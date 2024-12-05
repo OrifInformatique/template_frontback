@@ -41,10 +41,6 @@ public class ItemController {
         return itemService.getItems();
     }
 
-    /**
-     * Read - Get one item by id
-     * @return - A single item object
-     */
     @GetMapping("/items/{id}")
     public Item getItemById(@PathVariable Long id) {
         /* Try to get the corresponding item, else throw an exception */
