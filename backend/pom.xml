@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ch.sectioninformatique</groupId>
-	<artifactId>packbase</artifactId>
+	<artifactId>spring-template</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>packbase</name>
-	<description>Basic package for a Rest API application with Spring Boot</description>
+	<name>spring-template</name>
+	<description>Template for a Rest API application with Spring Boot</description>
 	<url/>
 	<licenses>
 		<license/>

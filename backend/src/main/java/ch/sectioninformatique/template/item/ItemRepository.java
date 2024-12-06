@@ -1,4 +1,4 @@
-package ch.sectioninformatique.packbase.item;
+package ch.sectioninformatique.template.item;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;

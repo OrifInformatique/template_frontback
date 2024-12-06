@@ -1,13 +1,13 @@
-package ch.sectioninformatique.packbase;
+package ch.sectioninformatique.template;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PackbaseApplication {
+public class TemplateApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(PackbaseApplication.class, args);
+		SpringApplication.run(TemplateApplication.class, args);
 	}
 
 }
