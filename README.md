@@ -29,7 +29,7 @@ These are also available on the dedicated Teams channel.
 
 ### Copy the project using git
 
-This documentation assumes that you know already how to use `git`.
+This documentation assumes that you already know how to use `git`.
 
 First, make sure that you have `git` on your machine.
 
