@@ -1,18 +1,15 @@
 # Spring Packbase
 <p>
-    <img src="https://sectioninformatique.ch/wp-content/uploads/2021/09/Logo_Orif__70.jpg" width="271" height="70" alt="Logo ORIF"></a> 
-    <img src="https://docs.spring.io/spring-boot/_/img/spring-logo.svg" width="271" height="70" alt="Logo Spring"></a><br><br>
-    <img src="https://img.shields.io/badge/release-v0.1.1-blue" alt="Latest Release"></a>
+    <div style="text-align: center;">
+        <img src="https://sectioninformatique.ch/wp-content/uploads/2021/09/Logo_Orif__70.jpg" width=40% height=40% alt="ORIF logo"></a>
+        <img src="src/main/resources/static/images/spring_boot.svg" width="271" height="70" alt="Spring Boot logo">
+    </div>
 </p>
 
 Base package to start a REST API app with Spring-boot.
 
 
 ## Where to start ?
-
-This project is built with a begginer oriented approach.
-
-For the sake of good practice, this documentation is in **ENGLISH**.
 
 ### Copy the project using git
 
@@ -89,8 +86,16 @@ Here is a list of the most common commands you'll likely use !
 
 `mvn validate`
 
-## License
+## Microsoft Entra / Azure AD oAuth2 grant flow
 
-[MIT](https://github.com/OrifInformatique/spring-packbase/blob/master/LICENSE)
+### Simplified sequence diagram
+<p>
+    <img src="src/main/resources/static/images/oauth2_sequence_diagram.png" alt="simplified oAuth 2 sequence diagram">
+</p>
+
+
+## Sources
+
+[Microsoft oAuth2 grant flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow)
 
 ---
