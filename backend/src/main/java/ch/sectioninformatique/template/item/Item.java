@@ -1,4 +1,4 @@
-package ch.sectioninformatique.packbase.item;
+package ch.sectioninformatique.template.item;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
