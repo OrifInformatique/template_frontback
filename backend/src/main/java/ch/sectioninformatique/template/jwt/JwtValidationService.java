@@ -1,4 +1,4 @@
-package ch.sectioninformatique.packbase.jwt;
+package ch.sectioninformatique.template.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
