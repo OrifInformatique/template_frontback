@@ -5,6 +5,13 @@
 # spring.profiles.active=dev
 
 ### Database connection ###
-# spring.datasource.url=jdbc:mariadb://localhost:3306/spring-template
+# spring.datasource.url=jdbc:mariadb://localhost:3306/spring-packbase
 # spring.datasource.username=root
 # spring.datasource.password=
+
+# Specifies your Active Directory ID:
+# tenant-id=
+# Specifies your App Registration's Application ID:
+# client-id=
+# Specifies your App Registration's secret key:
+# client-secret=
