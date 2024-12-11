@@ -1,60 +1,43 @@
-# Spring Packbase
+# Spring template
 <p>
-    <img src="https://sectioninformatique.ch/wp-content/uploads/2021/09/Logo_Orif__70.jpg" width="271" height="70" alt="Logo ORIF"></a> 
-    <img src="https://docs.spring.io/spring-boot/_/img/spring-logo.svg" width="271" height="70" alt="Logo Spring"></a><br><br>
-    <img src="https://img.shields.io/badge/release-v0.1.1-blue" alt="Latest Release"></a>
+    <div style="text-align: center;">
+        <img src="https://sectioninformatique.ch/wp-content/uploads/2021/09/Logo_Orif__70.jpg" width=40% height=40% alt="Orif logo"></a>
+        <img src="src/main/resources/static/images/spring_boot.svg" width="271" height="70" alt="Spring Boot logo">
+    </div>
 </p>
 
-Base package to start a REST API app with Spring-boot.
+Template to start developing a new REST API application with Spring Boot.
 
+## Getting Started
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-## Where to start ?
+### Prerequisites
+The Spring Boot version currently used in this project is 3.3.5.
 
-This project is built with a begginer oriented approach.
+The project's environment must contain these tools. Make sure that your Windows or WSL environnment variables contain the path to Java.
 
-For the sake of good practice, this documentation is in **ENGLISH**.
+- [Java / openJDK 21](https://adoptium.net/fr/temurin/releases/)
+- [Maven 3.9](https://maven.apache.org/docs/history.html)
+- [MariaDB 10.4](https://mariadb.org/mariadb/all-releases/). A MySQL equivalent can also be installed with [Laragon](https://laragon.org/download/)
 
-### Copy the project using git
+### Application properties
+Link your database to your app :
 
-This documentation assumes that you know already how to use `git`.
-
-First, make sure that you have `git` on your machine.
-
-Open up your favorite terminal emulator and type in `git clone https://github.com/OrifInformatique/spring-packbase.git`.
-
-### Make the project work on your machine
-
-#### External dependencies
-
-You will need 4 external dependencies:
-
-- Java / openJDK 21
-- Maven 3.9.9
-- Spring-boot 3.3.3
-- MariaDB 11.5.2
-
-Make sure that your windows or WSL environnment variable contains the path to Java.
-
-#### Application proprieties
-The application is now almost ready!
-The last thing that needs to be done is to link the database to your app.
-
-To do that:
-1. Copy the file `application.properties-dist` in the root of the project. Be careful to NOT modify this file itself.
-2. Rename you copied file to `application.proprieties`.
+1. DON'T modify the `application.properties-dist` file but make a copy of it in the root of the project.
+2. Rename your copied file to `application.properties`.
 3. Open the file in you IDE of choice and uncomment the `### Database connection ###` section.
 4. Insert your database url and credentials.
 
-This step is important because you do not want your **top secret** password to be public on github.
+The `application.properties` file is git ignored. This is important because you do not want your **top secret** password to be public on github.
 
 ## What's next ?
 
 Some additional documentation will be soon available in the `docs/` folder.
 
-In the mean time, feel free to explore the code and create your own branch to
-learn about Spring-boot !
+In the mean time, feel free to explore the code and create your own experiment branch to
+learn about Spring Boot !
 
-The item module is here as an exemple of how to create your own.
+The item module is here as an exemple of how to create your own modules.
 
 Good luck !
 
@@ -89,8 +72,16 @@ Here is a list of the most common commands you'll likely use !
 
 `mvn validate`
 
-## License
+## Microsoft Entra / Azure AD oAuth2 grant flow
 
-[MIT](https://github.com/OrifInformatique/spring-packbase/blob/master/LICENSE)
+### Simplified sequence diagram
+<p>
+    <img src="src/main/resources/static/images/oauth2_sequence_diagram.png" alt="simplified oAuth 2 sequence diagram">
+</p>
+
+
+## Sources
+
+[Microsoft oAuth2 grant flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow)
 
 ---
