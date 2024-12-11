@@ -1,57 +1,43 @@
-# Spring Packbase
+# Spring template
 <p>
     <div style="text-align: center;">
-        <img src="https://sectioninformatique.ch/wp-content/uploads/2021/09/Logo_Orif__70.jpg" width=40% height=40% alt="ORIF logo"></a>
+        <img src="https://sectioninformatique.ch/wp-content/uploads/2021/09/Logo_Orif__70.jpg" width=40% height=40% alt="Orif logo"></a>
         <img src="src/main/resources/static/images/spring_boot.svg" width="271" height="70" alt="Spring Boot logo">
     </div>
 </p>
 
-Base package to start a REST API app with Spring-boot.
+Template to start developing a new REST API application with Spring Boot.
 
+## Getting Started
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-## Where to start ?
+### Prerequisites
+The Spring Boot version currently used in this project is 3.3.5.
 
-### Copy the project using git
+The project's environment must contain these tools. Make sure that your Windows or WSL environnment variables contain the path to Java.
 
-This documentation assumes that you know already how to use `git`.
+- [Java / openJDK 21](https://adoptium.net/fr/temurin/releases/)
+- [Maven 3.9](https://maven.apache.org/docs/history.html)
+- [MariaDB 10.4](https://mariadb.org/mariadb/all-releases/). A MySQL equivalent can also be installed with [Laragon](https://laragon.org/download/)
 
-First, make sure that you have `git` on your machine.
+### Application properties
+Link your database to your app :
 
-Open up your favorite terminal emulator and type in `git clone https://github.com/OrifInformatique/spring-packbase.git`.
-
-### Make the project work on your machine
-
-#### External dependencies
-
-You will need 4 external dependencies:
-
-- Java / openJDK 21
-- Maven 3.9.9
-- Spring-boot 3.3.3
-- MariaDB 11.5.2
-
-Make sure that your windows or WSL environnment variable contains the path to Java.
-
-#### Application proprieties
-The application is now almost ready!
-The last thing that needs to be done is to link the database to your app.
-
-To do that:
-1. Copy the file `application.properties-dist` in the root of the project. Be careful to NOT modify this file itself.
-2. Rename you copied file to `application.proprieties`.
+1. DON'T modify the `application.properties-dist` file but make a copy of it in the root of the project.
+2. Rename your copied file to `application.properties`.
 3. Open the file in you IDE of choice and uncomment the `### Database connection ###` section.
 4. Insert your database url and credentials.
 
-This step is important because you do not want your **top secret** password to be public on github.
+The `application.properties` file is git ignored. This is important because you do not want your **top secret** password to be public on github.
 
 ## What's next ?
 
 Some additional documentation will be soon available in the `docs/` folder.
 
-In the mean time, feel free to explore the code and create your own branch to
-learn about Spring-boot !
+In the mean time, feel free to explore the code and create your own experiment branch to
+learn about Spring Boot !
 
-The item module is here as an exemple of how to create your own.
+The item module is here as an exemple of how to create your own modules.
 
 Good luck !
 

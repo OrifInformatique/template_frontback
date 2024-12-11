@@ -1,5 +1,4 @@
 # Template frontback
-
 <p>
     <img src="https://img.shields.io/badge/release-v0.1.1-blue" alt="Latest Release"></a>
     <div style="text-align: center;">
@@ -9,31 +8,24 @@
     </div>
 </p>
 
-## Documatation for each part of the app
+Template to start developing a web app with React as frontend and Spring Boot as backend.
 
-Base package for all our web apps.
+## Getting Started
+This project is built as an example, with a begginer oriented approach. For the sake of good practice, this documentation is in **ENGLISH**.
 
-Built with React and Spring Boot.
+### Good practices
+- [Branches namming conventions](https://www.atlassian.com/fr/git/tutorials/comparing-workflows/gitflow-workflow)
+- [Commits namming conventions](https://www.conventionalcommits.org)
 
-## Where to start ?
+Informations are also available on our dedicated Teams channel.
 
-This project is built with a begginer oriented approach.
+### Clone the project using git
 
-For the sake of good practice, this documentation is in **ENGLISH**.
+The git repository contains backend and frontend together. Use your favorite IDE or terminal to clone the project.
 
-## Good practices
-
-In [sources](#Sources), you will find good practices regarding the namming conventions of our branches and commits.
-
-These are also available on the dedicated Teams channel.
-
-### Copy the project using git
-
-This documentation assumes that you already know how to use `git`.
-
-First, make sure that you have `git` on your machine.
-
-Open up your favorite terminal emulator and type in `git clone https://github.com/OrifInformatique/spring-packbase.git`.
+```console
+git clone https://github.com/OrifInformatique/template_frontback.git
+```
 
 ## Backend
 [Backend README](https://github.com/OrifInformatique/template_frontback/blob/master/backend/README.md)
@@ -41,16 +33,5 @@ Open up your favorite terminal emulator and type in `git clone https://github.co
 ## Frontend
 [Frontend README](https://github.com/OrifInformatique/template_frontback/blob/master/frontend/README.md)
 
-## Sources
-
-### Conventions
-
-[Git branches names](https://www.atlassian.com/fr/git/tutorials/comparing-workflows/gitflow-workflow)
-
-[Conventional commits](https://www.conventionalcommits.org)
-
 ## License
-
 [MIT](https://github.com/OrifInformatique/spring-packbase/blob/master/LICENSE)
-
----
