@@ -1,9 +1,5 @@
 package ch.sectioninformatique.template.auth;
 
-import ch.sectioninformatique.template.user.User;
-import ch.sectioninformatique.template.auth.dtos.LoginResponse;
-import ch.sectioninformatique.template.auth.dtos.LoginUserDto;
-import ch.sectioninformatique.template.auth.dtos.RegisterUserDto;
 import ch.sectioninformatique.template.common.JwtService;
 
 import org.springframework.http.ResponseEntity;
@@ -37,9 +33,9 @@ public class AuthenticationController {
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
 
-        LoginResponse loginResponse = new LoginResponse()
-                                        .setToken(jwtToken)
-                                        .setExpiresIn(jwtService.getExpirationTime());
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setToken(jwtToken);
+        loginResponse.setExpiresIn(jwtService.getExpirationTime());
 
         return ResponseEntity.ok(loginResponse);
     }

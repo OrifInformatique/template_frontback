@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.auth.dtos;
+package ch.sectioninformatique.template.auth;
 
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.user;
+package ch.sectioninformatique.template.auth;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,19 +23,22 @@ public class UserSeeder implements CommandLineRunner {
     private void loadUserData() {
         if (userRepository.count() == 0) {
             User user1 = new User();
-            user1.setFullName("john DOE");
+            user1.setFirstName("John");
+            user1.setLastName("DOE");
             user1.setEmail("john.doe@test.com");
-            user1.setPassword(passwordEncoder.encode("xswqay"));
+            user1.setPassword(passwordEncoder.encode("qwertz"));
 
             User user2 = new User();
-            user2.setFullName("jane SMITH");
+            user2.setFirstName("Jane");
+            user2.setLastName("SMITH");
             user2.setEmail("jane.smith@test.com");
             user2.setPassword(passwordEncoder.encode("qwertz"));
 
             User user3 = new User();
-            user3.setFullName("alice JOHNSON");
+            user3.setFirstName("Alice");
+            user3.setLastName("JOHNSON");
             user3.setEmail("alice.johnson@test.com");
-            user3.setPassword(passwordEncoder.encode("yaqwsx"));
+            user3.setPassword(passwordEncoder.encode("qwertz"));
 
             userRepository.save(user1);
             userRepository.save(user2);

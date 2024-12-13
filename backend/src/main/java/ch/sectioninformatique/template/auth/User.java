@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.user;
+package ch.sectioninformatique.template.auth;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +16,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import lombok.Data;
+
+/* @Data annotation from the Lombok library automatically adds getters and setters */
+@Data
 @Table(name = "users")
 @Entity
 public class User implements UserDetails {
@@ -24,8 +28,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Integer id;
 
-    @Column(nullable = false, name = "full_name")
-    private String fullName;
+    @Column(nullable = false, name = "first_name")
+    private String firstName;
+
+    @Column(nullable = false, name = "last_name")
+    private String lastName;
 
     @Column(unique = true, length = 100, nullable = false)
     private String email;
@@ -43,9 +50,24 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(); //NOTE: Need to create some roles 
+        // @TODO: Create some roles 
+        return List.of(); 
     }
 
+    // Constructors
+    public User() {
+        super();
+    }
+
+    public User(String firstName, String lastName, String email, String password) {
+        super();
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+    }
+
+    // Implementation of UserDetails methods
     public String getPassword() {
         return password;
     }
@@ -73,68 +95,5 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-    
-    // constructors, Getter and setter
-
-    public User() {
-        super();
-    }
-
-    public User(String fullName, String email, String password) {
-        super();
-        this.fullName = fullName;
-        this.email = email;
-        this.password = password;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public User setId(Integer id) {
-        this.id = id;
-        return this;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public User setFullName(String fullName) {
-        this.fullName = fullName;
-        return this;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public User setEmail(String email) {
-        this.email = email;
-        return this;
-    }
-
-    public User setPassword(String password) {
-        this.password = password;
-        return this;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public User setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-        return this;
-    }
-
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public User setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-        return this;
     }
 }

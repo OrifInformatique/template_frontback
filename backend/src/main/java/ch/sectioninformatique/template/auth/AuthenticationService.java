@@ -8,11 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
-import ch.sectioninformatique.template.auth.dtos.LoginUserDto;
-import ch.sectioninformatique.template.auth.dtos.RegisterUserDto;
-import ch.sectioninformatique.template.user.User;
-import ch.sectioninformatique.template.user.UserRepository;
-
 @Service
 public class AuthenticationService {
     private final UserRepository userRepository;
@@ -33,10 +28,10 @@ public class AuthenticationService {
     }
 
     public User signup(RegisterUserDto input) {
-        User user = new User()
-                .setFullName(input.getFullName())
-                .setEmail(input.getEmail())
-                .setPassword(passwordEncoder.encode(input.getPassword()));
+        User user = new User(input.getFirstName(),
+                             input.getLastName(),
+                             input.getEmail(),
+                             passwordEncoder.encode(input.getPassword()));
 
         return userRepository.save(user);
     }

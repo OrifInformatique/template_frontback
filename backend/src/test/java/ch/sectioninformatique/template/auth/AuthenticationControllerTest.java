@@ -1,9 +1,7 @@
 package ch.sectioninformatique.template.auth;
 
-import ch.sectioninformatique.template.auth.dtos.LoginUserDto;
-import ch.sectioninformatique.template.auth.dtos.RegisterUserDto;
 import ch.sectioninformatique.template.common.JwtService;
-import ch.sectioninformatique.template.user.User;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +41,8 @@ class AuthenticationControllerTest {
         testUser = new User();
         testUser.setId(1);
         testUser.setEmail("test@example.com");
-        testUser.setFullName("Test User");
+        testUser.setFirstName("Test");
+        testUser.setLastName("User");
         
         testToken = "test.jwt.token";
     }
@@ -71,7 +70,8 @@ class AuthenticationControllerTest {
         RegisterUserDto registerDto = new RegisterUserDto();
         registerDto.setEmail("test@example.com");
         registerDto.setPassword("password123");
-        registerDto.setFullName("Test User");
+        registerDto.setFirstName("Test");
+        registerDto.setLastName("User");
 
         when(authService.signup(any(RegisterUserDto.class))).thenReturn(testUser);
 
@@ -81,7 +81,8 @@ class AuthenticationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$.fullName").value(testUser.getFullName()));
+                .andExpect(jsonPath("$.firstName").value(testUser.getFirstName()))
+                .andExpect(jsonPath("$.lastName").value(testUser.getLastName()));
     }
 
     @Test
