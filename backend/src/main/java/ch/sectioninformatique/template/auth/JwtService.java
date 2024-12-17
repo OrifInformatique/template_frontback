@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.common;
+package ch.sectioninformatique.template.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -43,11 +43,7 @@ public class JwtService {
         return jwtExpiration;
     }
 
-    private String buildToken(
-        Map<String, Object> extraClaims,
-        UserDetails userDetails,
-        long expiration
-) {
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
     return Jwts
             .builder()
             .claims(extraClaims)

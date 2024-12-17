@@ -1,6 +1,5 @@
 package ch.sectioninformatique.template.auth;
 
-import ch.sectioninformatique.template.common.JwtService;
 import ch.sectioninformatique.template.user.LoginUserDto;
 import ch.sectioninformatique.template.user.RegisterUserDto;
 import ch.sectioninformatique.template.user.User;
@@ -13,12 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequestMapping("/auth")
 @RestController
-public class AuthenticationController {
+public class AuthController {
     private final JwtService jwtService;
     
-    private final AuthenticationService authenticationService;
+    private final AuthService authenticationService;
 
-    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService) {
+    public AuthController(JwtService jwtService, AuthService authenticationService) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;
     }

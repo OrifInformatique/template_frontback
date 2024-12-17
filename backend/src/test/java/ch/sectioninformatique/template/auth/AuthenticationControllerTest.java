@@ -1,6 +1,5 @@
 package ch.sectioninformatique.template.auth;
 
-import ch.sectioninformatique.template.common.JwtService;
 import ch.sectioninformatique.template.user.LoginUserDto;
 import ch.sectioninformatique.template.user.RegisterUserDto;
 import ch.sectioninformatique.template.user.User;
@@ -31,7 +30,7 @@ class AuthenticationControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private AuthenticationService authService;
+    private AuthService authService;
 
     @MockBean
     private JwtService jwtService;

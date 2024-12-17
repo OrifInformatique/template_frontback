@@ -14,7 +14,7 @@ import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
 
 @Service
-public class AuthenticationService {
+public class AuthService {
     private final UserRepository userRepository;
     
     private final PasswordEncoder passwordEncoder;
@@ -22,7 +22,7 @@ public class AuthenticationService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public AuthenticationService(
+    public AuthService(
         UserRepository userRepository,
         AuthenticationManager authenticationManager,
         PasswordEncoder passwordEncoder

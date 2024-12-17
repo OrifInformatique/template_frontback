@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.common;
+package ch.sectioninformatique.template.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,10 +13,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import ch.sectioninformatique.template.user.UserRepository;
 
 @Configuration
-public class ApplicationConfiguration {
+public class AuthConfiguration {
     private final UserRepository userRepository;
 
-    public ApplicationConfiguration(UserRepository userRepository) {
+    public AuthConfiguration(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
