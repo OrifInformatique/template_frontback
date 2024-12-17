@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.auth;
+package ch.sectioninformatique.template.user;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;

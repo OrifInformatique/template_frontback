@@ -1,6 +1,9 @@
 package ch.sectioninformatique.template.auth;
 
 import ch.sectioninformatique.template.common.JwtService;
+import ch.sectioninformatique.template.user.LoginUserDto;
+import ch.sectioninformatique.template.user.RegisterUserDto;
+import ch.sectioninformatique.template.user.User;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,12 +31,12 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginUserDto request) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginUserDto request) {
         User authenticatedUser = authenticationService.authenticate(request);
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
 
-        LoginResponse loginResponse = new LoginResponse();
+        LoginResponseDto loginResponse = new LoginResponseDto();
         loginResponse.setToken(jwtToken);
         loginResponse.setExpiresIn(jwtService.getExpirationTime());
 

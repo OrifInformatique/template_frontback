@@ -8,6 +8,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
+import ch.sectioninformatique.template.user.LoginUserDto;
+import ch.sectioninformatique.template.user.RegisterUserDto;
+import ch.sectioninformatique.template.user.User;
+import ch.sectioninformatique.template.user.UserRepository;
+
 @Service
 public class AuthenticationService {
     private final UserRepository userRepository;

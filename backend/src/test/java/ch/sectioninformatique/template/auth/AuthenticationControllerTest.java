@@ -1,6 +1,9 @@
 package ch.sectioninformatique.template.auth;
 
 import ch.sectioninformatique.template.common.JwtService;
+import ch.sectioninformatique.template.user.LoginUserDto;
+import ch.sectioninformatique.template.user.RegisterUserDto;
+import ch.sectioninformatique.template.user.User;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

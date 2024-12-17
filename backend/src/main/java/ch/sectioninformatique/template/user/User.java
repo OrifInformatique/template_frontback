@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.auth;
+package ch.sectioninformatique.template.user;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

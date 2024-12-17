@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.auth;
+package ch.sectioninformatique.template.user;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
