@@ -1,0 +1,10 @@
+### Tomcat configuration ###
+# server.port=${PORT:9000}
+
+### Spring profile ###
+# spring.profiles.active=dev
+
+### Database connection ###
+# spring.datasource.url=jdbc:mariadb://localhost:3306/spring-packbase
+# spring.datasource.username=root
+# spring.datasource.password=
