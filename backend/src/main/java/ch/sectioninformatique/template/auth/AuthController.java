@@ -13,23 +13,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final JwtService jwtService;
     
-    private final AuthService authenticationService;
+    private final AuthService authService;
 
-    public AuthController(JwtService jwtService, AuthService authenticationService) {
+    public AuthController(JwtService jwtService, AuthService authService) {
         this.jwtService = jwtService;
-        this.authenticationService = authenticationService;
+        this.authService = authService;
     }
 
     @PostMapping("/signup")
     public ResponseEntity<User> register(@RequestBody RegisterUserDto registerUserDto) {
-        User registeredUser = authenticationService.signup(registerUserDto);
+        User registeredUser = authService.signup(registerUserDto);
 
         return ResponseEntity.ok(registeredUser);
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginUserDto request) {
-        User authenticatedUser = authenticationService.authenticate(request);
+        User authenticatedUser = authService.authenticate(request);
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
 
