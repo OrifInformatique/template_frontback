@@ -5,6 +5,11 @@
 # spring.profiles.active=dev
 
 ### Database connection ###
-# spring.datasource.url=jdbc:mariadb://localhost:3306/spring-packbase
+# spring.datasource.url=jdbc:mariadb://localhost:3306/spring-template
 # spring.datasource.username=root
 # spring.datasource.password=
+
+### JWT configuration ###
+# security.jwt.secret-key=
+## 1h in millisecond
+# security.jwt.expiration-time=3600000
