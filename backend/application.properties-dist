@@ -1,5 +1,13 @@
 ### Tomcat configuration ###
 # server.port=${PORT:9000}
+#
+### Spring profile ###
+# Environnment is set in `.env`
+# Set to `dev` by default if none found.
+# spring.profiles.active=${ENVIRONMENT:dev}
+
+# Prevent the app from running without a set environnment
+# spring.main.allow-bean-definition-overriding=false
 
 ### Spring profile ###
 # spring.profiles.active=dev

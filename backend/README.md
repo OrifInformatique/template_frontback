@@ -20,7 +20,18 @@ The project's environment must contain these tools. Make sure that your Windows 
 - [Maven 3.9](https://maven.apache.org/docs/history.html)
 - [MariaDB 10.4](https://mariadb.org/mariadb/all-releases/). A MySQL equivalent can also be installed with [Laragon](https://laragon.org/download/)
 
-### Application properties
+#### Optionnal
+
+It is recommanded to develop the app using docker.
+This is not a hard requirement but it's highly encouraged.
+For more info, head to the [Docker section](#docker) of this documentation.
+
+- [Docker]()
+- [Docker-compose]()
+
+### `Application properties` and `.env`
+
+#### `application.properties<NONE|-dist|-dev|-prod|test>`
 Link your database to your app :
 
 1. DON'T modify the `application.properties-dist` file but make a copy of it in the root of the project.
@@ -29,6 +40,25 @@ Link your database to your app :
 4. Insert your database url and credentials.
 
 The `application.properties` file is git ignored. This is important because you do not want your **top secret** password to be public on github.
+
+#### `.env`
+The `.env` is where you declare which environment you're working in.
+It's used by your application.properties.
+Docker uses it to know what container to build or start and how.
+
+There's 3 valid environments:
+- dev (Working environment)
+- test
+- prod (Only meant to be deployed)
+
+### Docker
+
+In this app, we use docker-compose, a Docker wrapper.
+It allows you to make sure you don't have unexcpected issues, notably with lambok
+and the database while you work.
+
+A dedicated cheat-sheet is available in the [docker cheat-sheet](#docker-cheat-sheet)
+sub-section.
 
 ## What's next ?
 
@@ -71,6 +101,22 @@ Here is a list of the most common commands you'll likely use !
 **Check if the project's structure is valid**
 
 `mvn validate`
+
+### Docker cheat-sheet
+
+**Build and start the container**
+
+`docker compose up`
+
+**Just start the container**
+
+`docker compose up --build`
+
+No need to pass the target since docker-compose will fetch the one you declared
+in `.env`.
+
+You can run a container in the background using the parameter `-d` with any
+commands.
 
 ## Microsoft Entra / Azure AD oAuth2 grant flow
 
