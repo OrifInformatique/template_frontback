@@ -8,6 +8,26 @@
 
 Template to start developing a new REST API application with Spring Boot.
 
+# Table of Contents
+
+1. [Getting Started](#getting-started)
+   - [Prerequisites](#prerequisites)
+     - [Java / openJDK 21](#java-openjdk-21)
+     - [Maven 3.9](#maven-39)
+     - [MariaDB 10.4](#mariadb-104)
+     - [Optional Tools](#optional-tools)
+   - [Application properties and .env](#application-properties-and-env)
+     - [application.properties](#applicationproperties)
+     - [.env](#env)
+   - [Docker](#docker)
+2. [What's Next?](#whats-next)
+3. [Command Cheat-Sheet](#command-cheat-sheet)
+   - [Common Commands](#common-commands)
+   - [Docker Cheat-Sheet](#docker-cheat-sheet)
+4. [Microsoft Entra / Azure AD oAuth2 Grant Flow](#microsoft-entra-azure-ad-oauth2-grant-flow)
+   - [Simplified Sequence Diagram](#simplified-sequence-diagram)
+5. [Sources](#sources)
+
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
@@ -52,15 +72,6 @@ There's 3 valid environments:
 - test
 - prod (Only meant to be deployed)
 
-### Docker
-
-In this app, we use docker-compose, a Docker wrapper.
-It allows you to make sure you don't have unexcpected issues, notably with lambok
-and the database while you work.
-
-A dedicated cheat-sheet is available in the [docker cheat-sheet](#docker-cheat-sheet)
-sub-section.
-
 ## What's next ?
 
 Some additional documentation will be soon available in the `docs/` folder.
@@ -102,6 +113,15 @@ Here is a list of the most common commands you'll likely use !
 **Check if the project's structure is valid**
 
 `mvn validate`
+
+## Docker
+
+In this app, we use docker-compose, a Docker wrapper.
+It allows you to make sure you don't have unexcpected issues, notably with lambok
+and the database while you work.
+
+A dedicated cheat-sheet is available in the [docker cheat-sheet](#docker-cheat-sheet)
+sub-section.
 
 ### Docker cheat-sheet
 
