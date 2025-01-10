@@ -12,9 +12,6 @@ Template to start developing a new REST API application with Spring Boot.
 
 1. [Getting Started](#getting-started)
    - [Prerequisites](#prerequisites)
-     - [Java / openJDK 21](#java-openjdk-21)
-     - [Maven 3.9](#maven-39)
-     - [MariaDB 10.4](#mariadb-104)
      - [Optional Tools](#optional-tools)
    - [Application properties and .env](#application-properties-and-env)
      - [application.properties](#applicationproperties)
@@ -46,9 +43,9 @@ It is recommanded to develop the app using docker.
 This is not a hard requirement but it's highly encouraged.
 For more info, head to the [Docker section](#docker) of this documentation.
 
-- [Docker]()
-- [Docker-compose]()
-- [Docker-buildx]()
+- [Docker](https://www.docker.com/products/docker-desktop/)
+- [Docker-compose](https://docs.docker.com/compose/)
+- On linux or WSL (Included in Docker desktop): [Docker-buildx](https://github.com/docker/buildx)
 
 ### `Application properties` and `.env`
 
@@ -122,6 +119,20 @@ and the database while you work.
 
 A dedicated cheat-sheet is available in the [docker cheat-sheet](#docker-cheat-sheet)
 sub-section.
+
+### Init project using docker
+First, you need to build the base image from the project manually using this
+command:
+
+`docker buildx build --tag updated_base-openjdk:21-jdk-slim --target update .`
+
+This is to prevent you from having to update your container everytime you
+rebuilt the project.
+
+Now run `docker compose up --build` in the `backend/` directory.
+Wait for the updates to download and you're good to go.
+From now on, rebuilding the project *won't* update the container as a whole but
+only your project.
 
 ### Docker cheat-sheet
 
