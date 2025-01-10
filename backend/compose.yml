@@ -1,0 +1,24 @@
+services:
+  app:
+    container_name: "Spring-boot-${ENVIRONMENT}"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: "${ENVIRONMENT}" # Use the environment variable to target the desired stage
+    environment:
+      SPRING_PROFILES_ACTIVE: "${ENVIRONMENT}"
+      # SPRING_DATASOURCE_URL: "${SPRING_DATASOURCE_URL}"
+    ports:
+      - "8080:8080"
+    # command: sh -c "if [ \"$ENVIRONMENT\" = 'dev' ]; then mvn spring-boot:run; fi"
+  db:
+    container_name: "Spring-boot-Mariadb"
+    image: mariadb:latest
+    environment:
+      MARIADB_ROOT_PASSWORD: "example"
+      MARIADB_DATABASE: "prod_db"
+    networks:
+      - spring_network
+networks:
+  spring_network:
+    driver: bridge
