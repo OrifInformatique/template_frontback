@@ -14,11 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AdminController {
     private final UserService userService;
-
+    
     public AdminController(UserService userService) {
         this.userService = userService;
     }
 
+    /**
+     * Create - Add a new administrator
+     * @param registerUserDto - The administrator to create
+     * @return - The created administrator
+     */
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<User> createAdministrator(@RequestBody RegisterUserDto registerUserDto) {

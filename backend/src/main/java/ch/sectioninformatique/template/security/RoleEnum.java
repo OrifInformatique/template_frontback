@@ -9,11 +9,9 @@ import java.util.stream.Collectors;
 import static ch.sectioninformatique.template.security.PermissionEnum.*;
 
 public enum RoleEnum {
-    USER(EnumSet.of(USER_READ, USER_WRITE)),
-    SUPER_ADMIN(EnumSet.of(COURSE_READ, COURSE_WRITE, STUDENT_READ, STUDENT_WRITE, USER_READ, USER_WRITE)),
-    STUDENT(EnumSet.of(STUDENT_READ)),
-    ADMIN(EnumSet.of(COURSE_READ, COURSE_WRITE, STUDENT_READ, STUDENT_WRITE)),
-    ADMINTRAINEE(EnumSet.of(COURSE_READ, STUDENT_READ));
+    USER(EnumSet.of(ITEM_READ, ITEM_WRITE)),
+    ADMIN(EnumSet.of(USER_READ, USER_WRITE, ITEM_READ, ITEM_WRITE)),
+    SUPER_ADMIN(EnumSet.of(ITEM_READ, ITEM_WRITE, ITEM_DELETE, USER_READ, USER_WRITE, USER_DELETE));
 
     private final Set<PermissionEnum> permissions;
 

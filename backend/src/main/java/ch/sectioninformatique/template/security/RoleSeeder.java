@@ -3,6 +3,7 @@ package ch.sectioninformatique.template.security;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -19,21 +20,19 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
     }
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent)
+    public void onApplicationEvent(@NonNull ContextRefreshedEvent contextRefreshedEvent)
     {
         this.loadRoles();
     }
 
     private void loadRoles() {
         RoleEnum[] roleNames = new RoleEnum[] { RoleEnum.USER, RoleEnum.ADMIN,
-                RoleEnum.SUPER_ADMIN, RoleEnum.STUDENT, RoleEnum.ADMINTRAINEE };
+                RoleEnum.SUPER_ADMIN };
         
         Map<RoleEnum, String> roleDescriptionMap = Map.of(
                 RoleEnum.USER, "Default user role",
                 RoleEnum.ADMIN, "Administrator role",
-                RoleEnum.SUPER_ADMIN, "Super Administrator role",
-                RoleEnum.STUDENT, "Student role",
-                RoleEnum.ADMINTRAINEE, "Administrateur trainee"
+                RoleEnum.SUPER_ADMIN, "Super Administrator role"
         );
 
         Arrays.stream(roleNames).forEach((roleName) -> {

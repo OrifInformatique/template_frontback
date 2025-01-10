@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
@@ -28,29 +30,36 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    private final Validator validator;
+
     public AuthService(
             UserRepository userRepository,
             AuthenticationManager authenticationManager,
-            PasswordEncoder passwordEncoder, RoleRepository roleRepository
+            PasswordEncoder passwordEncoder, RoleRepository roleRepository,
+            Validator validator
     ) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+        this.validator = validator;
     }
 
-    public User signup(RegisterUserDto input) {
-
+    public User signup(@Valid RegisterUserDto registerUserDto) {
+        var violations = validator.validate(registerUserDto);
+        if (!violations.isEmpty()) {
+            throw new IllegalArgumentException("Validation failed");
+        }
         Optional<Role> optionalRole = roleRepository.findByName(RoleEnum.USER);
 
         if (optionalRole.isEmpty()) {
             return null;
         }
         User user = new UserBuilder()
-                .setFirstName(input.getFirstName())
-                .setLastName(input.getLastName())
-                .setEmail(input.getEmail())
-                .setPassword(passwordEncoder.encode(input.getPassword()))
+                .setFirstName(registerUserDto.getFirstName())
+                .setLastName(registerUserDto.getLastName())
+                .setEmail(registerUserDto.getEmail())
+                .setPassword(passwordEncoder.encode(registerUserDto.getPassword()))
                 .addRole(optionalRole.get())
                 .build();
 

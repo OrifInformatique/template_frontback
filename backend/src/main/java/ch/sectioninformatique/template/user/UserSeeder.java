@@ -6,10 +6,12 @@ import ch.sectioninformatique.template.security.RoleRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.core.annotation.Order;
 
 import java.util.Optional;
 
 @Component
+@Order(2)
 public class UserSeeder implements CommandLineRunner {
         
     private final UserRepository userRepository;
@@ -27,22 +29,28 @@ public class UserSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("Starting User Seeding...");
         loadUserData();
+        System.out.println("User Seeding completed.");
     }
 
     private void loadUserData() {
         if (this.userRepository.count() == 0) {
+            Optional<Role> optionalRole = this.roleRepository.findByName(RoleEnum.USER);
+            
+            if (optionalRole.isEmpty()) {
+                System.out.println("Role USER not found - Skipping user seeding");
+                return;
+            }
 
-            Optional<Role> optionalRole = this.roleRepository
-                    .findByName(RoleEnum.USER);
+            Role userRole = optionalRole.get();
             
             User user1 = new UserBuilder()
                     .setFirstName("John")
                     .setLastName("DOE")
                     .setEmail("john.doe@test.com")
-                    .setPassword(this.passwordEncoder
-                            .encode("qwertz"))
-                    .addRole(optionalRole.get())
+                    .setPassword(this.passwordEncoder.encode("Secure123@Pass"))
+                    .addRole(userRole)
                     .build();
             
             User user2 = new UserBuilder()
@@ -50,8 +58,8 @@ public class UserSeeder implements CommandLineRunner {
                     .setLastName("SMITH")
                     .setEmail("jane.smith@test.com")
                     .setPassword(this.passwordEncoder
-                            .encode("qwertz"))
-                    .addRole(optionalRole.get())
+                            .encode("Complex#789Pwd"))
+                    .addRole(userRole)
                     .build();
 
             User user3 = new UserBuilder()
@@ -59,13 +67,45 @@ public class UserSeeder implements CommandLineRunner {
                     .setLastName("JOHNSON")
                     .setEmail("alice.johnson@test.com")
                     .setPassword(this.passwordEncoder
-                            .encode("qwertz"))
-                    .addRole(optionalRole.get())
+                            .encode("Test$4321Now"))
+                    .addRole(userRole)
+                    .build();
+
+            User user4 = new UserBuilder()
+                    .setFirstName("Dan")
+                    .setLastName("SERGEANT")
+                    .setEmail("dan.sergeant@test.com")
+                    .setPassword(this.passwordEncoder
+                            .encode("Spring2024@Dev"))
+                    .addRole(userRole)
+                    .build();
+
+            User user5 = new UserBuilder()
+                    .setFirstName("Bobby")
+                    .setLastName("BALLOONZI")
+                    .setEmail("bobby.balloonzi@test.com")
+                    .setPassword(this.passwordEncoder
+                            .encode("P@ssw0rd2024"))
+                    .addRole(userRole)
+                    .build();
+                
+            User user6 = new UserBuilder()
+                    .setFirstName("Rob")
+                    .setLastName("JAKE")
+                    .setEmail("rob.jake@test.com")
+                    .setPassword(this.passwordEncoder
+                            .encode("Inf0#Security24"))
+                    .addRole(userRole)
                     .build();
 
             this.userRepository.save(user1);
             this.userRepository.save(user2);
             this.userRepository.save(user3);
+            this.userRepository.save(user4);
+            this.userRepository.save(user5);
+            this.userRepository.save(user6);
+        } else {
+            System.out.println("Users table not empty - Skipping user seeding");
         }
     }
 }

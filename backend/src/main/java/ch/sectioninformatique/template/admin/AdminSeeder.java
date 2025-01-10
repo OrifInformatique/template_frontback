@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 import java.util.Optional;
 
@@ -33,7 +34,7 @@ public class AdminSeeder implements ApplicationListener<ContextRefreshedEvent> {
     }
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent)
+    public void onApplicationEvent(@NonNull ContextRefreshedEvent contextRefreshedEvent)
     {
         this.createSuperAdministrator();
     }
@@ -43,7 +44,7 @@ public class AdminSeeder implements ApplicationListener<ContextRefreshedEvent> {
             .setFirstName("Super")
             .setLastName("Admin")
             .setEmail("super.admin@email.com")
-            .setPassword("123456");
+            .setPassword("B@dPassw0rd");
 
         Optional<Role> optionalRole = roleRepository
                 .findByName(RoleEnum.SUPER_ADMIN);

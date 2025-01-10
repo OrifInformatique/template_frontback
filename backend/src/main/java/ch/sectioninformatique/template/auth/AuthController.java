@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 
 @RequestMapping("/auth")
@@ -26,7 +27,7 @@ public class AuthController {
 
     @PreAuthorize("permitAll")
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody RegisterUserDto registerUserDto) {
+    public ResponseEntity<User> register(@Valid @RequestBody RegisterUserDto registerUserDto) {
         User registeredUser = authService.signup(registerUserDto);
 
         return ResponseEntity.ok(registeredUser);
@@ -34,7 +35,7 @@ public class AuthController {
 
     @PreAuthorize("permitAll")
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginUserDto request) {
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginUserDto request) {
         try {
             User authenticatedUser = authService.authenticate(request);
 

@@ -30,4 +30,14 @@ public class ItemService {
         Item savedItem = itemRepository.save(item);
         return savedItem;
     }
+
+    public Item updateItem(Long id, Item newItem) {
+        return itemRepository.findById(id)
+            .map(item -> {
+                item.setName(newItem.getName());
+                item.setDescription(newItem.getDescription());
+                return itemRepository.save(item);
+            })
+            .orElseThrow(() -> new ItemNotFoundException(id));
+    }
 }

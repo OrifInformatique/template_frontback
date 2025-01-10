@@ -30,7 +30,7 @@ public class UserBuilder {
         return this;
     }
 
-    public UserBuilder setLastName(String lastName) {
+    public UserBuilder setLastName( String lastName) {
         this.lastName = lastName;
         return this;
     }

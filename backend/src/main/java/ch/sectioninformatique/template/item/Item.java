@@ -1,10 +1,14 @@
 package ch.sectioninformatique.template.item;
 
+import ch.sectioninformatique.template.user.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import lombok.Data;
@@ -19,30 +23,24 @@ public class Item {
 
     /* @Id annotation indicates the table's primary key */
     @Id
-    /* @GeneratedValue anotation indicates an auto-generated value */
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    /* In MariaDB, this will create a Varchar(255) field */
     private String name;
 
-    /* In MariaDB, this will create a Varchar(1000) field */
     @Column(length=1000)
     private String description;
 
-    /* Constructors */
+    @ManyToOne  // Change @OneToOne to @ManyToOne because a user can have multiple items
+    @JoinColumn(name = "author_id")
+    private User author;
+
     public Item() {
-        super();
     }
     
-    public Item(String name) {
-        super();
-        this.name = name;
-    }
-
-    public Item(String name, String description) {
-        super();
+    public Item(String name, String description, User author) {
         this.name = name;   
         this.description = description;
+        this.author = author;
     }
 }
