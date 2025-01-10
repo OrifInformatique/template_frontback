@@ -1,3 +1,7 @@
+# Don't forget to run 
+#`docker buildx build --tag updated_base-openjdk:21-jdk-slim --target update .`
+# the first time you run this project!"
+
 services:
   app:
     container_name: "Spring-boot-${ENVIRONMENT}"
@@ -7,18 +11,27 @@ services:
       target: "${ENVIRONMENT}" # Use the environment variable to target the desired stage
     environment:
       SPRING_PROFILES_ACTIVE: "${ENVIRONMENT}"
+      # Declare the production database in `application.proprieties` to prevent
+      # pushing to github the URL by mistake 
       # SPRING_DATASOURCE_URL: "${SPRING_DATASOURCE_URL}"
+      DEV_SPRING_DATASOURCE_URL: "${DEV_SPRING_DATASOURCE_URL}"
+      TEST_SPRING_DATASOURCE_URL: "${TEST_SPRING_DATASOURCE_URL}"
     ports:
       - "8080:8080"
-    # command: sh -c "if [ \"$ENVIRONMENT\" = 'dev' ]; then mvn spring-boot:run; fi"
+    depends_on:
+      - db
+
   db:
     container_name: "Spring-boot-Mariadb"
     image: mariadb:latest
     environment:
-      MARIADB_ROOT_PASSWORD: "example"
-      MARIADB_DATABASE: "prod_db"
+      MARIADB_ROOT_PASSWORD: "pwd"
+      MARIADB_DATABASE: "dev_db"
+    volumes:
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - spring_network
+
 networks:
   spring_network:
     driver: bridge

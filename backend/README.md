@@ -28,16 +28,17 @@ For more info, head to the [Docker section](#docker) of this documentation.
 
 - [Docker]()
 - [Docker-compose]()
+- [Docker-buildx]()
 
 ### `Application properties` and `.env`
 
-#### `application.properties<NONE|-dist|-dev|-prod|test>`
+#### `application.properties`
 Link your database to your app :
 
 1. DON'T modify the `application.properties-dist` file but make a copy of it in the root of the project.
 2. Rename your copied file to `application.properties`.
 3. Open the file in you IDE of choice and uncomment the `### Database connection ###` section.
-4. Insert your database url and credentials.
+4. Insert the prod database url and credentials.
 
 The `application.properties` file is git ignored. This is important because you do not want your **top secret** password to be public on github.
 
