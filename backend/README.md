@@ -19,14 +19,14 @@ Template to start developing a new REST API application with Spring Boot.
    - [Application properties and .env](#application-properties-and-env)
      - [application.properties](#applicationproperties)
      - [.env](#env)
-   - [Docker](#docker)
 2. [What's Next?](#whats-next)
 3. [Command Cheat-Sheet](#command-cheat-sheet)
    - [Common Commands](#common-commands)
+4. [Docker](#docker)
    - [Docker Cheat-Sheet](#docker-cheat-sheet)
-4. [Microsoft Entra / Azure AD oAuth2 Grant Flow](#microsoft-entra-azure-ad-oauth2-grant-flow)
+5. [Microsoft Entra / Azure AD oAuth2 Grant Flow](#microsoft-entra-azure-ad-oauth2-grant-flow)
    - [Simplified Sequence Diagram](#simplified-sequence-diagram)
-5. [Sources](#sources)
+6. [Sources](#sources)
 
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
