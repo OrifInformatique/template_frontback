@@ -22,7 +22,7 @@ services:
       - db
 
   db:
-    container_name: "Spring-boot-Mariadb"
+    container_name: "Spring-boot-mariadb-${ENVIRONMENT}"
     image: mariadb:latest
     environment:
       MARIADB_ROOT_PASSWORD: "pwd"

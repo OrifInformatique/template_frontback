@@ -13,13 +13,13 @@ COPY . .
 
 # Development stage
 FROM base AS dev
-RUN echo "== Dev environment =="
+RUN echo -e "\033[0;32m====< Dev environment >====\033[0m"
 RUN mvn clean install -DskipTests
 CMD ["mvn", "spring-boot:run", "-DskipTests"]
 
 # Testing stage
 FROM base AS test
-RUN echo "== Run test without executing the app =="
+RUN echo -e "\033[0;32m====< Run test without executing the app >====\033[0m"
 CMD ["mvn", "clean test"]
 
 # Production stage
