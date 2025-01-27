@@ -1,15 +1,9 @@
 # make an updated base image
 # `docker buildx build --tag updated_base-openjdk:21-jdk-slim --target update .`
-FROM openjdk:21-jdk-slim AS update
-RUN apt-get update -y && apt-get install maven -y
-
-# Base image for all stages
-# Started by docker-compose
-# Ensure you have the environment you want in `.env`.
-FROM updated_base-openjdk:21-jdk-slim AS base
-COPY --from=update / /
+FROM openjdk:21-jdk-slim AS base
 WORKDIR /app
 COPY . .
+RUN apt-get update -y && apt-get install maven -y
 
 # Development stage
 FROM base AS dev
