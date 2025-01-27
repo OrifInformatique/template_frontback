@@ -9,21 +9,23 @@
 Template to start developing a new REST API application with Spring Boot.
 
 # Table of Contents
-
-1. [Getting Started](#getting-started)
-   - [Prerequisites](#prerequisites)
-     - [Optional Tools](#optional-tools)
-   - [Application properties and .env](#application-properties-and-env)
-     - [application.properties](#applicationproperties)
-     - [.env](#env)
-2. [What's Next?](#whats-next)
-3. [Command Cheat-Sheet](#command-cheat-sheet)
-   - [Common Commands](#common-commands)
-4. [Docker](#docker)
-   - [Docker Cheat-Sheet](#docker-cheat-sheet)
-5. [Microsoft Entra / Azure AD oAuth2 Grant Flow](#microsoft-entra-azure-ad-oauth2-grant-flow)
-   - [Simplified Sequence Diagram](#simplified-sequence-diagram)
-6. [Sources](#sources)
+- [Spring template](#spring-template)
+- [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+      - [Optionnal](#optionnal)
+    - [`Application properties` and `.env`](#application-properties-and-env)
+      - [`application.properties`](#applicationproperties)
+      - [`.env`](#env)
+  - [What's next ?](#whats-next)
+  - [Command cheat-sheet](#command-cheat-sheet)
+  - [Docker](#docker)
+    - [Init project using docker](#init-project-using-docker)
+    - [Docker cheat-sheet](#docker-cheat-sheet)
+  - [.env](#env)
+  - [Microsoft Entra / Azure AD oAuth2 grant flow](#microsoft-entra-azure-ad-oauth2-grant-flow)
+    - [Simplified sequence diagram](#simplified-sequence-diagram)
+  - [Sources](#sources)
 
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -149,6 +151,8 @@ in `.env`.
 
 You can run a container in the background using the parameter `-d` with any
 commands.
+
+## .env
 
 ## Microsoft Entra / Azure AD oAuth2 grant flow
 

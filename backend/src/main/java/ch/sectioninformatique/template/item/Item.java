@@ -5,9 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
 import lombok.Data;
-
 /* @Data annotation from the Lombok library automatically adds getters and setters */
 @Data
 /* @Entity annotation indicates that this class corresponds to a database table */
