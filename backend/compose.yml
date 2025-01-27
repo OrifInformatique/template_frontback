@@ -1,15 +1,8 @@
 # Don't forget to run 
-#`docker buildx build --tag updated_base-openjdk:21-jdk-slim --target update .`
+# `docker compose up` with `ENVIRONMENT=base` set in `.env`
 # the first time you run this project!"
 
 services:
-  base:
-    container_name: "Spring-boot-update"
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: base
-
   app:
     container_name: "Spring-boot-${ENVIRONMENT}"
     build:

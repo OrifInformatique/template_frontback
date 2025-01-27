@@ -1,5 +1,4 @@
 # make an updated base image
-# `docker buildx build --tag updated_base-openjdk:21-jdk-slim --target update .`
 FROM openjdk:21-jdk-slim AS base
 WORKDIR /app
 COPY . .

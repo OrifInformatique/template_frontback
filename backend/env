@@ -4,7 +4,7 @@ ENVIRONMENT=base
 # WARN: Set your database production database in `application.proprieties`!
 
 # Local dev database (Local mariadb)
-DEV_SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/dev_db
+DEV_SPRING_DATASOURCE_URL=
 
 # Local OR cloud test database
-TEST_SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/test_db
+TEST_SPRING_DATASOURCE_URL=
