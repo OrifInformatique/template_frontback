@@ -123,18 +123,20 @@ A dedicated cheat-sheet is available in the [docker cheat-sheet](#docker-cheat-s
 sub-section.
 
 ### Init project using docker
-First, you need to build the base image from the project manually using this
-command:
+First, you need to build the base image from the project manually.
 
-`docker buildx build --tag updated_base-openjdk:21-jdk-slim --target update .`
+1. Make sure `ENVIRONMENT=base` is set in `.env` !
+2. In the `backend/` directory, use the command `docker compose build`
 
 This is to prevent you from having to update your container everytime you
 rebuilt the project.
 
-Now run `docker compose up --build` in the `backend/` directory.
+3. Set `ENVIRONMENT=dev` in `.env`.
+4. Now run `docker compose up --build` in the `backend/` directory.
+
 Wait for the updates to download and you're good to go.
-From now on, rebuilding the project *won't* update the container as a whole but
-only your project.
+From now on, set `ENVIRONMENT` to `base` *only* when you need to update Ubuntu.
+
 
 ### Docker cheat-sheet
 
