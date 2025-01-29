@@ -5,11 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import lombok.Data;
 
 /* @Data annotation from the Lombok library automatically adds getters and setters */
 @Data
+/* @Table annotation rename table name in the Database */
+@Table(name = "items")
 /* @Entity annotation indicates that this class corresponds to a database table */
 @Entity
 public class Item {
@@ -18,7 +21,7 @@ public class Item {
     @Id
     /* @GeneratedValue anotation indicates an auto-generated value */
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     /* In MariaDB, this will create a Varchar(255) field */
     private String name;
@@ -31,8 +34,15 @@ public class Item {
     public Item() {
         super();
     }
+    
     public Item(String name) {
         super();
         this.name = name;
+    }
+
+    public Item(String name, String description) {
+        super();
+        this.name = name;   
+        this.description = description;
     }
 }
