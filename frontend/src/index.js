@@ -8,6 +8,7 @@ import MainLayout from './layouts/main';
 // Modules
 import Home from './modules/home';
 import Contact from './modules/contact';
+import Login from './modules/login';
 
 // Utils
 import Redirect from './utils/Redirect'
@@ -25,6 +26,7 @@ root.render(<BrowserRouter basename={process.env.APP_ROOT}>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="login" element={<Login />} />
         <Route path="*" element={<Redirect to="/" />} />
       </Route>
 

@@ -10,6 +10,7 @@ public class oAuth2Controller {
 
     @GetMapping("/success")
     public String onAzureLoginSuccess() {
+        // TODO: redirect to REACT frontend
         return "Successful login with azure !";
     }
 }
