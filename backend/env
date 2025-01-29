@@ -1,5 +1,6 @@
-# base | dev | test | prod : see README for more info
-ENVIRONMENT=base
+# dev | test | prod : see README for more info
+# Remember to run `docker compose up --build` when changing environment
+ENVIRONMENT=dev
 
 # WARN: Set your database production database in `application.proprieties`!
 
