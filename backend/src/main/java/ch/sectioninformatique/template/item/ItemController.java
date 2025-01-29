@@ -57,7 +57,7 @@ public class ItemController {
     @GetMapping("/items/{id}")
     public Item getItemById(@PathVariable Long id) {
         return itemService.getItem(id)
-            .orElseThrow(() -> new ItemNotFoundException(id));
+            .orElseThrow(() -> new ItemException.ItemNotFoundException(id));
     }
     
     /**
@@ -76,8 +76,9 @@ public class ItemController {
      * @param id - The id of the item to update
      * @param item - The item to update
      * @return - The updated item
+     * @throws UnauthorizedItemUpdateException if the user doesn't have permission to update this item
      */
-    @PreAuthorize("hasAuthority('item:write')")
+    @PreAuthorize("hasAuthority('item:update')")
     @PutMapping("/items/{id}")
     public Item updateItem(@PathVariable Long id, @RequestBody Item item) {
         return itemService.updateItem(id, item);
@@ -87,7 +88,7 @@ public class ItemController {
      * Delete - Delete an item
      * @param id - The id of the item to delete
      */
-    @PreAuthorize("hasRole('ADMIN' || 'SUPER_ADMIN') && hasAuthority('item:write')")
+    @PreAuthorize("hasAuthority('item:delete')")
     @DeleteMapping("/items/{id}")
     public void deleteItem(@PathVariable Long id) {
         itemService.deleteItem(id);

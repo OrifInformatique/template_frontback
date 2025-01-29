@@ -59,7 +59,7 @@ public class SecurityConfiguration {
             "Access-Control-Request-Headers"
         ));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // 1 hour max age
+        configuration.setMaxAge(7200L); // 2 hours max age
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
