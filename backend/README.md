@@ -1,3 +1,4 @@
+
 # Spring template
 <p>
     <div style="text-align: center;">
@@ -21,8 +22,8 @@ Template to start developing a new REST API application with Spring Boot.
   - [Command cheat-sheet](#command-cheat-sheet)
   - [Docker](#docker)
     - [Init project using docker](#init-project-using-docker)
+    - [Do action from within Docker (CLI)](#do-action-from-within-docker-cli)
     - [Docker cheat-sheet](#docker-cheat-sheet)
-  - [.env](#env)
   - [Microsoft Entra / Azure AD oAuth2 grant flow](#microsoft-entra-azure-ad-oauth2-grant-flow)
     - [Simplified sequence diagram](#simplified-sequence-diagram)
   - [Sources](#sources)
@@ -123,38 +124,38 @@ A dedicated cheat-sheet is available in the [docker cheat-sheet](#docker-cheat-s
 sub-section.
 
 ### Init project using docker
-First, you need to build the base image from the project manually.
+First, you need to build the containers.
 
-1. Make sure `ENVIRONMENT=base` is set in `.env` !
+To build containers:
+
+1. Make sure `ENVIRONMENT=dev|test|prod` is set in `.env` !
 2. In the `backend/` directory, use the command `docker compose build`
 
-This is to prevent you from having to update your container everytime you
-rebuilt the project.
+Now that they have been built, you can start the containers with `docker compose up`
 
-3. Set `ENVIRONMENT=dev` in `.env`.
-4. Now run `docker compose up --build` in the `backend/` directory.
+Note that each time you change the `ENVIRONMENT` variable, you need to use
+the command `docker compose build`.
 
-Wait for the updates to download and you're good to go.
-From now on, set `ENVIRONMENT` to `base` *only* when you need to update Ubuntu.
+### Do action from within Docker (CLI)
 
+To manipulate your application from within a container, you simply need to
+enter it using the command `docker exec -it <container name> sh`.
+
+You're now using the container's terminal.
 
 ### Docker cheat-sheet
 
-**Build and start the container**
+**Build containers**
+`docker compose build`
 
+**Start containers**
 `docker compose up`
 
-**Just start the container**
+*run in background*
+`docker compose up -d`
 
-`docker compose up --build`
-
-No need to pass the target since docker-compose will fetch the one you declared
-in `.env`.
-
-You can run a container in the background using the parameter `-d` with any
-commands.
-
-## .env
+**Enter a container with shell**
+`docker exec -it <container name> sh`
 
 ## Microsoft Entra / Azure AD oAuth2 grant flow
 
