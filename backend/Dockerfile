@@ -1,5 +1,4 @@
 # Base stage
-# TODO: find a lightweight LTS docker image for maven 3.9.9
 FROM maven:3.9.9-amazoncorretto-21-alpine AS base
 WORKDIR /app
 
