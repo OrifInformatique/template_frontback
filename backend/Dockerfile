@@ -1,23 +1,32 @@
-# make an updated base image
-FROM openjdk:21-jdk-slim AS base
+# Base stage
+# TODO: find a lightweight LTS docker image for maven 3.9.9
+FROM maven:3.9.9-amazoncorretto-21-alpine AS base
 WORKDIR /app
-COPY . .
-RUN apt-get update -y && apt-get install maven -y
+
+# Copy only the POM file first
+COPY pom.xml .
+
+# Download dependencies
+RUN mvn dependency:go-offline -B
 
 # Development stage
 FROM base AS dev
-RUN echo -e "\033[0;32m====< Dev environment >====\033[0m"
-RUN mvn clean install -DskipTests
+# Copy the downloaded dependencies from the base stage
+COPY --from=base /root/.m2 /root/.m2
+# Copy the rest of your application code
+COPY . .
 CMD ["mvn", "spring-boot:run", "-DskipTests"]
 
 # Testing stage
 FROM base AS test
-RUN echo -e "\033[0;32m====< Run test without executing the app >====\033[0m"
-CMD ["mvn", "clean test"]
+COPY . .
+CMD ["mvn", "test"]
 
 # Production stage
 FROM base AS prod
-RUN mvn build
+COPY . .
+RUN mvn clean package -DskipTests
 COPY --from=base /app/target/*.jar app.jar
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
+
