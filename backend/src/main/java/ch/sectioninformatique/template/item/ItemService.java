@@ -10,12 +10,16 @@ import ch.sectioninformatique.template.user.User;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /* @Service annotation indicates that the class is a business layer Bean, used as a bridge
  *          between repository and controller.
  */
 @Service
 public class ItemService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ItemService.class);
 
     @Autowired
     private ItemRepository itemRepository;
@@ -66,7 +70,6 @@ public class ItemService {
         
         return itemRepository.findById(id)
             .map(item -> {
-                // Check permissions based on authorities
                 boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
                 
