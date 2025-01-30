@@ -1,4 +1,4 @@
-package ch.sectioninformatique.packbase.item;
+package ch.sectioninformatique.template.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -18,9 +18,9 @@ public class ItemSeeder implements CommandLineRunner {
 
     private void loadItemData() {
         if (itemRepository.count() == 0) {
-            Item item1 = new Item("Premier objet");
-            Item item2 = new Item("Deuxième objet");
-            Item item3 = new Item("Troisième objet");
+            Item item1 = new Item("Premier objet", "Description du premier objet");
+            Item item2 = new Item("Deuxième objet", "Description du deuxième objet");
+            Item item3 = new Item("Troisième objet", "Description du troisième objet");
 
             itemRepository.save(item1);
             itemRepository.save(item2);

@@ -1,4 +1,4 @@
-package ch.sectioninformatique.packbase.item;
+package ch.sectioninformatique.template.item;
 
 public class ItemNotFoundException extends RuntimeException {
   
