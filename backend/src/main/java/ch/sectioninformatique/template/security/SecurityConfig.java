@@ -20,11 +20,11 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class SecurityConfiguration {
+public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfiguration(
+    public SecurityConfig(
         JwtAuthenticationFilter jwtAuthenticationFilter,
         AuthenticationProvider authenticationProvider
     ) {
@@ -60,7 +60,7 @@ public class SecurityConfiguration {
             "Access-Control-Request-Headers"
         ));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(7200L); // 2 hours max age
+        configuration.setMaxAge(3600L); // 1 hour max age
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 

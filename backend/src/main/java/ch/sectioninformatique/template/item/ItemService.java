@@ -10,16 +10,12 @@ import ch.sectioninformatique.template.user.User;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /* @Service annotation indicates that the class is a business layer Bean, used as a bridge
  *          between repository and controller.
  */
 @Service
 public class ItemService {
-
-    private static final Logger logger = LoggerFactory.getLogger(ItemService.class);
 
     @Autowired
     private ItemRepository itemRepository;
@@ -67,20 +63,20 @@ public class ItemService {
 
     public Item updateItem(Long id, Item newItem) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication.getName();
+        
+        // Get the current user
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+            .orElseThrow(() -> new RuntimeException("User not found"));
         
         return itemRepository.findById(id)
             .map(item -> {
                 boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
-                
-                System.out.println("isAdmin: " + isAdmin);
-                System.out.println("isSuperAdmin: " + isSuperAdmin);
 
                 if (!isAdmin && !isSuperAdmin) {
-                    // Pour les utilisateurs normaux, vérifier s'ils sont l'auteur
-                    String currentUsername = authentication.getName();
-                    // Correction ici : comparer avec l'email de l'auteur
-                    if (!item.getAuthor().getEmail().equals(currentUsername)) {
+                    // Compare the IDs of the users
+                    if (item.getAuthor().getId() != currentUser.getId()) {
                         throw new ItemException.UnauthorizedItemUpdateException("You can only update your own items");
                     }
                 } 
