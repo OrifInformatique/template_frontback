@@ -53,13 +53,36 @@ public class ItemService {
     }
 
     public void deleteItem(final Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication.getName();
+        
+        // Récupérer l'utilisateur connecté
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Récupérer l'item à supprimer
+        Item item = itemRepository.findById(id)
+            .orElseThrow(() -> new ItemException.ItemNotFoundException(id));
+        
+        // Vérifier les permissions
+        boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+        
+        // Si pas admin/superadmin, vérifier si l'utilisateur est l'auteur
+        if (!isAdmin && !isSuperAdmin) {
+            if (item.getAuthor().getId() != currentUser.getId()) {
+                throw new ItemException.UnauthorizedItemUpdateException("Vous ne pouvez supprimer que vos propres items");
+            }
+        }
+        
+        // Si tout est OK, supprimer l'item
         itemRepository.deleteById(id);
     }
 
-    public Item saveItem(Item item) {
+/*     public Item saveItem(Item item) {
         Item savedItem = itemRepository.save(item);
         return savedItem;
-    }
+    } */
 
     public Item updateItem(Long id, Item newItem) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

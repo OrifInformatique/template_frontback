@@ -47,4 +47,39 @@ public class UserService {
 
         return userRepository.save(user);
     }
+
+    public void promoteToAdmin(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            
+        // Vérifier que l'utilisateur n'est pas déjà admin
+        if (user.getRole().getName().equals(RoleEnum.ADMIN)) {
+            throw new RuntimeException("L'utilisateur est déjà admin");
+        }
+        
+        // Récupérer le rôle ADMIN
+        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
+            .orElseThrow(() -> new RuntimeException("Rôle ADMIN non trouvé"));
+            
+        // Mettre à jour le rôle
+        user.getRoles().clear();
+        user.getRoles().add(adminRole);
+        userRepository.save(user);
+    }
+
+    public void revokeAdminRole(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        
+        if (user.getRole().getName().equals(RoleEnum.USER)) {
+            throw new RuntimeException("L'utilisateur est déjà un utilisateur");
+        }
+
+        Role userRole = roleRepository.findByName(RoleEnum.USER)
+            .orElseThrow(() -> new RuntimeException("Rôle USER non trouvé"));
+
+        user.getRoles().clear();
+        user.getRoles().add(userRole);
+        userRepository.save(user);
+    }
 }

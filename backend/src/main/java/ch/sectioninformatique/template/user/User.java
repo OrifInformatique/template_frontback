@@ -62,9 +62,16 @@ public class User implements UserDetails {
         super();
     }
 
-    public User(long id, String firstName, String lastName, String email,
-                String password, Date createdAt, Date updatedAt,
-                Set<Role> roles)
+    public User(long id,
+                String firstName, 
+                String lastName, 
+                String email,
+                String password, 
+                Date createdAt, 
+                Date updatedAt,
+                Set<Role> roles
+                )
+                
     {
         super();
         this.id = id;
@@ -106,5 +113,9 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public Role getRole() {
+       return roles.iterator().next();
     }
 }

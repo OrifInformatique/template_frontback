@@ -2,6 +2,8 @@ package ch.sectioninformatique.template.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 /* import org.springframework.security.access.prepost.PostAuthorize; */
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import ch.sectioninformatique.template.item.ItemException.UnauthorizedItemUpdateException;
+import jakarta.servlet.http.HttpServletRequest;
+import ch.sectioninformatique.template.jwt.JwtService;
 
 /* @RestController annotation indicates that the class is a Bean.
  *                 Indicates that returned datas have to be in JSON format in the http response's body
@@ -23,6 +29,9 @@ public class ItemController {
 
     @Autowired
     private Environment environment;
+
+    @Autowired
+    private JwtService jwtService;
 
     /**
      * Return some text informations to show that the application is running
@@ -68,7 +77,7 @@ public class ItemController {
     @PreAuthorize("hasAuthority('item:write')")
     @PostMapping("/items")
     public Item createItem(@RequestBody Item item) {
-        return itemService.saveItem(item);
+        return itemService.createItem(item);
     }
 
     /**
@@ -88,9 +97,34 @@ public class ItemController {
      * Delete - Delete an item
      * @param id - The id of the item to delete
      */
-    @PreAuthorize("hasAuthority('item:delete')")
+    @PreAuthorize("hasAuthority('item:delete') || ((hasRole('ROLE_USER') || hasRole('ROLE_ADMIN')) && hasAuthority('item:write'))")
     @DeleteMapping("/items/{id}")
     public void deleteItem(@PathVariable Long id) {
         itemService.deleteItem(id);
+    }
+
+    /**
+     * Exemple de méthode pour décoder un token
+     */
+    @GetMapping("/decode-token")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> decodeToken(HttpServletRequest request) {
+        try {
+            // Récupérer le token du header Authorization
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+
+                String userEmail = jwtService.extractUsername(token);
+                
+                return ResponseEntity.ok(userEmail);
+            }
+            
+            return ResponseEntity.badRequest().body("Token non trouvé");
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur lors du décodage du token: " + e.getMessage());
+        }
     }
 }
