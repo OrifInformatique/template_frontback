@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * RoleRepository interface extends CrudRepository to provide CRUD operations for the Role entity.
+ */
 @Repository
 public interface RoleRepository extends CrudRepository<Role, Long> {
     Optional<Role> findByName(RoleEnum name);

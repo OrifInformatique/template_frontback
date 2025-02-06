@@ -10,6 +10,9 @@ import org.springframework.core.annotation.Order;
 
 import java.util.Optional;
 
+/**
+ * UserSeeder class is used to seed the database with users.
+ */
 @Component
 @Order(2)
 public class UserSeeder implements CommandLineRunner {
@@ -18,6 +21,13 @@ public class UserSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
+    /**
+     * Constructor for UserSeeder.
+     * 
+     * @param userRepository The user repository
+     * @param passwordEncoder The password encoder
+     * @param roleRepository The role repository
+     */
     public UserSeeder(UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         RoleRepository roleRepository)
@@ -27,6 +37,12 @@ public class UserSeeder implements CommandLineRunner {
         this.roleRepository = roleRepository;
     }
 
+    /**
+     * Run the UserSeeder.
+     * 
+     * @param args The command line arguments
+     * @throws Exception If an error occurs
+     */
     @Override
     public void run(String... args) throws Exception {
         System.out.println("Starting User Seeding...");
@@ -34,6 +50,9 @@ public class UserSeeder implements CommandLineRunner {
         System.out.println("User Seeding completed.");
     }
 
+    /**
+     * Load user data into the database.
+     */
     private void loadUserData() {
         if (this.userRepository.count() == 0) {
             Optional<Role> optionalRole = this.roleRepository.findByName(RoleEnum.USER);
@@ -43,8 +62,26 @@ public class UserSeeder implements CommandLineRunner {
                 return;
             }
 
+			/**
+			 * Get the user role, admin role and super admin role.
+			 */
             Role userRole = optionalRole.get();
+            Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
+                    .orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
+            Role superAdminRole = roleRepository.findByName(RoleEnum.SUPER_ADMIN)
+                    .orElseThrow(() -> new RuntimeException("Role SUPER_ADMIN not found"));
             
+			/**
+			 * Create different profiles (users).
+			 */
+            User user0 = new UserBuilder()
+                    .setFirstName("deleted")
+                    .setLastName("user")
+                    .setEmail("deleted.user@test.com")
+                    .setPassword(this.passwordEncoder.encode("NoN33dPassword@nymore!"))
+                    .addRole(userRole)
+                    .build();                   
+
             User user1 = new UserBuilder()
                     .setFirstName("John")
                     .setLastName("DOE")
@@ -59,7 +96,7 @@ public class UserSeeder implements CommandLineRunner {
                     .setEmail("jane.smith@test.com")
                     .setPassword(this.passwordEncoder
                             .encode("Complex#789Pwd"))
-                    .addRole(userRole)
+                    .addRole(adminRole)
                     .build();
 
             User user3 = new UserBuilder()
@@ -98,12 +135,22 @@ public class UserSeeder implements CommandLineRunner {
                     .addRole(userRole)
                     .build();
 
+            User user7 = new UserBuilder()
+                    .setFirstName("Super")
+                    .setLastName("Admin")
+                    .setEmail("super.admin@test.com")
+                    .setPassword(this.passwordEncoder.encode("ReallySecure123@PassWordBecauseIWantToBeSuperSafe"))
+                    .addRole(superAdminRole)
+                    .build();
+
+			this.userRepository.save(user0);
             this.userRepository.save(user1);
             this.userRepository.save(user2);
             this.userRepository.save(user3);
             this.userRepository.save(user4);
             this.userRepository.save(user5);
             this.userRepository.save(user6);
+            this.userRepository.save(user7);
         } else {
             System.out.println("Users table not empty - Skipping user seeding");
         }

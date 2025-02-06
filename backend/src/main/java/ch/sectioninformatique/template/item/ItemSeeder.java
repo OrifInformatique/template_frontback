@@ -22,21 +22,36 @@ public class ItemSeeder implements CommandLineRunner {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Run the item seeder
+     * 
+     * @param args The arguments
+     * @throws Exception The exception
+     */
     @Override
     public void run(String... args) throws Exception {
         loadItemData();
     }
 
+    /**
+     * Load the item data
+     * Get all users except the "deleted user" (ID 1)
+     * Create items with random authors (except the "deleted user")
+     */
     private void loadItemData() {
         if (itemRepository.count() == 0) {
-            // Récupérer tous les utilisateurs une seule fois
+
             var users = new ArrayList<User>();
-            userRepository.findAll().forEach(users::add);
+            userRepository.findAll().forEach(user -> {
+                if (user.getId() != 1L) {  
+                    users.add(user);
+                }
+            });
+
             if (users.isEmpty()) {
                 throw new RuntimeException("Aucun utilisateur trouvé pour créer les items");
             }
 
-            // Créer une liste d'items avec leurs données
             var itemsData = List.of(
                 new String[]{"Premier objet", "Description du premier objet"},
                 new String[]{"Deuxième objet", "Description du deuxième objet"},
@@ -60,9 +75,7 @@ public class ItemSeeder implements CommandLineRunner {
                 new String[]{"Vingtième objet", "Description du vingtième objet"}
             );
 
-            // Créer et sauvegarder les items
             itemsData.forEach(data -> {
-                // Choisir un utilisateur aléatoire comme auteur
                 User randomAuthor = users.get(new Random().nextInt(users.size()));
                 
                 Item item = new ItemBuilder()

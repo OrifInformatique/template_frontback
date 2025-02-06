@@ -27,68 +27,81 @@ public class ItemService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Create an item
+     * 
+     * @param newItem The item to create
+     * @return The created item
+     */
     public Item createItem(Item newItem) {
-        // Récupérer l'utilisateur authentifié
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserEmail = authentication.getName();
         
-        // Récupérer l'utilisateur depuis la base de données
         User author = userRepository.findByEmail(currentUserEmail)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Assigner l'auteur à l'item
         newItem.setAuthor(author);
         
-        // Sauvegarder l'item
         return itemRepository.save(newItem);
     }
 
-
+    /**
+     * Get an item by its id
+     * 
+     * @param id The id of the item
+     * @return The item
+     */
     public Optional<Item> getItem(final Long id) {
         return itemRepository.findById(id);
     }
 
+    /**
+     * Get all items
+     * 
+     * @return The items
+     */
     public Iterable<Item> getItems() {
         return itemRepository.findAll();
     }
 
+    /**
+     * Delete an item
+     * 
+     * @param id The id of the item
+     */
     public void deleteItem(final Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserEmail = authentication.getName();
         
-        // Récupérer l'utilisateur connecté
         User currentUser = userRepository.findByEmail(currentUserEmail)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Récupérer l'item à supprimer
         Item item = itemRepository.findById(id)
             .orElseThrow(() -> new ItemException.ItemNotFoundException(id));
         
-        // Vérifier les permissions
         boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
         boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
         
-        // Si pas admin/superadmin, vérifier si l'utilisateur est l'auteur
         if (!isAdmin && !isSuperAdmin) {
             if (item.getAuthor().getId() != currentUser.getId()) {
-                throw new ItemException.UnauthorizedItemUpdateException("Vous ne pouvez supprimer que vos propres items");
+                throw new ItemException.UnauthorizedItemUpdateException("You can only delete your own items");
             }
         }
         
-        // Si tout est OK, supprimer l'item
         itemRepository.deleteById(id);
     }
 
-/*     public Item saveItem(Item item) {
-        Item savedItem = itemRepository.save(item);
-        return savedItem;
-    } */
-
+    /**
+     * Update an item
+     * 
+     * @param id The id of the item
+     * @param newItem The new item
+     * @return The updated item
+     */
     public Item updateItem(Long id, Item newItem) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserEmail = authentication.getName();
         
-        // Get the current user
         User currentUser = userRepository.findByEmail(currentUserEmail)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
@@ -98,7 +111,6 @@ public class ItemService {
                 boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
 
                 if (!isAdmin && !isSuperAdmin) {
-                    // Compare the IDs of the users
                     if (item.getAuthor().getId() != currentUser.getId()) {
                         throw new ItemException.UnauthorizedItemUpdateException("You can only update your own items");
                     }
@@ -106,6 +118,7 @@ public class ItemService {
                 
                 item.setName(newItem.getName());
                 item.setDescription(newItem.getDescription());
+                item.setAuthor(currentUser);
                 return itemRepository.save(item);
             })
             .orElseThrow(() -> new ItemException.ItemNotFoundException(id));

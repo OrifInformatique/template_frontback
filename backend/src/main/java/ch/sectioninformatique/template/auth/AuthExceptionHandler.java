@@ -17,6 +17,12 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class AuthExceptionHandler {
+    /**
+     * Handle security exceptions
+     * 
+     * @param exception The security exception
+     * @return The error detail
+     */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleSecurityException(Exception exception) {
         ProblemDetail errorDetail = null;
@@ -58,6 +64,12 @@ public class AuthExceptionHandler {
         return errorDetail;
     }
 
+    /**
+     * Handle validation exceptions
+     * 
+     * @param ex The validation exception
+     * @return The validation errors
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();

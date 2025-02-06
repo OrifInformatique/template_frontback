@@ -5,15 +5,11 @@ import lombok.Data;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Email;
-/* Pattern is used to validate the password, contains a regex and message */
 import jakarta.validation.constraints.Pattern;
-/* 
-import jakarta.validation.constraints.regexp;
-import jakarta.validation.constraints.message;
-*/
 
-/* @Data annotation from the Lombok library automatically adds getters and setters */
-
+/**
+ * Data transfer object for the registration request
+ */
 @Data
 public class RegisterUserDto {
     @NotNull(message = "Le prénom est requis")
@@ -46,7 +42,14 @@ public class RegisterUserDto {
 
     public RegisterUserDto() {
     }
-
+    /**
+     * Constructor for the RegisterUserDto class
+     * 
+     * @param firstName The first name of the user
+     * @param lastName The last name of the user
+     * @param email The email of the user
+     * @param password The password of the user
+     */
     public RegisterUserDto(String firstName, String lastName, String email, String password) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -54,21 +57,45 @@ public class RegisterUserDto {
         this.password = password;
     }
 
+    /**
+     * Set the first name of the user
+     * 
+     * @param firstName The first name of the user
+     * @return The RegisterUserDto object
+     */
     public RegisterUserDto setFirstName(String firstName) {
         this.firstName = firstName;
         return this;
     }
 
+    /**
+     * Set the last name of the user
+     * 
+     * @param lastName The last name of the user
+     * @return The RegisterUserDto object
+     */
     public RegisterUserDto setLastName(String lastName) {
         this.lastName = lastName;
         return this;
     }
 
+    /**
+     * Set the email of the user
+     * 
+     * @param email The email of the user
+     * @return The RegisterUserDto object
+     */
     public RegisterUserDto setEmail(String email) {
         this.email = email;
         return this;
     }
 
+    /**
+     * Set the password of the user
+     * 
+     * @param password The password of the user
+     * @return The RegisterUserDto object
+     */
     public RegisterUserDto setPassword(String password) {
         this.password = password;
         return this;

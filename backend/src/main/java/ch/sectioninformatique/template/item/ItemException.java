@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 
 public class ItemException {
      
+    /**
+     * Exception for the item not found
+     */
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public static class ItemNotFoundException extends RuntimeException {
         public ItemNotFoundException(Long id) {
@@ -14,6 +17,9 @@ public class ItemException {
         }
     }
 
+    /**
+     * Exception for the unauthorized item update
+     */
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public static class UnauthorizedItemUpdateException extends RuntimeException {
         public UnauthorizedItemUpdateException(String message) {
@@ -21,6 +27,9 @@ public class ItemException {
         }
     }
 
+    /**
+     * Error response for the item exception
+     */
     private static class ErrorResponse {
         @JsonProperty("status")
         private final int status;
@@ -31,6 +40,12 @@ public class ItemException {
         @JsonProperty("message")
         private final String message;
 
+        /**
+         * Constructor for the ErrorResponse class
+         * 
+         * @param status The status of the error
+         * @param message The message of the error
+         */
         public ErrorResponse(HttpStatus status, String message) {
             this.status = status.value();
             this.error = status.getReasonPhrase();
@@ -38,6 +53,9 @@ public class ItemException {
         }
     }
 
+    /**
+     * Exception handler for the item exception
+     */
     @ControllerAdvice
     public static class ItemExceptionHandler {
         @ExceptionHandler(ItemNotFoundException.class)

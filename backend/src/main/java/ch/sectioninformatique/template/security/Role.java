@@ -12,6 +12,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Role class represents the roles available in the application.
+ */
 @Entity
 @Table(name = "roles")
 @Setter
@@ -38,7 +41,7 @@ public class Role {
     private Date updatedAt;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
-    @JsonIgnore // avoid infinite recursion on print
+    @JsonIgnore
     private Set<User> users = new HashSet<>();
 }
 

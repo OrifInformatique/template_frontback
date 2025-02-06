@@ -19,6 +19,9 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
+/**
+ * JwtAuthenticationFilter class extends OncePerRequestFilter to filter requests based on JWT authentication.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -26,6 +29,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
+    /**
+     * Constructor for the JwtAuthenticationFilter class
+     * 
+     * @param jwtService The JwtService
+     * @param userDetailsService The UserDetailsService
+     * @param handlerExceptionResolver The HandlerExceptionResolver
+     */
     @Autowired
     public JwtAuthenticationFilter(
         JwtService jwtService,
@@ -37,6 +47,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.handlerExceptionResolver = handlerExceptionResolver;
     }
 
+    /**
+     * Filter the request to check for JWT authentication.
+     * 
+     * @param request The HTTP request
+     * @param response The HTTP response
+     * @param filterChain The filter chain
+     * @throws ServletException If a servlet exception occurs
+     * @throws IOException If an I/O error occurs
+     */
     @Override
     protected void doFilterInternal(
         @NonNull HttpServletRequest request,

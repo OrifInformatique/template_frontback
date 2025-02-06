@@ -32,6 +32,15 @@ public class AuthService {
 
     private final Validator validator;
 
+    /**
+     * Constructor for the AuthService class
+     * 
+     * @param userRepository The user repository
+     * @param authenticationManager The authentication manager
+     * @param passwordEncoder The password encoder
+     * @param roleRepository The role repository
+     * @param validator The validator
+     */
     public AuthService(
             UserRepository userRepository,
             AuthenticationManager authenticationManager,
@@ -45,6 +54,12 @@ public class AuthService {
         this.validator = validator;
     }
 
+    /**
+     * Sign up a new user
+     * 
+     * @param registerUserDto The registration data for the user
+     * @return The registered user
+     */
     public User signup(@Valid RegisterUserDto registerUserDto) {
         var violations = validator.validate(registerUserDto);
         if (!violations.isEmpty()) {
@@ -66,6 +81,12 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+    /**
+     * Authenticate a user
+     * 
+     * @param request The login data for the user
+     * @return The authenticated user
+     */
     public User authenticate(LoginUserDto request) {
         try {
             Authentication authentication = authenticationManager.authenticate(

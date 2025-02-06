@@ -17,6 +17,9 @@ import ch.sectioninformatique.template.jwt.JwtAuthenticationFilter;
 
 import java.util.List;
 
+/**
+ * SecurityConfig class provides configuration for Spring Security.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -24,6 +27,12 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /**
+     * Constructor for the SecurityConfig class
+     * 
+     * @param jwtAuthenticationFilter The JwtAuthenticationFilter
+     * @param authenticationProvider The AuthenticationProvider
+     */
     public SecurityConfig(
         JwtAuthenticationFilter jwtAuthenticationFilter,
         AuthenticationProvider authenticationProvider
@@ -32,6 +41,13 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    /**
+     * Configure the security filter chain.
+     * 
+     * @param http The HttpSecurity object
+     * @return The SecurityFilterChain
+     * @throws Exception If an error occurs
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -44,6 +60,11 @@ public class SecurityConfig {
             .build();
     }
 
+    /**
+     * Configure the CORS configuration source.
+     * 
+     * @return The CorsConfigurationSource
+     */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
