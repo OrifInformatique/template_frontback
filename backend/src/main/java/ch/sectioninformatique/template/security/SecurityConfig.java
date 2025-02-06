@@ -1,6 +1,5 @@
 package ch.sectioninformatique.template.security;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,7 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((requests) -> requests
                         // Allow unauthenticated access to login and OAuth2 endpoints
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
-                        .requestMatchers("/auth/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/oauth2/**").permitAll()
                         // Require authentication for all other requests
                         .anyRequest().authenticated())
                 // Configure OAuth2 login
