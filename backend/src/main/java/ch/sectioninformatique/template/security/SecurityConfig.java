@@ -33,12 +33,12 @@ public class SecurityConfig {
                 // Disable CSRF (not needed for stateless APIs)
                 .csrf(AbstractHttpConfigurer::disable)
                 // Set session management to stateless (no sessions)
-                .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 // Configure authorization rules
                 .authorizeHttpRequests((requests) -> requests
-                        // Allow unauthenticated access to login and OAuth2 endpoints
+                        // Allow unauthenticated access to login, register, and OAuth2 endpoints
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/oauth2/**", "/login/oauth2/**", "/auth/success", "/oauth2/success").permitAll()
                         // Require authentication for all other requests
                         .anyRequest().authenticated())
                 // Configure OAuth2 login
