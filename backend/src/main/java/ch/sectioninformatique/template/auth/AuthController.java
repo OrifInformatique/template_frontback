@@ -38,9 +38,4 @@ public class AuthController {
         createdUser.setToken(userAuthenticationProvider.createToken(createdUser));
         return ResponseEntity.created(URI.create("/users/" + createdUser.getId())).body(createdUser);
     }
-
-    @GetMapping("/success")
-    public String onLoginSuccess() {
-        return "Successful login with spring security !";
-    }
 }
