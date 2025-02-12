@@ -38,10 +38,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests((requests) -> requests
                         // Allow unauthenticated access to login, register, and OAuth2 endpoints
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/oauth2/**", "/login/oauth2/**", "/auth/success", "/oauth2/success").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/oauth2/**", "/login/oauth2/**", "/auth/success",
+                                "/oauth2/success")
+                        .permitAll()
                         // Require authentication for all other requests
                         .anyRequest().authenticated())
                 // Configure OAuth2 login
+                // `<base_URL>/oauth2/authorization/<registrationId>` is used by `.oauth2Login`
+                // ^^^^ This is the "redirect URI" ^^^^
                 .oauth2Login(oauth2 -> oauth2
                         // Redirect to a success URL after OAuth2 login
                         .defaultSuccessUrl("/oauth2/success", true));
