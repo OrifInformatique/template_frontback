@@ -7,9 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 
-/**
- * Data transfer object for the registration request
- */
+/* @Data annotation from the Lombok library automatically adds getters and setters */
 @Data
 public class RegisterUserDto {
     @NotNull(message = "Le prénom est requis")
