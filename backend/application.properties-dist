@@ -40,3 +40,6 @@
 # logging.level.root=
 # logging.level.ch.sectioninformatique=
 # logging.level.org.springframework.boot.web.embedded.tomcat=
+
+### JWT configuration ###
+security.jwt.token.secret-key=
