@@ -35,7 +35,7 @@ public class ItemController {
     @GetMapping("/")
     public String getHello() {
         return "<strong>Hello World !</strong><br>" +
-               "<strong>JAreq_0891d0baeaa243dba3ac7683936cb32dVA_HOME : </strong>" + environment.getProperty("JAVA_HOME") + "<br>" +
+               "<strong>JAVA_HOME : </strong>" + environment.getProperty("JAVA_HOME") + "<br>" +
                "<strong>Spring active profile : </strong>" + environment.getProperty("spring.profiles.active") + "<br>" +
                "<strong>Database used : </strong>" + environment.getProperty("spring.datasource.url");
     }
