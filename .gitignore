@@ -4,5 +4,5 @@ application.properties
 ### VS Code ###
 .vscode/
 
-### TODO checklist ###
-TODO.md
+### Cursor IDE ###
+.cursor
