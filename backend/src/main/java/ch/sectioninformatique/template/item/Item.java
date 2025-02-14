@@ -1,48 +1,58 @@
 package ch.sectioninformatique.template.item;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
+import jakarta.persistence.*;
+import ch.sectioninformatique.template.user.User;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-/* @Data annotation from the Lombok library automatically adds getters and setters */
+import java.util.Date;
+
+/**
+ * Data transfer object for the item
+ */
 @Data
-/* @Table annotation rename table name in the Database */
 @Table(name = "items")
-/* @Entity annotation indicates that this class corresponds to a database table */
 @Entity
 public class Item {
 
-    /* @Id annotation indicates the table's primary key */
     @Id
-    /* @GeneratedValue anotation indicates an auto-generated value */
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    /* In MariaDB, this will create a Varchar(255) field */
     private String name;
 
-    /* In MariaDB, this will create a Varchar(1000) field */
     @Column(length=1000)
     private String description;
 
-    /* Constructors */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "author_id")
+    private User author;
+
+    @CreationTimestamp
+    @Column(updatable = false, name = "created_at")
+    private Date createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Date updatedAt;
+
+    /**
+     * Constructor for the Item class
+     */
     public Item() {
-        super();
     }
     
-    public Item(String name) {
-        super();
-        this.name = name;
-    }
-
-    public Item(String name, String description) {
-        super();
+    /**
+     * Constructor for the Item class
+     * 
+     * @param name The name of the item
+     * @param description The description of the item
+     * @param author The author of the item
+     */
+    public Item(String name, String description, User author) {
         this.name = name;   
         this.description = description;
+        this.author = author;
     }
 }
