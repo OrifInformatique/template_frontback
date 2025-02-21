@@ -20,36 +20,41 @@ import ch.sectioninformatique.template.user.UserAuthenticationProvider;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final UserAuthenticationEntryPoint userAuthenticationEntryPoint;
-    private final UserAuthenticationProvider userAuthenticationProvider;
+  private final UserAuthenticationEntryPoint userAuthenticationEntryPoint;
+  private final UserAuthenticationProvider userAuthenticationProvider;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // Exception handling for authentication failures
-                .exceptionHandling(customizer -> customizer.authenticationEntryPoint(userAuthenticationEntryPoint))
-                // Add JWT filter before Basic Authentication
-                .addFilterBefore(new JwtAuthFilter(userAuthenticationProvider), BasicAuthenticationFilter.class)
-                // Disable CSRF (not needed for stateless APIs)
-                .csrf(AbstractHttpConfigurer::disable)
-                // Set session management to stateless (no sessions)
-                .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                // Configure authorization rules
-                .authorizeHttpRequests((requests) -> requests
-                        // Allow unauthenticated access to login, register, and OAuth2 endpoints
-                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/oauth2/**", "/login/oauth2/**", "/auth/success",
-                                "/oauth2/success")
-                        .permitAll()
-                        // Require authentication for all other requests
-                        .anyRequest().authenticated())
-                // Configure OAuth2 login
-                // `<base_URL>/oauth2/authorization/<registrationId>` is used by `.oauth2Login`
-                // ^^^^ This is the "redirect URI" ^^^^
-                .oauth2Login(oauth2 -> oauth2
-                        // Redirect to a success URL after OAuth2 login
-                        .defaultSuccessUrl("/oauth2/success", true));
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        // Exception handling for authentication failures
+        .exceptionHandling(customizer -> customizer
+            .authenticationEntryPoint(userAuthenticationEntryPoint))
+        // Add JWT filter before Basic Authentication
+        .addFilterBefore(new JwtAuthFilter(userAuthenticationProvider),
+            BasicAuthenticationFilter.class)
+        // Disable CSRF (not needed for stateless APIs)
+        .csrf(AbstractHttpConfigurer::disable)
+        // Set session management to stateless (no sessions)
+        .sessionManagement(customizer -> customizer
+            .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+        // Configure authorization rules
+        .authorizeHttpRequests((requests) -> requests
+            // Allow unauthenticated access to login, register, and OAuth2 endpoints
+            .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register")
+            .permitAll()
+            .requestMatchers(HttpMethod.GET, "/oauth2/**", "/login/oauth2/**",
+                "/auth/success",
+                "/oauth2/success")
+            .permitAll()
+            // Require authentication for all other requests
+            .anyRequest().authenticated())
+        // Configure OAuth2 login
+        // `<base_URL>/oauth2/authorization/<registrationId>` is used by `.oauth2Login`
+        // ^^^^ This is the "redirect URI" ^^^^
+        .oauth2Login(oauth2 -> oauth2
+            // Redirect to a success URL after OAuth2 login
+            .defaultSuccessUrl("/oauth2/success", true));
 
-        return http.build();
-    }
+    return http.build();
+  }
 }
