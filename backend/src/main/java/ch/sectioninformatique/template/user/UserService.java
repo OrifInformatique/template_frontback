@@ -90,7 +90,7 @@ public class UserService {
      * @throws RuntimeException if the user is a super admin
      * @throws RuntimeException if the admin role is not found
      */
-    public void promoteToAdmin(Long userId) {
+    public UserDto promoteToAdmin(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
             
@@ -107,6 +107,7 @@ public class UserService {
         user.getRoles().clear();
         user.getRoles().add(adminRole);
         userRepository.save(user);
+        return userMapper.toUserDto(user);
     }
 
     /**
@@ -144,7 +145,7 @@ public class UserService {
      * @throws RuntimeException if the user is already a super admin
      * @throws RuntimeException if the super admin role is not found
      */
-    public void promoteToSuperAdmin(Long userId) {
+    public UserDto promoteToSuperAdmin(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -158,6 +159,7 @@ public class UserService {
         user.getRoles().clear();
         user.getRoles().add(superAdminRole);
         userRepository.save(user);
+        return userMapper.toUserDto(user);
     }
 
     /**

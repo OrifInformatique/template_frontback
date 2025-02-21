@@ -2,8 +2,13 @@ package ch.sectioninformatique.template.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /* @RestController annotation indicates that the class is a Bean.
@@ -24,6 +29,7 @@ public class ItemController {
      * 
      * @return - A String
      */
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/")
     public String getHello() {
         return "<strong>Hello World !</strong><br>" +
@@ -36,6 +42,7 @@ public class ItemController {
      * Read - Get all items
      * @return - An Iterable object of Items full filled
      */
+    @PreAuthorize("hasAuthority('item:read')")
     @GetMapping("/items")
     public Iterable<Item> getItems() {
         return itemService.getItems();
@@ -45,10 +52,44 @@ public class ItemController {
      * Read - Get one item by id
      * @return - A single item object
      */
+    @PreAuthorize("hasAuthority('item:read')")
     @GetMapping("/items/{id}")
     public Item getItemById(@PathVariable Long id) {
-        /* Try to get the corresponding item, else throw an exception */
         return itemService.getItem(id)
             .orElseThrow(() -> new ItemNotFoundException(id));
+    }
+    
+    /**
+     * Create - Add a new item
+     * @param item - The item to create
+     * @return - The created item
+     */
+    @PreAuthorize("hasAuthority('item:write')")
+    @PostMapping("/items")
+    public Item createItem(@RequestBody Item item) {
+        return itemService.createItem(item);
+    }
+
+    /**
+     * Update - Update an item
+     * @param id - The id of the item to update
+     * @param item - The item to update
+     * @return - The updated item with actual author and
+     * @throws UnauthorizedItemUpdateException if the user doesn't have permission to update this item
+     */
+    @PreAuthorize("hasAuthority('item:update')")
+    @PutMapping("/items/{id}")
+    public Item updateItem(@PathVariable Long id, @RequestBody Item item) {
+        return itemService.updateItem(id, item);
+    }
+
+    /**
+     * Delete - Delete an item
+     * @param id - The id of the item to delete
+     */
+    @PreAuthorize("hasAuthority('item:delete') || ((hasRole('ROLE_USER') || hasRole('ROLE_ADMIN')) && hasAuthority('item:write'))")
+    @DeleteMapping("/items/{id}")
+    public void deleteItem(@PathVariable Long id) {
+        itemService.deleteItem(id);
     }
 }

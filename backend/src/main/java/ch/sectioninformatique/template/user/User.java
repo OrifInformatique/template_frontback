@@ -12,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import java.util.*;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * User class represents the user entity in the database.
@@ -19,6 +20,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "users")
+@NoArgsConstructor
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
