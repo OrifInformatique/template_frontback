@@ -8,7 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.core.annotation.Order;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * UserSeeder class is used to seed the database with users.
@@ -54,102 +56,79 @@ public class UserSeeder implements CommandLineRunner {
 	 */
 	private void loadUserData() {
 		if (this.userRepository.count() == 0) {
-			Optional<Role> optionalRole = this.roleRepository.findByName(RoleEnum.USER);
-
-			if (optionalRole.isEmpty()) {
-				System.out.println("Role USER not found - Skipping user seeding");
-				return;
-			}
-
-			/**
-			 * Get the user role, admin role and super admin role.
-			 */
-			Role userRole = optionalRole.get();
+			Role userRole = roleRepository.findByName(RoleEnum.USER)
+					.orElseThrow(() -> new RuntimeException("Role USER not found"));
 			Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
 					.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 			Role superAdminRole = roleRepository.findByName(RoleEnum.SUPER_ADMIN)
 					.orElseThrow(() -> new RuntimeException("Role SUPER_ADMIN not found"));
 
-			/**
-			 * Create different profiles (users).
-			 */
-			User user0 = new UserBuilder()
-					.setFirstName("deleted")
-					.setLastName("user")
-					.setLogin("deleted.user@test.com")
-					.setPassword(this.passwordEncoder.encode("NoN33dPassword@nymore!"))
-					.addRole(userRole)
+			// Création des utilisateurs avec User.builder()
+			User user0 = User.builder()
+					.firstName("deleted")
+					.lastName("user")
+					.login("deleted.user@test.com")
+					.password(passwordEncoder.encode("NoN33dPassword@nymore!"))
+					.roles(Set.of(userRole))
 					.build();
 
-			User user1 = new UserBuilder()
-					.setFirstName("John")
-					.setLastName("DOE")
-					.setLogin("john.doe@test.com")
-					.setPassword(this.passwordEncoder.encode("Secure123@Pass"))
-					.addRole(userRole)
+			User user1 = User.builder()
+					.firstName("John")
+					.lastName("DOE")
+					.login("john.doe@test.com")
+					.password(passwordEncoder.encode("Secure123@Pass"))
+					.roles(Set.of(userRole))
 					.build();
 
-			User user2 = new UserBuilder()
-					.setFirstName("Jane")
-					.setLastName("SMITH")
-					.setLogin("jane.smith@test.com")
-					.setPassword(this.passwordEncoder
-							.encode("Complex#789Pwd"))
-					.addRole(adminRole)
+			User user2 = User.builder()
+					.firstName("Jane")
+					.lastName("SMITH")
+					.login("jane.smith@test.com")
+					.password(passwordEncoder.encode("Complex#789Pwd"))
+					.roles(Set.of(adminRole))
 					.build();
 
-			User user3 = new UserBuilder()
-					.setFirstName("Alice")
-					.setLastName("JOHNSON")
-					.setLogin("alice.johnson@test.com")
-					.setPassword(this.passwordEncoder
-							.encode("Test$4321Now"))
-					.addRole(userRole)
+			User user3 = User.builder()
+					.firstName("Alice")
+					.lastName("JOHNSON")
+					.login("alice.johnson@test.com")
+					.password(passwordEncoder.encode("Test$4321Now"))
+					.roles(Set.of(userRole))
 					.build();
 
-			User user4 = new UserBuilder()
-					.setFirstName("Dan")
-					.setLastName("SERGEANT")
-					.setLogin("dan.sergeant@test.com")
-					.setPassword(this.passwordEncoder
-							.encode("Spring2024@Dev"))
-					.addRole(userRole)
+			User user4 = User.builder()
+					.firstName("Dan")
+					.lastName("SERGEANT")
+					.login("dan.sergeant@test.com")
+					.password(passwordEncoder.encode("Spring2024@Dev"))
+					.roles(Set.of(userRole))
 					.build();
 
-			User user5 = new UserBuilder()
-					.setFirstName("Bobby")
-					.setLastName("BALLOONZI")
-					.setLogin("bobby.balloonzi@test.com")
-					.setPassword(this.passwordEncoder
-							.encode("P@ssw0rd2024"))
-					.addRole(userRole)
+			User user5 = User.builder()
+					.firstName("Bobby")
+					.lastName("BALLOONZI")
+					.login("bobby.balloonzi@test.com")
+					.password(passwordEncoder.encode("P@ssw0rd2024"))
+					.roles(Set.of(userRole))
 					.build();
 
-			User user6 = new UserBuilder()
-					.setFirstName("Rob")
-					.setLastName("JAKE")
-					.setLogin("rob.jake@test.com")
-					.setPassword(this.passwordEncoder
-							.encode("Inf0#Security24"))
-					.addRole(userRole)
+			User user6 = User.builder()
+					.firstName("Rob")
+					.lastName("JAKE")
+					.login("rob.jake@test.com")
+					.password(passwordEncoder.encode("Inf0#Security24"))
+					.roles(Set.of(userRole))
 					.build();
 
-			User user7 = new UserBuilder()
-					.setFirstName("Super")
-					.setLastName("Admin")
-					.setLogin("super.admin@test.com")
-					.setPassword(this.passwordEncoder.encode("ReallySecure123@PassWordBecauseIWantToBeSuperSafe"))
-					.addRole(superAdminRole)
+			User user7 = User.builder()
+					.firstName("Super")
+					.lastName("Admin")
+					.login("super.admin@test.com")
+					.password(passwordEncoder.encode("ReallySecure123@PassWordBecauseIWantToBeSuperSafe"))
+					.roles(Set.of(superAdminRole))
 					.build();
 
-			this.userRepository.save(user0);
-			this.userRepository.save(user1);
-			this.userRepository.save(user2);
-			this.userRepository.save(user3);
-			this.userRepository.save(user4);
-			this.userRepository.save(user5);
-			this.userRepository.save(user6);
-			this.userRepository.save(user7);
+			userRepository.saveAll(Arrays.asList(user0, user1, user2, user3, user4, user5, user6, user7));
 		} else {
 			System.out.println("Users table not empty - Skipping user seeding");
 		}

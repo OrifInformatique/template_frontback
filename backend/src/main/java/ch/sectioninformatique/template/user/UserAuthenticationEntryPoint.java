@@ -26,8 +26,15 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // send "Unauthorized" if user not connected and try to
                                                                  // access a restricted page
         response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        // BUG: This error always sent even when user register and tries to log in
-        // maybe the user is never allowed to log in proprely
-        OBJECT_MAPPER.writeValue(response.getOutputStream(), new ErrorDto("Unauthorized path"));
+        
+        String errorMessage = "Authentication failed";
+        if (authException != null) {
+            errorMessage = authException.getMessage();
+            if (errorMessage == null || errorMessage.isEmpty()) {
+                errorMessage = "Invalid or missing authentication token";
+            }
+        }
+        
+        OBJECT_MAPPER.writeValue(response.getOutputStream(), new ErrorDto(errorMessage));
     }
 }

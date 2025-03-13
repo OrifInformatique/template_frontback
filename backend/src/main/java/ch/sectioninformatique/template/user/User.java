@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.util.*;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @Table(name = "users")
+@Builder
 @NoArgsConstructor
 public class User implements UserDetails {
     @Id
@@ -57,6 +59,7 @@ public class User implements UserDetails {
     }
     
     @ManyToMany(fetch = FetchType.EAGER)
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
     /**
@@ -161,4 +164,8 @@ public class User implements UserDetails {
     public Role getRole() {
        return roles.iterator().next();
     }
+    
+    public void addRole(Role role) {
+        roles.add(role);
+    }   
 }

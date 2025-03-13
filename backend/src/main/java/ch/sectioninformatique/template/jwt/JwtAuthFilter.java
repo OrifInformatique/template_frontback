@@ -8,12 +8,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.stereotype.Component;
 
 import ch.sectioninformatique.template.user.UserAuthenticationProvider;
 
 import java.io.IOException;
 
 @RequiredArgsConstructor
+@Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final UserAuthenticationProvider userAuthenticationProvider;

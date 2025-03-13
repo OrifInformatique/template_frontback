@@ -2,12 +2,9 @@ package ch.sectioninformatique.template.user;
 
 import ch.sectioninformatique.template.auth.credentials.CredentialsDto;
 import ch.sectioninformatique.template.auth.signup.SignUpDto;
-import ch.sectioninformatique.template.user.UserDto;
-import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.app.exceptions.AppException;
-import ch.sectioninformatique.template.user.UserMapper;
-import ch.sectioninformatique.template.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +22,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -57,15 +55,36 @@ public class UserService {
         User user = userMapper.signUpToUser(userDto);
         user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
 
-        User savedUser = userRepository.save(user);
+        // Ajout du rôle USER par défaut
+        Role userRole = roleRepository.findByName(RoleEnum.USER)
+            .orElseThrow(() -> new AppException("Default role not found", HttpStatus.INTERNAL_SERVER_ERROR));
+        user.addRole(userRole);
 
+        User savedUser = userRepository.save(user);
         return userMapper.toUserDto(savedUser);
     }
 
     public UserDto findByLogin(String login) {
-        User user = userRepository.findByLogin(login)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
-        return userMapper.toUserDto(user);
+        log.debug("Searching for user with login: {}", login);
+        
+        Optional<User> userOptional = userRepository.findByLogin(login);
+        log.debug("User found in database: {}", userOptional.isPresent());
+        
+        User user = userOptional
+                .orElseThrow(() -> {
+                    log.error("User not found with login: {}", login);
+                    return new AppException("Unknown user", HttpStatus.NOT_FOUND);
+                });
+                
+        log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}", 
+            user.getId(), user.getFirstName(), user.getLastName(), 
+            user.getRoles().stream().map(role -> role.getName().toString()).toList());
+            
+        UserDto userDto = userMapper.toUserDto(user);
+        log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}", 
+            userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getRole());
+            
+        return userDto;
     }
 
     /**
