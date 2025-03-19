@@ -16,6 +16,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequestMapping("/oauth2")
 @RestController
@@ -23,6 +25,7 @@ public class oAuth2Controller {
 
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final UserAuthenticationProvider userAuthenticationProvider;
+    private static final Logger log = LoggerFactory.getLogger(oAuth2Controller.class);
 
     public oAuth2Controller(OAuth2AuthorizedClientService authorizedClientService,
                             UserAuthenticationProvider userAuthenticationProvider) {
@@ -64,12 +67,11 @@ public class oAuth2Controller {
         // Generate a JWT using your custom UserAuthenticationProvider.
         String jwt = userAuthenticationProvider.createToken(user);
 
-        // Construct a redirect URL for your frontend with the token and loginType=azure.
-        // TODO: create this page in react
-        String redirectUrl = "http://localhost:4000/oauth2/success?token=" +
-                URLEncoder.encode(jwt, StandardCharsets.UTF_8) +
-                "&loginType=azure";
+        // Construct a redirect URL for your frontend with the token
+        String redirectUrl = String.format("http://localhost:4000/oauth2/success?token=%s&loginType=azure",
+                URLEncoder.encode(jwt, StandardCharsets.UTF_8));
 
+        log.debug("Redirecting to frontend with JWT token");
         response.sendRedirect(redirectUrl);
     }
 }

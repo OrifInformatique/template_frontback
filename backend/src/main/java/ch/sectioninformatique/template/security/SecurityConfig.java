@@ -74,8 +74,7 @@ public class SecurityConfig {
                     .successHandler((request, response, authentication) -> {
                         log.debug("OAuth2 authentication successful: {}", authentication);
                         response.sendRedirect("/oauth2/success");
-                    })
-                    .permitAll();
+                    });
             })
             .authorizeHttpRequests(requests -> {
                 log.debug("Configuring HTTP request authorization rules");
