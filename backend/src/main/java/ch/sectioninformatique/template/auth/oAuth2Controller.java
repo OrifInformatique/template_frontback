@@ -21,13 +21,13 @@ import org.slf4j.LoggerFactory;
 
 @RequestMapping("/oauth2")
 @RestController
-public class oAuth2Controller {
+public class Oauth2Controller {
 
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final UserAuthenticationProvider userAuthenticationProvider;
-    private static final Logger log = LoggerFactory.getLogger(oAuth2Controller.class);
+    private static final Logger log = LoggerFactory.getLogger(Oauth2Controller.class);
 
-    public oAuth2Controller(OAuth2AuthorizedClientService authorizedClientService,
+    public Oauth2Controller(OAuth2AuthorizedClientService authorizedClientService,
                             UserAuthenticationProvider userAuthenticationProvider) {
         this.authorizedClientService = authorizedClientService;
         this.userAuthenticationProvider = userAuthenticationProvider;

@@ -56,7 +56,7 @@ public class Item {
         this.author = author;
     }
 
-    // The @Data annotation from Lombok should generate these methods,
+/*     // The @Data annotation from Lombok should generate these methods,
     // but let's add them explicitly to ensure they exist
     public User getAuthor() {
         return author;
@@ -64,5 +64,5 @@ public class Item {
 
     public void setAuthor(User author) {
         this.author = author;
-    }
+    } */
 }

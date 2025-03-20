@@ -55,7 +55,7 @@ public class UserService {
         User user = userMapper.signUpToUser(userDto);
         user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
 
-        // Ajout du rôle USER par défaut
+        // Add default USER role
         Role userRole = roleRepository.findByName(RoleEnum.USER)
             .orElseThrow(() -> new AppException("Default role not found", HttpStatus.INTERNAL_SERVER_ERROR));
         user.addRole(userRole);
@@ -291,6 +291,41 @@ public class UserService {
 
         // Delete the user
         userRepository.deleteById(userId);
+    }
+
+    /**
+     * Create a new Azure user
+     * 
+     * @param userDto The user data from Azure
+     * @return The created user
+     */
+    public UserDto createAzureUser(UserDto userDto) {
+        log.debug("Creating new Azure user: {}", userDto.getLogin());
+        
+        // Check if user already exists
+        if (userRepository.existsByLogin(userDto.getLogin())) {
+            log.debug("User already exists: {}", userDto.getLogin());
+            return findByLogin(userDto.getLogin());
+        }
+
+        // Create new user
+        User user = User.builder()
+            .login(userDto.getLogin())
+            .firstName(userDto.getFirstName())
+            .lastName(userDto.getLastName())
+            .password(passwordEncoder.encode("AzureUser" + System.currentTimeMillis())) // Temporary password
+            .build();
+
+        // Add default USER role
+        Role userRole = roleRepository.findByName(RoleEnum.USER)
+            .orElseThrow(() -> new AppException("Default role not found", HttpStatus.INTERNAL_SERVER_ERROR));
+        user.addRole(userRole);
+
+        // Save the user
+        User savedUser = userRepository.save(user);
+        log.debug("Azure user created successfully: {}", savedUser.getLogin());
+        
+        return userMapper.toUserDto(savedUser);
     }
 }
 

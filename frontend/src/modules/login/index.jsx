@@ -28,23 +28,65 @@ const Login = () => {
     // Check if the current URL indicates an OAuth2 success (i.e. the backend redirected after Azure login)
     useEffect(() => {
         if (window.location.pathname === '/oauth2/success') {
-            // Call the backend endpoint to retrieve the JWT (ensure CORS and credentials are handled as needed)
-            axios
-                .get('http://localhost:8080/oauth2/success', { withCredentials: true })
-                .then(response => {
-                    const jwt = response.data.token;
-                    console.log('Azure login successful, received token:', jwt);
-                    localStorage.setItem('token', jwt);
-                    localStorage.setItem('loginType', 'azure');
-                    setToken(jwt);
-                    setLoginType('azure');
-                    setIsLoggedIn(true);
-                    // Optionally, remove "/oauth2/success" from the URL.
-                    window.history.replaceState({}, document.title, '/');
-                })
-                .catch(error => {
-                    console.error('Error fetching Azure token:', error.response?.data || error.message);
-                });
+            // Extract token from URL if present
+            const params = new URLSearchParams(window.location.search);
+            const tokenFromUrl = params.get('token');
+            
+            if (tokenFromUrl) {
+                console.log('%c Azure Authentication Success', 'background: #0078D4; color: white; padding: 2px 5px; border-radius: 3px;');
+                console.log('%c JWT Token:', 'font-weight: bold; color: #0078D4;');
+                console.log(tokenFromUrl);
+                
+                // Try to decode and display token parts
+                try {
+                    const [header, payload, signature] = tokenFromUrl.split('.');
+                    console.log('%c Decoded Token:', 'font-weight: bold; color: #0078D4;');
+                    console.log('Header:', JSON.parse(atob(header)));
+                    console.log('Payload:', JSON.parse(atob(payload)));
+                    console.log('Signature:', signature);
+                } catch (error) {
+                    console.log('Could not decode token parts:', error);
+                }
+
+                localStorage.setItem('token', tokenFromUrl);
+                localStorage.setItem('loginType', 'azure');
+                setToken(tokenFromUrl);
+                setLoginType('azure');
+                setIsLoggedIn(true);
+                window.history.replaceState({}, document.title, '/');
+            } else {
+                // If no token in URL, try backend endpoint
+                axios
+                    .get('http://localhost:8080/oauth2/success', { withCredentials: true })
+                    .then(response => {
+                        const jwt = response.data.token;
+                        console.log('%c Azure Authentication Success', 'background: #0078D4; color: white; padding: 2px 5px; border-radius: 3px;');
+                        console.log('%c JWT Token:', 'font-weight: bold; color: #0078D4;');
+                        console.log(jwt);
+                        
+                        // Try to decode and display token parts
+                        try {
+                            const [header, payload, signature] = jwt.split('.');
+                            console.log('%c Decoded Token:', 'font-weight: bold; color: #0078D4;');
+                            console.log('Header:', JSON.parse(atob(header)));
+                            console.log('Payload:', JSON.parse(atob(payload)));
+                            console.log('Signature:', signature);
+                        } catch (error) {
+                            console.log('Could not decode token parts:', error);
+                        }
+
+                        localStorage.setItem('token', jwt);
+                        localStorage.setItem('loginType', 'azure');
+                        setToken(jwt);
+                        setLoginType('azure');
+                        setIsLoggedIn(true);
+                        window.history.replaceState({}, document.title, '/');
+                    })
+                    .catch(error => {
+                        console.error('%c Azure Authentication Error', 'background: #D4000E; color: white; padding: 2px 5px; border-radius: 3px;');
+                        console.error('Error details:', error.response?.data || error.message);
+                    });
+            }
         }
     }, []);
 

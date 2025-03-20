@@ -63,7 +63,7 @@ public class UserSeeder implements CommandLineRunner {
 			Role superAdminRole = roleRepository.findByName(RoleEnum.SUPER_ADMIN)
 					.orElseThrow(() -> new RuntimeException("Role SUPER_ADMIN not found"));
 
-			// Création des utilisateurs avec User.builder()
+			// Create users with User.builder()
 			User user0 = User.builder()
 					.firstName("deleted")
 					.lastName("user")

@@ -50,7 +50,7 @@ public class UserAuthenticationProvider {
                 .withExpiresAt(validity)
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
-                .withClaim("role", "ROLE_USER")  // Rôle par défaut pour les utilisateurs OAuth2
+                .withClaim("role", "ROLE_USER")  // Default role for OAuth2 users
                 .withClaim("permissions", List.of(
                     // OAuth2 scopes
                     "SCOPE_openid", 
@@ -110,35 +110,59 @@ public class UserAuthenticationProvider {
         DecodedJWT decoded = verifier.verify(token);
         log.debug("Token strongly verified for subject: {}", decoded.getSubject());
 
-        UserDto user = userService.findByLogin(decoded.getSubject());
-        
-        // Add default permissions for OAuth2 users
-        List<String> permissions = new ArrayList<>(List.of(
-            // OAuth2 scopes
-            "SCOPE_openid", 
-            "SCOPE_profile", 
-            "SCOPE_email", 
-            "SCOPE_User.Read",
-            // Item permissions
-            "item:read",
-            "item:write",
-            "item:update",
-            "item:delete"
-        ));
+        try {
+            // Try to find the user in the database
+            UserDto user = userService.findByLogin(decoded.getSubject());
+            
+            // Add default permissions for OAuth2 users
+            List<String> permissions = new ArrayList<>(List.of(
+                // OAuth2 scopes
+                "SCOPE_openid", 
+                "SCOPE_profile", 
+                "SCOPE_email", 
+                "SCOPE_User.Read",
+                // Item permissions
+                "item:read",
+                "item:write",
+                "item:update",
+                "item:delete"
+            ));
 
-        // Add any existing permissions
-        if (user.getPermissions() != null) {
-            permissions.addAll(user.getPermissions());
+            // Add any existing permissions
+            if (user.getPermissions() != null) {
+                permissions.addAll(user.getPermissions());
+            }
+
+            user.setPermissions(permissions);
+            user.setToken(token);
+            
+            List<SimpleGrantedAuthority> authorities = buildAuthorities(user.getRole(), user.getPermissions());
+            log.debug("Built authorities for user {}: {}", user.getLogin(), authorities);
+            return new UsernamePasswordAuthenticationToken(user, null, authorities);
+        } catch (Exception e) {
+            // If user doesn't exist, create a new Azure user
+            log.debug("User not found, creating new Azure user: {}", decoded.getSubject());
+            
+            UserDto newUser = UserDto.builder()
+                .login(decoded.getSubject())
+                .firstName(decoded.getClaim("firstName").asString())
+                .lastName(decoded.getClaim("lastName").asString())
+                .role("USER")
+                .permissions(List.of(
+                    "item:read",
+                    "item:write",
+                    "item:update",
+                    "item:delete"
+                ))
+                .build();
+
+            // Save the new user
+            userService.createAzureUser(newUser);
+            
+            // Create authentication with authorities
+            List<SimpleGrantedAuthority> authorities = buildAuthorities(newUser.getRole(), newUser.getPermissions());
+            return new UsernamePasswordAuthenticationToken(newUser, null, authorities);
         }
-
-        user.setPermissions(permissions);
-        // Set the token in the UserDto
-        user.setToken(token);
-        
-        List<SimpleGrantedAuthority> authorities = buildAuthorities(user.getRole(), user.getPermissions());
-        log.debug("Built authorities for user {}: {}", user.getLogin(), authorities);
-        return new UsernamePasswordAuthenticationToken(user, null, authorities);
     }
-    
 }
 

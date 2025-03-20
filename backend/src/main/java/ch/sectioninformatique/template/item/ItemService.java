@@ -58,6 +58,13 @@ public class ItemService {
     public Item createItem(Item newItem) {
         String currentUserEmail = getCurrentUserEmail();
         
+        if (!userRepository.existsByLogin(currentUserEmail)) {
+            User newUser = new User();
+            newUser.setLogin(currentUserEmail);
+            newUser.setFirstName("Azure User");
+            userRepository.save(newUser);
+        }
+        
         User author = userRepository.findByLogin(currentUserEmail)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
