@@ -270,10 +270,14 @@ public class UserService {
 
         // Get the authenticated user (the actor)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User authenticatedUser = (User) authentication.getPrincipal();
+        UserDto authenticatedUser = (UserDto) authentication.getPrincipal();
+
+        // Get the full user entity for the authenticated user
+        User authenticatedUserEntity = userRepository.findByLogin(authenticatedUser.getLogin())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
         // Check if the action is authorized
-        if (!canPerformAction(authenticatedUser.getRole().getName(), userToDelete.getRole().getName())) {
+        if (!canPerformAction(authenticatedUserEntity.getRole().getName(), userToDelete.getRole().getName())) {
             throw new RuntimeException("You don't have the necessary rights to perform this action");
         }
 
