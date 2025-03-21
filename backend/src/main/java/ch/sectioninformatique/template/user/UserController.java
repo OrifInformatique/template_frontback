@@ -14,22 +14,41 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * UserController class is the REST controller for the User entity.
+ * REST controller for managing user operations.
+ * This controller provides endpoints for:
+ * - User authentication and profile management
+ * - User role management (promotion, revocation)
+ * - User deletion
+ * - User listing and retrieval
+ * 
+ * All endpoints are secured with appropriate authorization checks using Spring Security's
+ * @PreAuthorize annotations. The controller follows RESTful conventions and returns
+ * appropriate HTTP responses with success/error messages.
  */
 @RequestMapping("/users")
 @RestController
 public class UserController {
+    /** Service for handling user-related operations */
     private final UserService userService;
 
+    /**
+     * Constructs a new UserController with the required service.
+     *
+     * @param userService Service for handling user-related operations
+     */
     public UserController(UserService userService)
     {
         this.userService = userService;
     }
 
     /**
-     * Get the current authenticated user.
-     * 
-     * @return The current authenticated user
+     * Retrieves the currently authenticated user's information.
+     * This endpoint:
+     * - Requires user authentication
+     * - Returns the user's profile information
+     * - Is accessible to all authenticated users
+     *
+     * @return ResponseEntity containing the current user's DTO
      */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
@@ -43,9 +62,13 @@ public class UserController {
     }
 
     /**
-     * Get all users.
-     * 
-     * @return The list of all users
+     * Retrieves all users in the system.
+     * This endpoint:
+     * - Requires the 'user:read' authority
+     * - Returns a list of all users
+     * - Is typically used by administrators
+     *
+     * @return ResponseEntity containing a list of all users
      */
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('user:read')")
@@ -55,10 +78,14 @@ public class UserController {
     }
 
     /**
-     * Promote a user to admin.
-     * 
-     * @param userId - The ID of the user to promote
-     * @return The response entity
+     * Promotes a user to the admin role.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Validates the user exists and isn't already an admin
+     * - Returns success/error message
+     *
+     * @param userId The ID of the user to promote
+     * @return ResponseEntity with success message or error details
      */
     @PreAuthorize("hasAuthority('user:update')")
     @PutMapping("/{userId}/promote-admin")
@@ -72,10 +99,14 @@ public class UserController {
     }
 
     /**
-     * Revoke an admin role.
-     * 
-     * @param userId - The ID of the user to revoke
-     * @return The response entity
+     * Revokes the admin role from a user.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Validates the user exists and isn't a super admin
+     * - Returns success/error message
+     *
+     * @param userId The ID of the user to revoke admin role from
+     * @return ResponseEntity with success message or error details
      */
     @PreAuthorize("hasAuthority('user:update')")
     @PutMapping("/{userId}/revoke-admin")
@@ -89,10 +120,14 @@ public class UserController {
     }
 
     /**
-     * Promote a user to super admin.
-     * 
-     * @param userId - The ID of the user to promote
-     * @return The response entity
+     * Promotes a user to the super admin role.
+     * This endpoint:
+     * - Requires both 'user:update' authority and 'SUPER_ADMIN' role
+     * - Validates the user exists and isn't already a super admin
+     * - Returns success/error message
+     *
+     * @param userId The ID of the user to promote to super admin
+     * @return ResponseEntity with success message or error details
      */
     @PreAuthorize("hasAuthority('user:update') && hasRole('SUPER_ADMIN')")
     @PutMapping("/{userId}/promote-super-admin")
@@ -106,10 +141,14 @@ public class UserController {
     }
 
     /**
-     * Revoke a super admin role.
-     * 
-     * @param userId - The ID of the user to revoke
-     * @return The response entity
+     * Revokes the super admin role from a user.
+     * This endpoint:
+     * - Requires both 'user:update' authority and 'SUPER_ADMIN' role
+     * - Validates the user exists and isn't already a regular user
+     * - Returns success/error message
+     *
+     * @param userId The ID of the user to revoke super admin role from
+     * @return ResponseEntity with success message or error details
      */
     @PreAuthorize("hasAuthority('user:update') && hasRole('SUPER_ADMIN')")
     @PutMapping("/{userId}/revoke-super-admin")
@@ -123,10 +162,14 @@ public class UserController {
     }
 
     /**
-     * Downgrade a super admin role.
-     * 
-     * @param userId - The ID of the user to downgrade
-     * @return The response entity
+     * Downgrades a super admin to a regular admin role.
+     * This endpoint:
+     * - Requires both 'user:update' authority and 'SUPER_ADMIN' role
+     * - Validates the user exists and is currently a super admin
+     * - Returns success/error message
+     *
+     * @param userId The ID of the super admin to downgrade
+     * @return ResponseEntity with success message or error details
      */
     @PreAuthorize("hasAuthority('user:update') && hasRole('SUPER_ADMIN')")
     @PutMapping("/{userId}/downgrade-super-admin")
@@ -140,10 +183,15 @@ public class UserController {
     }
 
     /**
-     * Delete a user.
-     * 
-     * @param userId - The ID of the user to delete
-     * @return The response entity
+     * Deletes a user from the system.
+     * This endpoint:
+     * - Requires the 'user:delete' authority
+     * - Transfers the user's items to the deleted user account
+     * - Validates the authenticated user has sufficient permissions
+     * - Returns success/error message
+     *
+     * @param userId The ID of the user to delete
+     * @return ResponseEntity with success message or error details
      */
     @PreAuthorize("hasAuthority('user:delete')")
     @DeleteMapping("/{userId}")

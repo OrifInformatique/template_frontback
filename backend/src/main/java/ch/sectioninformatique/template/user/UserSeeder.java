@@ -13,22 +13,32 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * UserSeeder class is used to seed the database with users.
+ * Seeder class for initializing the database with default user data.
+ * This class implements CommandLineRunner to execute the seeding process
+ * when the application starts. It creates a set of predefined users with
+ * different roles (USER, ADMIN, SUPER_ADMIN) for testing and development purposes.
+ * The seeder runs after the RoleSeeder (Order(2)) to ensure roles exist before
+ * creating users.
  */
 @Component
 @Order(2)
 public class UserSeeder implements CommandLineRunner {
 
+	/** Repository for user data access */
 	private final UserRepository userRepository;
+
+	/** Encoder for password hashing */
 	private final PasswordEncoder passwordEncoder;
+
+	/** Repository for role data access */
 	private final RoleRepository roleRepository;
 
 	/**
-	 * Constructor for UserSeeder.
-	 * 
-	 * @param userRepository  The user repository
-	 * @param passwordEncoder The password encoder
-	 * @param roleRepository  The role repository
+	 * Constructs a new UserSeeder with the required dependencies.
+	 *
+	 * @param userRepository Repository for user data access
+	 * @param passwordEncoder Encoder for password hashing
+	 * @param roleRepository Repository for role data access
 	 */
 	public UserSeeder(UserRepository userRepository,
 			PasswordEncoder passwordEncoder,
@@ -39,10 +49,15 @@ public class UserSeeder implements CommandLineRunner {
 	}
 
 	/**
-	 * Run the UserSeeder.
-	 * 
-	 * @param args The command line arguments
-	 * @throws Exception If an error occurs
+	 * Executes the seeding process when the application starts.
+	 * This method is called by Spring Boot after the application context is loaded.
+	 * It:
+	 * 1. Prints a start message
+	 * 2. Calls loadUserData() to create default users
+	 * 3. Prints a completion message
+	 *
+	 * @param args Command line arguments passed to the application
+	 * @throws Exception if an error occurs during the seeding process
 	 */
 	@Override
 	public void run(String... args) throws Exception {
@@ -52,7 +67,21 @@ public class UserSeeder implements CommandLineRunner {
 	}
 
 	/**
-	 * Load user data into the database.
+	 * Loads initial user data into the database.
+	 * Creates a set of predefined users with different roles if the database is empty.
+	 * The users include:
+	 * - A deleted user (ID 1) for handling deleted user's items
+	 * - Regular users with USER role (John Doe, Alice Johnson, Dan Sergeant, etc.)
+	 * - An admin user with ADMIN role (Jane Smith)
+	 * - A super admin user with SUPER_ADMIN role (Super Admin)
+	 * 
+	 * Each user is created with:
+	 * - Unique login (email format)
+	 * - Secure password (hashed)
+	 * - First and last name
+	 * - Appropriate role(s)
+	 *
+	 * @throws RuntimeException if any required role (USER, ADMIN, SUPER_ADMIN) is not found in the database
 	 */
 	private void loadUserData() {
 		if (this.userRepository.count() == 0) {

@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-/* @RestController annotation indicates that the class is a Bean.
- *                 Indicates that returned datas have to be in JSON format in the http response's body
+/**
+ * REST controller for managing items in the system.
+ * This controller provides endpoints for CRUD operations on items,
+ * with appropriate security checks and authorization requirements.
+ * All responses are automatically converted to JSON format.
  */
 @RestController
 public class ItemController {
@@ -24,10 +27,11 @@ public class ItemController {
     private Environment environment;
 
     /**
-     * Return some text informations to show that the application is running
-     * and to see the value of some environment variables.
-     * 
-     * @return - A String
+     * Returns system information and environment variables.
+     * This endpoint is used to verify that the application is running
+     * and to display configuration information.
+     *
+     * @return A formatted string containing system information
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/")
@@ -39,8 +43,10 @@ public class ItemController {
     }
 
     /**
-     * Read - Get all items
-     * @return - An Iterable object of Items full filled
+     * Retrieves all items in the system.
+     * Requires the 'item:read' authority to access.
+     *
+     * @return An Iterable containing all items
      */
     @PreAuthorize("hasAuthority('item:read')")
     @GetMapping("/items")
@@ -49,8 +55,12 @@ public class ItemController {
     }
 
     /**
-     * Read - Get one item by id
-     * @return - A single item object
+     * Retrieves a specific item by its ID.
+     * Requires the 'item:read' authority to access.
+     *
+     * @param id The unique identifier of the item to retrieve
+     * @return The requested item
+     * @throws ItemNotFoundException if the item is not found
      */
     @PreAuthorize("hasAuthority('item:read')")
     @GetMapping("/items/{id}")
@@ -60,9 +70,11 @@ public class ItemController {
     }
     
     /**
-     * Create - Add a new item
-     * @param item - The item to create
-     * @return - The created item
+     * Creates a new item in the system.
+     * Requires the 'item:write' authority to access.
+     *
+     * @param item The item data to create
+     * @return The newly created item
      */
     @PreAuthorize("hasAuthority('item:write')")
     @PostMapping("/items")
@@ -71,11 +83,14 @@ public class ItemController {
     }
 
     /**
-     * Update - Update an item
-     * @param id - The id of the item to update
-     * @param item - The item to update
-     * @return - The updated item with actual author and
-     * @throws UnauthorizedItemUpdateException if the user doesn't have permission to update this item
+     * Updates an existing item in the system.
+     * Requires the 'item:update' authority to access.
+     *
+     * @param id The unique identifier of the item to update
+     * @param item The updated item data
+     * @return The updated item
+     * @throws ItemNotFoundException if the item is not found
+     * @throws UnauthorizedItemException if the user is not authorized to update the item
      */
     @PreAuthorize("hasAuthority('item:update')")
     @PutMapping("/items/{id}")
@@ -84,8 +99,13 @@ public class ItemController {
     }
 
     /**
-     * Delete - Delete an item
-     * @param id - The id of the item to delete
+     * Deletes an item from the system.
+     * Requires either the 'item:delete' authority or a combination of
+     * 'item:write' authority and appropriate role (ROLE_USER or ROLE_ADMIN).
+     *
+     * @param id The unique identifier of the item to delete
+     * @throws ItemNotFoundException if the item is not found
+     * @throws UnauthorizedItemException if the user is not authorized to delete the item
      */
     @PreAuthorize("hasAuthority('item:delete') || ((hasRole('ROLE_USER') || hasRole('ROLE_ADMIN')) && hasAuthority('item:write'))")
     @DeleteMapping("/items/{id}")

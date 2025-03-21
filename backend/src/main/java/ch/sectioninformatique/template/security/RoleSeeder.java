@@ -10,27 +10,31 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * RoleSeeder class implements ApplicationListener<ContextRefreshedEvent> to
- * load roles into the database.
+ * Seeder class for initializing the database with default roles.
+ * This class implements ApplicationListener to execute the seeding process
+ * when the application context is refreshed. It creates the basic roles
+ * (USER, ADMIN, SUPER_ADMIN) if they don't already exist in the database.
  */
 @Component
 public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
 
+    /** Repository for role data access */
     private final RoleRepository roleRepository;
 
     /**
-     * Constructor for the RoleSeeder class
-     * 
-     * @param roleRepository The role repository
+     * Constructs a new RoleSeeder with the required repository.
+     *
+     * @param roleRepository Repository for role data access
      */
     public RoleSeeder(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 
     /**
-     * Load roles into the database when the application context is refreshed.
-     * 
-     * @param contextRefreshedEvent The context refreshed event
+     * Handles the application context refresh event by loading roles.
+     * This method is called by Spring when the application context is refreshed.
+     *
+     * @param contextRefreshedEvent The event indicating that the application context has been refreshed
      */
     @Override
     public void onApplicationEvent(@NonNull ContextRefreshedEvent contextRefreshedEvent) {
@@ -38,7 +42,12 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
     }
 
     /**
-     * Load roles into the database.
+     * Loads the default roles into the database.
+     * Creates the following roles if they don't exist:
+     * - USER: Default user role
+     * - ADMIN: Administrator role
+     * - SUPER_ADMIN: Super Administrator role
+     * Each role is created with a descriptive name and description.
      */
     private void loadRoles() {
         RoleEnum[] roleNames = new RoleEnum[] { RoleEnum.USER, RoleEnum.ADMIN,

@@ -3,7 +3,9 @@ package ch.sectioninformatique.template.item;
 import ch.sectioninformatique.template.user.User;
 
 /**
- * Builder for the Item class
+ * Builder class for creating Item instances.
+ * This class implements the Builder pattern to provide a fluent interface
+ * for constructing Item objects with optional parameters.
  */
 public class ItemBuilder {
     private String name;
@@ -11,16 +13,16 @@ public class ItemBuilder {
     private User author;
 
     /**
-     * Constructor for the ItemBuilder class
+     * Default constructor for ItemBuilder.
      */
     public ItemBuilder() {
     }
 
     /**
-     * Set the name of the item
-     * 
-     * @param name The name of the item
-     * @return The ItemBuilder object
+     * Sets the name of the item to be created.
+     *
+     * @param name The name to set for the item
+     * @return This builder instance for method chaining
      */
     public ItemBuilder setName(String name) {
         this.name = name;
@@ -28,10 +30,10 @@ public class ItemBuilder {
     }
 
     /**
-     * Set the description of the item
-     * 
-     * @param description The description of the item
-     * @return The ItemBuilder object
+     * Sets the description of the item to be created.
+     *
+     * @param description The description to set for the item
+     * @return This builder instance for method chaining
      */
     public ItemBuilder setDescription(String description) {
         this.description = description;
@@ -39,10 +41,10 @@ public class ItemBuilder {
     }
 
     /**
-     * Set the author of the item
-     * 
-     * @param author The author of the item
-     * @return The ItemBuilder object
+     * Sets the author of the item to be created.
+     *
+     * @param author The user who will be set as the author of the item
+     * @return This builder instance for method chaining
      */
     public ItemBuilder setAuthor(User author) {
         this.author = author;
@@ -50,9 +52,9 @@ public class ItemBuilder {
     }
 
     /**
-     * Build the item
-     * 
-     * @return The Item object
+     * Builds and returns a new Item instance with the configured properties.
+     *
+     * @return A new Item instance with the set properties
      */
     public Item build() {
         return new Item(name, description, author);

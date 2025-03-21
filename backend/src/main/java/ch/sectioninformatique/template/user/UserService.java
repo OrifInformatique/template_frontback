@@ -20,21 +20,43 @@ import java.util.Optional;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service class for managing user-related operations.
+ * This class provides functionality for:
+ * - User authentication and registration
+ * - User role management (promotion, revocation)
+ * - User deletion with item transfer
+ * - Azure user integration
+ * - User search and retrieval
+ */
 @RequiredArgsConstructor
 @Service
 @Slf4j
 public class UserService {
 
+    /** Repository for user data access */
     private final UserRepository userRepository;
 
+    /** Encoder for password hashing */
     private final PasswordEncoder passwordEncoder;
 
+    /** Repository for role data access */
     private final RoleRepository roleRepository;
 
+    /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
+
+    /** Repository for item data access */
     @Autowired
     private ItemRepository itemRepository;
 
+    /**
+     * Authenticates a user with their credentials.
+     *
+     * @param credentialsDto The user's login credentials
+     * @return UserDto containing the authenticated user's information
+     * @throws AppException if the user is not found or the password is invalid
+     */
     public UserDto login(CredentialsDto credentialsDto) {
         User user = userRepository.findByLogin(credentialsDto.login())
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
@@ -45,6 +67,18 @@ public class UserService {
         throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Registers a new user in the system.
+     * This method:
+     * - Checks if the login is already taken
+     * - Encodes the password
+     * - Assigns the default USER role
+     * - Saves the user to the database
+     *
+     * @param userDto The user registration data
+     * @return UserDto containing the created user's information
+     * @throws AppException if the login already exists or the default role is not found
+     */
     public UserDto register(SignUpDto userDto) {
         Optional<User> optionalUser = userRepository.findByLogin(userDto.login());
 
@@ -64,6 +98,14 @@ public class UserService {
         return userMapper.toUserDto(savedUser);
     }
 
+    /**
+     * Finds a user by their login.
+     * This method includes detailed logging for debugging purposes.
+     *
+     * @param login The user's login
+     * @return UserDto containing the user's information
+     * @throws AppException if the user is not found
+     */
     public UserDto findByLogin(String login) {
         log.debug("Searching for user with login: {}", login);
         
@@ -88,26 +130,26 @@ public class UserService {
     }
 
     /**
-     * Get all users.
-     * 
-     * @return The list of all users
+     * Retrieves all users in the system.
+     *
+     * @return List of all User entities
      */
     public List<User> allUsers() {
         List<User> users = new ArrayList<>();
-
         userRepository.findAll().forEach(users::add);
-
         return users;
     }
 
     /**
-     * Promote a user to admin role
-     * 
+     * Promotes a user to the admin role.
+     * This operation:
+     * - Verifies the user exists
+     * - Checks if the user is already an admin or super admin
+     * - Removes existing roles and assigns the admin role
+     *
      * @param userId The ID of the user to promote
-     * @throws RuntimeException if the user is not found
-     * @throws RuntimeException if the user is already an admin
-     * @throws RuntimeException if the user is a super admin
-     * @throws RuntimeException if the admin role is not found
+     * @return UserDto containing the updated user's information
+     * @throws RuntimeException if the user is not found, already an admin, or the admin role is not found
      */
     public UserDto promoteToAdmin(Long userId) {
         User user = userRepository.findById(userId)
@@ -130,12 +172,14 @@ public class UserService {
     }
 
     /**
-     * Revoke an admin role from a user
-     * 
+     * Revokes the admin role from a user.
+     * This operation:
+     * - Verifies the user exists
+     * - Checks if the user is already a regular user or super admin
+     * - Removes existing roles and assigns the user role
+     *
      * @param userId The ID of the user to revoke the admin role from
-     * @throws RuntimeException if the user is not found
-     * @throws RuntimeException if the user is already a user
-     * @throws RuntimeException if the user role is not found
+     * @throws RuntimeException if the user is not found, already a user, or the user role is not found
      */
     public void revokeAdminRole(Long userId) {
         User user = userRepository.findById(userId)
@@ -157,12 +201,15 @@ public class UserService {
     }
 
     /**
-     * Promote an user to super admin role
-     * 
+     * Promotes a user to the super admin role.
+     * This operation:
+     * - Verifies the user exists
+     * - Checks if the user is already a super admin
+     * - Removes existing roles and assigns the super admin role
+     *
      * @param userId The ID of the user to promote
-     * @throws RuntimeException if the user is not found
-     * @throws RuntimeException if the user is already a super admin
-     * @throws RuntimeException if the super admin role is not found
+     * @return UserDto containing the updated user's information
+     * @throws RuntimeException if the user is not found, already a super admin, or the super admin role is not found
      */
     public UserDto promoteToSuperAdmin(Long userId) {
         User user = userRepository.findById(userId)
@@ -182,12 +229,14 @@ public class UserService {
     }
 
     /**
-     * Downgrade a super admin to an admin role
-     * 
+     * Downgrades a super admin to an admin role.
+     * This operation:
+     * - Verifies the user exists
+     * - Checks if the user is already an admin or has lower rights
+     * - Removes existing roles and assigns the admin role
+     *
      * @param userId The ID of the user to downgrade
-     * @throws RuntimeException if the user is not found
-     * @throws RuntimeException if the user is already an admin
-     * @throws RuntimeException if the user role is not found
+     * @throws RuntimeException if the user is not found, already an admin, or the admin role is not found
      */
     public void downgradeSuperAdminRole(Long userId) {
         User user = userRepository.findById(userId)
@@ -209,12 +258,14 @@ public class UserService {
     }
 
     /**
-     * Revoke the super admin role from a user
-     * 
+     * Revokes the super admin role from a user.
+     * This operation:
+     * - Verifies the user exists
+     * - Checks if the user is already a regular user
+     * - Removes existing roles and assigns the user role
+     *
      * @param userId The ID of the user to revoke the super admin role from
-     * @throws RuntimeException if the user is not found
-     * @throws RuntimeException if the user is already a user
-     * @throws RuntimeException if the user role is not found
+     * @throws RuntimeException if the user is not found, already a user, or the user role is not found
      */
     public void revokeSuperAdminRole(Long userId) {
         User user = userRepository.findById(userId)
@@ -233,11 +284,15 @@ public class UserService {
     }
 
     /**
-     * Check if the actor can perform the action on the target  
-     * 
-     * @param actorRole The role of the actor
-     * @param targetRole The role of the target
-     * @return true if the actor can perform the action on the target, false otherwise
+     * Checks if an actor can perform an action on a target based on their roles.
+     * The hierarchy is:
+     * - SUPER_ADMIN can perform actions on all roles
+     * - ADMIN can perform actions on USER and ADMIN roles
+     * - USER cannot perform actions on any role
+     *
+     * @param actorRole The role of the actor performing the action
+     * @param targetRole The role of the target of the action
+     * @return true if the actor can perform the action, false otherwise
      */
     private boolean canPerformAction(RoleEnum actorRole, RoleEnum targetRole) {
         switch (actorRole) {
@@ -256,12 +311,16 @@ public class UserService {
     }
 
     /**
-     * Delete a user and transfer their items to the deleted user account (ID 1)
-     * 
+     * Deletes a user and transfers their items to the deleted user account.
+     * This operation:
+     * - Verifies the user exists
+     * - Checks if the authenticated user has sufficient permissions
+     * - Transfers all items owned by the user to the deleted user account (ID 1)
+     * - Deletes the user
+     *
      * @param userId The ID of the user to delete
-     * @throws RuntimeException if the user is not found
-     * @throws RuntimeException if the authenticated user doesn't have sufficient permissions
-     * @throws RuntimeException if the deleted user account (ID 1) is not found
+     * @throws RuntimeException if the user is not found, the authenticated user lacks permissions,
+     *                        or the deleted user account is not found
      */
     public void deleteUser(Long userId) {
         // Get the user to delete
@@ -298,10 +357,16 @@ public class UserService {
     }
 
     /**
-     * Create a new Azure user
-     * 
+     * Creates a new user from Azure authentication.
+     * This method:
+     * - Checks if the user already exists
+     * - Creates a new user with Azure data if they don't exist
+     * - Assigns the default USER role
+     * - Generates a temporary password
+     *
      * @param userDto The user data from Azure
-     * @return The created user
+     * @return UserDto containing the created user's information
+     * @throws AppException if the default role is not found
      */
     public UserDto createAzureUser(UserDto userDto) {
         log.debug("Creating new Azure user: {}", userDto.getLogin());

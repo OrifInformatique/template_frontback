@@ -10,6 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Component responsible for seeding initial item data in the database.
+ * This seeder runs after the application starts and creates sample items
+ * if the database is empty. It assigns random authors to each item from
+ * the existing users (excluding the "deleted user").
+ */
 @Component
 @Order(3)
 public class ItemSeeder implements CommandLineRunner {
@@ -17,16 +23,23 @@ public class ItemSeeder implements CommandLineRunner {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Constructs a new ItemSeeder with the required repositories.
+     *
+     * @param itemRepository Repository for item operations
+     * @param userRepository Repository for user operations
+     */
     public ItemSeeder(ItemRepository itemRepository, UserRepository userRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
     }
 
     /**
-     * Run the item seeder
-     * 
-     * @param args The arguments
-     * @throws Exception The exception
+     * Executes the seeder when the application starts.
+     * This method is called by Spring Boot after the application context is loaded.
+     *
+     * @param args Command line arguments passed to the application
+     * @throws Exception If an error occurs during the seeding process
      */
     @Override
     public void run(String... args) throws Exception {
@@ -34,9 +47,12 @@ public class ItemSeeder implements CommandLineRunner {
     }
 
     /**
-     * Load the item data
-     * Get all users except the "deleted user" (ID 1)
-     * Create items with random authors (except the "deleted user")
+     * Loads initial item data into the database if it's empty.
+     * Creates 20 sample items with random authors from existing users.
+     * Each item has a name and description in French.
+     * The "deleted user" (ID 1) is excluded from being an author.
+     *
+     * @throws RuntimeException if no users are found to assign as authors
      */
     private void loadItemData() {
         if (itemRepository.count() == 0) {

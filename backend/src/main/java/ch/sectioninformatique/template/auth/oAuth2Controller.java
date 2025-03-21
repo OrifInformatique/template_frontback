@@ -19,6 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Controller handling OAuth2 authentication flows.
+ * This controller manages the OAuth2 authentication process, specifically handling
+ * the success callback from OAuth2 providers and generating JWT tokens for authenticated users.
+ */
 @RequestMapping("/oauth2")
 @RestController
 public class Oauth2Controller {
@@ -27,12 +32,28 @@ public class Oauth2Controller {
     private final UserAuthenticationProvider userAuthenticationProvider;
     private static final Logger log = LoggerFactory.getLogger(Oauth2Controller.class);
 
+    /**
+     * Constructs a new Oauth2Controller with the required dependencies.
+     *
+     * @param authorizedClientService Service for managing OAuth2 authorized clients
+     * @param userAuthenticationProvider Provider for user authentication and token generation
+     */
     public Oauth2Controller(OAuth2AuthorizedClientService authorizedClientService,
                             UserAuthenticationProvider userAuthenticationProvider) {
         this.authorizedClientService = authorizedClientService;
         this.userAuthenticationProvider = userAuthenticationProvider;
     }
 
+    /**
+     * Handles the OAuth2 authentication success callback.
+     * This endpoint processes the OAuth2 authentication token, extracts user information,
+     * and generates a JWT token for the authenticated user. It then redirects to the frontend
+     * with the generated token.
+     *
+     * @param authentication The OAuth2 authentication token containing user information
+     * @param response The HTTP response object used for redirection
+     * @throws IOException If an I/O error occurs during the response handling
+     */
     @GetMapping("/success")
     public void oauth2Success(OAuth2AuthenticationToken authentication, HttpServletResponse response) throws IOException {
         if (authentication == null) {

@@ -13,8 +13,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-/* @Service annotation indicates that the class is a business layer Bean, used as a bridge
- *          between repository and controller.
+/**
+ * Service class for managing items in the system.
+ * This class handles all business logic related to items, including CRUD operations
+ * and authorization checks. It acts as a bridge between the repository layer and
+ * the controller layer.
  */
 @Service
 public class ItemService {
@@ -26,15 +29,22 @@ public class ItemService {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Constructs a new ItemService with the required repositories.
+     *
+     * @param itemRepository Repository for item operations
+     * @param userRepository Repository for user operations
+     */
     public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
     }
 
     /**
-     * Extract the current user's email from the authentication principal
-     * 
-     * @return The current user's email
+     * Extracts the current user's email from the authentication principal.
+     * This method is used to identify the currently authenticated user.
+     *
+     * @return The current user's email address
      */
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -50,10 +60,12 @@ public class ItemService {
     }
 
     /**
-     * Create an item
-     * 
+     * Creates a new item in the system.
+     * If the current user doesn't exist in the system, a new user record is created.
+     * The item is associated with the current user as its author.
+     *
      * @param newItem The item to create
-     * @return The created item
+     * @return The created item with its author set
      */
     public Item createItem(Item newItem) {
         String currentUserEmail = getCurrentUserEmail();
@@ -74,28 +86,31 @@ public class ItemService {
     }
 
     /**
-     * Get an item by its id
-     * 
-     * @param id The id of the item
-     * @return The item
+     * Retrieves an item by its unique identifier.
+     *
+     * @param id The unique identifier of the item
+     * @return An Optional containing the item if found, empty otherwise
      */
     public Optional<Item> getItem(final Long id) {
         return itemRepository.findById(id);
     }
 
     /**
-     * Get all items
-     * 
-     * @return The items
+     * Retrieves all items in the system.
+     *
+     * @return An Iterable containing all items
      */
     public Iterable<Item> getItems() {
         return itemRepository.findAll();
     }
 
     /**
-     * Delete an item
-     * 
-     * @param id The id of the item
+     * Deletes an item from the system.
+     * Only the item's author or users with admin privileges can delete an item.
+     *
+     * @param id The unique identifier of the item to delete
+     * @throws ItemNotFoundException if the item is not found
+     * @throws UnauthorizedItemException if the current user is not authorized to delete the item
      */
     public void deleteItem(final Long id) {
         String currentUserEmail = getCurrentUserEmail();
@@ -120,11 +135,14 @@ public class ItemService {
     }
 
     /**
-     * Update an item
-     * 
-     * @param id The id of the item
-     * @param newItem The new item
+     * Updates an existing item in the system.
+     * Only the item's author or users with admin privileges can update an item.
+     *
+     * @param id The unique identifier of the item to update
+     * @param newItem The new item data to apply
      * @return The updated item
+     * @throws ItemNotFoundException if the item is not found
+     * @throws UnauthorizedItemException if the current user is not authorized to update the item
      */
     public Item updateItem(Long id, Item newItem) {
         String currentUserEmail = getCurrentUserEmail();

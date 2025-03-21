@@ -25,6 +25,23 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 
+/**
+ * Security configuration class for the application.
+ * This class configures Spring Security settings including:
+ * - Authentication and authorization rules
+ * - CORS configuration
+ * - OAuth2 login settings
+ * - JWT filter integration
+ * - Session management
+ * - Exception handling
+ * 
+ * The configuration ensures:
+ * - Secure endpoints with appropriate authorization
+ * - Cross-origin request handling
+ * - Stateless session management
+ * - Custom authentication failure handling
+ * - OAuth2 integration for external authentication
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -32,9 +49,39 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 @Slf4j
 public class SecurityConfig {
 
+    /**
+     * Entry point for handling authentication failures.
+     * This component:
+     * - Provides custom responses for unauthenticated requests
+     * - Formats error messages in JSON
+     * - Sets appropriate HTTP status codes
+     */
     private final UserAuthenticationEntryPoint userAuthenticationEntryPoint;
+
+    /**
+     * Filter for JWT token authentication.
+     * This component:
+     * - Validates JWT tokens in requests
+     * - Extracts user information from tokens
+     * - Sets up authentication context
+     */
     private final JwtAuthFilter jwtAuthFilter;
 
+    /**
+     * Configures the security filter chain with all necessary security settings.
+     * This method:
+     * - Sets up exception handling with custom entry point
+     * - Configures JWT authentication filter
+     * - Disables CSRF protection (not needed for stateless API)
+     * - Sets session management policy to ALWAYS
+     * - Configures CORS with allowed origins and methods
+     * - Sets up OAuth2 login with success/failure handlers
+     * - Defines HTTP request authorization rules
+     *
+     * @param http The HttpSecurity object to configure
+     * @return The configured SecurityFilterChain
+     * @throws Exception if security configuration fails
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.debug("Configuring SecurityFilterChain");
@@ -93,6 +140,16 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Creates and configures the OAuth2 user service for handling OAuth2 authentication.
+     * This service:
+     * - Loads user information from the OAuth2 provider
+     * - Converts OAuth2 user data into an OAuth2User object
+     * - Logs user attributes for debugging
+     * - Uses the default OAuth2 user service implementation
+     *
+     * @return Configured OAuth2UserService instance
+     */
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
         DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
