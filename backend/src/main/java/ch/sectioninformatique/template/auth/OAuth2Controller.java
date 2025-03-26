@@ -2,6 +2,7 @@ package ch.sectioninformatique.template.auth;
 
 import ch.sectioninformatique.template.user.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class OAuth2Controller {
 
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final UserAuthenticationProvider userAuthenticationProvider;
+    private final UserService userService;
     private static final Logger log = LoggerFactory.getLogger(OAuth2Controller.class);
 
     /**
@@ -36,11 +38,14 @@ public class OAuth2Controller {
      *
      * @param authorizedClientService Service for managing OAuth2 authorized clients
      * @param userAuthenticationProvider Provider for user authentication and token generation
+     * @param userService Service for user management
      */
     public OAuth2Controller(OAuth2AuthorizedClientService authorizedClientService,
-                            UserAuthenticationProvider userAuthenticationProvider) {
+                            UserAuthenticationProvider userAuthenticationProvider,
+                            UserService userService) {
         this.authorizedClientService = authorizedClientService;
         this.userAuthenticationProvider = userAuthenticationProvider;
+        this.userService = userService;
     }
 
     /**
