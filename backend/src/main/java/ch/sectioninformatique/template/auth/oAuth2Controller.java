@@ -26,11 +26,11 @@ import org.slf4j.LoggerFactory;
  */
 @RequestMapping("/oauth2")
 @RestController
-public class Oauth2Controller {
+public class OAuth2Controller {
 
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final UserAuthenticationProvider userAuthenticationProvider;
-    private static final Logger log = LoggerFactory.getLogger(Oauth2Controller.class);
+    private static final Logger log = LoggerFactory.getLogger(OAuth2Controller.class);
 
     /**
      * Constructs a new Oauth2Controller with the required dependencies.
@@ -38,7 +38,7 @@ public class Oauth2Controller {
      * @param authorizedClientService Service for managing OAuth2 authorized clients
      * @param userAuthenticationProvider Provider for user authentication and token generation
      */
-    public Oauth2Controller(OAuth2AuthorizedClientService authorizedClientService,
+    public OAuth2Controller(OAuth2AuthorizedClientService authorizedClientService,
                             UserAuthenticationProvider userAuthenticationProvider) {
         this.authorizedClientService = authorizedClientService;
         this.userAuthenticationProvider = userAuthenticationProvider;

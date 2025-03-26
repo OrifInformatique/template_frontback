@@ -29,7 +29,7 @@ public interface UserMapper {
      * @param user The User entity to convert
      * @return A UserDto containing the user's information
      */
-    @Mapping(target = "role", expression = "java(\"ROLE_\" + user.getRole().getName())")
+    @Mapping(target = "role", source = "role.name")
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")
     UserDto toUserDto(User user);
 
