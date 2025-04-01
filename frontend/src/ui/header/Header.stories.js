@@ -2,7 +2,7 @@ import Header from "./Header";
 import { fn } from "@storybook/test";
 
 export default {
-    title: "Component/Header",
+    title: "Components/Header",
     component: Header,
     tags: ["autodocs"],
     layout: "fullscreen",

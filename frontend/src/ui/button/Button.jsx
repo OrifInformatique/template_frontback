@@ -1,10 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const Button = ({ primary = true, label, size = "medium", ...props }) => {
-    const mode = primary ? "bg-primary text-white"
-        : "border border-black border-opacity-70";
-    
+const Button = ({
+    className = "", primary = false, label, size = "medium", ...props
+}) => {
+    const mode = primary ? "bg-primary text-white focus:bg-opacity-80 transition"
+        : "border border-black border-opacity-60 focus:text-gray-600 transition";
+
     const buttonSize = (size) => {
         switch (size) {
             case "small":
@@ -23,7 +25,8 @@ const Button = ({ primary = true, label, size = "medium", ...props }) => {
 
     return (
         <button
-            className={["font-medium rounded-full min-w-24 min-h-10 px-4 py-2", mode, buttonSize(size)].join(" ")}
+            className={["font-medium rounded-full px-4 py-2",
+                className, mode, buttonSize(size)].join(" ")}
             {...props}
         >
             {label}
@@ -32,6 +35,7 @@ const Button = ({ primary = true, label, size = "medium", ...props }) => {
 }
 
 Button.propTypes = {
+    className: PropTypes.string,
     primary: PropTypes.bool,
     label: PropTypes.string.isRequired,
     size: PropTypes.oneOf(["small", "medium", "large"]),

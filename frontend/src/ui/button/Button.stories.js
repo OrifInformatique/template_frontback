@@ -2,20 +2,22 @@ import Button from "./Button";
 import { fn } from "@storybook/test";
 
 export default {
-    title: "Component/Button",
+    title: "Components/Button",
     component: Button,
     tags: ["autodocs"],
     parameters: { layout: "centered" },
-    args: { onClick: fn() }
+    args: {
+        label: "Button",
+        onClick: fn() }
 }
 
-export const Primary = {}
-
-export const Secondary = {
+export const Primary = {
     args: {
-        primary: false
+        primary: true
     }
 }
+
+export const Secondary = {}
 
 export const Small = {
     args: {
