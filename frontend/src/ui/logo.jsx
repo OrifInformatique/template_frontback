@@ -3,7 +3,7 @@ import clsx from 'clsx'
 
 const Logo = ({ className}) => {
   return (<>
-    <img className={clsx("w-48 sm:w-96", className)} src="images/logo.svg" />
+    <img className={clsx("w-32 sm:w-64", className)} src="images/logo.svg" />
   </>)
 }
 
