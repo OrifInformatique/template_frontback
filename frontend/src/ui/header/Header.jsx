@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 
-import Logo from "../logo";
-import Button from "../button/Button";
+import Button from "../button/default/Button";
 import Icon from "../icon/Icon";
+import Logo from "../logo";
 import UserMenu from "../user-menu/UserMenu";
 
 const Header = ({ user = null, title, onLogin, onLogout }) => {
@@ -11,12 +11,12 @@ const Header = ({ user = null, title, onLogin, onLogout }) => {
 
     return (
         <header className="border-b shadow-sm py-8 px-6">
-            <div className="flex justify-between items-center">
+            <div className="relative flex justify-between items-center">
                 <Logo />
                 <h1 className="absolute text-4xl left-1/2 transform -translate-x-1/2 center">
                     {title}
                 </h1>
-                <div className="relative flex items-center gap-x-4">
+                <div className="flex items-center gap-x-4">
                     {user ? (
                         <Button
                             primary={false}
@@ -57,6 +57,7 @@ Header.propTypes = {
         name: PropTypes.string.isRequired,
         role: PropTypes.oneOf(["admin", "user"]).isRequired
     }),
+    title: PropTypes.string.isRequired,
     onLogin: PropTypes.func.isRequired,
     onLogout: PropTypes.func.isRequired
 }

@@ -19,3 +19,16 @@ export const AllIcons = (args) => (
         <Icon {...args} name="delete" />
     </div>
 );
+
+export const AllSizes = (args) => (
+    <div className="flex items-center gap-4">
+        <Icon {...args} size={4} />
+        <Icon {...args} size={6} />
+        <Icon {...args} size={8} />
+        <Icon {...args} size={10} />
+        <Icon {...args} size={12} />
+        <Icon {...args} size={16} />
+        <Icon {...args} size={20} />
+        <Icon {...args} size={24} />
+    </div>
+);
