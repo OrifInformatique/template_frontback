@@ -1,7 +1,7 @@
 import Icon from "./Icon";
 
 export default {
-    title: "Components/Icon",
+    title: "Components/UI/Icon",
     component: Icon,
     tags: ["autodocs"],
     parameters: { layout: "centered" },

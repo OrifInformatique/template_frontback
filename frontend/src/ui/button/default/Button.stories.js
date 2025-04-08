@@ -2,7 +2,7 @@ import Button from "./Button";
 import { fn } from "@storybook/test";
 
 export default {
-    title: "Components/Button",
+    title: "Components/UI/Button",
     component: Button,
     tags: ["autodocs"],
     parameters: { layout: "centered" },

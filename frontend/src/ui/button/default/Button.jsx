@@ -25,7 +25,7 @@ const Button = ({
 
     return (
         <button
-            className={["font-medium rounded-full transition transform duration-300 hover:scale-105 px-4 py-2",
+            className={["font-semibold rounded-full transition transform duration-300 hover:scale-105 px-4 py-2",
                 className, mode, buttonSize(size)].join(" ")}
             {...props}
         >

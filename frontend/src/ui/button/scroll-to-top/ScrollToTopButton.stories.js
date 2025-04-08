@@ -2,7 +2,7 @@ import { fn } from "@storybook/test";
 import ScrollToTopButton from "./ScrollToTopButton";
 
 export default {
-    title: "Components/ScrollToTopButton",
+    title: "Components/UI/ScrollToTopButton",
     component: ScrollToTopButton,
     tags: ["autodocs"],
     layout: "fullscreen",

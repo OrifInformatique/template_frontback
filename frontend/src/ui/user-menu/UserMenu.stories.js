@@ -3,7 +3,7 @@ import UserMenu from "./UserMenu";
 import Icon from "../icon/Icon";
 
 export default {
-    title: "Components/UserMenu",
+    title: "Components/UI/UserMenu",
     component: UserMenu,
     tags: ["autodocs"],
     parameters: {
