@@ -1,0 +1,10 @@
+import InputRadio from "./InputRadio";
+
+export default {
+    title: "Components/UI/InputRadio",
+    component: InputRadio,
+    tags: ["autodocs"],
+    layout: "fullscreen"
+}
+
+export const Default = {}

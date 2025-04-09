@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 
-import Button from "../button/default/Button";
+import Button from "../buttons/default/Button";
 import Icon from "../icon/Icon";
 import Logo from "../logo";
 import UserMenu from "../user-menu/UserMenu";

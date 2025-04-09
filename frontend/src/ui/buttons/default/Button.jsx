@@ -4,8 +4,8 @@ import PropTypes from "prop-types";
 const Button = ({
     className = "", primary = false, label, size = "medium", ...props
 }) => {
-    const mode = primary ? "bg-primary text-white focus:bg-opacity-80"
-        : "border border-black border-opacity-60 focus:text-gray-700";
+    const mode = primary ? "bg-primary text-white active:bg-opacity-80"
+        : "border border-black border-opacity-60 active:text-gray-700";
 
     const buttonSize = (size) => {
         switch (size) {

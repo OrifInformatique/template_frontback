@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 
 import Footer from "../ui/footer/Footer";
 import Header from "../ui/header/Header";
-import ScrollToTopButton from "../ui/button/scroll-to-top/ScrollToTopButton";
+import ScrollToTopButton from "../ui/buttons/scroll-to-top/ScrollToTopButton";
 
 const MainLayout = () => {
   return (<>
