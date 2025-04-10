@@ -4,7 +4,8 @@ export default {
     title: "Components/UI/InputRadio",
     component: InputRadio,
     tags: ["autodocs"],
-    layout: "fullscreen"
+    layout: "fullscreen",
+    args: { label: "Radio" }
 }
 
 export const Default = {}

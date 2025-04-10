@@ -4,7 +4,8 @@ export default {
     title: "Components/UI/InputEmail",
     component: InputEmail,
     tags: ["autodocs"],
-    layout: "fullscreen"
+    layout: "fullscreen",
+    args: { label: "Email" }
 }
 
 export const Default = {}

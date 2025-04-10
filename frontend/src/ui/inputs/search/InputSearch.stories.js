@@ -4,7 +4,8 @@ export default {
     title: "Components/UI/InputSearch",
     component: InputSearch,
     tags: ["autodocs"],
-    layout: "fullscreen"
+    layout: "fullscreen",
+    args: { label: "Rechercher" }
 }
 
 export const Default = {}

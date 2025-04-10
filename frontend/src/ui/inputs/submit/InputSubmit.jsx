@@ -1,11 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const InputSubmit = ({  }) => {
+const InputSubmit = ({ id, disabled = false }) => {
     return (
-        <input type="">
-
-        </input>
+        <input
+            id={id}
+            type="submit"
+            disabled={disabled}
+        />
     );
 }
 

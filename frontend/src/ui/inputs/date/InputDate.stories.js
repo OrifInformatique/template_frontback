@@ -4,7 +4,8 @@ export default {
     title: "Components/UI/InputDate",
     component: InputDate,
     tags: ["autodocs"],
-    layout: "fullscreen"
+    layout: "fullscreen",
+    args: { label: "Date" }
 }
 
 export const Default = {}

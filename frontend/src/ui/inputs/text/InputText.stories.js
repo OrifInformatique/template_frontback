@@ -4,7 +4,8 @@ export default {
     title: "Components/UI/InputText",
     component: InputText,
     tags: ["autodocs"],
-    layout: "fullscreen"
+    layout: "fullscreen",
+    args: { label: "Texte" }
 }
 
 export const Default = {}

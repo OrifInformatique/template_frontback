@@ -1,11 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const InputRadio = ({  }) => {
+const InputRadio = ({ id, label, disabled = false }) => {
     return (
-        <input type="">
-
-        </input>
+        <label htmlFor={id} className="flex gap-2 items-center">
+            <input
+                id={id}
+                type="radio"
+                disabled={disabled}
+            />
+            <span>{label}</span>
+        </label>
     );
 }
 
