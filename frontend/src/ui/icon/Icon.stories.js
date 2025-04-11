@@ -6,17 +6,37 @@ export default {
     tags: ["autodocs"],
     parameters: { layout: "centered" },
     args: {
-        color: "black",
-        size: 12
+        color: "black"
     }
 }
 
 export const AllIcons = (args) => (
-    <div className="flex gap-4">
+    <div className="flex flex-wrap justify-center gap-4">
         <Icon {...args} name="home" />
         <Icon {...args} name="user" />
         <Icon {...args} name="edit" />
         <Icon {...args} name="delete" />
+        <Icon {...args} name="duplicate" />
+        <Icon {...args} name="restore" />
+        <Icon {...args} name="history" />
+        <Icon {...args} name="info" />
+        <Icon {...args} name="check" />
+        <Icon {...args} name="cross" />
+        <Icon {...args} name="plus" />
+        <Icon {...args} name="export" />
+        <Icon {...args} name="camera" />
+        <Icon {...args} name="filter" />
+        <Icon {...args} name="settings" />
+        <Icon {...args} name="burger" />
+        <Icon {...args} name="meatballs" />
+        <Icon {...args} name="kebab" />
+        <Icon {...args} name="arrow-down" />
+        <Icon {...args} name="arrow-left" />
+        <Icon {...args} name="arrow-up" />
+        <Icon {...args} name="arrow-right" />
+        <Icon {...args} name="calendar" />
+        <Icon {...args} name="login" />
+        <Icon {...args} name="logout" />
     </div>
 );
 
