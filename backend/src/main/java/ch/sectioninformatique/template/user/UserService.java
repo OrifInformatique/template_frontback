@@ -47,8 +47,7 @@ public class UserService {
     private final UserMapper userMapper;
 
     /** Repository for item data access */
-    @Autowired
-    private ItemRepository itemRepository;
+    private final ItemRepository itemRepository;
 
     /**
      * Authenticates a user with their credentials.

@@ -3,3 +3,9 @@ application.properties
 
 ### VS Code ###
 .vscode/
+
+### Cursor ###
+.cursor/
+
+### Logs ###
+logs/
