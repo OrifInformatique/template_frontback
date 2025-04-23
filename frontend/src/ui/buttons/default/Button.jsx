@@ -1,11 +1,35 @@
 import React from "react";
 import PropTypes from "prop-types";
 
+// UI elements
+import Icon from "../../icon/Icon";
+
 const Button = ({
-    className = "", primary = false, label, size = "medium", ...props
+    className = "",
+    variant = "tertiary",
+    label = null,
+    icon = null,
+    size = "medium",
+    ...props
 }) => {
-    const mode = primary ? "bg-primary text-white active:bg-opacity-80"
-        : "border border-black border-opacity-60 active:text-gray-700";
+    const buttonMode = (variant) => {
+        switch (variant) {
+            case "primary":
+                return "bg-primary text-white active:bg-opacity-80";
+        
+            case "secondary":
+                return "border border-primary text-primary hover:bg-primary hover:text-white active:bg-opacity-80 active:border-opacity-0";
+
+            case "tertiary":
+                return "border border-black border-opacity-60 hover:bg-gray-800 hover:text-white active:bg-gray-600 active:border-opacity-0";
+
+            case "danger":
+                return "border border-red-700 text-red-700 hover:bg-red-700 hover:text-white active:bg-opacity-80 active:border-opacity-0";
+
+            default:
+                return "border border-black border-opacity-60 active:text-gray-700";
+        }
+    }
 
     const buttonSize = (size) => {
         switch (size) {
@@ -23,21 +47,61 @@ const Button = ({
         }
     }
 
+    const iconColor = (variant) => {
+        switch (variant) {
+            case "primary":
+                return "white"
+        
+            case "secondary":
+                return "primary";
+
+            case "tertiary":
+                return "black";
+
+            case "danger":
+                return "danger";
+        }
+    }
+
+    const iconSize = (size) => {
+        switch (size) {
+            case "small":
+                return "4";
+            
+            case "medium":
+                return "6"
+
+            case "large":
+                return "8";
+        }
+    }
+
     return (
         <button
-            className={["font-semibold rounded-full transition transform duration-300 hover:scale-105 px-4 py-2",
-                className, mode, buttonSize(size)].join(" ")}
+            className={["group flex items-center font-semibold rounded-sm transition transform duration-300 px-2 py-2 gap-2 hover:scale-105",
+                className, buttonMode(variant), buttonSize(size)].join(" ")}
             {...props}
         >
-            {label}
+            {icon && (
+                <span>
+                    <Icon name={icon} color={iconColor(variant)} size={iconSize(size)} />
+                </span>
+            )}
+            {label && (
+                <span>{label}</span>
+            )}
+            {!icon && !label && (
+                <span><Icon size={iconSize(size)} /></span>
+            )}
         </button>
     );
 }
 
 Button.propTypes = {
     className: PropTypes.string,
-    primary: PropTypes.bool,
-    label: PropTypes.string.isRequired,
+    variant: PropTypes.oneOf(["primary", "secondary", "tertiary", "danger"]),
+    label: PropTypes.string,
+    icon: PropTypes.string,
     size: PropTypes.oneOf(["small", "medium", "large"]),
     onClick: PropTypes.func
 }

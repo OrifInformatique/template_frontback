@@ -7,26 +7,48 @@ export default {
     tags: ["autodocs"],
     parameters: { layout: "centered" },
     args: {
-        label: "Button",
         onClick: fn() }
 }
 
 export const Primary = {
     args: {
-        primary: true
+        variant: "primary",
+        icon: "settings",
+        label: "Settings"
     }
 }
 
-export const Secondary = {}
+export const Secondary = {
+    args: {
+        variant: "secondary",
+        label: "Save changes"
+    }
+}
+
+export const Tertiary = {
+    args: {
+        label: "Cancel",
+        icon: "restore"
+    }
+}
+
+export const Danger = {
+    args: {
+        variant: "danger",
+        icon: "cross"
+    }
+}
 
 export const Small = {
     args: {
-        size: "small"
+        size: "small",
+        label: "Button"
     }
 }
 
 export const Large = {
     args: {
-        size: "large"
+        size: "large",
+        label: "Button"
     }
 }
