@@ -1,18 +1,42 @@
+# spring.application.name=Backend-template
+
 ### Tomcat configuration ###
 # server.port=${PORT:9000}
-#
+ 
 ### Spring profile ###
 # Environnment is set in `.env`
 # Set to `dev` by default if none found.
 # spring.profiles.active=${ENVIRONMENT:dev}
-
 # Prevent the app from running without a set environnment
 # spring.main.allow-bean-definition-overriding=false
-
-### Spring profile ###
-# spring.profiles.active=dev
-
+ 
 ### Database connection ###
-# spring.datasource.url=jdbc:mariadb://localhost:3306/spring-template
-# spring.datasource.username=root
+# spring.datasource.url=jbdc:mariadb://<URL here>
+# spring.datasource.username=
 # spring.datasource.password=
+  
+### default security credentials ###
+# spring.security.user.name=
+# spring.security.user.password=
+
+#          ╭──────────────────────────────────────────────────────────╮
+#          │                          oauth2                          │
+#          ╰──────────────────────────────────────────────────────────╯
+
+### Azure ###
+# custom.azure.account.tenant-id=
+# spring.security.oauth2.client.provider.azure.issuer-uri=https://login.microsoftonline.com/${custom.azure.account.tenant-id}/v2.0
+# spring.security.oauth2.client.registration.azure.client-id=
+# spring.security.oauth2.client.registration.azure.client-secret=
+### Info retreived from the MS graph user's account ###
+# spring.security.oauth2.client.registration.azure.scope=
+
+### Google exemple for multiple provider login ###
+# spring.security.oauth2.client.registration.google.client-id=
+# spring.security.oauth2.client.registration.google.client-secret=
+# spring.security.oauth2.client.registration.google.scope=
+
+### Error levels for default env ###
+# logging.level.root=
+# logging.level.ch.sectioninformatique=
+# logging.level.org.springframework.boot.web.embedded.tomcat=
