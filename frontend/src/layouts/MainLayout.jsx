@@ -7,7 +7,7 @@ import ScrollToTopButton from "../ui/buttons/scroll-to-top/ScrollToTopButton";
 
 const MainLayout = () => {
   return (<>
-      <Header title="App title" onLogin={() => {}} onLogout={() => {}} />
+      <Header title="App title" />
       {/* <Outlet /> */}
       <div className="flex justify-center items-center font-medium text-4xl text-gray-500 h-96 bg-background">
         C O N T E N T

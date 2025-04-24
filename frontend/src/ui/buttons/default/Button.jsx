@@ -78,7 +78,7 @@ const Button = ({
 
     return (
         <button
-            className={["group flex items-center font-semibold rounded-sm transition transform duration-300 px-2 py-2 gap-2 hover:scale-105",
+            className={["group flex justify-center items-center font-semibold rounded-sm transition transform duration-300 px-4 py-2 gap-2 hover:scale-105",
                 className, buttonMode(variant), buttonSize(size)].join(" ")}
             {...props}
         >

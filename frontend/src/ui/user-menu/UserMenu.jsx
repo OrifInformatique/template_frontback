@@ -1,7 +1,14 @@
 import React, { useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 
-const UserMenu = ({ user = null, setIsOpen }) => {
+import Button from "../buttons/default/Button";
+
+const UserMenu = ({
+    user = null,
+    setIsOpen,
+    onLogin = () => {},
+    onLogout = () => {}
+}) => {
     const ref = useRef(null);
 
     useEffect(() => {
@@ -20,16 +27,16 @@ const UserMenu = ({ user = null, setIsOpen }) => {
     return (
         <div ref={ref} className="absolute flex flex-col items-end gap-2 mt-4 right-2 top-full border bg-gray-100 p-4">
             {user ? (<>
-                <div>Bonjour, <b>{user.name}</b> !</div>
+                <span>Bonjour, <b>{user.name}</b> !</span>
                 <ul className="flex flex-col items-end text-primary">
-                    <li><a href="/">Changer de mot de passe</a></li>
                     {user.role === "admin" && <li><a href="/">Administration</a></li>}
+                    <li><a href="/">Changer de mot de passe</a></li>
                 </ul>
-            </>) : (
-                <ul>
-                    <li>Vous n'êtes pas connecté</li>
-                </ul>
-            )}
+                <Button label="Logout" icon="logout" onClick={onLogout} />
+            </>) : (<>
+                <p>Vous n'êtes pas connecté</p>
+                <Button variant="primary" label="Login" icon="login" onClick={onLogin} />
+            </>)}
         </div>
     );
 }
@@ -39,8 +46,9 @@ UserMenu.propTypes = {
         name: PropTypes.string.isRequired,
         role: PropTypes.oneOf(["admin", "user"]).isRequired
     }),
-    isOpen: PropTypes.bool.isRequired,
-    setIsOpen: PropTypes.func.isRequired
+    setIsOpen: PropTypes.func.isRequired,
+    onLogin: PropTypes.func,
+    onLogout: PropTypes.func
 }
 
 export default UserMenu;

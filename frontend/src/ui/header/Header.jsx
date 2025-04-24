@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 
-import Button from "../buttons/default/Button";
+// UI elements
 import Icon from "../icon/Icon";
 import Logo from "../logo";
 import UserMenu from "../user-menu/UserMenu";
 
-const Header = ({ user = null, title, onLogin, onLogout }) => {
+const Header = ({ user = null, title, childElement = null }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -17,23 +17,7 @@ const Header = ({ user = null, title, onLogin, onLogout }) => {
                     {title}
                 </h1>
                 <div className="flex items-center gap-x-4">
-                    {user ? (
-                        <Button
-                            primary={false}
-                            label="Logout"
-                            size="medium"
-                            onClick={onLogout}
-                            className="ml-auto"
-                        />
-                    ) : (
-                        <Button
-                            primary={true}
-                            label="Login"
-                            size="medium"
-                            onClick={onLogin}
-                            className="ml-auto"
-                        />
-                    )}
+                    {childElement}
                     <a
                         href="#"
                         onClick={(e) => {
@@ -58,8 +42,7 @@ Header.propTypes = {
         role: PropTypes.oneOf(["admin", "user"]).isRequired
     }),
     title: PropTypes.string.isRequired,
-    onLogin: PropTypes.func.isRequired,
-    onLogout: PropTypes.func.isRequired
+    childElement: PropTypes.element
 }
 
 export default Header;
