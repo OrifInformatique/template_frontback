@@ -4,8 +4,25 @@ export default {
     title: "Components/UI/InputNumber",
     component: InputNumber,
     tags: ["autodocs"],
-    layout: "fullscreen",
-    args: { label: "Nombre" }
+    layout: "fullscreen"
 }
 
-export const Default = {}
+export const LimitedValues = {
+    args: {
+        id: "number-1",
+        name: "number-1",
+        label: "Entrez votre âge :",
+        min: 0,
+        max: 130,
+        required: true
+    }
+}
+
+export const Disabled = {
+    args: {
+        id: "number-2",
+        name: "number-2",
+        label: "Quantité :",
+        disabled: true
+    }
+}
