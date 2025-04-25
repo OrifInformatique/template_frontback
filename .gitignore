@@ -6,6 +6,3 @@ application.properties
 
 ### Cursor ###
 .cursor/
-
-### Logs ###
-logs/
