@@ -7,9 +7,23 @@ export default {
     tags: ["autodocs"],
     layout: "fullscreen",
     args: {
-        label: "Checkbox",
-        onChange: fn()
+        label: "Checkbox"
     }
 }
 
-export const Default = {}
+export const Default = {
+    args: {
+        id: "checkbox-1",
+        name: "checkbox-1",
+        required: true
+    }
+}
+
+export const Disabled = {
+    args: {
+        id: "checkbox-2",
+        name: "checkbox-2",
+        defaultChecked: true,
+        disabled: true
+    }
+}
