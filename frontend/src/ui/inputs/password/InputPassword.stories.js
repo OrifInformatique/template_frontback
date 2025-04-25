@@ -5,7 +5,20 @@ export default {
     component: InputPassword,
     tags: ["autodocs"],
     layout: "fullscreen",
-    args: { label: "Mot de passe" }
+    args: { label: "Mot de passe :" }
 }
 
-export const Default = {}
+export const Default = {
+    args: {
+        id: "password-1",
+        name: "password-1",
+        placeholder: "Min. 8 caractères",
+        required: true
+    }
+}
+
+export const Disabled = {
+    args: {
+        disabled: true
+    }
+}

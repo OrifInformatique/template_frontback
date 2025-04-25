@@ -37,6 +37,8 @@ export const AllIcons = (args) => (
         <Icon {...args} name="calendar" />
         <Icon {...args} name="login" />
         <Icon {...args} name="logout" />
+        <Icon {...args} name="eye" />
+        <Icon {...args} name="eye-slash" />
     </div>
 );
 
