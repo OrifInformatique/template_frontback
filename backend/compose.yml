@@ -20,6 +20,8 @@ services:
       - "8080:8080"
     depends_on:
       - db
+    networks:
+      - spring_network
 
   db:
     container_name: "Spring-boot-mariadb"
