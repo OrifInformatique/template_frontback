@@ -4,11 +4,11 @@ import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -77,7 +77,7 @@ class UserTest {
                 .build();
 
         // When
-        Set<GrantedAuthority> authorities = (Set<GrantedAuthority>) user.getAuthorities();
+        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
 
         // Then
         System.out.println("Authorities found: " + authorities);
