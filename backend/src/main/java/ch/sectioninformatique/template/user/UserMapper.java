@@ -6,7 +6,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Mapper interface for converting between User entities and DTOs.

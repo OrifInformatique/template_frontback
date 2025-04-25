@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 import ch.sectioninformatique.template.user.UserAuthenticationProvider;
 
@@ -56,9 +57,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      */
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+                
+        if (request == null || response == null || filterChain == null) {
+            throw new IllegalArgumentException("Request, response and filterChain cannot be null");
+        }
+
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (header != null) {
