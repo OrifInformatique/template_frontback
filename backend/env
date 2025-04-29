@@ -2,6 +2,9 @@
 # Remember to run `docker compose up --build` when changing environment
 ENVIRONMENT=dev
 
+# Define the Tomcat server port for your Docker app container
+PORT=8080
+
 # WARN: Set your database production database in `application.proprieties`!
 
 # Local dev database (Local mariadb)

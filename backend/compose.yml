@@ -10,14 +10,16 @@ services:
       dockerfile: Dockerfile
       target: "${ENVIRONMENT}" # Use the environment variable to target the desired stage
     environment:
+      # Pass environment variables to the container and the Spring Boot app
       SPRING_PROFILES_ACTIVE: "${ENVIRONMENT}"
+      PORT: "${PORT}"
       # Declare the production database in `application.proprieties` to prevent
       # pushing to github the URL by mistake 
       # SPRING_DATASOURCE_URL: "${SPRING_DATASOURCE_URL}"
       DEV_SPRING_DATASOURCE_URL: "${DEV_SPRING_DATASOURCE_URL}"
       TEST_SPRING_DATASOURCE_URL: "${TEST_SPRING_DATASOURCE_URL}"
     ports:
-      - "8080:8080"
+      - "${PORT}:${PORT}"
     depends_on:
       - db
     networks:

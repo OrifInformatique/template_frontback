@@ -1,8 +1,3 @@
-# spring.application.name=Backend-template
-
-### Tomcat configuration ###
-# server.port=${PORT:9000}
- 
 ### Spring profile ###
 # Environnment is set in `.env`
 # Set to `dev` by default if none found.
