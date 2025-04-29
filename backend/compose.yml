@@ -18,6 +18,8 @@ services:
       # SPRING_DATASOURCE_URL: "${SPRING_DATASOURCE_URL}"
       DEV_SPRING_DATASOURCE_URL: "${DEV_SPRING_DATASOURCE_URL}"
       TEST_SPRING_DATASOURCE_URL: "${TEST_SPRING_DATASOURCE_URL}"
+      SPRING_DATASOURCE_USERNAME: "${DB_USERNAME}"
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
     ports:
       - "${PORT}:${PORT}"
     depends_on:
@@ -30,8 +32,8 @@ services:
     # TODO: Find a lightweight LTS docker image for mariadb
     image: mariadb:latest
     environment:
-      MARIADB_ROOT_PASSWORD: "pwd"
-      MARIADB_DATABASE: "dev_db"
+      MARIADB_ROOT_PASSWORD: "${DB_USERNAME}"
+      MARIADB_DATABASE: "${DB_PASSWORD}"
     volumes:
     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
