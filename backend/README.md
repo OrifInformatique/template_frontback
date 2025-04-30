@@ -51,7 +51,7 @@ For more info, head to the [Docker section](#docker) of this documentation.
 #### `.env` file
 This file is used by Docker to configure the containers. The environment variables defined in `.env` can be transmitted to the container and the Spring Boot app through the `compose.yml` file.
 
-1. DON'T modify the `env` file but make a copy of it in the backend root folder.
+1. DON'T modify the `env-dist` file but make a copy of it in the backend root folder.
 2. Rename your copied file to `.env`.
 3. If needed, change the values of the environment variables defined.
 
