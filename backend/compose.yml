@@ -27,8 +27,7 @@ services:
 
   db:
     container_name: "Spring-boot-mariadb"
-    # TODO: Find a lightweight LTS docker image for mariadb
-    image: mariadb:latest
+    image: mariadb:11.4
     environment:
       MARIADB_ROOT_PASSWORD: "${DB_USERNAME}"
       MARIADB_DATABASE: "${DB_PASSWORD}"
