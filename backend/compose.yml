@@ -1,17 +1,41 @@
+# Don't forget to run 
+# `docker compose up` with `ENVIRONMENT=base` set in `.env`
+# the first time you run this project!"
+
 services:
-  mariadb:
-    image: mariadb:latest
-    container_name: fcc-SB-mariadb
+  app:
+    container_name: "Spring-boot-${ENVIRONMENT}"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: "${ENVIRONMENT}" # Use the environment variable to target the desired stage
     environment:
-      MYSQL_DATABASE: db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: pwd
-      MYSQL_ROOT_PASSWORD: pwd
+      # Pass environment variables to the container and the Spring Boot app
+      SPRING_PROFILES_ACTIVE: "${ENVIRONMENT}"
+      PORT: "${PORT}"
+      # Prod database SPRING_DATASOURCE_URL has to be set in the production environment
+      DEV_SPRING_DATASOURCE_URL: "${DEV_SPRING_DATASOURCE_URL}"
+      TEST_SPRING_DATASOURCE_URL: "${TEST_SPRING_DATASOURCE_URL}"
+      SPRING_DATASOURCE_USERNAME: "${DB_USERNAME}"
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
     ports:
-      - "3306:3306"
+      - "${PORT}:${PORT}"
+    depends_on:
+      - db
+    networks:
+      - spring_network
+
+  db:
+    container_name: "Spring-boot-mariadb"
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: "${DB_USERNAME}"
+      MARIADB_DATABASE: "${DB_PASSWORD}"
     volumes:
-      - mariadb_data:/var/lib/mysql
-    restart: unless-stopped
- 
-volumes:
-  mariadb_data:
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - spring_network
+
+networks:
+  spring_network:
+    driver: bridge

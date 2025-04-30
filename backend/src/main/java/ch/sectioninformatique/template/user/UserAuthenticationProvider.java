@@ -1,8 +1,6 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.user.UserDto;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
