@@ -10,7 +10,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 @RestController
 public class OAuth2Controller {
 
-    private final OAuth2AuthorizedClientService authorizedClientService;
     private final UserAuthenticationProvider userAuthenticationProvider;
     private final UserService userService;
     private static final Logger log = LoggerFactory.getLogger(OAuth2Controller.class);
@@ -36,14 +34,11 @@ public class OAuth2Controller {
     /**
      * Constructs a new Oauth2Controller with the required dependencies.
      *
-     * @param authorizedClientService Service for managing OAuth2 authorized clients
      * @param userAuthenticationProvider Provider for user authentication and token generation
      * @param userService Service for user management
      */
-    public OAuth2Controller(OAuth2AuthorizedClientService authorizedClientService,
-                            UserAuthenticationProvider userAuthenticationProvider,
+    public OAuth2Controller(UserAuthenticationProvider userAuthenticationProvider,
                             UserService userService) {
-        this.authorizedClientService = authorizedClientService;
         this.userAuthenticationProvider = userAuthenticationProvider;
         this.userService = userService;
     }

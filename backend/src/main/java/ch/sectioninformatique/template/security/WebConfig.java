@@ -41,7 +41,7 @@ public class WebConfig {
      * @return FilterRegistrationBean containing the configured CORS filter
      */
     @Bean
-    public FilterRegistrationBean corsFilter() {
+    public FilterRegistrationBean<CorsFilter> corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
@@ -60,7 +60,7 @@ public class WebConfig {
                 HttpMethod.DELETE.name()));
         config.setMaxAge(MAX_AGE);
         source.registerCorsConfiguration("/**", config);
-        FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
+        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<CorsFilter>(new CorsFilter(source));
 
         // should be set order to -100 because we need to CorsFilter before
         // SpringSecurityFilter
