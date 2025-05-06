@@ -2,13 +2,20 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 
 const InputNumber = ({
-    id, name, label = null, min = null, max = null, disabled = false, required = false
+    id,
+    name,
+    label = null,
+    min = null,
+    max = null,
+    disabled = false,
+    required = false
 }) => {
     const [value, setValue] = useState(0);
 
+    if (disabled) required = false;
+
     const handleNumberChange = (event) => {
         let inputValue = event.target.value;
-        console.log(inputValue);
 
         if (inputValue === "") {
             setValue(min);
@@ -29,11 +36,15 @@ const InputNumber = ({
 
     return (
         <label htmlFor={id} className="flex flex-col gap-2 items-start">
-            {label && <span>{label}</span>}
+        <div>
+            {required && <span className="text-red-700">* </span>}
+            <span className="text-primary font-medium">{label}</span>
+        </div>
             <input
+                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
+                type="number"
                 id={id}
                 name={name}
-                type="number"
                 min={min}
                 max={max}
                 value={value}
@@ -41,7 +52,6 @@ const InputNumber = ({
                 disabled={disabled}
                 required={required}
             />
-            <p>{value}</p>
         </label>
     );
 }

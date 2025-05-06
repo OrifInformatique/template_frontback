@@ -6,6 +6,8 @@ const InputFile = ({
 }) => {
     const [file, setFile] = useState(null);
 
+    if (disabled) required = false;
+
     const handleFileChange = (event) => {
         const selectedFile = event.target.files[0];
         if (selectedFile) {
@@ -17,11 +19,14 @@ const InputFile = ({
 
     return (
         <label htmlFor={id} className="flex flex-col gap-2 items-start">
-            {label && <span>{label}</span>}
+        <div>
+            {required && <span className="text-red-700">* </span>}
+            <span className="text-primary font-medium">{label}</span>
+        </div>
             <input
+                type="file"
                 id={id}
                 name={name}
-                type="file"
                 accept={accept}
                 onChange={handleFileChange}
                 disabled={disabled}

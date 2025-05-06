@@ -6,6 +6,8 @@ const InputCheckbox = ({
 }) => {
     const [isChecked, setIsChecked] = useState(defaultChecked);
 
+    if (disabled && !defaultChecked) required = false;
+
     const handleCheckboxChange = (event) => {
         setIsChecked(event.target.checked);
     }
@@ -13,9 +15,9 @@ const InputCheckbox = ({
     return (
         <label htmlFor={id} className="flex gap-2 items-center">
             <input
+                type="checkbox"
                 id={id}
                 name={name}
-                type="checkbox"
                 checked={isChecked}
                 onChange={handleCheckboxChange}
                 disabled={disabled}

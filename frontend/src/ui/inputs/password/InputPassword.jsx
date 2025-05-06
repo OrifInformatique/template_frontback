@@ -10,6 +10,8 @@ const InputPassword = ({
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
+    if (disabled) required = false;
+
     const handlePasswordChange = (event) => {
         setPassword(event.target.value);
     }
@@ -21,23 +23,30 @@ const InputPassword = ({
 
     return (
         <label htmlFor={id} className="flex flex-col gap-2 items-start">
-            <span>{label}</span>
+            <div>
+                {required && <span className="text-red-700">* </span>}
+                <span className="text-primary font-medium">{label}</span>
+            </div>
             <div className="flex items-center">
                 <input
+                    className="rounded-md pr-10 disabled:bg-disabled focus:ring-primary focus:border-primary"
+                    type={showPassword ? "text" : "password"}
                     id={id}
                     name={name}
-                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={handlePasswordChange}
                     disabled={disabled}
                     placeholder={placeholder}
                     required={required}
-                    className="pr-10"
                 />
-                <button className="-ml-8" disabled={disabled} onClick={togglePasswordVisibility}>
+                <button
+                    className="-ml-8" 
+                    disabled={disabled}
+                    onClick={togglePasswordVisibility}
+                >
                     {showPassword
-                        ? <Icon name="eye-slash" size={6} />
-                        : <Icon name="eye" size={6} />}
+                        ? <Icon name="eye-slash" size="6" />
+                        : <Icon name="eye" size="6" />}
                 </button>
             </div>
         </label>

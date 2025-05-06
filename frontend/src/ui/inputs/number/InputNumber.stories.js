@@ -11,7 +11,7 @@ export const LimitedValues = {
     args: {
         id: "number-1",
         name: "number-1",
-        label: "Entrez votre âge :",
+        label: "Votre âge :",
         min: 0,
         max: 130,
         required: true

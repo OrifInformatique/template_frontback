@@ -4,10 +4,10 @@ import PropTypes from "prop-types";
 const InputSearch = ({ id, label, disabled = false }) => {
     return (
         <label htmlFor={id} className="flex gap-2 items-center">
-            <span>{label}</span>
+            <span className="text-primary font-medium">{label}</span>
             <input
-                id={id}
                 type="search"
+                id={id}
                 disabled={disabled}
             />
         </label>

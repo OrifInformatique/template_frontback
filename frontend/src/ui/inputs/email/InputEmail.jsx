@@ -6,17 +6,23 @@ const InputEmail = ({
 }) => {
     const [email, setEmail] = useState("");
 
+    if (disabled) required = false;
+
     const handleEmailChange = (event) => {
         setEmail(event.target.value);
     }
 
     return (
         <label htmlFor={id} className="flex flex-col gap-2">
-            <span>{label}</span>
+            <div>
+                {required && <span className="text-red-700">* </span>}
+                <span className="text-primary font-medium">{label}</span>
+            </div>
             <input
+                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
+                type="email"
                 id={id}
                 name={name}
-                type="email"
                 value={email}
                 onChange={handleEmailChange}
                 disabled={disabled}

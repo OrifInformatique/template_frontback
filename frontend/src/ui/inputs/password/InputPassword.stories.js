@@ -19,6 +19,8 @@ export const Default = {
 
 export const Disabled = {
     args: {
+        id: "password-2",
+        name: "password-2",
         disabled: true
     }
 }

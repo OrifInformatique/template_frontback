@@ -17,7 +17,7 @@ const Icon = ({ name = "home", size = 12, color = "black" }) => {
         "white": "text-white",
         "black": "text-black group-hover:text-white",
         "primary": "text-primary group-hover:text-white",
-        "danger": "text-red-700 group-hover:text-white"
+        "danger": "text-danger group-hover:text-white"
     }
 
     const sizeClass = sizeClasses[size] || sizeClasses[12];

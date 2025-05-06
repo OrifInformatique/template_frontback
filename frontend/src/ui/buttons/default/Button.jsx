@@ -24,7 +24,7 @@ const Button = ({
                 return "border border-black border-opacity-60 hover:bg-gray-800 hover:text-white active:bg-gray-600 active:border-opacity-0";
 
             case "danger":
-                return "border border-red-700 text-red-700 hover:bg-red-700 hover:text-white active:bg-opacity-80 active:border-opacity-0";
+                return "border border-danger text-danger hover:bg-danger hover:text-white active:bg-opacity-80 active:border-opacity-0";
 
             default:
                 return "border border-black border-opacity-60 active:text-gray-700";
