@@ -29,12 +29,17 @@ services:
     container_name: "Spring-boot-mariadb"
     image: mariadb:11.4
     environment:
-      MARIADB_ROOT_PASSWORD: "${DB_USERNAME}"
-      MARIADB_DATABASE: "${DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MARIADB_DATABASE: "dev_db"
     volumes:
     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - spring_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   spring_network:
