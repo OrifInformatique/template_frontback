@@ -39,6 +39,13 @@ export const AllIcons = (args) => (
         <Icon {...args} name="logout" />
         <Icon {...args} name="eye" />
         <Icon {...args} name="eye-slash" />
+        <Icon {...args} name="magnifying-glass" />
+        <Icon {...args} name="chevron-down" />
+        <Icon {...args} name="chevron-left" />
+        <Icon {...args} name="chevron-up" />
+        <Icon {...args} name="chevron-right" />
+        <Icon {...args} name="chevron-double-left" />
+        <Icon {...args} name="chevron-double-right" />
     </div>
 );
 
