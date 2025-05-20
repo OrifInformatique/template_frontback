@@ -10,6 +10,7 @@ const Button = ({
     label = null,
     icon = null,
     size = "medium",
+    hideTextOnMobile = true,
     ...props
 }) => {
     const buttonMode = (variant) => {
@@ -82,16 +83,22 @@ const Button = ({
                 className, buttonMode(variant), buttonSize(size)].join(" ")}
             {...props}
         >
-            {icon && (
-                <span>
-                    <Icon name={icon} color={iconColor(variant)} size={iconSize(size)} />
-                </span>
+            {!label && icon && (
+                <Icon name={icon} color={iconColor(variant)} size={iconSize(size)} />
             )}
-            {label && (
+            {label && !icon && (
                 <span>{label}</span>
             )}
-            {!icon && !label && (
-                <span><Icon size={iconSize(size)} /></span>
+            {label && icon && (
+                <>
+                    <Icon name={icon} color={iconColor(variant)} size={iconSize(size)} />
+                    <span className={hideTextOnMobile ? "hidden sm:inline" : ""}>
+                        {label}
+                    </span>
+                </>
+            )}
+            {!label && !icon && (
+                <Icon size={iconSize(size)} />
             )}
         </button>
     );
