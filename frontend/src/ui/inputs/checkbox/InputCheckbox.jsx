@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 
 const InputCheckbox = ({
-    id, name, label, defaultChecked = false, disabled = false, required = false
+    id,
+    name,
+    label,
+    onChange = () => {},
+    defaultChecked = false,
+    disabled = false,
+    required = false
 }) => {
     const [isChecked, setIsChecked] = useState(defaultChecked);
 
@@ -19,7 +25,7 @@ const InputCheckbox = ({
                 id={id}
                 name={name}
                 checked={isChecked}
-                onChange={handleCheckboxChange}
+                onChange={onChange}
                 disabled={disabled}
                 required={required}
             />
@@ -32,6 +38,7 @@ InputCheckbox.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
+    onChange: PropTypes.func,
     defaultChecked: PropTypes.bool,
     disabled: PropTypes.bool,
     required: PropTypes.bool
