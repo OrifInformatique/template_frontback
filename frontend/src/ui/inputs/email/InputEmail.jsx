@@ -2,13 +2,25 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 
 const InputEmail = ({
-    id, name, label, disabled = false, placeholder = "", required = false
+    id,
+    name,
+    label,
+    value = null,
+    defaultValue = null,
+    onChangeFunction = null,
+    disabled = false,
+    placeholder = "",
+    required = false
 }) => {
-    const [email, setEmail] = useState("");
+    // Internal state to the input
+    const [email, setEmail] = useState(value ?? defaultValue ?? "");
 
     if (disabled) required = false;
 
     const handleEmailChange = (event) => {
+        if(onChangeFunction)
+            onChangeFunction(event.target.value)
+
         setEmail(event.target.value);
     }
 

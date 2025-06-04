@@ -12,7 +12,7 @@ const InputDate = ({
     required = false
 }) => {
     // Internal state to the input
-    const [selectedDate, setSelectedDate] = useState(value ?? defaultValue);
+    const [selectedDate, setSelectedDate] = useState(value ?? defaultValue ?? "");
 
     if (disabled) required = false;
 
