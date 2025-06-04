@@ -17,12 +17,15 @@ const Button = ({
         switch (variant) {
             case "primary":
                 return "bg-primary text-white active:bg-opacity-80";
-        
+
             case "secondary":
                 return "border border-primary text-primary hover:bg-primary hover:text-white active:bg-opacity-80 active:border-opacity-0";
 
             case "tertiary":
                 return "border border-black border-opacity-60 hover:bg-gray-800 hover:text-white active:bg-gray-600 active:border-opacity-0";
+
+            case "link":
+                return "text-primary font-light hover:underline focus:underline"
 
             case "danger":
                 return "border border-danger text-danger hover:bg-danger hover:text-white active:bg-opacity-80 active:border-opacity-0";
@@ -52,7 +55,7 @@ const Button = ({
         switch (variant) {
             case "primary":
                 return "white"
-        
+
             case "secondary":
                 return "primary";
 
@@ -68,7 +71,7 @@ const Button = ({
         switch (size) {
             case "small":
                 return "4";
-            
+
             case "medium":
                 return "6"
 
@@ -79,7 +82,8 @@ const Button = ({
 
     return (
         <button
-            className={["group flex justify-center items-center font-semibold rounded-sm transition transform duration-300 px-4 py-2 gap-2 hover:scale-105",
+            className={["group flex justify-center items-center font-semibold",
+                variant !== "link" ?  "rounded-sm transition transform duration-300 px-4 py-2 gap-2 hover:scale-105" : "",
                 className, buttonMode(variant), buttonSize(size)].join(" ")}
             {...props}
         >

@@ -93,14 +93,14 @@ const Azure = () =>
                         </form>
 
                         <Button
-                            variant="tertiary"
+                            variant="link"
                             label="Envoyer un nouveau code"
                             className="w-full"
                             onClick={() => sendVerificationCodeToEmail()}
                         />
 
                         <Button
-                            variant="tertiary"
+                            variant="link"
                             label="Changer l'adresse e-mail"
                             className="w-full"
                             onClick={() => prevStep()}
