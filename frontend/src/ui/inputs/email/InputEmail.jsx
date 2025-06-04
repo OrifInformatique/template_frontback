@@ -12,17 +12,7 @@ const InputEmail = ({
     placeholder = "",
     required = false
 }) => {
-    // Internal state of the input
-    const [email, setEmail] = useState(value ?? defaultValue ?? "");
-
     if (disabled) required = false;
-
-    const handleEmailChange = (event) => {
-        if(onChangeFunction)
-            onChangeFunction(event.target.value)
-
-        setEmail(event.target.value);
-    }
 
     return (
         <label htmlFor={id} className="flex flex-col gap-2">
@@ -35,8 +25,11 @@ const InputEmail = ({
                 type="email"
                 id={id}
                 name={name}
-                value={email}
-                onChange={handleEmailChange}
+                {...value !== null
+                    ? { value: value }
+                    : { defaultValue: defaultValue }
+                }
+                onChange={onChangeFunction}
                 disabled={disabled}
                 placeholder={placeholder}
                 required={required}

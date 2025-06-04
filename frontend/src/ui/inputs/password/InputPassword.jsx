@@ -15,18 +15,9 @@ const InputPassword = ({
     placeholder = "",
     required = true
 }) => {
-    // Internal state of the input
-    const [password, setPassword] = useState(value ?? defaultValue ?? "");
     const [showPassword, setShowPassword] = useState(false);
 
     if (disabled) required = false;
-
-    const handlePasswordChange = (event) => {
-        if(onChangeFunction)
-            onChangeFunction(event.target.value);
-
-        setPassword(event.target.value);
-    }
 
     const togglePasswordVisibility = (e) => {
         e.preventDefault();
@@ -45,8 +36,11 @@ const InputPassword = ({
                     type={showPassword ? "text" : "password"}
                     id={id}
                     name={name}
-                    value={password}
-                    onChange={handlePasswordChange}
+                    {...value !== null
+                        ? { value: value }
+                        : { defaultValue: defaultValue }
+                    }
+                    onChange={onChangeFunction}
                     disabled={disabled}
                     placeholder={placeholder}
                     required={required}

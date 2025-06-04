@@ -15,13 +15,6 @@ const InputText = ({
 
     if (disabled) required = false;
 
-    const handleTextChange = (event) => {
-        if(onChangeFunction)
-            onChangeFunction(event.target.value);
-
-        setInternalValue(event.target.value)
-    }
-
     return (
         <label htmlFor={id} className="flex flex-col gap-2">
             <div>
@@ -33,8 +26,11 @@ const InputText = ({
                 type="text"
                 id={id}
                 name={name}
-                value={internalValue}
-                onChange={handleTextChange}
+                {...value !== null
+                    ? { value: value }
+                    : { defaultValue: defaultValue }
+                }
+                onChange={onChangeFunction}
                 disabled={disabled}
             />
         </label>

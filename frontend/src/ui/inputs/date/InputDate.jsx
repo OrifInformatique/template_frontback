@@ -11,17 +11,7 @@ const InputDate = ({
     disabled = false,
     required = false
 }) => {
-    // Internal state of the input
-    const [selectedDate, setSelectedDate] = useState(value ?? defaultValue ?? "");
-
     if (disabled) required = false;
-
-    const handleDateChange = (event) => {
-        if(onChangeFunction)
-            onChangeFunction(event.target.value);
-
-        setSelectedDate(event.target.value);
-    }
 
     return (
         <label htmlFor={id} className="flex flex-col gap-2 items-start">
@@ -34,8 +24,11 @@ const InputDate = ({
                 type="date"
                 id={id}
                 name={name}
-                value={selectedDate}
-                onChange={handleDateChange}
+                {...value !== null
+                    ? { value: value }
+                    : { defaultValue: defaultValue }
+                }
+                onChange={onChangeFunction}
                 disabled={disabled}
                 required={required}
             />

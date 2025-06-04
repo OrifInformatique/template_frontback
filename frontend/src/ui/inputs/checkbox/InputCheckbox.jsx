@@ -5,23 +5,13 @@ const InputCheckbox = ({
     id,
     name,
     label,
-    onChangeFunction = null,
-    defaultChecked = false,
     checked = null,
+    defaultChecked = null,
+    onChangeFunction = null,
     disabled = false,
     required = false
 }) => {
-    // Internal state of the input
-    const [isChecked, setIsChecked] = useState(checked ?? defaultChecked ?? false);
-
     if (disabled && !defaultChecked) required = false;
-
-    const handleCheckboxChange = (event) => {
-        if(onChangeFunction)
-            onChangeFunction(event.target.checked);
-
-        setIsChecked(event.target.checked);
-    }
 
     return (
         <label htmlFor={id} className="flex gap-2 items-center">
@@ -29,8 +19,11 @@ const InputCheckbox = ({
                 type="checkbox"
                 id={id}
                 name={name}
-                checked={isChecked}
-                onChange={handleCheckboxChange}
+                {...checked !== null
+                    ? { checked: checked }
+                    : { defaultChecked: defaultChecked }
+                }
+                onChange={onChangeFunction}
                 disabled={disabled}
                 required={required}
             />
@@ -43,9 +36,9 @@ InputCheckbox.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
-    onChangeFunction: PropTypes.func,
-    defaultChecked: PropTypes.bool,
     checked: PropTypes.bool,
+    defaultChecked: PropTypes.bool,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     required: PropTypes.bool
 }
