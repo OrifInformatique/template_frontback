@@ -1,12 +1,25 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 
-const InputDate = ({ id, name, label, disabled = false, required = false }) => {
-    const [selectedDate, setSelectedDate] = useState("");
+const InputDate = ({
+    id,
+    name,
+    label,
+    value = null,
+    defaultValue = null,
+    onChangeFunction = null,
+    disabled = false,
+    required = false
+}) => {
+    // Internal state to the input
+    const [selectedDate, setSelectedDate] = useState(value ?? defaultValue);
 
     if (disabled) required = false;
 
     const handleDateChange = (event) => {
+        if(onChangeFunction)
+            onChangeFunction(event.target.value);
+
         setSelectedDate(event.target.value);
     }
 

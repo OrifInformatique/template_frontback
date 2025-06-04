@@ -11,7 +11,7 @@ const InputCheckbox = ({
     disabled = false,
     required = false
 }) => {
-    // Provides an internal state to the input
+    // Internal state to the input
     const [isChecked, setIsChecked] = useState(checked ?? defaultChecked);
 
     if (disabled && !defaultChecked) required = false;
