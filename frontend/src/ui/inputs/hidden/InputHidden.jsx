@@ -1,7 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const InputHidden = ({ id, name, value = null }) => {
+const InputHidden = ({
+    id,
+    name,
+    value = null
+}) => {
     return (
         <input id={id} name={name} type="hidden" value={value} />
     );

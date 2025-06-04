@@ -5,12 +5,16 @@ const InputNumber = ({
     id,
     name,
     label = null,
-    min = null,
-    max = null,
+    min = -Infinity,
+    max = Infinity,
+    value = null,
+    defaultValue = null,
+    onChangeFunction = null,
     disabled = false,
     required = false
 }) => {
-    const [value, setValue] = useState(0);
+    // Internal state of the input
+    const [internalValue, setInternalValue] = useState(value ?? defaultValue ?? "");
 
     if (disabled) required = false;
 
@@ -18,7 +22,10 @@ const InputNumber = ({
         let inputValue = event.target.value;
 
         if (inputValue === "") {
-            setValue(min);
+            if(onChangeFunction)
+                onChangeFunction(min);
+
+            setInternalValue(min);
             return;
         }
 
@@ -26,11 +33,20 @@ const InputNumber = ({
         const numericValue = Number(normalizedValue);
 
         if (numericValue < min) {
-            setValue(min);
+            if(onChangeFunction)
+                onChangeFunction(min);
+
+            setInternalValue(min);
         } else if (numericValue > max) {
-            setValue(max);
+            if(onChangeFunction)
+                onChangeFunction(max);
+
+            setInternalValue(max);
         } else {
-            setValue(normalizedValue);
+            if(onChangeFunction)
+                onChangeFunction(normalizedValue);
+
+            setInternalValue(normalizedValue);
         }
     }
 
@@ -47,7 +63,7 @@ const InputNumber = ({
                 name={name}
                 min={min}
                 max={max}
-                value={value}
+                value={internalValue}
                 onChange={handleNumberChange}
                 disabled={disabled}
                 required={required}

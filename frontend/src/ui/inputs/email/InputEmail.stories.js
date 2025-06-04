@@ -27,16 +27,16 @@ export const Disabled = {
 
 export const Uncontrolled = {
     args: {
-        id: "date-3",
-        name: "date-3",
+        id: "email-3",
+        name: "email-3",
         defaultValue: "enter.email@here.com"
     }
 }
 
 export const Controlled = {
     args: {
-        id: "date-3",
-        name: "date-3",
+        id: "email-4",
+        name: "email-4",
         value: "",
         onChangeFunction: (email) => alert("The input contains \"" + email + "\".")
     }
