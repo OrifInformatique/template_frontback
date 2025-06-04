@@ -11,7 +11,7 @@ const InputDate = ({
     disabled = false,
     required = false
 }) => {
-    // Internal state to the input
+    // Internal state of the input
     const [selectedDate, setSelectedDate] = useState(value ?? defaultValue ?? "");
 
     if (disabled) required = false;
@@ -47,6 +47,9 @@ InputDate.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    defaultValue: PropTypes.string,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     required: PropTypes.bool
 }

@@ -12,7 +12,7 @@ const InputEmail = ({
     placeholder = "",
     required = false
 }) => {
-    // Internal state to the input
+    // Internal state of the input
     const [email, setEmail] = useState(value ?? defaultValue ?? "");
 
     if (disabled) required = false;
@@ -49,9 +49,12 @@ InputEmail.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    defaultValue: PropTypes.string,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     placeholder: PropTypes.string,
-    requried: PropTypes.bool
+    required: PropTypes.bool
 }
 
 export default InputEmail;
