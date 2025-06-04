@@ -5,16 +5,21 @@ const InputCheckbox = ({
     id,
     name,
     label,
-    onChange = () => {},
+    onChangeFunction = null,
     defaultChecked = false,
+    checked = null,
     disabled = false,
     required = false
 }) => {
-    const [isChecked, setIsChecked] = useState(defaultChecked);
+    // Provides an internal state to the input
+    const [isChecked, setIsChecked] = useState(checked ?? defaultChecked);
 
     if (disabled && !defaultChecked) required = false;
 
     const handleCheckboxChange = (event) => {
+        if(onChangeFunction)
+            onChangeFunction(event.target.checked);
+
         setIsChecked(event.target.checked);
     }
 
@@ -25,7 +30,7 @@ const InputCheckbox = ({
                 id={id}
                 name={name}
                 checked={isChecked}
-                onChange={onChange}
+                onChange={handleCheckboxChange}
                 disabled={disabled}
                 required={required}
             />
