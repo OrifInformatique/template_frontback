@@ -78,6 +78,9 @@ InputNumber.propTypes = {
     label: PropTypes.string.isRequired,
     min: PropTypes.number,
     max: PropTypes.number,
+    value: PropTypes.number,
+    defaultValue: PropTypes.number,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     required: PropTypes.bool
 }

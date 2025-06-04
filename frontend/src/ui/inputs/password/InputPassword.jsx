@@ -5,20 +5,32 @@ import PropTypes from "prop-types";
 import Icon from "../../icon/Icon";
 
 const InputPassword = ({
-    id, name, label, disabled = false, placeholder = "", required = true
+    id,
+    name,
+    label,
+    value = null,
+    defaultValue = null,
+    onChangeFunction = null,
+    disabled = false,
+    placeholder = "",
+    required = true
 }) => {
-    const [password, setPassword] = useState("");
+    // Internal state of the input
+    const [password, setPassword] = useState(value ?? defaultValue ?? "");
     const [showPassword, setShowPassword] = useState(false);
 
     if (disabled) required = false;
 
     const handlePasswordChange = (event) => {
+        if(onChangeFunction)
+            onChangeFunction(event.target.value);
+
         setPassword(event.target.value);
     }
 
     const togglePasswordVisibility = (e) => {
         e.preventDefault();
-        setShowPassword(!showPassword);
+        setShowPassword(prev => !prev);
     }
 
     return (
@@ -40,7 +52,7 @@ const InputPassword = ({
                     required={required}
                 />
                 <button
-                    className="-ml-8" 
+                    className="-ml-8"
                     disabled={disabled}
                     onClick={togglePasswordVisibility}
                 >
@@ -57,6 +69,9 @@ InputPassword.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    defaultValue: PropTypes.string,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     placeholder: PropTypes.string,
     required: PropTypes.bool
