@@ -10,7 +10,12 @@ export default {
     }
 }
 
-export const Default = {}
+export const Default = {
+    args: {
+        type: "neutral",
+        autoCloseTimer: 5000
+    }
+}
 
 export const Info = {
     args: {
@@ -45,6 +50,14 @@ export const ShortTimer = {
 export const VeryLongMessage = {
     args: {
         message: "This is a ridiculously, unnecessarily, outrageously, catastrophically, unnecessarily verbose, grandiloquent, extravagantly bloated, ultra-chunky, mega-monolithic snackbar message carefully engineered to push the boundaries of UI rendering and to make frontend developers weep softly in a dark corner.",
+        autoCloseTimer: 60000
+    }
+}
+
+export const VeryLongMessageWithIcon = {
+    args: {
+        type: "warning",
+        message: "Warning: This excessively long, super massive, ultra thicc, intergalactically verbose snackbar message may cause irreversible psychological damage to your layout engine, melt your flexbox, and awaken long-buried CSS traumas.",
         autoCloseTimer: 60000
     }
 }

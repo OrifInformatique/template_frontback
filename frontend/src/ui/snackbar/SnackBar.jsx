@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import clsx from "clsx";
 
 import Icon from "../icon/Icon";
@@ -28,59 +28,62 @@ const Snackbar = ({
             icon: "check",
             backgroundColor: "bg-green-500/80",
             borderColor: "border-black",
-            color: "text-white"
+            color: "text-black"
         },
         "warning": {
             icon: "home", // TODO : Add missing warning icon
             backgroundColor: "bg-amber-500/80",
             borderColor: "border-black",
-            color: "text-white"
+            color: "text-black"
         },
         "error": {
             icon: "home", // TODO : Add missing error icon
             backgroundColor: "bg-red-500/80",
             borderColor: "border-black",
-            color: "text-white"
+            color: "text-black"
         }
     }
 
     const [isDisplayed, setIsDisplayed] = useState(true);
-    const [progress, setProgress] = useState(100);
-    const intervalDelay = 100;
 
-    useEffect(() => {
+    // To display the time in a thin horizontal line.
+    const [progress, setProgress] = useState(100);
+    const intervalDelay = 50;
+
+    useEffect(() =>
+    {
         const start = Date.now();
 
-        const interval = setInterval(() => {
+        const interval = setInterval(() =>
+        {
             const elapsed = Date.now() - start;
             const percentage = Math.max(100 - (elapsed / autoCloseTimer) * 100, 0);
             setProgress(percentage);
         }, intervalDelay);
 
-        const timeout = setTimeout(() => {
+        const timeout = setTimeout(() =>
+        {
             clearInterval(interval);
             setIsDisplayed(false);
-        }, autoCloseTimer + intervalDelay);
+        }, autoCloseTimer + 100);
 
-        return () => {
-            clearInterval(interval);
-            clearTimeout(timeout);
-        };
+        return () => clearTimeout(timeout);
     }, [autoCloseTimer]);
 
     return (
         isDisplayed && (
             <article
+                title="Cliquer pour fermer" // TODO : Use i18n
                 onClick={() => setIsDisplayed(false)}
-                className=""
-            >
-                <div className={clsx(
-                    "relative flex gap-2 px-4 py-2 w-fit max-w-9/10 h-fit border-2 rounded-lg hover:cursor-pointer font-bold overflow-hidden z-[9999]",
+                className={clsx(
+                    "fixed bottom-4 right-1/2 translate-x-1/2 flex flex-col gap-2 w-max max-w-[95%] border-2 rounded-lg hover:cursor-pointer z-[9999]",
                     snackBarTypes[type].backgroundColor,
                     snackBarTypes[type].borderColor,
                     snackBarTypes[type].color,
                     className
-                )}>
+                )}
+            >
+                <div className="flex gap-4 px-4 pt-3">
                     {snackBarTypes[type].icon !== null &&
                         <span className="self-center">
                             <Icon
@@ -94,13 +97,13 @@ const Snackbar = ({
                     <p className="self-center break-word">
                         {message}
                     </p>
+                </div>
 
-                    <div className="absolute bottom-0 left-0 h-[3px] w-full overflow-hidden">
-                        <div
-                            className="h-full bg-black transition-all duration-100"
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
+                <div className="h-[3px] w-full overflow-hidden">
+                    <div
+                        className="h-full bg-black rounded-full transition-all duration-100"
+                        style={{ width: `${progress}%` }}
+                    ></div>
                 </div>
             </article>
         )
