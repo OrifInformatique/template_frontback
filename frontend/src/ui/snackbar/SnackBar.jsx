@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
+import PropTypes from "prop-types";
 
 import Icon from "../icon/Icon";
 
@@ -69,6 +70,13 @@ const Snackbar = ({
 
         return () => clearTimeout(timeout);
     }, [autoCloseTimer]);
+
+    Snackbar.PropTypes = {
+        type: PropTypes.oneOf(Object.keys(snackBarTypes)),
+        message: PropTypes.string.isRequired,
+        autoCloseTimer: PropTypes.number,
+        className: PropTypes.string
+    }
 
     return (
         isDisplayed && (
