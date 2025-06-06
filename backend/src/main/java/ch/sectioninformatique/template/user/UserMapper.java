@@ -30,6 +30,7 @@ public interface UserMapper {
      */
     @Mapping(target = "role", source = "role.name")
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")
+    @Mapping(target = "token", ignore = true)
     UserDto toUserDto(User user);
 
     /**
