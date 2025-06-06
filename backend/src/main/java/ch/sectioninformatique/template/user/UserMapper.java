@@ -24,6 +24,7 @@ public interface UserMapper {
      * - Maps basic user properties (id, firstName, lastName, login)
      * - Converts the role to a "ROLE_" prefixed string
      * - Converts authorities to a list of permission strings
+     * - Ignores the token field (handled separately)
      *
      * @param user The User entity to convert
      * @return A UserDto containing the user's information
@@ -38,6 +39,7 @@ public interface UserMapper {
      * This method:
      * - Maps basic user properties from the signup data
      * - Ignores password and roles (these are handled separately)
+     * - Ignores ID and timestamps (these are set by the system)
      *
      * @param signUpDto The SignUpDto containing user registration data
      * @return A new User entity with the signup information
