@@ -44,6 +44,9 @@ public interface UserMapper {
      */
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     User signUpToUser(SignUpDto signUpDto);
 
     /**
