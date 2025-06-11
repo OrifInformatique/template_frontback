@@ -4,7 +4,11 @@ import ColorChange from "./ColorChange";
 export default {
   title: "Components/UI/ColorChange",
   component: ColorChange,
-};
+  tags: ["autodocs"],
+  parameters: {
+      layout: "fullscreen"
+    }
+}
 
 export const Exemple = () => {
   const [color, setColor] = useState("#005ba9");
