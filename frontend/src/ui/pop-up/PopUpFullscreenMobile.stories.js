@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PopUpFullscreenMobile from "./PopUpFullscreenMobile";
 import Button from "../buttons/default/Button";
 import Title from "../title";
-import Icon from "../icon/Icon";
+
 
 export default {
   title: "Components/UI/PopUpFullscreenMobile",
@@ -24,7 +24,7 @@ export const FullscreenDemo = () => {
         <PopUpFullscreenMobile onClose={() => setOpen(false)}>
           <div className="space-y-4">
             <Title className="text-primary">Titre en plein écran</Title>
-            <p className="text-sm text-gray-600">Voici un texte de démonstration.</p>
+            <p className="text-sm text-center text-gray-600">Voici un texte de démonstration.</p>
           </div>
         </PopUpFullscreenMobile>
       )}

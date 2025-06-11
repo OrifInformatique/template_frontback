@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PopUp from "./PopUp";
-import Button from "../buttons/default/Button"; // adapt path if needed
+import Button from "../buttons/default/Button";
 
 export default {
   title: "Components/UI/PopUp",

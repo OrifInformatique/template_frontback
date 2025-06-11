@@ -5,7 +5,7 @@ import Icon from "../icon/Icon";
 const PopUpFullscreenMobile = ({ title, description, onClose, children }) => {
     return (
         <div className="fixed inset-0 z-50 bg-white p-4 overflow-auto">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-end items-center mb-4">
                 {title && (
                     <h2 className="text-lg font-semibold">{title}</h2>
                 )}
