@@ -7,7 +7,12 @@ import Title from "../title";
 export default {
   title: "Components/UI/PopUpFullscreenMobile",
   component: PopUpFullscreenMobile,
-};
+  tags: ["autodocs"],
+  parameters: {
+      layout: "fullscreen"
+    }
+}
+
 
 export const FullscreenDemo = () => {
   const [open, setOpen] = useState(false);

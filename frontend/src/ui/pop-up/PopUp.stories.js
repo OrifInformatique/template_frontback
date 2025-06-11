@@ -5,8 +5,11 @@ import Button from "../buttons/default/Button";
 export default {
   title: "Components/UI/PopUp",
   component: PopUp,
-};
-
+  tags: ["autodocs"],
+  parameters: {
+      layout: "fullscreen"
+    }
+}
 export const DialogueSimple = () => {
   const [open, setOpen] = useState(false);
 
@@ -18,7 +21,7 @@ export const DialogueSimple = () => {
         <PopUp
           title="Titre"
           description="Texte de description"
-          onClose={() => setOpen(false)} // ⬅️ Ferme le pop-up
+          onClose={() => setOpen(false)} 
         >
           <p className="text-sm text-gray-700">Contenu du PopUp</p>
         </PopUp>
