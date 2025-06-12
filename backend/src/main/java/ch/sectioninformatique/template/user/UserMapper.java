@@ -1,9 +1,11 @@
 package ch.sectioninformatique.template.user;
 
 import ch.sectioninformatique.template.auth.signup.SignUpDto;
+import org.springframework.security.core.GrantedAuthority;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,10 @@ public interface UserMapper {
     @Mapping(target = "role", source = "role.name")
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")
     @Mapping(target = "token", ignore = true)
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "firstName", source = "firstName")
+    @Mapping(target = "lastName", source = "lastName")
+    @Mapping(target = "login", source = "login")
     UserDto toUserDto(User user);
 
     /**
@@ -60,7 +66,7 @@ public interface UserMapper {
      * @return List of permission strings, or null if authorities is null
      */
     @Named("authoritiesToPermissions")
-    default List<String> authoritiesToPermissions(java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> authorities) {
+    default List<String> authoritiesToPermissions(Collection<? extends GrantedAuthority> authorities) {
         if (authorities == null) return null;
         return authorities.stream()
             .map(auth -> auth.getAuthority())

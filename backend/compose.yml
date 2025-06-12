@@ -31,10 +31,17 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: "${DB_PASSWORD}"
       MARIADB_DATABASE: "${ENVIRONMENT}_db"
+    ports:
+      - "3306:3306" # Expose the database port to connect from outside the container
     volumes:
     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - spring_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   spring_network:

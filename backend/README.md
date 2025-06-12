@@ -16,7 +16,8 @@ Template to start developing a new REST API application with Spring Boot.
     - [Prerequisites](#prerequisites)
     - [Environment variables and application properties](#environment-variables-and-application-properties)
   - [Docker](#docker)
-    - [Init project using docker](#init-project-using-docker)
+    - [Run dev environment using docker](#run-dev-environment-using-docker)
+    - [Run test environment using docker](#run-test-environment-using-docker)
     - [Do actions from within Docker (CLI)](#do-actions-from-within-docker-cli)
   - [What's next ?](#whats-next)
   - [Microsoft Entra Azure AD oAuth2](#microsoft-entra-azure-ad-oauth2)
@@ -76,16 +77,21 @@ It allows you and other programmers to work in a same development or testing env
 
 The main commands you'll have to use are described in the [commands cheat-sheet](#commands-cheat-sheet) sub-section.
 
-### Init project using docker
+### Run dev environment using docker
 First, you need to build the containers :
 
-1. Make sure `ENVIRONMENT=dev|test|prod` is set in `.env` !
+1. Make sure `ENVIRONMENT=dev` is set in `.env` !
 2. In the `backend` folder, use the command `docker compose build`
-
-Now that the containers have been built, you can start them with `docker compose up`
+3. Now that the containers have been built, you can start them with `docker compose up`
 
 Note that each time you change the `ENVIRONMENT` variables, you need to use
 the command `docker compose build`.
+
+### Run test environment using docker
+1. Make sure `ENVIRONMENT=test` is set in `.env` !
+2. If needed, reset containers and volumes (datas) with `docker compose down -v`
+3. In the `backend` folder, use the command `docker compose build`
+4. Now that the containers have been built, you can start them with `docker compose up`
 
 ### Do actions from within Docker (CLI)
 
