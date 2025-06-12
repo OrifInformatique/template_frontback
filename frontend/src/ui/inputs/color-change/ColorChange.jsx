@@ -32,14 +32,14 @@ const ColorChange = ({ label = "Couleur", defaultColor = "#005ba9", onChange }) 
           onChange={handleColorChange}
           className="w-10 h-10 rounded-full cursor-pointer focus:outline-none focus:ring-0"
         />
-        <div className="flex items-center border rounded px-2">
-          <span className="text-black-500">#</span>
+        <div className="flex items-center outline-none rounded px-0.5">
+          <span className="text-black-500 text-bold px-1">#</span>
           <input
             type="text"
             value={hexInputValue}
             onChange={handleHexColorChange}
             maxLength="6"
-            className="outline-none px-1 py-1 w-20"
+            className="text-center outline-none px-1 py-0.5 w-20"
           />
         </div>
       </div>
