@@ -21,7 +21,6 @@ export const DialogueDesktop = () => {
 
       {open && (
         <PopUp
-          variant="default"
           title="Titre"
           description="Texte de description"
           onClose={() => setOpen(false)}
@@ -47,12 +46,13 @@ export const DialogueMobile = () => {
 
       {open && (
         <PopUp
-          variant="fullscreen"
           title=""
           description=""
           onClose={() => setOpen(false)}
         >
-          <Title className="text-primary">Contenu dans PopUp fullscreen</Title>
+          <Title className="text-primary"></Title>
+          <p>Appuier sur f12 pour permettre la visualisation Mobile
+          Laisser par default pour une visualisation Desktop</p>
         </PopUp>
       )}
     </>
