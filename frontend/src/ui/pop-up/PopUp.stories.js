@@ -23,7 +23,8 @@ export const DialogueSimple = () => {
           description="Texte de description"
           onClose={() => setOpen(false)} 
         >
-          <p className="text-sm text-gray-700">Contenu du PopUp</p>
+  <Button label="Oui" onClick={() => console.log("Oui cliqué")} variant="primary" />
+  <Button label="Non" onClick={() => setOpen(false)} variant="danger" />
         </PopUp>
       )}
     </>

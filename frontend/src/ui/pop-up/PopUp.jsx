@@ -21,7 +21,7 @@ const PopUp = ({ title, description, onClose, children }) => {
                     <p className="text-sm text-gray-600 mb-4">{description}</p>
                 )}
 
-                <div>{children}</div>
+                <div className="flex justify-end gap-2 mt-4">{children}</div>
             </div>
         </div>
     );
