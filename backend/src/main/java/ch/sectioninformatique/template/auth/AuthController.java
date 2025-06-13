@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.sectioninformatique.template.auth.credentials.CredentialsDto;
-import ch.sectioninformatique.template.auth.signup.SignUpDto;
-import ch.sectioninformatique.template.user.UserAuthenticationProvider;
+import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.validation.Valid;

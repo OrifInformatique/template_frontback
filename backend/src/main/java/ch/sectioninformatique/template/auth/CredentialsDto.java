@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.auth.credentials;
+package ch.sectioninformatique.template.auth;
 
 /**
  * Data transfer object for user credentials.

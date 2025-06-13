@@ -1,6 +1,6 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.auth.signup.SignUpDto;
+import ch.sectioninformatique.template.auth.SignUpDto;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import org.junit.jupiter.api.Test;

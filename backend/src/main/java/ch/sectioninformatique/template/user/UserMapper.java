@@ -1,7 +1,9 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.auth.signup.SignUpDto;
 import org.springframework.security.core.GrantedAuthority;
+
+import ch.sectioninformatique.template.auth.SignUpDto;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -18,7 +20,7 @@ import java.util.stream.Collectors;
  * - Authorities to permissions conversion
  */
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface UserMapper { 
 
     /**
      * Converts a User entity to a UserDto.

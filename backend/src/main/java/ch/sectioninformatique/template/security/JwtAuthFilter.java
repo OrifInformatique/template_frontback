@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.jwt;
+package ch.sectioninformatique.template.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,8 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;
-
-import ch.sectioninformatique.template.user.UserAuthenticationProvider;
 
 import java.io.IOException;
 
