@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.auth.signup;
+package ch.sectioninformatique.template.auth;
 
 /**
  * Data transfer object for user registration.

@@ -1,7 +1,7 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.auth.credentials.CredentialsDto;
-import ch.sectioninformatique.template.auth.signup.SignUpDto;
+import ch.sectioninformatique.template.auth.CredentialsDto;
+import ch.sectioninformatique.template.auth.SignUpDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
