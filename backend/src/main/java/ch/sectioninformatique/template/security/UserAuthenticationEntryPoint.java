@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.user;
+package ch.sectioninformatique.template.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.sectioninformatique.template.app.errors.ErrorDto;

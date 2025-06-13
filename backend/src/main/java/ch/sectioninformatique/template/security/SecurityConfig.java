@@ -12,7 +12,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import ch.sectioninformatique.template.user.UserAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;

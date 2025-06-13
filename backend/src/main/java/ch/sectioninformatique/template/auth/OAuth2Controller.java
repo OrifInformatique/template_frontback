@@ -1,6 +1,6 @@
 package ch.sectioninformatique.template.auth;
 
-import ch.sectioninformatique.template.user.UserAuthenticationProvider;
+import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.servlet.http.HttpServletResponse;
