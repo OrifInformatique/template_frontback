@@ -7,7 +7,10 @@ export default {
     tags: ["autodocs"],
     layout: "fullscreen",
     args: {
-        label: "Checkbox"
+        label: "Checkbox",
+        onChange: (e) => {
+            
+        }
     }
 }
 
