@@ -1,5 +1,3 @@
-
-
 /** @type { import('@storybook/react-webpack5').StorybookConfig } */
 const config = {
   "stories": [
@@ -18,11 +16,14 @@ const config = {
     "name": "@storybook/react-webpack5",
     "options": {}
   },
+  "staticDirs": ['../public'],
   webpackFinal: async (config) => {
-    config.module.rules.push({
-      test: /\.pcss$/,
-      use: ["style-loader", "css-loader", "postcss-loader"],
-    });
+    config.module.rules.push(
+      {
+        test: /\.pcss$/,
+        use: ["style-loader", "css-loader", "postcss-loader"],
+      }
+    );
     return config;
   }
 };

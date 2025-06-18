@@ -5,6 +5,11 @@ module.exports = {
             colors: {
                 primary: '#005ba9',
                 background: '#f4f7fd',
+                disabled: '#e7e7e7',
+                danger: '#b91c1c'
+            },
+            fontFamily: {
+                display: ['Montserrat', 'sans-serif'],
             },
         },
     },
