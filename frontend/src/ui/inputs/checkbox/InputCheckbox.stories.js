@@ -4,26 +4,16 @@ export default {
   title: "Components/UI/InputCheckbox",
   component: InputCheckbox,
   tags: ["autodocs"],
-  layout: "fullscreen",
-  args: {
-    label: "Checkbox",
-    onChange: (e) => console.log("Changement :", e.target.checked)
-  }
+  layout: "fullscreen"
 };
 
-export const Default = {
+export const MultipleOptions = {
   args: {
-    id: "checkbox-1",
-    name: "checkbox-1",
-    required: true
-  }
-};
-
-export const Disabled = {
-  args: {
-    id: "checkbox-2",
-    name: "checkbox-2",
-    defaultChecked: true,
-    disabled: true
+    options: [
+      { id: "option-1", name: "choices", label: "Option 1" },
+      { id: "option-2", name: "choices", label: "Option 2", defaultChecked: true },
+      { id: "option-3", name: "choices", label: "Option 3" }
+    ],
+    onChange: (selectedIds) => console.log("Sélection :", selectedIds)
   }
 };
