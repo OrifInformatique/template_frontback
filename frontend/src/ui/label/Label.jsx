@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 
 const Label = ({ htmlFor, children, required = false }) => {
   return (
-    <label htmlFor={htmlFor} className="font-display text-primary font-medium">
+    <label htmlFor={htmlFor} className="text-primary font-medium">
       {required && <span className="text-danger">*</span>} {children}
     </label>
   );
