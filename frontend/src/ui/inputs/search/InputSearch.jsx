@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputSearch = ({ id, label, disabled = false }) => {
     return (

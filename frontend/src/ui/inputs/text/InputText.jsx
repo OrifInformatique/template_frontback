@@ -1,11 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputText = ({ id, name, label, disabled = false, required = false }) => {
     if (disabled) required = false;
 
     return (
-        <label htmlFor={id} className="flex flex-col gap-2">
+        <Label htmlFor={id} className="flex flex-col gap-2">
             <div>
                 {required && <span className="text-red-700">* </span>}
                 <span className="text-primary font-medium">{label}</span>
@@ -17,7 +18,7 @@ const InputText = ({ id, name, label, disabled = false, required = false }) => {
                 name={name}
                 disabled={disabled}
             />
-        </label>
+        </Label>
     );
 }
 

@@ -6,7 +6,7 @@ export default {
   component: Label,
   tags: ["autodocs"],
   parameters: {
-    layout: "centered",
+    layout: "fullscreen",
   },
 };
 

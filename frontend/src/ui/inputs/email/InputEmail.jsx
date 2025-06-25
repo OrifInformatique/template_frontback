@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputEmail = ({
     id, name, label, disabled = false, placeholder = "", required = false
@@ -13,7 +14,7 @@ const InputEmail = ({
     }
 
     return (
-        <label htmlFor={id} className="flex flex-col gap-2">
+        <Label htmlFor={id} className="flex flex-col gap-2">
             <div>
                 {required && <span className="text-red-700">* </span>}
                 <span className="text-primary font-medium">{label}</span>
@@ -29,7 +30,7 @@ const InputEmail = ({
                 placeholder={placeholder}
                 required={required}
             />
-        </label>
+        </Label>
     );
 }
 
