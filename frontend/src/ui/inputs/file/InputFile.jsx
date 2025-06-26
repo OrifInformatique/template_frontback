@@ -19,11 +19,8 @@ const InputFile = ({
     }
 
     return (
-        <Label htmlFor={id} className="flex flex-col gap-2 items-start">
-        <div>
-            {required && <span className="text-red-700">* </span>}
-            <span className="text-primary font-medium">{label}</span>
-        </div>
+        <Label htmlFor={id} required={required}>
+            {label}
             <input
                 type="file"
                 id={id}

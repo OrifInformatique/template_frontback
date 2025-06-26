@@ -21,11 +21,8 @@ const InputPassword = ({
     };
 
     return (
-        <Label htmlFor={id} className="flex flex-col gap-2 items-start">
-            <div>
-                {required && <span className="text-red-700">*</span>}{" "}
-                <span className="text-primary font-medium">{label}</span>
-            </div>
+        <Label htmlFor={id} required={required}>
+            {label}
             <div className="flex items-center w-full">
                 <input
                     className="rounded-md pr-10 w-full disabled:bg-disabled focus:ring-primary focus:border-primary"

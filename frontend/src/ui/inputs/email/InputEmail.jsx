@@ -14,11 +14,8 @@ const InputEmail = ({
     }
 
     return (
-        <Label htmlFor={id} className="flex flex-col gap-2">
-            <div>
-                {required && <span className="text-red-700">* </span>}
-                <span className="text-primary font-medium">{label}</span>
-            </div>
+        <Label htmlFor={id} required={required}>
+            {label}
             <input
                 className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
                 type="email"

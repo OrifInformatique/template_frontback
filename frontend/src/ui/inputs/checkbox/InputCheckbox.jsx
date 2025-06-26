@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputCheckbox = ({
     id,
@@ -19,7 +20,7 @@ const InputCheckbox = ({
     }
 
     return (
-        <label htmlFor={id} className="flex gap-2 items-center">
+        <Label htmlFor={id} inlineLeft>
             <input
                 type="checkbox"
                 id={id}
@@ -30,7 +31,7 @@ const InputCheckbox = ({
                 required={required}
             />
             <span>{label}</span>
-        </label>
+        </Label>
     );
 }
 
