@@ -20,7 +20,9 @@ const InputCheckbox = ({
     }
 
     return (
+
         <Label htmlFor={id} inlineLeft>
+
             <input
                 type="checkbox"
                 id={id}

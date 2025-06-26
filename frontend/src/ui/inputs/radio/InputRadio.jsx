@@ -17,6 +17,7 @@ const InputRadio = ({ id, label, disabled = false }) => {
   );
 };
 
+
 InputRadio.propTypes = {
   id: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
