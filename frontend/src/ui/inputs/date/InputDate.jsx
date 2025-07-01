@@ -15,7 +15,7 @@ const InputDate = ({ id, name, label, disabled = false, required = false }) => {
     <Label htmlFor={id} required>
       <Label.Title>{label}</Label.Title>
       <input
-        className="rounded-md text-gray-800 disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
+        className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
         type="date"
         id={id}
         name={name}
