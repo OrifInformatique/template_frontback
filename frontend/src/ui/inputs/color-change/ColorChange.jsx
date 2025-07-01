@@ -24,8 +24,12 @@ const ColorChange = ({ label = "Couleur", defaultColor = "#005ba9", onChange }) 
   };
 
   return (
+    
     <div className="flex flex-col space-y-2 max-w-full mx-auto">
-      <Label>{label}</Label>
+   
+    <Label.Title>{label}</Label.Title>
+    
+
       <div className="flex items-center space-x-2">
         <input
           type="color"

@@ -12,10 +12,10 @@ const InputDate = ({ id, name, label, disabled = false, required = false }) => {
   };
 
   return (
-    <Label htmlFor={id} required={required}>
-      {label}
+    <Label htmlFor={id} required>
+      <Label.Title>{label}</Label.Title>
       <input
-        className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
+        className="rounded-md text-gray-800 disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
         type="date"
         id={id}
         name={name}
@@ -33,7 +33,7 @@ InputDate.propTypes = {
   name: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
   disabled: PropTypes.bool,
-  required: PropTypes.bool
+  required: PropTypes.bool,
 };
 
 export default InputDate;

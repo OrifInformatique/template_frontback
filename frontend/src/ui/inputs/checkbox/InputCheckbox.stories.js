@@ -31,17 +31,3 @@ export const Disabled = {
         disabled: true
     }
 }
-
-export const InlineRight = () => (
-    <Label htmlFor="checkbox-inline-right" inlineRight>
-      <input type="checkbox" id="checkbox-inline-right" />
-      <span>Texte à droite</span>
-    </Label>
-  );
-  
-  export const InlineLeft = () => (
-    <Label htmlFor="checkbox-inline-left" inlineLeft>
-      <input type="checkbox" id="checkbox-inline-left" />
-      <span>Texte à gauche</span>
-    </Label>
-  );

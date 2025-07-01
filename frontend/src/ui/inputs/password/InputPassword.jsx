@@ -21,11 +21,11 @@ const InputPassword = ({
     };
 
     return (
-        <Label htmlFor={id} required={required}>
-            {label}
-            <div className="flex items-center w-full">
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
+            <div className="flex items-center w-fit">
                 <input
-                    className="rounded-md pr-10 w-full disabled:bg-disabled focus:ring-primary focus:border-primary"
+                    className="rounded-md pr-10 w-full disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
                     type={showPassword ? "text" : "password"}
                     id={id}
                     name={name}

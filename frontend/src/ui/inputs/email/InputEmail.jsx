@@ -14,10 +14,10 @@ const InputEmail = ({
     }
 
     return (
-        <Label htmlFor={id} required={required}>
-            {label}
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
             <input
-                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
+                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
                 type="email"
                 id={id}
                 name={name}

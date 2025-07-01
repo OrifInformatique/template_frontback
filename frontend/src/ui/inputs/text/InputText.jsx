@@ -6,10 +6,10 @@ const InputText = ({ id, name, label, disabled = false, required = false }) => {
     if (disabled) required = false;
 
     return (
-        <Label htmlFor={id} required={required}>
-            {label}
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
             <input
-                className="rounded-md pr-10 disabled:bg-disabled focus:ring-primary focus:border-primary"
+                className="rounded-md text-gray-800 disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
                 type="text"
                 id={id}
                 name={name}
