@@ -1,41 +1,39 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputDate = ({ id, name, label, disabled = false, required = false }) => {
-    const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
-    if (disabled) required = false;
+  if (disabled) required = false;
 
-    const handleDateChange = (event) => {
-        setSelectedDate(event.target.value);
-    }
+  const handleDateChange = (event) => {
+    setSelectedDate(event.target.value);
+  };
 
-    return (
-        <label htmlFor={id} className="flex flex-col gap-2 items-start">
-            <div>
-                {required && <span className="text-red-700">* </span>}
-                <span className="text-primary font-medium">{label}</span>
-            </div>
-            <input
-                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
-                type="date"
-                id={id}
-                name={name}
-                value={selectedDate}
-                onChange={handleDateChange}
-                disabled={disabled}
-                required={required}
-            />
-        </label>
-    );
-}
+  return (
+    <Label htmlFor={id} required>
+      <Label.Title>{label}</Label.Title>
+      <input
+        className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
+        type="date"
+        id={id}
+        name={name}
+        value={selectedDate}
+        onChange={handleDateChange}
+        disabled={disabled}
+        required={required}
+      />
+    </Label>
+  );
+};
 
 InputDate.propTypes = {
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    disabled: PropTypes.bool,
-    required: PropTypes.bool
-}
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  disabled: PropTypes.bool,
+  required: PropTypes.bool,
+};
 
 export default InputDate;
