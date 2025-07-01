@@ -1,5 +1,6 @@
 import InputCheckbox from "./InputCheckbox";
 import { fn } from "@storybook/test";
+import Label from "../../label/Label";
 
 export default {
     title: "Components/UI/InputCheckbox",

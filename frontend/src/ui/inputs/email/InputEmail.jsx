@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputEmail = ({
     id,
@@ -15,13 +16,10 @@ const InputEmail = ({
     if (disabled) required = false;
 
     return (
-        <label htmlFor={id} className="flex flex-col gap-2">
-            <div>
-                {required && <span className="text-red-700">* </span>}
-                <span className="text-primary font-medium">{label}</span>
-            </div>
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
             <input
-                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
+                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
                 type="email"
                 id={id}
                 name={name}
@@ -34,7 +32,7 @@ const InputEmail = ({
                 placeholder={placeholder}
                 required={required}
             />
-        </label>
+        </Label>
     );
 }
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputFile = ({
     id,
@@ -24,11 +25,8 @@ const InputFile = ({
     }
 
     return (
-        <label htmlFor={id} className="flex flex-col gap-2 items-start">
-        <div>
-            {required && <span className="text-red-700">* </span>}
-            <span className="text-primary font-medium">{label}</span>
-        </div>
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
             <input
                 type="file"
                 id={id}
@@ -38,7 +36,7 @@ const InputFile = ({
                 disabled={disabled}
                 required={required}
             />
-        </label>
+        </Label>
     );
 }
 

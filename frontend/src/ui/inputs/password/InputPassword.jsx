@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-
-// UI elements
+import Label from "../../label/Label";
 import Icon from "../../icon/Icon";
 
 const InputPassword = ({
@@ -25,14 +24,11 @@ const InputPassword = ({
     }
 
     return (
-        <label htmlFor={id} className="flex flex-col gap-2 items-start">
-            <div>
-                {required && <span className="text-red-700">* </span>}
-                <span className="text-primary font-medium">{label}</span>
-            </div>
-            <div className="flex items-center">
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
+            <div className="flex items-center w-fit">
                 <input
-                    className="rounded-md pr-10 disabled:bg-disabled focus:ring-primary focus:border-primary"
+                    className="rounded-md pr-10 w-full disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
                     type={showPassword ? "text" : "password"}
                     id={id}
                     name={name}
@@ -55,9 +51,9 @@ const InputPassword = ({
                         : <Icon name="eye" size="6" />}
                 </button>
             </div>
-        </label>
+        </Label>
     );
-}
+};
 
 InputPassword.propTypes = {
     id: PropTypes.string.isRequired,
@@ -69,6 +65,6 @@ InputPassword.propTypes = {
     disabled: PropTypes.bool,
     placeholder: PropTypes.string,
     required: PropTypes.bool
-}
+};
 
 export default InputPassword;

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputCheckbox = ({
     id,

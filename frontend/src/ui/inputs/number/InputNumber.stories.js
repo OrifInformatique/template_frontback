@@ -23,6 +23,8 @@ export const Disabled = {
         id: "number-2",
         name: "number-2",
         label: "Quantité :",
+        min: 0,
+        max: 130,
         disabled: true
     }
 }
