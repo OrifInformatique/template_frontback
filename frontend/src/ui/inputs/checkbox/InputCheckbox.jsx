@@ -3,56 +3,45 @@ import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
 const InputCheckbox = ({
-  id,
-  name,
-  label,
-  onChange = () => {},
-  defaultChecked = false,
-  disabled = false,
-  required = false,
-  labelPosition = "right",
+    id,
+    name,
+    label,
+    checked = null,
+    defaultChecked = null,
+    onChangeFunction = null,
+    disabled = false,
+    required = false
 }) => {
-  const [isChecked, setIsChecked] = useState(defaultChecked);
+    if (disabled && !defaultChecked) required = false;
 
-  if (disabled && !defaultChecked) required = false;
-
-  const handleCheckboxChange = (event) => {
-    setIsChecked(event.target.checked);
-    onChange(event);
-  };
-
-  const isLeft = labelPosition === "left";
-
-  return (
-    <label
-      htmlFor={id}
-      className={`flex items-center gap-2 w-fit cursor-pointer ${
-        isLeft ? "flex-row-reverse" : ""
-      }`}
-    >
-      <input
-        type="checkbox"
-        id={id}
-        name={name}
-        checked={isChecked}
-        onChange={handleCheckboxChange}
-        disabled={disabled}
-        required={required}
-      />
-      <Label.Title unstyled>{label}</Label.Title>
-    </label>
-  );
-};
+    return (
+        <label htmlFor={id} className="flex gap-2 items-center">
+            <input
+                type="checkbox"
+                id={id}
+                name={name}
+                {...checked !== null
+                    ? { checked: checked }
+                    : { defaultChecked: defaultChecked }
+                }
+                onChange={onChangeFunction}
+                disabled={disabled}
+                required={required}
+            />
+            <span>{label}</span>
+        </label>
+    );
+}
 
 InputCheckbox.propTypes = {
-  id: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  onChange: PropTypes.func,
-  defaultChecked: PropTypes.bool,
-  disabled: PropTypes.bool,
-  required: PropTypes.bool,
-  labelPosition: PropTypes.oneOf(["left", "right"]),
-};
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    checked: PropTypes.bool,
+    defaultChecked: PropTypes.bool,
+    onChangeFunction: PropTypes.func,
+    disabled: PropTypes.bool,
+    required: PropTypes.bool
+}
 
 export default InputCheckbox;

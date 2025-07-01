@@ -8,10 +8,7 @@ export default {
     tags: ["autodocs"],
     layout: "fullscreen",
     args: {
-        label: "Checkbox",
-        onChange: (e) => {
-            
-        }
+        label: "Checkbox"
     }
 }
 
@@ -27,7 +24,23 @@ export const Disabled = {
     args: {
         id: "checkbox-2",
         name: "checkbox-2",
-        defaultChecked: true,
         disabled: true
+    }
+}
+
+export const Uncontrolled = {
+    args: {
+        id: "checkbox-3",
+        name: "checkbox-3",
+        defaultChecked: true,
+    }
+}
+
+export const Controlled = {
+    args: {
+        id: "checkbox-3",
+        name: "checkbox-3",
+        onChangeFunction: (value) => alert("Checkbox is " + (value ? "checked" : "unchecked")),
+        checked: false
     }
 }

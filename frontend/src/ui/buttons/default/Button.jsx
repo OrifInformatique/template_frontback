@@ -17,7 +17,7 @@ const Button = ({
         switch (variant) {
             case "primary":
                 return "bg-primary text-white active:bg-opacity-80";
-        
+
             case "secondary":
                 return "border border-primary text-primary hover:bg-primary hover:text-white active:bg-opacity-80 active:border-opacity-0";
 
@@ -52,7 +52,7 @@ const Button = ({
         switch (variant) {
             case "primary":
                 return "white"
-        
+
             case "secondary":
                 return "primary";
 
@@ -68,7 +68,7 @@ const Button = ({
         switch (size) {
             case "small":
                 return "4";
-            
+
             case "medium":
                 return "6"
 
