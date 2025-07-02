@@ -6,11 +6,8 @@ export default {
     tags: ["autodocs"],
     layout: "fullscreen",
     args: {
-        src: "",
-        alt: ""
+        name: "inputfileimage"
     }
 }
 
-export const Default = {
-
-}
+export const Default = {}
