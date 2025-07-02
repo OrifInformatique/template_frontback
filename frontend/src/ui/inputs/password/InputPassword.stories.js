@@ -24,3 +24,20 @@ export const Disabled = {
         disabled: true
     }
 }
+
+export const Uncontrolled = {
+    args: {
+        id: "password-3",
+        name: "password-3",
+        defaultValue: "myDefaultPassword123"
+    }
+}
+
+export const Controlled = {
+    args: {
+        id: "password-4",
+        name: "password-4",
+        value: "",
+        onChangeFunction: (password) => alert("The input contains \"" + password + "\".")
+    }
+}

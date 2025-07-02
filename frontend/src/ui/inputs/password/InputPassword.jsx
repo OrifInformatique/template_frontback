@@ -1,46 +1,48 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-
-// UI elements
+import Label from "../../label/Label";
 import Icon from "../../icon/Icon";
 
 const InputPassword = ({
-    id, name, label, disabled = false, placeholder = "", required = true
+    id,
+    name,
+    label,
+    value = null,
+    defaultValue = null,
+    onChangeFunction = null,
+    disabled = false,
+    placeholder = "",
+    required = true
 }) => {
-    const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
     if (disabled) required = false;
 
-    const handlePasswordChange = (event) => {
-        setPassword(event.target.value);
-    }
-
     const togglePasswordVisibility = (e) => {
         e.preventDefault();
-        setShowPassword(!showPassword);
+        setShowPassword(prev => !prev);
     }
 
     return (
-        <label htmlFor={id} className="flex flex-col gap-2 items-start">
-            <div>
-                {required && <span className="text-red-700">* </span>}
-                <span className="text-primary font-medium">{label}</span>
-            </div>
-            <div className="flex items-center">
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
+            <div className="flex items-center w-fit">
                 <input
-                    className="rounded-md pr-10 disabled:bg-disabled focus:ring-primary focus:border-primary"
+                    className="rounded-md pr-10 w-full disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
                     type={showPassword ? "text" : "password"}
                     id={id}
                     name={name}
-                    value={password}
-                    onChange={handlePasswordChange}
+                    {...value !== null
+                        ? { value: value }
+                        : { defaultValue: defaultValue }
+                    }
+                    onChange={onChangeFunction}
                     disabled={disabled}
                     placeholder={placeholder}
                     required={required}
                 />
                 <button
-                    className="-ml-8" 
+                    className="-ml-8"
                     disabled={disabled}
                     onClick={togglePasswordVisibility}
                 >
@@ -49,17 +51,20 @@ const InputPassword = ({
                         : <Icon name="eye" size="6" />}
                 </button>
             </div>
-        </label>
+        </Label>
     );
-}
+};
 
 InputPassword.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    defaultValue: PropTypes.string,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     placeholder: PropTypes.string,
     required: PropTypes.bool
-}
+};
 
 export default InputPassword;

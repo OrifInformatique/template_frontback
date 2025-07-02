@@ -7,7 +7,8 @@ export default {
     tags: ["autodocs"],
     parameters: { layout: "centered" },
     args: {
-        onClick: fn() }
+        onClick: () => alert("Button clicked!")
+    }
 }
 
 export const Primary = {
