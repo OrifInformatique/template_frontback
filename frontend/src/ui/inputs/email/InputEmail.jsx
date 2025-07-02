@@ -1,35 +1,38 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import Label from "../../label/Label";
 
 const InputEmail = ({
-    id, name, label, disabled = false, placeholder = "", required = false
+    id,
+    name,
+    label,
+    value = null,
+    defaultValue = null,
+    onChangeFunction = null,
+    disabled = false,
+    placeholder = "",
+    required = false
 }) => {
-    const [email, setEmail] = useState("");
-
     if (disabled) required = false;
 
-    const handleEmailChange = (event) => {
-        setEmail(event.target.value);
-    }
-
     return (
-        <label htmlFor={id} className="flex flex-col gap-2">
-            <div>
-                {required && <span className="text-red-700">* </span>}
-                <span className="text-primary font-medium">{label}</span>
-            </div>
+        <Label htmlFor={id} required>
+            <Label.Title>{label}</Label.Title>
             <input
-                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary"
+                className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
                 type="email"
                 id={id}
                 name={name}
-                value={email}
-                onChange={handleEmailChange}
+                {...value !== null
+                    ? { value: value }
+                    : { defaultValue: defaultValue }
+                }
+                onChange={onChangeFunction}
                 disabled={disabled}
                 placeholder={placeholder}
                 required={required}
             />
-        </label>
+        </Label>
     );
 }
 
@@ -37,9 +40,12 @@ InputEmail.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    defaultValue: PropTypes.string,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     placeholder: PropTypes.string,
-    requried: PropTypes.bool
+    required: PropTypes.bool
 }
 
 export default InputEmail;
