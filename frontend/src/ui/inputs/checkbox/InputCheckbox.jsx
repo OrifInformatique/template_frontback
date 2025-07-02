@@ -20,7 +20,7 @@ const InputCheckbox = ({ options = [], onChange = () => {} }) => {
     <div className="flex flex-col gap-2">
       {options.map(({ id, name, label, disabled = false, required = false, defaultChecked = false }) => (
         <label key={id} htmlFor={id} className="flex gap-2 items-center">
-          <input
+          <input className="disabled:bg-disabled focus:border-primary"
             type="checkbox"
             id={id}
             name={name}
