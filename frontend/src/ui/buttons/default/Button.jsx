@@ -24,6 +24,9 @@ const Button = ({
             case "tertiary":
                 return "border border-black border-opacity-60 hover:bg-gray-800 hover:text-white active:bg-gray-600 active:border-opacity-0";
 
+            case "link":
+                return "text-primary font-light hover:underline focus:underline"
+
             case "danger":
                 return "border border-danger text-danger hover:bg-danger hover:text-white active:bg-opacity-80 active:border-opacity-0";
 
@@ -79,7 +82,8 @@ const Button = ({
 
     return (
         <button
-            className={["group flex justify-center items-center font-semibold rounded-sm transition transform duration-300 px-4 py-2 gap-2 hover:scale-105",
+            className={["group flex justify-center items-center font-semibold",
+                variant !== "link" ?  "rounded-sm transition transform duration-300 px-4 py-2 gap-2 hover:scale-105" : "",
                 className, buttonMode(variant), buttonSize(size)].join(" ")}
             {...props}
         >

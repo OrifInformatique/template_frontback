@@ -8,6 +8,10 @@ import MainLayout from './layouts/MainLayout';
 // Modules
 import Home from './modules/home';
 import Contact from './modules/contact';
+import Login from './ui/auth/login';
+import Azure from './ui/auth/login/azure';
+import ChangePassword from './ui/auth/change-password';
+import ResetPassword from './ui/auth/reset-password';
 
 // Utils
 import Redirect from './utils/Redirect'
@@ -18,16 +22,48 @@ import './index.pcss';
 const container = document.getElementById('root');
 const root = createRoot(container);
 
+root.render(
+    <BrowserRouter basename={process.env.APP_ROOT}>
+        <Routes>
+            <Route
+                path="/login"
+                element={<Login />}
+            />
 
-root.render(<BrowserRouter basename={process.env.APP_ROOT}>
+            <Route
+                path="/azure"
+                element={<Azure />}
+            />
 
-    <Routes>
-      <Route path="/" element={<MainLayout />}>
-        <Route index element={<Home />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="*" element={<Redirect to="/" />} />
-      </Route>
+            <Route
+                path="/change-password"
+                element={<ChangePassword />}
+            />
 
-    </Routes>
+            <Route
+                path="/reset-password"
+                element={<ResetPassword />}
+            />
 
-</BrowserRouter>);
+            <Route
+                path="/"
+                element={<MainLayout />}
+            >
+                <Route
+                    index
+                    element={<Home />}
+                />
+
+                <Route
+                    path="contact"
+                    element={<Contact />}
+                />
+
+                <Route
+                    path="*"
+                    element={<Redirect to="/" />}
+                />
+            </Route>
+        </Routes>
+    </BrowserRouter>
+);

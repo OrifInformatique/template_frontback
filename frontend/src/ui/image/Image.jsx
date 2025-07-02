@@ -32,6 +32,9 @@ const Image = ({
     {
         if(src)
             setInsertImagePlaceholder(false)
+
+        else if(src === "")
+            setInsertImagePlaceholder(true)
     }, [src])
 
     return (
@@ -49,7 +52,7 @@ const Image = ({
                     alt={alt}
                     style={{ width: `${size}px` }}
                     onError={() => setInsertImagePlaceholder(true)}
-                    className={"h-auto rounded-md"}
+                    className={"h-auto"}
                 />
             )}
         </>
