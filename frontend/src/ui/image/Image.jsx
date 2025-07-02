@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+import Icon from "../icon/Icon";
+
 /**
  * UI component to display images. If the image can't be displayed, a placeholder will show instead.
  *
@@ -19,7 +21,7 @@ const Image = ({
 }) =>
 {
     if(src && !alt)
-        console.warn("For accessibility reasons, it's preferable to add an alternative text to the image.");
+        console.warn("For accessibility reasons, it's preferable to add an alternative text to the image");
 
     const [insertImagePlaceholder, setInsertImagePlaceholder] = useState(false)
 
@@ -42,7 +44,7 @@ const Image = ({
                     className={"flex flex-wrap place-content-center bg-gray-400 rounded-md"}
                     style={{ width: `${size}px`, height: `${size}px` }}
                 >
-                    <p>Image indisponible</p>
+                    <Icon name="eye-slash" />
                 </div>
             ) : (
                 <img
