@@ -4,17 +4,35 @@ export default {
   title: "Components/UI/InputCheckbox",
   component: InputCheckbox,
   tags: ["autodocs"],
-  layout: "fullscreen"
+  layout: "fullscreen",
 };
 
-export const MultipleOptions = {
+const baseOptions = [
+  { id: "option-1", name: "choices", label: "Option 1" },
+  { id: "option-2", name: "choices", label: "Option 2", defaultChecked: true },
+  { id: "option-3", name: "choices", label: "Option 3" },
+  { id: "option-4", name: "choices", label: "Option 4", disabled: true },
+];
+
+export const Default = {
   args: {
-    options: [
-      { id: "option-1", name: "choices", label: "Option 1" },
-      { id: "option-2", name: "choices", label: "Option 2", defaultChecked: true },
-      { id: "option-3", name: "choices", label: "Option 3" },
-      { id: "option-4", name: "choices", label: "Option 4", disabled: true }
-    ],
-    onChange: (selectedIds) => console.log("Sélection :", selectedIds)
-  }
+    options: baseOptions,
+    onChange: (selectedIds) => console.log("Sélection :", selectedIds),
+  },
+};
+
+export const AllDisabled = {
+  args: {
+    options: baseOptions,
+    allDisabled: true,
+    onChange: (selectedIds) => console.log("Sélection (disabled):", selectedIds),
+  },
+};
+
+export const LabelOnLeft = {
+  args: {
+    name: "choices-left",
+    options: baseOptions.map((opt) => ({ ...opt, labelPosition: "left" })),
+    onChange: (selectedId) => console.log("Selected (left):", selectedId),
+  },
 };

@@ -12,13 +12,13 @@ export default {
 
 export const Required = () => (
   <Label htmlFor="file" required>
-    Label
+    <Label.Title>Label</Label.Title>
   </Label>
 );
 
 export const NotRequired = () => (
   <Label htmlFor="file">
-    Label
+    <Label.Title>Label</Label.Title>
   </Label>
 );
 
