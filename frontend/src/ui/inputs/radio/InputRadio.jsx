@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
@@ -13,10 +13,21 @@ const InputRadio = ({
     options.find((o) => o.defaultChecked)?.id || ""
   );
 
+  const [longestLabelWidth, setLongestLabelWidth] = useState(0);
+  const labelRefs = [];
+
   const handleRadioChange = (id) => {
     setSelectedId(id);
     onChange(id);
   };
+
+  useEffect(() => {
+    const widths = labelRefs.map(ref => ref?.offsetWidth || 0);
+    const maxWidth = Math.max(...widths);
+    if (maxWidth > 0) {
+      setLongestLabelWidth(maxWidth);
+    }
+  }, [options]);
 
   return (
     <Label required>
@@ -24,46 +35,60 @@ const InputRadio = ({
 
       <div className="flex flex-col gap-2">
         {options.map(
-          ({
-            id,
-            label,
-            disabled = false,
-            required = false,
-            defaultChecked = false,
-            labelPosition = "right",
-          }) => {
+          (
+            {
+              id,
+              label,
+              disabled = false,
+              required = false,
+              defaultChecked = false,
+              labelPosition = "right",
+            },
+            index
+          ) => {
             const isLeft = labelPosition === "left";
             const isDisabled = disabledAll || disabled;
 
             return (
-              <label
+              <div
                 key={id}
-                htmlFor={id}
-                className="flex items-center gap-2 cursor-pointer w-fit"
+                className="grid grid-cols-[auto_1fr] items-center gap-2"
               >
                 {isLeft && (
-                  <Label.Title unstyled className="w-40 text-right">
-                    {label}
-                  </Label.Title>
+                  <span
+                    ref={(el) => (labelRefs[index] = el)}
+                    className="text-sm"
+                    style={{
+                      minWidth: `${longestLabelWidth}px`,
+                      textAlign: "left",
+                    }}
+                  >
+                    <Label.Title unstyled>{label}</Label.Title>
+                  </span>
                 )}
 
-                <input
-                  type="radio"
-                  id={id}
-                  name={name}
-                  checked={selectedId === id}
-                  disabled={isDisabled}
-                  required={required}
-                  onChange={() => handleRadioChange(id)}
-                  className="accent-primary disabled:bg-disabled"
-                />
+                <label
+                  htmlFor={id}
+                  className="flex items-center gap-2 w-fit cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    id={id}
+                    name={name}
+                    checked={selectedId === id}
+                    disabled={isDisabled}
+                    required={required}
+                    onChange={() => handleRadioChange(id)}
+                    className="accent-primary disabled:bg-disabled"
+                  />
 
-                {!isLeft && (
-                  <Label.Title unstyled className="w-40">
-                    {label}
-                  </Label.Title>
-                )}
-              </label>
+                  {!isLeft && (
+                    <Label.Title unstyled className="w-fit">
+                      {label}
+                    </Label.Title>
+                  )}
+                </label>
+              </div>
             );
           }
         )}

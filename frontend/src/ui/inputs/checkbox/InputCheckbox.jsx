@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
@@ -12,6 +12,9 @@ const InputCheckbox = ({
     options.filter((o) => o.defaultChecked).map((o) => o.id)
   );
 
+  const [longestLabelWidth, setLongestLabelWidth] = useState(0);
+  const labelRefs = [];
+
   const handleCheckboxChange = (id, isChecked) => {
     const updated = isChecked
       ? [...selectedIds, id]
@@ -21,55 +24,73 @@ const InputCheckbox = ({
     onChange(updated);
   };
 
+  useEffect(() => {
+    const widths = labelRefs.map(ref => ref?.offsetWidth || 0);
+    const maxWidth = Math.max(...widths);
+    if (maxWidth > 0) {
+      setLongestLabelWidth(maxWidth);
+    }
+  }, [options]);
+
   return (
     <Label required>
       <Label.Title>{label}</Label.Title>
 
       <div className="flex flex-col gap-2">
         {options.map(
-          ({
-            id,
-            name,
-            label,
-            disabled = false,
-            required = false,
-            defaultChecked = false,
-            labelPosition = "right",
-          }) => {
+          (
+            {
+              id,
+              name,
+              label,
+              disabled = false,
+              required = false,
+              defaultChecked = false,
+              labelPosition = "right",
+            },
+            index
+          ) => {
             const isLeft = labelPosition === "left";
             const isDisabled = allDisabled || disabled;
 
             return (
-              <label
+              <div
                 key={id}
-                htmlFor={id}
-                className="flex items-center gap-2 cursor-pointer w-fit"
+                className="grid grid-cols-[auto_1fr] items-center gap-2"
               >
                 {isLeft && (
-                  <Label.Title unstyled className="w-40 text-right">
-                    {label}
-                  </Label.Title>
+                  <span
+                    ref={(el) => (labelRefs[index] = el)}
+                    className="text-sm"
+                    style={{ minWidth: `${longestLabelWidth}px`, textAlign: "left" }}
+                  >
+                    <Label.Title unstyled>{label}</Label.Title>
+                  </span>
                 )}
 
-                <input
-                  className="disabled:bg-disabled focus:border-primary"
-                  type="checkbox"
-                  id={id}
-                  name={name}
-                  defaultChecked={defaultChecked}
-                  disabled={isDisabled}
-                  required={required}
-                  onChange={(e) =>
-                    handleCheckboxChange(id, e.target.checked)
-                  }
-                />
-
-                {!isLeft && (
-                  <Label.Title unstyled className="w-40">
-                    {label}
-                  </Label.Title>
-                )}
-              </label>
+                <label
+                  htmlFor={id}
+                  className="flex items-center gap-2 w-fit cursor-pointer"
+                >
+                  <input
+                    className="disabled:bg-disabled focus:border-primary"
+                    type="checkbox"
+                    id={id}
+                    name={name}
+                    defaultChecked={defaultChecked}
+                    disabled={isDisabled}
+                    required={required}
+                    onChange={(e) =>
+                      handleCheckboxChange(id, e.target.checked)
+                    }
+                  />
+                  {!isLeft && (
+                    <Label.Title unstyled className="w-fit">
+                      {label}
+                    </Label.Title>
+                  )}
+                </label>
+              </div>
             );
           }
         )}
