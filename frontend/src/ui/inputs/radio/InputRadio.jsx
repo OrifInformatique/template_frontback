@@ -71,7 +71,7 @@ const InputRadio = ({
                   htmlFor={id}
                   className="flex items-center gap-2 w-fit cursor-pointer"
                 >
-                  <input
+                  <input               
                     type="radio"
                     id={id}
                     name={name}
@@ -79,7 +79,7 @@ const InputRadio = ({
                     disabled={isDisabled}
                     required={required}
                     onChange={() => handleRadioChange(id)}
-                    className="accent-primary disabled:bg-disabled"
+                    className="disabled:bg-disabled focus:border-primary disabled:hover:bg-disabled disabled:focus:outline-none"
                   />
 
                   {!isLeft && (

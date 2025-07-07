@@ -73,7 +73,7 @@ const InputCheckbox = ({
                   className="flex items-center gap-2 w-fit cursor-pointer"
                 >
                   <input
-                    className="disabled:bg-disabled focus:border-primary"
+                    className="disabled:bg-disabled focus:border-primary disabled:hover:bg-disabled disabled:focus:outline-none"
                     type="checkbox"
                     id={id}
                     name={name}
