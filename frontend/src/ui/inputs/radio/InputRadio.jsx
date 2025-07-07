@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
@@ -13,8 +13,8 @@ const InputRadio = ({
     options.find((o) => o.defaultChecked)?.id || ""
   );
 
+  const labelRefs = useRef([]);
   const [longestLabelWidth, setLongestLabelWidth] = useState(0);
-  const labelRefs = [];
 
   const handleRadioChange = (id) => {
     setSelectedId(id);
@@ -22,7 +22,7 @@ const InputRadio = ({
   };
 
   useEffect(() => {
-    const widths = labelRefs.map(ref => ref?.offsetWidth || 0);
+    const widths = labelRefs.current.map(ref => ref?.offsetWidth || 0);
     const maxWidth = Math.max(...widths);
     if (maxWidth > 0) {
       setLongestLabelWidth(maxWidth);
@@ -32,7 +32,6 @@ const InputRadio = ({
   return (
     <Label required>
       <Label.Title>{label}</Label.Title>
-
       <div className="flex flex-col gap-2">
         {options.map(
           (
@@ -52,42 +51,52 @@ const InputRadio = ({
             return (
               <div
                 key={id}
-                className="grid grid-cols-[auto_1fr] items-center gap-2"
+                className="flex items-center"
               >
                 {isLeft && (
                   <span
-                    ref={(el) => (labelRefs[index] = el)}
+                    ref={el => (labelRefs.current[index] = el)}
                     className="text-sm"
                     style={{
                       minWidth: `${longestLabelWidth}px`,
                       textAlign: "left",
+                      marginRight: "0.5rem",
                     }}
                   >
-                    <Label.Title unstyled>{label}</Label.Title>
+                    <label
+                      htmlFor={id}
+                      className="cursor-pointer w-full"
+                      style={{ display: "block" }}
+                    >
+                      <Label.Title unstyled>{label}</Label.Title>
+                    </label>
                   </span>
                 )}
-
-                <label
-                  htmlFor={id}
-                  className="flex items-center gap-2 w-fit cursor-pointer"
-                >
-                  <input               
-                    type="radio"
-                    id={id}
-                    name={name}
-                    checked={selectedId === id}
-                    disabled={isDisabled}
-                    required={required}
-                    onChange={() => handleRadioChange(id)}
-                    className="disabled:bg-disabled focus:border-primary disabled:hover:bg-disabled disabled:focus:outline-none"
-                  />
-
-                  {!isLeft && (
-                    <Label.Title unstyled className="w-fit">
-                      {label}
-                    </Label.Title>
-                  )}
-                </label>
+                <input
+                  type="radio"
+                  id={id}
+                  name={name}
+                  checked={selectedId === id}
+                  disabled={isDisabled}
+                  required={required}
+                  onChange={() => handleRadioChange(id)}
+                  className="disabled:bg-disabled focus:border-primary disabled:hover:bg-disabled disabled:focus:outline-none disabled:cursor-not-allowed"
+                  style={{ marginRight: isLeft ? 0 : "0.5rem" }}
+                />
+                {!isLeft && (
+                  <span
+                    ref={el => (labelRefs.current[index] = el)}
+                    className="text-sm"
+                  >
+                    <label
+                      htmlFor={id}
+                      className="cursor-pointer w-full"
+                      style={{ display: "block" }}
+                    >
+                      <Label.Title unstyled>{label}</Label.Title>
+                    </label>
+                  </span>
+                )}
               </div>
             );
           }

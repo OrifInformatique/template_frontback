@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
@@ -12,8 +12,9 @@ const InputCheckbox = ({
     options.filter((o) => o.defaultChecked).map((o) => o.id)
   );
 
+  const labelRefs = useRef([]);
+
   const [longestLabelWidth, setLongestLabelWidth] = useState(0);
-  const labelRefs = [];
 
   const handleCheckboxChange = (id, isChecked) => {
     const updated = isChecked
@@ -25,7 +26,7 @@ const InputCheckbox = ({
   };
 
   useEffect(() => {
-    const widths = labelRefs.map(ref => ref?.offsetWidth || 0);
+    const widths = labelRefs.current.map(ref => ref?.offsetWidth || 0);
     const maxWidth = Math.max(...widths);
     if (maxWidth > 0) {
       setLongestLabelWidth(maxWidth);
@@ -35,7 +36,6 @@ const InputCheckbox = ({
   return (
     <Label required>
       <Label.Title>{label}</Label.Title>
-
       <div className="flex flex-col gap-2">
         {options.map(
           (
@@ -56,40 +56,54 @@ const InputCheckbox = ({
             return (
               <div
                 key={id}
-                className="grid grid-cols-[auto_1fr] items-center gap-2"
+                className="flex items-center"
               >
                 {isLeft && (
                   <span
-                    ref={(el) => (labelRefs[index] = el)}
+                    ref={el => (labelRefs.current[index] = el)}
                     className="text-sm"
-                    style={{ minWidth: `${longestLabelWidth}px`, textAlign: "left" }}
+                    style={{
+                      minWidth: `${longestLabelWidth}px`,
+                      textAlign: "left",
+                      marginRight: "0.5rem",
+                    }}
                   >
-                    <Label.Title unstyled>{label}</Label.Title>
+                    <label
+                      htmlFor={id}
+                      className="cursor-pointer w-full"
+                      style={{ display: "block" }}
+                    >
+                      <Label.Title unstyled>{label}</Label.Title>
+                    </label>
                   </span>
                 )}
-
-                <label
-                  htmlFor={id}
-                  className="flex items-center gap-2 w-fit cursor-pointer"
-                >
-                  <input
-                    className="disabled:bg-disabled focus:border-primary disabled:hover:bg-disabled disabled:focus:outline-none"
-                    type="checkbox"
-                    id={id}
-                    name={name}
-                    defaultChecked={defaultChecked}
-                    disabled={isDisabled}
-                    required={required}
-                    onChange={(e) =>
-                      handleCheckboxChange(id, e.target.checked)
-                    }
-                  />
-                  {!isLeft && (
-                    <Label.Title unstyled className="w-fit">
-                      {label}
-                    </Label.Title>
-                  )}
-                </label>
+                <input
+                  className="disabled:bg-disabled focus:border-primary disabled:hover:bg-disabled disabled:focus:outline-none disabled:cursor-not-allowed"
+                  type="checkbox"
+                  id={id}
+                  name={name}
+                  defaultChecked={defaultChecked}
+                  disabled={isDisabled}
+                  required={required}
+                  onChange={(e) =>
+                    handleCheckboxChange(id, e.target.checked)
+                  }
+                  style={{ marginRight: isLeft ? 0 : "0.5rem" }}
+                />
+                {!isLeft && (
+                  <span
+                    ref={el => (labelRefs.current[index] = el)}
+                    className="text-sm"
+                  >
+                    <label
+                      htmlFor={id}
+                      className="cursor-pointer w-full"
+                      style={{ display: "block" }}
+                    >
+                      <Label.Title unstyled>{label}</Label.Title>
+                    </label>
+                  </span>
+                )}
               </div>
             );
           }
