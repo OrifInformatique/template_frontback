@@ -23,3 +23,20 @@ export const Disabled = {
         disabled: true
     }
 }
+
+export const Uncontrolled = {
+    args: {
+        id: "text-3",
+        name: "text-3",
+        defaultValue: "Example text."
+    }
+}
+
+export const Controlled = {
+    args: {
+        id: "text-4",
+        name: "text-4",
+        value: "",
+        onChangeFunction: (text) => alert("The input contains \"" + text + "\".")
+    }
+}

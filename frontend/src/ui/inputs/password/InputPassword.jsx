@@ -4,21 +4,24 @@ import Label from "../../label/Label";
 import Icon from "../../icon/Icon";
 
 const InputPassword = ({
-    id, name, label, disabled = false, placeholder = "", required = true
+    id,
+    name,
+    label,
+    value = null,
+    defaultValue = null,
+    onChangeFunction = null,
+    disabled = false,
+    placeholder = "",
+    required = true
 }) => {
-    const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
     if (disabled) required = false;
 
-    const handlePasswordChange = (event) => {
-        setPassword(event.target.value);
-    };
-
     const togglePasswordVisibility = (e) => {
         e.preventDefault();
-        setShowPassword(!showPassword);
-    };
+        setShowPassword(prev => !prev);
+    }
 
     return (
         <Label htmlFor={id} required>
@@ -29,8 +32,11 @@ const InputPassword = ({
                     type={showPassword ? "text" : "password"}
                     id={id}
                     name={name}
-                    value={password}
-                    onChange={handlePasswordChange}
+                    {...value !== null
+                        ? { value: value }
+                        : { defaultValue: defaultValue }
+                    }
+                    onChange={onChangeFunction}
                     disabled={disabled}
                     placeholder={placeholder}
                     required={required}
@@ -53,6 +59,9 @@ InputPassword.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
+    value: PropTypes.string,
+    defaultValue: PropTypes.string,
+    onChangeFunction: PropTypes.func,
     disabled: PropTypes.bool,
     placeholder: PropTypes.string,
     required: PropTypes.bool

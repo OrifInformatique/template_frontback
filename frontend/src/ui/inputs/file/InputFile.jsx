@@ -3,8 +3,14 @@ import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
 const InputFile = ({
-    id, name, label = null, accept = "", disabled = false, required = false
+    id,
+    name,
+    label = null,
+    accept = "",
+    disabled = false,
+    required = false
 }) => {
+    // Internal state of the input
     const [file, setFile] = useState(null);
 
     if (disabled) required = false;
