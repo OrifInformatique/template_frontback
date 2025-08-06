@@ -4,6 +4,9 @@ import Logo from '../../ui/logo';
 import Title from '../../ui/title';
 
 const Login = () => {
+    // Get the environment variable for the auth API URL
+    const AUTH_API_URL = process.env.AUTH_API_URL;
+
     // Local state for tabs, input fields, token, and login type
     const [activeTab, setActiveTab] = useState('login');
     const [firstName, setFirstName] = useState('');
@@ -57,7 +60,7 @@ const Login = () => {
             } else {
                 // If no token in URL, try backend endpoint
                 axios
-                    .get('http://localhost:8080/oauth2/success', { withCredentials: true })
+                    .get(`${AUTH_API_URL}/oauth2/success`, { withCredentials: true })
                     .then(response => {
                         const jwt = response.data.token;
                         console.log('%c Azure Authentication Success', 'background: #0078D4; color: white; padding: 2px 5px; border-radius: 3px;');
@@ -93,7 +96,7 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8080/auth/login', {
+            const response = await axios.post(`${AUTH_API_URL}/auth/login`, {
                 login: username,
                 password,
             });
@@ -112,7 +115,7 @@ const Login = () => {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8080/auth/register', {
+            const response = await axios.post(`${AUTH_API_URL}/auth/register`, {
                 firstName,
                 lastName,
                 login: username,
@@ -128,7 +131,7 @@ const Login = () => {
     // Redirects the browser to the backend OAuth2 login URL.
     // After Azure login, the backend should redirect back to your app at /oauth2/success.
     const handleOAuth2Login = () => {
-        window.location.href = `http://localhost:8080/oauth2/authorization/azure`;
+        window.location.href = `${AUTH_API_URL}/oauth2/authorization/azure`;
     };
 
     const handleLogout = () => {
