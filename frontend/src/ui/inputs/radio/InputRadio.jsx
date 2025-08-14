@@ -40,7 +40,6 @@ const InputRadio = ({
               id,
               label,
               disabled = false,
-              required = false,
               defaultChecked = false,
               labelPosition = "right",
             },
@@ -79,7 +78,6 @@ const InputRadio = ({
                   name={name}
                   checked={selectedId === id}
                   disabled={isDisabled}
-                  required={required}
                   onChange={() => handleRadioChange(id)}
                   className="disabled:bg-disabled focus:border-primary disabled:hover:bg-disabled disabled:focus:outline-none disabled:cursor-not-allowed"
                   style={{ marginRight: isLeft ? 0 : "0.5rem" }}
@@ -113,7 +111,6 @@ InputRadio.propTypes = {
       id: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
       disabled: PropTypes.bool,
-      required: PropTypes.bool,
       defaultChecked: PropTypes.bool,
       labelPosition: PropTypes.oneOf(["left", "right"]),
     })
@@ -122,6 +119,7 @@ InputRadio.propTypes = {
   name: PropTypes.string.isRequired,
   label: PropTypes.string,
   disabledAll: PropTypes.bool,
+  required: PropTypes.bool,
 };
 
 export default InputRadio;
