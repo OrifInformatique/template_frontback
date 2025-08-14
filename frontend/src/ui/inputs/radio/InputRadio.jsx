@@ -8,6 +8,7 @@ const InputRadio = ({
   name,
   disabledAll = false,
   label = "Sélectionner une option",
+  required = false,
 }) => {
   const [selectedId, setSelectedId] = useState(
     options.find((o) => o.defaultChecked)?.id || ""
@@ -30,7 +31,7 @@ const InputRadio = ({
   }, [options]);
 
   return (
-    <Label required>
+    <Label required={required}>
       <Label.Title>{label}</Label.Title>
       <div className="flex flex-col gap-2">
         {options.map(
