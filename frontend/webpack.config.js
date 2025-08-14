@@ -29,7 +29,7 @@ module.exports = {
         historyApiFallback: true,
         proxy: [
             {
-                context: ['/auth/login', '/users'],
+                context: ['/auth', '/users'],
                 target: 'https://auth.sectioninformatique.ch',
                 changeOrigin: true,
                 secure: false,
