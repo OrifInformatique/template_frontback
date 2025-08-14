@@ -17,6 +17,7 @@ const baseOptions = [
 export const Default = {
   args: {
     options: baseOptions,
+    required: false,
     onChange: (selectedIds) => console.log("Sélection :", selectedIds),
   },
 };
@@ -25,6 +26,7 @@ export const AllDisabled = {
   args: {
     options: baseOptions,
     allDisabled: true,
+    required: true,
     onChange: (selectedIds) => console.log("Sélection (disabled):", selectedIds),
   },
 };
@@ -33,6 +35,7 @@ export const LabelOnLeft = {
   args: {
     name: "choices-left",
     options: baseOptions.map((opt) => ({ ...opt, labelPosition: "left" })),
+    required: true,
     onChange: (selectedId) => console.log("Selected (left):", selectedId),
   },
 };

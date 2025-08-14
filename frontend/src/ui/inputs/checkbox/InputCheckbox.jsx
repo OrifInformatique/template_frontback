@@ -7,6 +7,7 @@ const InputCheckbox = ({
   onChange = () => {},
   allDisabled = false,
   label = "Sélectionner une option",
+  required = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState(
     options.filter((o) => o.defaultChecked).map((o) => o.id)
@@ -34,7 +35,7 @@ const InputCheckbox = ({
   }, [options]);
 
   return (
-    <Label required>
+    <Label required={required}>
       <Label.Title>{label}</Label.Title>
       <div className="flex flex-col gap-2">
         {options.map(
