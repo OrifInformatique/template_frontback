@@ -25,7 +25,8 @@ export const Disabled = {
         label: "Quantité :",
         min: 0,
         max: 130,
-        disabled: true
+        disabled: true,
+        required: false
     }
 }
 
@@ -33,7 +34,8 @@ export const Uncontrolled = {
     args: {
         id: "number-3",
         name: "number-3",
-        defaultValue: 42
+        defaultValue: 42,
+        required: true
     }
 }
 
@@ -42,6 +44,7 @@ export const Controlled = {
         id: "number-4",
         name: "number-4",
         value: "",
+        required: true,
         onChangeFunction: (number) => alert("The input contains \"" + number + "\".")
     }
 }

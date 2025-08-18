@@ -2,19 +2,17 @@ import React from "react";
 import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
-const InputSearch = ({ id, label, disabled = false }) => {
+const InputSearch = ({ id, label, disabled = false, required = false }) => {
   return (
-    <div className="flex items-center gap-2 w-fit">
-      <label htmlFor={id}>
-        <Label.Title>{label}</Label.Title>
-      </label>
+    <Label htmlFor={id} required={required}>
+      <Label.Title>{label}</Label.Title>
       <input
         type="search"
         id={id}
         disabled={disabled}
-        className="border px-2 py-1 rounded w-fit"
+        className="border px-2 py-1 rounded w-full max-w-sm"
       />
-    </div>
+    </Label>
   );
 };
 
@@ -22,6 +20,7 @@ InputSearch.propTypes = {
   id: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
   disabled: PropTypes.bool,
+  required: PropTypes.bool, 
 };
 
 export default InputSearch;

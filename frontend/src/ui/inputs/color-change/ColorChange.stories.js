@@ -16,11 +16,11 @@ export const Exemple = () => {
 
   return (
     <div className="p-4 max-w-sm">
-      <ColorChange
-        title = "Titre"
-        label="Choisir une couleur"
-        defaultColor={color}
-        onChange={(newColor) => setColor(newColor)}
+    <ColorChange
+      label="Choisir une couleur"
+      defaultColor={color}
+      required={true} 
+      onChange={(newColor) => setColor(newColor)}
       >
         <InputText
           id="example-text"

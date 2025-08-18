@@ -20,7 +20,8 @@ export const Disabled = {
     args: {
         id: "text-2",
         name: "text-2",
-        disabled: true
+        disabled: true,
+        required: false
     }
 }
 
@@ -28,7 +29,8 @@ export const Uncontrolled = {
     args: {
         id: "text-3",
         name: "text-3",
-        defaultValue: "Example text."
+        defaultValue: "Example text.",
+        required: true
     }
 }
 

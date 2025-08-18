@@ -12,7 +12,7 @@ const InputPassword = ({
     onChangeFunction = null,
     disabled = false,
     placeholder = "",
-    required = true
+    required = false
 }) => {
     const [showPassword, setShowPassword] = useState(false);
 
@@ -24,7 +24,7 @@ const InputPassword = ({
     }
 
     return (
-        <Label htmlFor={id} required>
+        <Label htmlFor={id} required={required}>
             <Label.Title>{label}</Label.Title>
             <div className="flex items-center w-fit">
                 <input

@@ -14,7 +14,6 @@ const InputNumber = ({
     disabled = false,
     required = false
 }) => {
-    // Internal state of the input
     const [internalValue, setInternalValue] = useState(value ?? defaultValue ?? "");
 
     if (disabled) required = false;
@@ -52,7 +51,7 @@ const InputNumber = ({
     }
 
     return (
-        <Label htmlFor={id} required>
+        <Label htmlFor={id} required={required}>
             <Label.Title>{label}</Label.Title>
             <input
                 className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"
@@ -64,7 +63,6 @@ const InputNumber = ({
                 value={internalValue}
                 onChange={handleNumberChange}
                 disabled={disabled}
-                required={required}
             />
         </Label>
     );
