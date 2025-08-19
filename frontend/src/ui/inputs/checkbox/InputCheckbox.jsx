@@ -13,6 +13,8 @@ const InputCheckbox = ({
     options.filter((o) => o.defaultChecked).map((o) => o.id)
   );
 
+  if (allDisabled) required = false;
+
   const labelRefs = useRef([]);
 
   const [longestLabelWidth, setLongestLabelWidth] = useState(0);

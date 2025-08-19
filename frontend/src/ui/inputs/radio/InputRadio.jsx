@@ -14,6 +14,8 @@ const InputRadio = ({
     options.find((o) => o.defaultChecked)?.id || ""
   );
 
+  if (disabledAll) required = false;
+
   const labelRefs = useRef([]);
   const [longestLabelWidth, setLongestLabelWidth] = useState(0);
 
