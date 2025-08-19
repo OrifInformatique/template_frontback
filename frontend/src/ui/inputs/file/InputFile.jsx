@@ -25,7 +25,7 @@ const InputFile = ({
     }
 
     return (
-        <Label htmlFor={id} required>
+        <Label htmlFor={id} required={required}>
             <Label.Title>{label}</Label.Title>
             <input
                 type="file"

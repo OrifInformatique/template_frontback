@@ -22,6 +22,7 @@ export const Disabled = {
         id: "email-2",
         name: "email-2",
         disabled: true,
+        required: false,
     }
 }
 
@@ -29,7 +30,8 @@ export const Uncontrolled = {
     args: {
         id: "email-3",
         name: "email-3",
-        defaultValue: "enter.email@here.com"
+        defaultValue: "enter.email@here.com",
+        required: true
     }
 }
 
@@ -38,6 +40,7 @@ export const Controlled = {
         id: "email-4",
         name: "email-4",
         value: "",
+        required: true,
         onChangeFunction: (email) => alert("The input contains \"" + email + "\".")
     }
 }

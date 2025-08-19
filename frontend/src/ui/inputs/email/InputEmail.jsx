@@ -16,7 +16,7 @@ const InputEmail = ({
     if (disabled) required = false;
 
     return (
-        <Label htmlFor={id} required>
+        <Label htmlFor={id} required={required}>
             <Label.Title>{label}</Label.Title>
             <input
                 className="rounded-md disabled:bg-disabled focus:ring-primary focus:border-primary w-fit"

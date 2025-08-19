@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import Label from "../../label/Label";
 
-const ColorChange = ({ label = "Couleur", defaultColor = "#005ba9", onChange }) => {
+const ColorChange = ({
+  label = "Couleur",
+  defaultColor = "#005ba9",
+  onChange,
+  required = false, 
+}) => {
   const [colorValue, setColorValue] = useState(defaultColor);
   const [hexInputValue, setHexInputValue] = useState(defaultColor.replace("#", ""));
 
@@ -24,11 +29,10 @@ const ColorChange = ({ label = "Couleur", defaultColor = "#005ba9", onChange }) 
   };
 
   return (
-    
     <div className="flex flex-col space-y-2 max-w-full mx-auto">
-   
-    <Label.Title>{label}</Label.Title>
-    
+      <Label required={required}>
+        <Label.Title>{label}</Label.Title>
+      </Label>
 
       <div className="flex items-center space-x-2">
         <input
@@ -56,6 +60,7 @@ ColorChange.propTypes = {
   label: PropTypes.string,
   defaultColor: PropTypes.string,
   onChange: PropTypes.func,
+  required: PropTypes.bool  
 };
 
 export default ColorChange;
