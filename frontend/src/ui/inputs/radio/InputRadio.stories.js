@@ -18,7 +18,7 @@ export const Default = {
   args: {
     name: "choices",
     options: baseOptions,
-    required: true,
+    required: false,
     onChange: (selectedId) => console.log("Selected radio:", selectedId),
   },
 };
@@ -28,7 +28,7 @@ export const AllDisabled = {
     name: "choices-disabled",
     options: baseOptions,
     disabledAll: true,
-    required: false,
+    required: true,
     onChange: (selectedId) => console.log("Selected radio (disabled):", selectedId),
   },
 };
