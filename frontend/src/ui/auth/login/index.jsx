@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
 
-import Button from "../../buttons/default/Button";
+import Button from '../../buttons/default/Button';
 import Image from '../../image/Image';
-import InputText from "../../inputs/text/InputText";
-import InputPassword from "../../inputs/password/InputPassword"
+import InputText from '../../inputs/text/InputText';
+import InputPassword from '../../inputs/password/InputPassword';
 import Link from '../../link';
+import handleLoginFormSubmit from '../api/authService';
 
-const Login = () =>
-{
-    const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] = useState(false);
-
-    const handleLoginFormSubmit = (e) =>
-    {
-        e.preventDefault();
-        console.log(handleLoginFormSubmit);
-    }
+const Login = () => {
+    const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =
+        useState(false);
 
     return (
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
@@ -72,7 +67,7 @@ const Login = () =>
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default Login;
