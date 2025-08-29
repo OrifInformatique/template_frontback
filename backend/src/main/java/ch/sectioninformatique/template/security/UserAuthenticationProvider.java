@@ -18,7 +18,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import ch.sectioninformatique.template.user.UserDto;
-import ch.sectioninformatique.template.user.UserService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +39,6 @@ public class UserAuthenticationProvider {
     /** Secret key for JWT token signing and verification, configured via application properties */
     @Value("${security.jwt.token.secret-key:secret-key}")
     private String secretKey;
-
-    /** Service for user-related operations, including user creation and retrieval */
-    private final UserService userService;
 
     /**
      * Initializes the authentication provider by encoding the secret key.
@@ -140,72 +136,5 @@ public class UserAuthenticationProvider {
         return new UsernamePasswordAuthenticationToken(user, null, authorities);
     }
 
-    /**
-     * Performs strong validation of a JWT token with database verification.
-     * This method:
-     * 1. Validates the token signature and claims
-     * 2. Attempts to find the user in the database
-     * 3. If user exists:
-     *    - Adds default OAuth2 scopes permissions
-     *    - Preserves existing permissions
-     * 4. If user doesn't exist:
-     *    - Creates a new Azure user with default permissions
-     *    - Sets role to "USER"
-     *
-     * @param token The JWT token to validate
-     * @return Authentication object containing the user's information and authorities
-     */
-    public Authentication validateTokenStrongly(String token) {
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
-        JWTVerifier verifier = JWT.require(algorithm)
-                .build();
-
-        DecodedJWT decoded = verifier.verify(token);
-        log.debug("Token strongly verified for subject: {}", decoded.getSubject());
-
-        try {
-            // Try to find the user in the database
-            UserDto user = userService.findByLogin(decoded.getSubject());
-            
-            // Add default permissions for OAuth2 users
-            List<String> permissions = new ArrayList<>(List.of(
-                // OAuth2 scopes
-                "SCOPE_openid", 
-                "SCOPE_profile", 
-                "SCOPE_email", 
-                "SCOPE_User.Read"
-            ));
-
-            // Add any existing permissions
-            if (user.getPermissions() != null) {
-                permissions.addAll(user.getPermissions());
-            }
-
-            user.setPermissions(permissions);
-            user.setToken(token);
-            
-            List<SimpleGrantedAuthority> authorities = buildAuthorities(user.getRole(), user.getPermissions());
-            log.debug("Built authorities for user {}: {}", user.getLogin(), authorities);
-            
-            return new UsernamePasswordAuthenticationToken(user, null, authorities);
-        } catch (Exception e) {
-            // If user doesn't exist, create a new Azure user
-            log.debug("User not found, creating new Azure user: {}", decoded.getSubject());
-            
-            UserDto newUser = UserDto.builder()
-                .login(decoded.getSubject())
-                .firstName(decoded.getClaim("firstName").asString())
-                .lastName(decoded.getClaim("lastName").asString())
-                .role("USER")
-                .build();
-
-            // Save the new user
-            userService.createAzureUser(newUser);
-            
-            // Create authentication with authorities
-            List<SimpleGrantedAuthority> authorities = buildAuthorities(newUser.getRole(), newUser.getPermissions());
-            return new UsernamePasswordAuthenticationToken(newUser, null, authorities);
-        }
-    }
 }
