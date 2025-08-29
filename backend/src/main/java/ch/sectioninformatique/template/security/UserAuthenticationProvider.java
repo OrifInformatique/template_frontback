@@ -36,7 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UserAuthenticationProvider {
 
-    /** Secret key for JWT token signing and verification, configured via application properties */
+    /**
+     * Secret key for JWT token signing and verification, configured via application
+     * properties
+     */
     @Value("${security.jwt.token.secret-key:secret-key}")
     private String secretKey;
 
@@ -84,10 +87,12 @@ public class UserAuthenticationProvider {
      * This method converts:
      * - Role into a "ROLE_" prefixed authority
      * - Permissions into individual authorities
-     * The resulting authorities are used by Spring Security for authorization checks.
+     * The resulting authorities are used by Spring Security for authorization
+     * checks.
      *
-     * @param role The user's role (e.g., "USER", "MANAGER")
-     * @param permissions List of permission strings (e.g., "user:read", "user:write")
+     * @param role        The user's role (e.g., "USER", "MANAGER")
+     * @param permissions List of permission strings (e.g., "user:read",
+     *                    "user:write")
      * @return List of SimpleGrantedAuthority objects for Spring Security
      */
     private List<SimpleGrantedAuthority> buildAuthorities(String role, List<String> permissions) {
@@ -97,8 +102,8 @@ public class UserAuthenticationProvider {
         }
         if (permissions != null) {
             authorities.addAll(permissions.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList()));
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList()));
         }
         log.debug("Built authorities for role {}: {}", role, authorities);
         return authorities;
@@ -113,7 +118,8 @@ public class UserAuthenticationProvider {
      * - Token claims (user information)
      *
      * @param token The JWT token to validate
-     * @return Authentication object containing the user's information and authorities
+     * @return Authentication object containing the user's information and
+     *         authorities
      */
     public Authentication validateToken(String token) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
@@ -135,6 +141,5 @@ public class UserAuthenticationProvider {
         List<SimpleGrantedAuthority> authorities = buildAuthorities(user.getRole(), user.getPermissions());
         return new UsernamePasswordAuthenticationToken(user, null, authorities);
     }
-
 
 }
