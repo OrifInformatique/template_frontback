@@ -1,12 +1,5 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.auth.CredentialsDto;
-import ch.sectioninformatique.template.auth.SignUpDto;
-import ch.sectioninformatique.template.app.exceptions.AppException;
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
-import ch.sectioninformatique.template.security.RoleRepository;
-import ch.sectioninformatique.template.item.ItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,17 +7,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.auth.CredentialsDto;
+import ch.sectioninformatique.template.security.Role;
+import ch.sectioninformatique.template.security.RoleEnum;
+import ch.sectioninformatique.template.security.RoleRepository;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.http.HttpStatus;
-import ch.sectioninformatique.template.item.Item;
 
 import java.nio.CharBuffer;
 import java.util.Optional;
 import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -43,9 +40,6 @@ public class UserServiceTest {
 
     @Mock
     private UserMapper userMapper;
-
-    @Mock
-    private ItemRepository itemRepository;
 
     @Mock
     private SecurityContext securityContext;
@@ -115,63 +109,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void register_Successful_ReturnsUserDto() {
-        // Arrange
-        String login = "newuser@test.com";
-        String password = "password123";
-        SignUpDto signUpDto = new SignUpDto("New", "User", login, password.toCharArray());
-        
-        User user = new User();
-        user.setId(1L);
-        user.setFirstName("New");
-        user.setLastName("User");
-        user.setLogin(login);
-        user.setPassword("hashedPassword");
-        user.setRoles(new HashSet<>());
-        
-        UserDto expectedDto = new UserDto(1L, "New", "User", login, null, "ROLE_USER", null);
-        Role userRole = new Role();
-        userRole.setId(1L);
-        userRole.setName(RoleEnum.USER);
-        
-        when(userRepository.findByLogin(login)).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(CharBuffer.wrap(password))).thenReturn("hashedPassword");
-        when(roleRepository.findByName(RoleEnum.USER)).thenReturn(Optional.of(userRole));
-        when(userMapper.signUpToUser(signUpDto)).thenReturn(user);
-        when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toUserDto(user)).thenReturn(expectedDto);
-
-        // Act
-        UserDto result = userService.register(signUpDto);
-
-        // Assert
-        assertEquals(expectedDto, result);
-        verify(userRepository).findByLogin(login);
-        verify(passwordEncoder).encode(CharBuffer.wrap(password));
-        verify(roleRepository).findByName(RoleEnum.USER);
-        verify(userRepository).save(user);
-    }
-
-    @Test
-    void register_LoginExists_ThrowsAppException() {
-        // Arrange
-        String login = "existing@test.com";
-        String password = "password123";
-        SignUpDto signUpDto = new SignUpDto("Existing", "User", login, password.toCharArray());
-        
-        User existingUser = new User(1L, "Existing", "User", login, "hashedPassword", null, null, null);
-        
-        when(userRepository.findByLogin(login)).thenReturn(Optional.of(existingUser));
-
-        // Act & Assert
-        AppException exception = assertThrows(AppException.class, 
-            () -> userService.register(signUpDto));
-        assertEquals("Login already exists", exception.getMessage());
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-    }
-
-    @Test
-    void promoteToAdmin_Successful_ReturnsUserDto() {
+    void promoteToManager_Successful_ReturnsUserDto() {
         // Arrange
         Long userId = 1L;
         User user = new User();
@@ -185,42 +123,42 @@ public class UserServiceTest {
         Role userRole = new Role();
         userRole.setId(1L);
         userRole.setName(RoleEnum.USER);
-        Role adminRole = new Role();
-        adminRole.setId(2L);
-        adminRole.setName(RoleEnum.ADMIN);
+        Role managerRole = new Role();
+        managerRole.setId(2L);
+        managerRole.setName(RoleEnum.MANAGER);
         user.getRoles().add(userRole);
         
-        UserDto expectedDto = new UserDto(userId, "John", "Doe", "john@test.com", null, "ROLE_ADMIN", null);
+        UserDto expectedDto = new UserDto(userId, "John", "Doe", "john@test.com", null, "ROLE_MANAGER", null);
         
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(roleRepository.findByName(RoleEnum.ADMIN)).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByName(RoleEnum.MANAGER)).thenReturn(Optional.of(managerRole));
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toUserDto(user)).thenReturn(expectedDto);
 
         // Act
-        UserDto result = userService.promoteToAdmin(userId);
+        UserDto result = userService.promoteToManager(userId);
 
         // Assert
         assertEquals(expectedDto, result);
         verify(userRepository).findById(userId);
-        verify(roleRepository).findByName(RoleEnum.ADMIN);
+        verify(roleRepository).findByName(RoleEnum.MANAGER);
         verify(userRepository).save(user);
     }
 
     @Test
-    void promoteToAdmin_UserNotFound_ThrowsRuntimeException() {
+    void promoteToManager_UserNotFound_ThrowsRuntimeException() {
         // Arrange
         Long userId = 1L;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> userService.promoteToAdmin(userId));
+            () -> userService.promoteToManager(userId));
         assertEquals("User not found", exception.getMessage());
     }
 
     @Test
-    void promoteToAdmin_AlreadyAdmin_ThrowsRuntimeException() {
+    void promoteToManager_AlreadyManager_ThrowsRuntimeException() {
         // Arrange
         Long userId = 1L;
         User user = new User();
@@ -231,21 +169,21 @@ public class UserServiceTest {
         user.setPassword("pass");
         user.setRoles(new HashSet<>());
         
-        Role adminRole = new Role();
-        adminRole.setId(2L);
-        adminRole.setName(RoleEnum.ADMIN);
-        user.getRoles().add(adminRole);
+        Role managerRole = new Role();
+        managerRole.setId(2L);
+        managerRole.setName(RoleEnum.MANAGER);
+        user.getRoles().add(managerRole);
         
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> userService.promoteToAdmin(userId));
-        assertEquals("The user is already an admin", exception.getMessage());
+            () -> userService.promoteToManager(userId));
+        assertEquals("The user is already an manager", exception.getMessage());
     }
 
     @Test
-    void deleteUser_Successful_DeletesUserAndTransfersItems() {
+    void deleteUser_Successful_DeletesUser() {
         // Arrange
         Long userId = 2L;
         User userToDelete = new User();
@@ -262,41 +200,29 @@ public class UserServiceTest {
         
         User authenticatedUser = new User();
         authenticatedUser.setId(3L);
-        authenticatedUser.setFirstName("Admin");
+        authenticatedUser.setFirstName("Manager");
         authenticatedUser.setLastName("User");
-        authenticatedUser.setLogin("admin@test.com");
+        authenticatedUser.setLogin("manager@test.com");
         authenticatedUser.setPassword("pass");
         authenticatedUser.setRoles(new HashSet<>());
-        Role adminRole = new Role();
-        adminRole.setId(2L);
-        adminRole.setName(RoleEnum.ADMIN);
-        authenticatedUser.getRoles().add(adminRole);
+        Role managerRole = new Role();
+        managerRole.setId(2L);
+        managerRole.setName(RoleEnum.MANAGER);
+        authenticatedUser.getRoles().add(managerRole);
         
-        User deletedUser = new User();
-        deletedUser.setId(1L);
-        deletedUser.setFirstName("Deleted");
-        deletedUser.setLastName("User");
-        deletedUser.setLogin("deleted@test.com");
-        deletedUser.setPassword("pass");
-        deletedUser.setRoles(new HashSet<>());
-        
-        UserDto authenticatedUserDto = new UserDto(3L, "Admin", "User", "admin@test.com", null, "ROLE_ADMIN", null);
+        UserDto authenticatedUserDto = new UserDto(3L, "Manager", "User", "manager@test.com", null, "ROLE_MANAGER", null);
         
         when(userRepository.findById(userId)).thenReturn(Optional.of(userToDelete));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(authenticatedUserDto);
-        when(userRepository.findByLogin("admin@test.com")).thenReturn(Optional.of(authenticatedUser));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(deletedUser));
-        List<Item> userItems = new ArrayList<>();
-        when(itemRepository.findAll()).thenReturn(userItems);
+        when(userRepository.findByLogin("manager@test.com")).thenReturn(Optional.of(authenticatedUser));
 
         // Act
         userService.deleteUser(userId);
 
         // Assert
         verify(userRepository).findById(userId);
-        verify(userRepository).findByLogin("admin@test.com");
-        verify(userRepository).findById(1L);
+        verify(userRepository).findByLogin("manager@test.com");
         verify(userRepository).deleteById(userId);
     }
 
@@ -311,10 +237,10 @@ public class UserServiceTest {
         userToDelete.setLogin("john@test.com");
         userToDelete.setPassword("pass");
         userToDelete.setRoles(new HashSet<>());
-        Role adminRole = new Role();
-        adminRole.setId(2L);
-        adminRole.setName(RoleEnum.ADMIN);
-        userToDelete.getRoles().add(adminRole);
+        Role managerRole = new Role();
+        managerRole.setId(2L);
+        managerRole.setName(RoleEnum.MANAGER);
+        userToDelete.getRoles().add(managerRole);
         
         User authenticatedUser = new User();
         authenticatedUser.setId(3L);

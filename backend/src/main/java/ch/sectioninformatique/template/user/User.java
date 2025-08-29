@@ -1,11 +1,13 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.security.Role;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import ch.sectioninformatique.template.security.Role;
+
 import org.springframework.security.core.GrantedAuthority;
 import java.util.*;
 import lombok.Builder;

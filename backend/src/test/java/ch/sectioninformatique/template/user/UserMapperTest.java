@@ -1,13 +1,14 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.auth.SignUpDto;
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
+
+import ch.sectioninformatique.template.security.Role;
+import ch.sectioninformatique.template.security.RoleEnum;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,7 @@ class UserMapperTest {
          */
         @org.springframework.context.annotation.Bean
         public UserMapper userMapper() {
-            return new UserMapperImpl();
+            return UserMapper.INSTANCE;
         }
     }
 
@@ -67,7 +68,7 @@ class UserMapperTest {
         user.setLogin("johndoe");
         
         Role role = new Role();
-        role.setName(RoleEnum.ADMIN);
+        role.setName(RoleEnum.MANAGER);
         Set<Role> roles = new HashSet<>();
         roles.add(role);
         user.setRoles(roles);
@@ -81,37 +82,8 @@ class UserMapperTest {
         assertEquals("John", userDto.getFirstName());
         assertEquals("Doe", userDto.getLastName());
         assertEquals("johndoe", userDto.getLogin());
-        assertEquals("ADMIN", userDto.getRole());
+        assertEquals("MANAGER", userDto.getRole());
         assertNotNull(userDto.getPermissions());
-    }
-
-    /**
-     * Tests the conversion from SignUpDto to User.
-     * Verifies that:
-     * - Basic information is correctly mapped
-     * - Password is ignored as configured
-     * - Roles are initialized as an empty set
-     */
-    @Test
-    void testSignUpToUser() {
-        // Given
-        SignUpDto signUpDto = new SignUpDto(
-            "Jane",
-            "Smith",
-            "janesmith",
-            "password123".toCharArray()
-        );
-
-        // When
-        User user = userMapper.signUpToUser(signUpDto);
-
-        // Then
-        assertNotNull(user);
-        assertEquals("Jane", user.getFirstName());
-        assertEquals("Smith", user.getLastName());
-        assertEquals("janesmith", user.getLogin());
-        assertNull(user.getPassword()); // Password should be ignored as per mapping
-        assertTrue(user.getRoles().isEmpty()); // Roles should be empty as per mapping
     }
 
     /**

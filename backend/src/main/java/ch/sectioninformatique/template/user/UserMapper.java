@@ -1,15 +1,16 @@
 package ch.sectioninformatique.template.user;
 
-import org.springframework.security.core.GrantedAuthority;
-
-import ch.sectioninformatique.template.auth.SignUpDto;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.mapstruct.factory.Mappers;
+import org.springframework.security.core.GrantedAuthority;
+
+
 
 /**
  * Mapper interface for converting between User entities and DTOs.
@@ -23,6 +24,12 @@ import java.util.stream.Collectors;
 public interface UserMapper { 
 
     /**
+     * By convention for MapStruct, the interface declares a member INSTANCE,
+     * providing clients access to the mapper implementation.
+     */
+    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+
+    /**
      * Converts a User entity to a UserDto.
      * This method:
      * - Maps basic user properties (id, firstName, lastName, login)
@@ -33,7 +40,7 @@ public interface UserMapper {
      * @param user The User entity to convert
      * @return A UserDto containing the user's information
      */
-    @Mapping(target = "role", source = "role.name")
+    @Mapping(target = "role", expression = "java(user.getRole().getName().name())")
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")
     @Mapping(target = "token", ignore = true)
     @Mapping(target = "id", source = "id")
@@ -41,23 +48,6 @@ public interface UserMapper {
     @Mapping(target = "lastName", source = "lastName")
     @Mapping(target = "login", source = "login")
     UserDto toUserDto(User user);
-
-    /**
-     * Converts a SignUpDto to a User entity.
-     * This method:
-     * - Maps basic user properties from the signup data
-     * - Ignores password and roles (these are handled separately)
-     * - Ignores ID and timestamps (these are set by the system)
-     *
-     * @param signUpDto The SignUpDto containing user registration data
-     * @return A new User entity with the signup information
-     */
-    @Mapping(target = "password", ignore = true)
-    @Mapping(target = "roles", ignore = true)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    User signUpToUser(SignUpDto signUpDto);
 
     /**
      * Converts a collection of GrantedAuthority objects to a list of permission strings.

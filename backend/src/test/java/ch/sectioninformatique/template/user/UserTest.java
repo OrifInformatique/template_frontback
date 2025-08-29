@@ -1,9 +1,10 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
+
+import ch.sectioninformatique.template.security.Role;
+import ch.sectioninformatique.template.security.RoleEnum;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -65,12 +66,12 @@ class UserTest {
         // Given
         Role userRole = new Role();
         userRole.setName(RoleEnum.USER);
-        Role adminRole = new Role();
-        adminRole.setName(RoleEnum.ADMIN);
+        Role managerRole = new Role();
+        managerRole.setName(RoleEnum.MANAGER);
 
         Set<Role> roles = new HashSet<>();
         roles.add(userRole);
-        roles.add(adminRole);
+        roles.add(managerRole);
 
         User user = User.builder()
                 .roles(roles)
@@ -84,7 +85,7 @@ class UserTest {
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
         assertTrue(authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")));
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_MANAGER")));
     }
 
     /**

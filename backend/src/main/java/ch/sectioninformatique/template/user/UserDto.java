@@ -1,9 +1,10 @@
 package ch.sectioninformatique.template.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Data Transfer Object (DTO) for user information.
