@@ -25,29 +25,33 @@ public enum RoleEnum {
      * Can only read user information.
      */
     USER(EnumSet.of(
-        USER_READ
-    )),
+            USER_READ)),
+
+    /**
+     * Basic user role with limited permissions.
+     * Can only read user information.
+     */
+    USER_TEST(EnumSet.of(
+            USER_READ)),
 
     /**
      * Manager role with extended permissions.
      * Can manage users, but cannot delete them.
      */
     MANAGER(EnumSet.of(
-        USER_READ, 
-        USER_WRITE, 
-        USER_UPDATE
-    )),
+            USER_READ,
+            USER_WRITE,
+            USER_UPDATE)),
 
     /**
      * Administrator role with full system access.
      * Has all permissions including deletion of users.
      */
     ADMIN(EnumSet.of(
-        USER_READ, 
-        USER_WRITE, 
-        USER_UPDATE, 
-        USER_DELETE
-    ));
+            USER_READ,
+            USER_WRITE,
+            USER_UPDATE,
+            USER_DELETE));
 
     /** Set of permissions associated with this role */
     private final Set<PermissionEnum> permissions;
@@ -71,11 +75,13 @@ public enum RoleEnum {
     }
 
     /**
-     * Converts the role's permissions into Spring Security GrantedAuthority objects.
+     * Converts the role's permissions into Spring Security GrantedAuthority
+     * objects.
      * This method creates SimpleGrantedAuthority objects for each permission and
      * adds a role-based authority (e.g., "ROLE_USER").
      *
-     * @return Set of SimpleGrantedAuthority objects representing the role's permissions
+     * @return Set of SimpleGrantedAuthority objects representing the role's
+     *         permissions
      */
     public Set<SimpleGrantedAuthority> getGrantedAuthorities() {
         Set<SimpleGrantedAuthority> permissions = getPermissions().stream()

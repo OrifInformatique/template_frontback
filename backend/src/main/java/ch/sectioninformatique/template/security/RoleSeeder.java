@@ -50,11 +50,12 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
      * Each role is created with a descriptive name and description.
      */
     private void loadRoles() {
-        RoleEnum[] roleNames = new RoleEnum[] { RoleEnum.USER, RoleEnum.MANAGER,
+        RoleEnum[] roleNames = new RoleEnum[] { RoleEnum.USER, RoleEnum.USER_TEST, RoleEnum.MANAGER,
                 RoleEnum.ADMIN };
 
         Map<RoleEnum, String> roleDescriptionMap = Map.of(
                 RoleEnum.USER, "Default user role",
+                RoleEnum.USER_TEST, "test user role",
                 RoleEnum.MANAGER, "Manager role",
                 RoleEnum.ADMIN, "Administrator role");
 
