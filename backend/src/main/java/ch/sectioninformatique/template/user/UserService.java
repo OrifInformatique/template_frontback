@@ -1,5 +1,8 @@
 package ch.sectioninformatique.template.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import ch.sectioninformatique.template.security.Role;
@@ -56,6 +59,17 @@ public class UserService {
         user.getRoles().add(testUserRole);
         userRepository.save(user);
         return userMapper.toUserDto(user);
+    }
+
+    /**
+     * Retrieves all users in the system.
+     *
+     * @return List of all User entities
+     */
+    public List<User> allUsers() {
+        List<User> users = new ArrayList<>();
+        userRepository.findAll().forEach(users::add);
+        return users;
     }
 
     /**

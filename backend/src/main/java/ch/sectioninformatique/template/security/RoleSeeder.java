@@ -45,6 +45,7 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
      * Loads the default roles into the database.
      * Creates the following roles if they don't exist:
      * - USER: Default user role
+     * - USER_TEST: A local role for tests
      * - MANAGER: Manager role
      * - ADMIN: Administrator role
      * Each role is created with a descriptive name and description.
@@ -59,12 +60,19 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
                 RoleEnum.MANAGER, "Manager role",
                 RoleEnum.ADMIN, "Administrator role");
 
+                Map<RoleEnum, String> roleDomaineMap = Map.of(
+                RoleEnum.USER, "auth",
+                RoleEnum.USER_TEST, "frontBack",
+                RoleEnum.MANAGER, "auth",
+                RoleEnum.ADMIN, "auth");
+
         Arrays.stream(roleNames).forEach((roleName) -> {
             Optional<Role> optionalRole = roleRepository.findByName(roleName);
             optionalRole.ifPresentOrElse(System.out::println, () -> {
                 Role roleToCreate = new Role();
                 roleToCreate.setName(roleName);
                 roleToCreate.setDescription(roleDescriptionMap.get(roleName));
+                roleToCreate.setDomaine(roleDomaineMap.get(roleName));
                 roleRepository.save(roleToCreate);
             });
         });

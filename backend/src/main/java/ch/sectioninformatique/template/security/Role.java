@@ -67,6 +67,16 @@ public class Role {
     private RoleEnum name;
 
     /**
+     * The sphere of influence of the role throug this app and beyond.
+     * This field:
+     * - Cannot be null
+     * - Provides context about the role's purpose
+     * - Helps administrators understand role assignments
+     */
+    @Column(nullable = false)
+    private String domaine;
+
+    /**
      * A human-readable description of the role.
      * This field:
      * - Cannot be null

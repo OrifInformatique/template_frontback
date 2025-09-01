@@ -1,5 +1,7 @@
 package ch.sectioninformatique.template.test;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +92,22 @@ public class testController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    /**
+     * Retrieves all users in the system.
+     * This endpoint:
+     * - Requires the 'user:read' authority
+     * - Returns a list of all users
+     * - Is typically used by administrators
+     *
+     * @return ResponseEntity containing a list of all users
+     */
+    @GetMapping("/all")
+    @PreAuthorize("hasAuthority('user:read')")
+    public ResponseEntity<List<User>> allUsers() {
+        List<User> users = userService.allUsers();
+        return ResponseEntity.ok(users);
     }
 
 }
