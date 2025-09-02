@@ -3,7 +3,7 @@ package ch.sectioninformatique.template.security;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -101,14 +101,11 @@ public class UserAuthenticationProvider {
         for (String role : roles) {
             if (role != null && !role.isEmpty()) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                Set<SimpleGrantedAuthority> authoritySet = RoleEnum.valueOf(role).getGrantedAuthorities();
+                authorities.addAll(authoritySet);
             }
         }
 
-        if (permissions != null) {
-            authorities.addAll(permissions.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList()));
-        }
         log.debug("Built authorities for role {}: {}", roles, authorities);
         return authorities;
     }
