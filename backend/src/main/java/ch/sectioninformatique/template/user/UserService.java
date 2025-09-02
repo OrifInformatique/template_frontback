@@ -43,20 +43,23 @@ public class UserService {
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
-     * @throws RuntimeException if the user is not found, already an manager, or the manager role is not found
+     * @throws RuntimeException if the user is not found, already an manager, or the
+     *                          manager role is not found
      */
     public UserDto promoteToTestUser(Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-            
-        if (user.getRole().getName().equals(RoleEnum.USER_TEST)) {
-            throw new RuntimeException("The user is already a test user");
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        for (Role role : user.getAppSpecificRoles()) {
+            if (role.getName().equals(RoleEnum.USER_TEST)) {
+                throw new RuntimeException("The user is already a test user");
+            }
         }
 
         Role testUserRole = roleRepository.findByName(RoleEnum.USER_TEST)
-            .orElseThrow(() -> new RuntimeException("Test user role not found"));
-            
-        user.getRoles().add(testUserRole);
+                .orElseThrow(() -> new RuntimeException("Test user role not found"));
+
+        user.getAppSpecificRoles().add(testUserRole);
         userRepository.save(user);
         return userMapper.toUserDto(user);
     }
@@ -70,32 +73,5 @@ public class UserService {
         List<User> users = new ArrayList<>();
         userRepository.findAll().forEach(users::add);
         return users;
-    }
-
-    /**
-     * Checks if an actor can perform an action on a target based on their roles.
-     * The hierarchy is:
-     * - ADMIN can perform actions on all roles
-     * - MANGER can perform actions on USER and MANAGER roles
-     * - USER cannot perform actions on any role
-     *
-     * @param actorRole  The role of the actor performing the action
-     * @param targetRole The role of the target of the action
-     * @return true if the actor can perform the action, false otherwise
-     */
-    private boolean canPerformAction(RoleEnum actorRole, RoleEnum targetRole) {
-        switch (actorRole) {
-            case ADMIN:
-                return true;
-            case MANAGER:
-                if (targetRole == RoleEnum.ADMIN) {
-                    return false;
-                }
-                return true;
-            case USER:
-                return false;
-            default:
-                return false;
-        }
     }
 }

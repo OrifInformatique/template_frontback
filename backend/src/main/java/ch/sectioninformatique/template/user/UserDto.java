@@ -46,7 +46,14 @@ public class UserDto {
      * Defaults to "ROLE_USER" if not specified.
      */
     @Builder.Default
-    private String role = "ROLE_USER";
+    private String mainRole = "ROLE_USER";
+
+    /**
+     * List of additional app specific roles.
+     * Defaults to an empty list if not specified.
+     */
+    @Builder.Default
+    private List<String> appSpecificRoles = new ArrayList<>();
     
     /**
      * List of permissions granted to the user.

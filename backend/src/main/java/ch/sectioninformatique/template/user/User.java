@@ -85,11 +85,20 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        for (Role role : this.roles) {
+        Set<Role> roleList = this.appSpecificRoles;
+        roleList.add(this.mainRole);
+        for (Role role : roleList) {
             authorities.addAll(role.getName().getGrantedAuthorities());
         }
         return authorities;
     }
+
+    /**
+     * Main role of the user
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @Builder.Default
+    private Role mainRole = new Role();
     
     /**
      * Set of roles assigned to the user.
@@ -97,7 +106,9 @@ public class User implements UserDetails {
      */
     @ManyToMany(fetch = FetchType.EAGER)
     @Builder.Default
-    private Set<Role> roles = new HashSet<>();
+    private Set<Role> appSpecificRoles = new HashSet<>();
+
+    
 
     /**
      * Constructs a new User with all required fields.
@@ -109,7 +120,8 @@ public class User implements UserDetails {
      * @param password The user's hashed password
      * @param createdAt The timestamp when the user was created
      * @param updatedAt The timestamp when the user was last updated
-     * @param roles The set of roles assigned to the user
+     * @param mainRole The Main role assigned to the user
+     * @param appSpecificRoles The set of app specifique roles assigned to the user
      */
     public User(long id,
                 String firstName, 
@@ -118,7 +130,8 @@ public class User implements UserDetails {
                 String password, 
                 Date createdAt, 
                 Date updatedAt,
-                Set<Role> roles) {
+                Role mainRole,
+                Set<Role> appSpecificRoles) {
         super();
         this.id = id;
         this.firstName = firstName;
@@ -127,7 +140,8 @@ public class User implements UserDetails {
         this.password = password;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.roles = roles;
+        this.mainRole = mainRole;
+        this.appSpecificRoles = appSpecificRoles;
     }
 
     /**
@@ -200,18 +214,53 @@ public class User implements UserDetails {
      * Returns the first role assigned to the user.
      * This method assumes the user has at least one role.
      *
+     * @return The main role 
+     */
+    public Role getMainRole() {
+        return mainRole;
+    }
+
+    /**
+     * Returns the first role assigned to the user.
+     * This method assumes the user has at least one role.
+     *
+     * @return The user's app specific role set
+     */
+    public List<String> getAppSpecificRolesString() {
+        List<String> appSpecificRolesSrting = new ArrayList<String>();
+        for(Role role : appSpecificRoles){
+            appSpecificRolesSrting.add(role.getName().name());
+        }
+        return appSpecificRolesSrting;
+    }
+    
+    /**
+     * Returns the first role assigned to the user.
+     * This method assumes the user has at least one role.
+     *
      * @return The first role in the user's role set
      */
-    public Role getRole() {
-        return roles.iterator().next();
+    public Set<Role> getAllRoles() {
+        Set<Role> allRoles = appSpecificRoles;
+        allRoles.add(mainRole);
+        return appSpecificRoles;
     }
+
+    /**
+     * Adds a new role to the user's set of roles.
+     *
+     * @param role The role to add to the user
+     */
+    public void setMainRole(Role role) {
+        mainRole = role;
+    } 
     
     /**
      * Adds a new role to the user's set of roles.
      *
      * @param role The role to add to the user
      */
-    public void addRole(Role role) {
-        roles.add(role);
-    }   
+    public void addAppSpecificRoles(Role role) {
+        appSpecificRoles.add(role);
+    }
 }

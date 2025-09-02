@@ -3,8 +3,8 @@ package ch.sectioninformatique.template.security;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -77,7 +77,8 @@ public class UserAuthenticationProvider {
                 .withExpiresAt(validity)
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
-                .withClaim("role", user.getRole())
+                .withClaim("mainRole", user.getMainRole())
+                .withClaim("appSpecificRoles", user.getAppSpecificRoles())
                 .withClaim("permissions", user.getPermissions())
                 .sign(algorithm);
     }
@@ -95,17 +96,20 @@ public class UserAuthenticationProvider {
      *                    "user:write")
      * @return List of SimpleGrantedAuthority objects for Spring Security
      */
-    private List<SimpleGrantedAuthority> buildAuthorities(String role, List<String> permissions) {
+    private List<SimpleGrantedAuthority> buildAuthorities(List<String> roles, List<String> permissions) {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        if (role != null && !role.isEmpty()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+        for (String role : roles) {
+            if (role != null && !role.isEmpty()) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+            }
         }
+
         if (permissions != null) {
             authorities.addAll(permissions.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList()));
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList()));
         }
-        log.debug("Built authorities for role {}: {}", role, authorities);
+        log.debug("Built authorities for role {}: {}", roles, authorities);
         return authorities;
     }
 
@@ -134,11 +138,18 @@ public class UserAuthenticationProvider {
                 .login(decoded.getSubject())
                 .firstName(decoded.getClaim("firstName").asString())
                 .lastName(decoded.getClaim("lastName").asString())
-                .role(decoded.getClaim("role").asString())
+                .mainRole(decoded.getClaim("mainRole").asString())
+                .appSpecificRoles(decoded.getClaim("appSpecificRoles").asList(String.class))
                 .permissions(decoded.getClaim("permissions").asList(String.class))
                 .build();
-
-        List<SimpleGrantedAuthority> authorities = buildAuthorities(user.getRole(), user.getPermissions());
+        List<String> allRoles = new ArrayList<>();
+        if (user.getAppSpecificRoles() != null) {
+            for (String role : user.getAppSpecificRoles()) {
+                allRoles.add(role);
+            }
+        }
+        allRoles.add(user.getMainRole());
+        List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles, user.getPermissions());
         return new UsernamePasswordAuthenticationToken(user, null, authorities);
     }
 

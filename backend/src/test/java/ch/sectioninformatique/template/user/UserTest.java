@@ -7,8 +7,6 @@ import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,15 +64,9 @@ class UserTest {
         // Given
         Role userRole = new Role();
         userRole.setName(RoleEnum.USER);
-        Role managerRole = new Role();
-        managerRole.setName(RoleEnum.MANAGER);
-
-        Set<Role> roles = new HashSet<>();
-        roles.add(userRole);
-        roles.add(managerRole);
 
         User user = User.builder()
-                .roles(roles)
+                .mainRole(userRole)
                 .build();
 
         // When
@@ -84,8 +76,6 @@ class UserTest {
         System.out.println("Authorities found: " + authorities);
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
-        assertTrue(authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_MANAGER")));
     }
 
     /**
@@ -97,10 +87,9 @@ class UserTest {
     @Test
     void testBuilderWithAllFields() {
         // Given
-        Set<Role> roles = new HashSet<>();
         Role role = new Role();
         role.setName(RoleEnum.USER);
-        roles.add(role);
+        
 
         // When
         User user = User.builder()
@@ -111,7 +100,7 @@ class UserTest {
                 .password(TEST_PASSWORD)
                 .createdAt(TEST_CREATED_AT)
                 .updatedAt(TEST_UPDATED_AT)
-                .roles(roles)
+                .mainRole(role)
                 .build();
 
         // Then
@@ -122,7 +111,7 @@ class UserTest {
         assertEquals(TEST_PASSWORD, user.getPassword());
         assertEquals(TEST_CREATED_AT, user.getCreatedAt());
         assertEquals(TEST_UPDATED_AT, user.getUpdatedAt());
-        assertEquals(roles, user.getRoles());
+        assertEquals(role, user.getMainRole());
     }
 
     /**
@@ -139,10 +128,10 @@ class UserTest {
         role.setName(RoleEnum.USER);
 
         // When
-        user.addRole(role);
+        user.setMainRole(role);
 
         // Then
-        assertEquals(role, user.getRole());
-        assertTrue(user.getRoles().contains(role));
+        assertEquals(role, user.getMainRole());
+        assertTrue(user.getMainRole() == role);
     }
 } 

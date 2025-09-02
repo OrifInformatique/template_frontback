@@ -71,7 +71,7 @@ class UserMapperTest {
         role.setName(RoleEnum.MANAGER);
         Set<Role> roles = new HashSet<>();
         roles.add(role);
-        user.setRoles(roles);
+        user.setAppSpecificRoles(roles);
 
         // When
         UserDto userDto = userMapper.toUserDto(user);
@@ -82,7 +82,7 @@ class UserMapperTest {
         assertEquals("John", userDto.getFirstName());
         assertEquals("Doe", userDto.getLastName());
         assertEquals("johndoe", userDto.getLogin());
-        assertEquals("MANAGER", userDto.getRole());
+        assertEquals("MANAGER", userDto.getMainRole());
         assertNotNull(userDto.getPermissions());
     }
 
