@@ -211,7 +211,7 @@ public class User implements UserDetails {
     }
 
     /**
-     * Returns the first role assigned to the user.
+     * Returns the Main role assigned to the user.
      * This method assumes the user has at least one role.
      *
      * @return The main role 
@@ -221,8 +221,7 @@ public class User implements UserDetails {
     }
 
     /**
-     * Returns the first role assigned to the user.
-     * This method assumes the user has at least one role.
+     * Returns a list of app specific roles' names assigned to the user.
      *
      * @return The user's app specific role set
      */
@@ -235,10 +234,9 @@ public class User implements UserDetails {
     }
     
     /**
-     * Returns the first role assigned to the user.
-     * This method assumes the user has at least one role.
+     * Returns all roles assigned to the user.
      *
-     * @return The first role in the user's role set
+     * @return The all roles assigned to the user
      */
     public Set<Role> getAllRoles() {
         Set<Role> allRoles = appSpecificRoles;
@@ -247,18 +245,18 @@ public class User implements UserDetails {
     }
 
     /**
-     * Adds a new role to the user's set of roles.
+     * Adds a new main role to the user.
      *
-     * @param role The role to add to the user
+     * @param role The main role to set for the user
      */
     public void setMainRole(Role role) {
         mainRole = role;
     } 
     
     /**
-     * Adds a new role to the user's set of roles.
+     * Adds a new role to the user's set of app specific roles.
      *
-     * @param role The role to add to the user
+     * @param role The app specific role to add to the user
      */
     public void addAppSpecificRoles(Role role) {
         appSpecificRoles.add(role);
