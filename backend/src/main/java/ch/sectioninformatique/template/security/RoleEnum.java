@@ -31,8 +31,11 @@ public enum RoleEnum {
      * Basic user role with limited permissions.
      * Can only read user information.
      */
-    USER_TEST(EnumSet.of(
-            USER_READ)),
+    ADMIN_TEST(EnumSet.of(
+            USER_READ,
+            USER_WRITE,
+            USER_UPDATE,
+            USER_DELETE)),
 
     /**
      * Manager role with extended permissions.

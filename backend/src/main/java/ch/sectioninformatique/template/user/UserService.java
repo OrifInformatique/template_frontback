@@ -35,31 +35,31 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to the manager role.
+     * Promotes a user to the local admin role.
      * This operation:
      * - Verifies the user exists
      * - Checks if the user is already an manager or admin
-     * - Removes existing roles and assigns the manager role
+     * - Removes existing roles and assigns the admin role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
      * @throws RuntimeException if the user is not found, already an manager, or the
      *                          manager role is not found
      */
-    public UserDto promoteToTestUser(Long userId) {
+    public UserDto promoteToTestAdmin(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         for (Role role : user.getAppSpecificRoles()) {
-            if (role.getName().equals(RoleEnum.USER_TEST)) {
-                throw new RuntimeException("The user is already a test user");
+            if (role.getName().equals(RoleEnum.ADMIN_TEST)) {
+                throw new RuntimeException("The user is already a test admin");
             }
         }
 
-        Role testUserRole = roleRepository.findByName(RoleEnum.USER_TEST)
-                .orElseThrow(() -> new RuntimeException("Test user role not found"));
+        Role testAdminRole = roleRepository.findByName(RoleEnum.ADMIN_TEST)
+                .orElseThrow(() -> new RuntimeException("ADMIN_TEST role not found"));
 
-        user.getAppSpecificRoles().add(testUserRole);
+        user.getAppSpecificRoles().add(testAdminRole);
         userRepository.save(user);
         return userMapper.toUserDto(user);
     }
@@ -73,5 +73,21 @@ public class UserService {
         List<User> users = new ArrayList<>();
         userRepository.findAll().forEach(users::add);
         return users;
+    }
+
+    /**
+     * Retrieves the user in the system.
+     *
+     * @return List of all User entities
+     */
+    public User me(UserDto currentUser) {
+        List<User> users = userRepository.findAll();
+        User localUser = null;
+        for(User user : users){
+            if(user.getUsername().contains(currentUser.getLogin())){
+                localUser = user;
+            }
+        }
+        return localUser;
     }
 }

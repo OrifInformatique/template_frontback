@@ -64,30 +64,31 @@ public class testController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
-    public ResponseEntity<UserDto> authenticatedUser() {
+    public ResponseEntity<User> authenticatedUser() {
         Authentication authentication = SecurityContextHolder
                 .getContext()
                 .getAuthentication();
 
         UserDto currentUser = (UserDto) authentication.getPrincipal();
-        return ResponseEntity.ok(currentUser);
+        User localUser = userService.me(currentUser);
+        return ResponseEntity.ok(localUser);
     }
 
     /**
-     * Promotes a user to the test user role.
+     * Promotes a user to the test admin role.
      * This endpoint:
      * - Requires the 'user:update' authority
-     * - Validates the user exists and isn't already an test user
+     * - Validates the user exists and isn't already an test admin
      * - Returns success/error message
      *
      * @param userId The ID of the user to promote
      * @return ResponseEntity with success message or error details
      */
-    @PreAuthorize("hasAuthority('user:update')")
     @PutMapping("/{userId}/promote-test")
-    public ResponseEntity<?> promoteToTestUser(@PathVariable Long userId) {
+    @PreAuthorize("hasAuthority('user:update')")
+    public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
         try {
-            userService.promoteToTestUser(userId);
+            userService.promoteToTestAdmin(userId);
             return ResponseEntity.ok().body("User promoted to test user successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

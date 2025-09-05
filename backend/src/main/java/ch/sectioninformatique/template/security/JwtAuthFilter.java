@@ -21,7 +21,8 @@ import java.io.IOException;
  * - Validates JWT tokens in the Authorization header
  * - Sets up Spring Security context with authenticated user information
  * 
- * The filter implements different validation strategies based on the HTTP method:
+ * The filter implements different validation strategies based on the HTTP
+ * method:
  * - GET requests use standard token validation
  * - Other methods use strong token validation
  */
@@ -47,18 +48,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * - Applies different validation strategies based on HTTP method
      * - Clears security context if validation fails
      *
-     * @param request The incoming HTTP request
-     * @param response The HTTP response
+     * @param request     The incoming HTTP request
+     * @param response    The HTTP response
      * @param filterChain The filter chain for request processing
      * @throws ServletException If there's a servlet-related error
-     * @throws IOException If there's an I/O error
+     * @throws IOException      If there's an I/O error
      */
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
-                
+
         if (request == null || response == null || filterChain == null) {
             throw new IllegalArgumentException("Request, response and filterChain cannot be null");
         }
@@ -71,10 +72,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (authElements.length == 2
                     && "Bearer".equals(authElements[0])) {
                 try {
-                    if ("GET".equals(request.getMethod())) {
-                        SecurityContextHolder.getContext().setAuthentication(
-                                userAuthenticationProvider.validateToken(authElements[1]));
-                    }
+
+                    SecurityContextHolder.getContext().setAuthentication(
+                            userAuthenticationProvider.validateToken(authElements[1]));
+
                 } catch (RuntimeException e) {
                     SecurityContextHolder.clearContext();
                     throw e;
@@ -85,4 +86,3 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-

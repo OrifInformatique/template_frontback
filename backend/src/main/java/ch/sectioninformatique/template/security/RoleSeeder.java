@@ -45,24 +45,24 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
      * Loads the default roles into the database.
      * Creates the following roles if they don't exist:
      * - USER: Default user role
-     * - USER_TEST: A local role for tests
+     * - ADMIN_TEST: A local role for tests
      * - MANAGER: Manager role
      * - ADMIN: Administrator role
      * Each role is created with a descriptive name and description.
      */
     private void loadRoles() {
-        RoleEnum[] roleNames = new RoleEnum[] { RoleEnum.USER, RoleEnum.USER_TEST, RoleEnum.MANAGER,
+        RoleEnum[] roleNames = new RoleEnum[] { RoleEnum.USER, RoleEnum.ADMIN_TEST, RoleEnum.MANAGER,
                 RoleEnum.ADMIN };
 
         Map<RoleEnum, String> roleDescriptionMap = Map.of(
                 RoleEnum.USER, "Default user role",
-                RoleEnum.USER_TEST, "test user role",
+                RoleEnum.ADMIN_TEST, "test user role",
                 RoleEnum.MANAGER, "Manager role",
                 RoleEnum.ADMIN, "Administrator role");
 
                 Map<RoleEnum, String> roleDomaineMap = Map.of(
                 RoleEnum.USER, "auth",
-                RoleEnum.USER_TEST, "frontBack",
+                RoleEnum.ADMIN_TEST, "frontBack",
                 RoleEnum.MANAGER, "auth",
                 RoleEnum.ADMIN, "auth");
 

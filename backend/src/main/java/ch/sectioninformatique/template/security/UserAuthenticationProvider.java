@@ -17,7 +17,9 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
+import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Component
 public class UserAuthenticationProvider {
+
+    /** Repository for user data access */
+    private final UserRepository userRepository;
 
     /**
      * Secret key for JWT token signing and verification, configured via application
@@ -79,7 +84,6 @@ public class UserAuthenticationProvider {
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
                 .withClaim("appSpecificRoles", user.getAppSpecificRoles())
-                .withClaim("permissions", user.getPermissions())
                 .sign(algorithm);
     }
 
@@ -96,7 +100,7 @@ public class UserAuthenticationProvider {
      *                    "user:write")
      * @return List of SimpleGrantedAuthority objects for Spring Security
      */
-    private List<SimpleGrantedAuthority> buildAuthorities(List<String> roles, List<String> permissions) {
+    private List<SimpleGrantedAuthority> buildAuthorities(List<String> roles) {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             if (role != null && !role.isEmpty()) {
@@ -122,6 +126,7 @@ public class UserAuthenticationProvider {
      * @return Authentication object containing the user's information and
      *         authorities
      */
+    @SuppressWarnings("null")
     public Authentication validateToken(String token) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
@@ -131,7 +136,7 @@ public class UserAuthenticationProvider {
         DecodedJWT decoded = verifier.verify(token);
         log.debug("Token verified for subject: {}", decoded.getSubject());
 
-        UserDto user = UserDto.builder()
+        UserDto currentUser = UserDto.builder()
                 .login(decoded.getSubject())
                 .firstName(decoded.getClaim("firstName").asString())
                 .lastName(decoded.getClaim("lastName").asString())
@@ -139,15 +144,28 @@ public class UserAuthenticationProvider {
                 .appSpecificRoles(decoded.getClaim("appSpecificRoles").asList(String.class))
                 .permissions(decoded.getClaim("permissions").asList(String.class))
                 .build();
+
+        List<User> users = userRepository.findAll();
+        User localUser = null;
+        for (User user : users) {
+            if (user.getUsername().contains(currentUser.getLogin())) {
+                localUser = user;
+            }
+        }
+
         List<String> allRoles = new ArrayList<>();
-        if (user.getAppSpecificRoles() != null) {
-            for (String role : user.getAppSpecificRoles()) {
+        if (localUser.getAppSpecificRoles() != null) {
+            for (String role : localUser.getAppSpecificRolesString()) {
                 allRoles.add(role);
             }
         }
-        allRoles.add(user.getMainRole());
-        List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles, user.getPermissions());
-        return new UsernamePasswordAuthenticationToken(user, null, authorities);
+
+        allRoles.add(localUser.getMainRole().getName().name());
+
+
+        List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles);
+        
+        return new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
     }
 
 }
