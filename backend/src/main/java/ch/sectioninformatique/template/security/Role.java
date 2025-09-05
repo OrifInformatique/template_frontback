@@ -110,9 +110,9 @@ public class Role {
     private Date updatedAt;
 
     /**
-     * Set of users who have this role.
+     * Set of users who have this mainRole.
      * This field:
-     * - Implements a many-to-many relationship with User entity
+     * - Implements a one-to-many relationship with User entity
      * - Is mapped by the 'roles' field in the User class
      * - Uses eager fetching to ensure roles are always available
      * - Is ignored during JSON serialization to prevent infinite recursion
@@ -123,7 +123,7 @@ public class Role {
     private Set<User> usersMains = new HashSet<>();
 
     /**
-     * Set of users who have this role.
+     * Set of users who have this appspecificRole.
      * This field:
      * - Implements a many-to-many relationship with User entity
      * - Is mapped by the 'roles' field in the User class
