@@ -46,6 +46,8 @@ public class UserAuthenticationProvider {
 
     private final UserService userService;
 
+    private final RoleRepository roleRepository;
+
     /**
      * Secret key for JWT token signing and verification, configured via application
      * properties
@@ -161,6 +163,16 @@ public class UserAuthenticationProvider {
                     currentUser.getLogin());
 
             localUser = userService.register(newUser);
+        }
+
+        String localMainRole = localUser.getMainRole().getName().name();
+
+        if (!localMainRole.contains(currentUser.getMainRole())) {
+            Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
+                    .orElseThrow(() -> new RuntimeException("role not found"));
+
+            localUser.setMainRole(newMainRole);
+            userRepository.save(localUser);
         }
 
         List<String> allRoles = new ArrayList<>();
