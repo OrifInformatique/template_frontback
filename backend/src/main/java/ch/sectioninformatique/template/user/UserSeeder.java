@@ -1,7 +1,6 @@
 package ch.sectioninformatique.template.user;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import ch.sectioninformatique.template.security.Role;
@@ -27,9 +26,6 @@ public class UserSeeder implements CommandLineRunner {
 	/** Repository for user data access */
 	private final UserRepository userRepository;
 
-	/** Encoder for password hashing */
-	private final PasswordEncoder passwordEncoder;
-
 	/** Repository for role data access */
 	private final RoleRepository roleRepository;
 
@@ -37,14 +33,11 @@ public class UserSeeder implements CommandLineRunner {
 	 * Constructs a new UserSeeder with the required dependencies.
 	 *
 	 * @param userRepository  Repository for user data access
-	 * @param passwordEncoder Encoder for password hashing
 	 * @param roleRepository  Repository for role data access
 	 */
 	public UserSeeder(UserRepository userRepository,
-			PasswordEncoder passwordEncoder,
 			RoleRepository roleRepository) {
 		this.userRepository = userRepository;
-		this.passwordEncoder = passwordEncoder;
 		this.roleRepository = roleRepository;
 	}
 
@@ -78,7 +71,6 @@ public class UserSeeder implements CommandLineRunner {
 	 * 
 	 * Each user is created with:
 	 * - Unique login (email format)
-	 * - Secure password (hashed)
 	 * - First and last name
 	 * - Appropriate role(s)
 	 *
@@ -99,7 +91,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("deleted")
 					.lastName("user")
 					.login("deleted.user@test.com")
-					.password(passwordEncoder.encode("NoN33dPassword@nymore!"))
 					.mainRole(userRole)
 					.build();
 
@@ -107,7 +98,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("John")
 					.lastName("DOE")
 					.login("john.doe@test.com")
-					.password(passwordEncoder.encode("Secure123@Pass"))
 					.mainRole(userRole)
 					.build();
 
@@ -115,7 +105,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("Jane")
 					.lastName("SMITH")
 					.login("jane.smith@test.com")
-					.password(passwordEncoder.encode("Complex#789Pwd"))
 					.mainRole(managerRole)
 					.build();
 
@@ -123,7 +112,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("Alice")
 					.lastName("JOHNSON")
 					.login("alice.johnson@test.com")
-					.password(passwordEncoder.encode("Test$4321Now"))
 					.mainRole(userRole)
 					.build();
 
@@ -131,7 +119,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("Dan")
 					.lastName("SERGEANT")
 					.login("dan.sergeant@test.com")
-					.password(passwordEncoder.encode("Spring2024@Dev"))
 					.mainRole(userRole)
 					.build();
 
@@ -139,7 +126,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("Bobby")
 					.lastName("BALLOONZI")
 					.login("bobby.balloonzi@test.com")
-					.password(passwordEncoder.encode("P@ssw0rd2024"))
 					.mainRole(userRole)
 					.build();
 
@@ -147,7 +133,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("Rob")
 					.lastName("JAKE")
 					.login("rob.jake@test.com")
-					.password(passwordEncoder.encode("Inf0#Security24"))
 					.mainRole(userRole)
 					.build();
 
@@ -155,7 +140,6 @@ public class UserSeeder implements CommandLineRunner {
 					.firstName("Super")
 					.lastName("Admin")
 					.login("super.admin@test.com")
-					.password(passwordEncoder.encode("ReallySecure123@PassWordBecauseIWantToBeSuperSafe"))
 					.mainRole(adminRole)
 					.build();
 

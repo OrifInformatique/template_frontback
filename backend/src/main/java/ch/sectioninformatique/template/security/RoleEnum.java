@@ -28,8 +28,9 @@ public enum RoleEnum {
             USER_READ)),
 
     /**
-     * Basic user role with limited permissions.
-     * Can only read user information.
+     * Administrator role with full system access.
+     * Has all permissions including deletion of users.
+     * Only Have those permissions in this app.
      */
     ADMIN_TEST(EnumSet.of(
             USER_READ,

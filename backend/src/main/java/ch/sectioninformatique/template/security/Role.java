@@ -110,11 +110,11 @@ public class Role {
     private Date updatedAt;
 
     /**
-     * Set of users who have this mainRole.
+     * Set of users who have this role as mainRole.
      * This field:
      * - Implements a one-to-many relationship with User entity
-     * - Is mapped by the 'roles' field in the User class
-     * - Uses eager fetching to ensure roles are always available
+     * - Is mapped by the 'mainRole' field in the User class
+     * - Uses eager fetching to ensure the mainRole are always available
      * - Is ignored during JSON serialization to prevent infinite recursion
      * - Is initialized as an empty HashSet to prevent null pointer exceptions
      */
@@ -123,11 +123,11 @@ public class Role {
     private Set<User> usersMains = new HashSet<>();
 
     /**
-     * Set of users who have this appspecificRole.
+     * Set of users who have this appSpecificRole.
      * This field:
      * - Implements a many-to-many relationship with User entity
-     * - Is mapped by the 'roles' field in the User class
-     * - Uses eager fetching to ensure roles are always available
+     * - Is mapped by the 'appSpecificRole' field in the User class
+     * - Uses eager fetching to ensure appSpecificRole are always available
      * - Is ignored during JSON serialization to prevent infinite recursion
      * - Is initialized as an empty HashSet to prevent null pointer exceptions
      */

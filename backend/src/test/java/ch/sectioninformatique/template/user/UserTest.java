@@ -25,7 +25,6 @@ class UserTest {
     private static final String TEST_FIRST_NAME = "John";
     private static final String TEST_LAST_NAME = "Doe";
     private static final String TEST_LOGIN = "john.doe@example.com";
-    private static final String TEST_PASSWORD = "hashedPassword";
     private static final Date TEST_CREATED_AT = new Date();
     private static final Date TEST_UPDATED_AT = new Date();
 
@@ -33,7 +32,6 @@ class UserTest {
      * Tests the UserDetails interface implementation.
      * Verifies that:
      * - Username returns login
-     * - Password is correctly returned
      * - Account status methods return true by default
      */
     @Test
@@ -41,12 +39,10 @@ class UserTest {
         // Given
         User user = User.builder()
                 .login(TEST_LOGIN)
-                .password(TEST_PASSWORD)
                 .build();
 
         // Then
         assertEquals(TEST_LOGIN, user.getUsername());
-        assertEquals(TEST_PASSWORD, user.getPassword());
         assertTrue(user.isAccountNonExpired());
         assertTrue(user.isAccountNonLocked());
         assertTrue(user.isCredentialsNonExpired());
@@ -97,7 +93,6 @@ class UserTest {
                 .firstName(TEST_FIRST_NAME)
                 .lastName(TEST_LAST_NAME)
                 .login(TEST_LOGIN)
-                .password(TEST_PASSWORD)
                 .createdAt(TEST_CREATED_AT)
                 .updatedAt(TEST_UPDATED_AT)
                 .mainRole(role)
@@ -108,7 +103,6 @@ class UserTest {
         assertEquals(TEST_FIRST_NAME, user.getFirstName());
         assertEquals(TEST_LAST_NAME, user.getLastName());
         assertEquals(TEST_LOGIN, user.getLogin());
-        assertEquals(TEST_PASSWORD, user.getPassword());
         assertEquals(TEST_CREATED_AT, user.getCreatedAt());
         assertEquals(TEST_UPDATED_AT, user.getUpdatedAt());
         assertEquals(role, user.getMainRole());

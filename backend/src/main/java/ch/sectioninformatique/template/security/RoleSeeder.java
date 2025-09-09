@@ -60,6 +60,7 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
                 RoleEnum.MANAGER, "Manager role",
                 RoleEnum.ADMIN, "Administrator role");
 
+                // Concept test
                 Map<RoleEnum, String> roleDomaineMap = Map.of(
                 RoleEnum.USER, "auth",
                 RoleEnum.ADMIN_TEST, "frontBack",

@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,9 +18,11 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
+import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserRepository;
+import ch.sectioninformatique.template.user.UserService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,8 @@ public class UserAuthenticationProvider {
 
     /** Repository for user data access */
     private final UserRepository userRepository;
+
+    private final UserService userService;
 
     /**
      * Secret key for JWT token signing and verification, configured via application
@@ -65,7 +70,7 @@ public class UserAuthenticationProvider {
      * The token includes:
      * - User login as subject
      * - First name and last name as claims
-     * - Role and permissions as claims
+     * - Roles
      * - Issue time and expiration time (1 hour validity)
      *
      * @param user The user to create a token for
@@ -95,9 +100,8 @@ public class UserAuthenticationProvider {
      * The resulting authorities are used by Spring Security for authorization
      * checks.
      *
-     * @param role        The user's role (e.g., "USER", "MANAGER")
-     * @param permissions List of permission strings (e.g., "user:read",
-     *                    "user:write")
+     * @param role The user's role (e.g., "USER", "MANAGER")
+     * 
      * @return List of SimpleGrantedAuthority objects for Spring Security
      */
     private List<SimpleGrantedAuthority> buildAuthorities(List<String> roles) {
@@ -126,7 +130,6 @@ public class UserAuthenticationProvider {
      * @return Authentication object containing the user's information and
      *         authorities
      */
-    @SuppressWarnings("null")
     public Authentication validateToken(String token) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
@@ -145,12 +148,19 @@ public class UserAuthenticationProvider {
                 .permissions(decoded.getClaim("permissions").asList(String.class))
                 .build();
 
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAllById(Arrays.asList(currentUser.getId()));
         User localUser = null;
         for (User user : users) {
             if (user.getUsername().contains(currentUser.getLogin())) {
                 localUser = user;
             }
+        }
+
+        if (localUser == null) {
+            RegisterDto newUser = new RegisterDto(currentUser.getFirstName(), currentUser.getLastName(),
+                    currentUser.getLogin());
+
+            localUser = userService.register(newUser);
         }
 
         List<String> allRoles = new ArrayList<>();
@@ -162,9 +172,8 @@ public class UserAuthenticationProvider {
 
         allRoles.add(localUser.getMainRole().getName().name());
 
-
         List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles);
-        
+
         return new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
     }
 

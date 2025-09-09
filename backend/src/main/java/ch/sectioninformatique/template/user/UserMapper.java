@@ -10,7 +10,7 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 import org.springframework.security.core.GrantedAuthority;
 
-
+import ch.sectioninformatique.template.auth.RegisterDto;
 
 /**
  * Mapper interface for converting between User entities and DTOs.
@@ -21,7 +21,7 @@ import org.springframework.security.core.GrantedAuthority;
  * - Authorities to permissions conversion
  */
 @Mapper(componentModel = "spring")
-public interface UserMapper { 
+public interface UserMapper {
 
     /**
      * By convention for MapStruct, the interface declares a member INSTANCE,
@@ -51,7 +51,25 @@ public interface UserMapper {
     UserDto toUserDto(User user);
 
     /**
-     * Converts a collection of GrantedAuthority objects to a list of permission strings.
+     * Converts a SignUpDto to a User entity.
+     * This method:
+     * - Maps basic user properties from the signup data
+     * - Ignores  roles (these are handled separately)
+     * - Ignores ID and timestamps (these are set by the system)
+     *
+     * @param RegisterDto The SignUpDto containing user registration data
+     * @return A new User entity with the signup information
+     */
+    @Mapping(target = "mainRole", ignore = true)
+    @Mapping(target = "appSpecificRoles", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    User signUpToUser(RegisterDto registerDto);
+
+    /**
+     * Converts a collection of GrantedAuthority objects to a list of permission
+     * strings.
      * This method is used to transform Spring Security authorities into a format
      * suitable for the UserDto.
      *
@@ -60,9 +78,10 @@ public interface UserMapper {
      */
     @Named("authoritiesToPermissions")
     default List<String> authoritiesToPermissions(Collection<? extends GrantedAuthority> authorities) {
-        if (authorities == null) return null;
+        if (authorities == null)
+            return null;
         return authorities.stream()
-            .map(auth -> auth.getAuthority())
-            .collect(Collectors.toList());
+                .map(auth -> auth.getAuthority())
+                .collect(Collectors.toList());
     }
 }

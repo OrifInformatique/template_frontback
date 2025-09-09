@@ -2,9 +2,13 @@ package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
@@ -89,5 +93,34 @@ public class UserService {
             }
         }
         return localUser;
+    }
+
+    /**
+     * Registers a new user in the system.
+     * This method:
+     * - Checks if the login is already taken
+     * - Assigns the default USER role
+     * - Saves the user to the database
+     *
+     * @param userDto The user registration data
+     * @return UserDto containing the created user's information
+     * @throws AppException if the login already exists or the default role is not found
+     */
+    public User register(RegisterDto userDto) {
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.login());
+
+        if (optionalUser.isPresent()) {
+            throw new AppException("Login already exists", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userMapper.signUpToUser(userDto);
+
+        // Add default USER role
+        Role userRole = roleRepository.findByName(RoleEnum.USER)
+            .orElseThrow(() -> new AppException("Default role not found", HttpStatus.INTERNAL_SERVER_ERROR));
+        user.setMainRole(userRole);
+
+        User savedUser = userRepository.save(user);
+        return savedUser;
     }
 }

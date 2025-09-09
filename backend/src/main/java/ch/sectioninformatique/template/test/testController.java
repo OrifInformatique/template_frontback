@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * REST controller for managing items in the system.
- * This controller provides endpoints for CRUD operations on items,
+ * This controller provides endpoints for CRUD operations ona variety of items,
  * with appropriate security checks and authorization requirements.
  * All responses are automatically converted to JSON format.
  */

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import ch.sectioninformatique.template.security.Role;
 
@@ -26,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 @Builder
 @NoArgsConstructor
-public class User implements UserDetails {
+public class User {
     
     /**
      * Unique identifier for the user.
@@ -55,12 +54,6 @@ public class User implements UserDetails {
     private String login;
 
     /**
-     * User's hashed password.
-     */
-    @Column(nullable = false)
-    private String password;
-
-    /**
      * Timestamp when the user account was created.
      * This field cannot be updated after creation.
      */
@@ -82,7 +75,6 @@ public class User implements UserDetails {
      *
      * @return Collection of GrantedAuthority objects representing the user's roles
      */
-    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
         Set<Role> roleList = this.appSpecificRoles;
@@ -117,7 +109,6 @@ public class User implements UserDetails {
      * @param firstName The user's first name
      * @param lastName The user's last name
      * @param login The user's unique login identifier
-     * @param password The user's hashed password
      * @param createdAt The timestamp when the user was created
      * @param updatedAt The timestamp when the user was last updated
      * @param mainRole The Main role assigned to the user
@@ -127,7 +118,6 @@ public class User implements UserDetails {
                 String firstName, 
                 String lastName, 
                 String login,
-                String password, 
                 Date createdAt, 
                 Date updatedAt,
                 Role mainRole,
@@ -137,22 +127,10 @@ public class User implements UserDetails {
         this.firstName = firstName;
         this.lastName = lastName;
         this.login = login;
-        this.password = password;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.mainRole = mainRole;
         this.appSpecificRoles = appSpecificRoles;
-    }
-
-    /**
-     * Returns the user's password.
-     * Required by the UserDetails interface.
-     *
-     * @return The user's hashed password
-     */
-    @Override
-    public String getPassword() {
-        return password;
     }
 
     /**
@@ -161,7 +139,6 @@ public class User implements UserDetails {
      *
      * @return The user's login identifier
      */
-    @Override
     public String getUsername() {
         return login;
     }
@@ -172,7 +149,6 @@ public class User implements UserDetails {
      *
      * @return true if the account is valid (not expired), false otherwise
      */
-    @Override
     public boolean isAccountNonExpired() {
         return true;
     }
@@ -183,18 +159,16 @@ public class User implements UserDetails {
      *
      * @return true if the account is not locked, false otherwise
      */
-    @Override
     public boolean isAccountNonLocked() {
         return true;
     }
 
     /**
-     * Indicates whether the user's credentials (password) has expired.
+     * Indicates whether the user's credentials has expired.
      * Required by the UserDetails interface.
      *
      * @return true if the credentials are valid (not expired), false otherwise
      */
-    @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
@@ -205,7 +179,6 @@ public class User implements UserDetails {
      *
      * @return true if the account is enabled, false otherwise
      */
-    @Override
     public boolean isEnabled() {
         return true;
     }
