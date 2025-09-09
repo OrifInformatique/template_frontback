@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,10 +17,8 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
-import ch.sectioninformatique.template.user.UserRepository;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -41,12 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UserAuthenticationProvider {
 
-    /** Repository for user data access */
-    private final UserRepository userRepository;
-
     private final UserService userService;
-
-    private final RoleRepository roleRepository;
 
     /**
      * Secret key for JWT token signing and verification, configured via application
@@ -127,6 +119,10 @@ public class UserAuthenticationProvider {
      * - Token signature using the secret key
      * - Token expiration
      * - Token claims (user information)
+     * 
+     * It also modify the local informations based on the the validated token informations
+     * - It add new validated user
+     * - it update main Roles for users
      *
      * @param token The JWT token to validate
      * @return Authentication object containing the user's information and
@@ -150,39 +146,12 @@ public class UserAuthenticationProvider {
                 .permissions(decoded.getClaim("permissions").asList(String.class))
                 .build();
 
-        List<User> users = userRepository.findAll();
-        User localUser = null;
-        for (User user : users) {
-            if (user.getUsername().contains(currentUser.getLogin())) {
-                localUser = user;
-            }
-        }
 
-        if (localUser == null) {
-            RegisterDto newUser = new RegisterDto(currentUser.getFirstName(), currentUser.getLastName(),
-                    currentUser.getLogin());
+        User localUser = userService.getOrCreateAuthenticatedUser(currentUser);
 
-            localUser = userService.register(newUser);
-        }
+        userService.updateMainRole(localUser, currentUser);
 
-        String localMainRole = localUser.getMainRole().getName().name();
-
-        if (!localMainRole.contains(currentUser.getMainRole())) {
-            Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
-                    .orElseThrow(() -> new RuntimeException("role not found"));
-
-            localUser.setMainRole(newMainRole);
-            userRepository.save(localUser);
-        }
-
-        List<String> allRoles = new ArrayList<>();
-        if (localUser.getAppSpecificRoles() != null) {
-            for (String role : localUser.getAppSpecificRolesString()) {
-                allRoles.add(role);
-            }
-        }
-
-        allRoles.add(localUser.getMainRole().getName().name());
+        List<String> allRoles = userService.getRolesList(localUser);
 
         List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles);
 

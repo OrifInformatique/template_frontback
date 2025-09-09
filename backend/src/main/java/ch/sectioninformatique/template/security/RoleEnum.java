@@ -28,17 +28,6 @@ public enum RoleEnum {
             USER_READ)),
 
     /**
-     * Administrator role with full system access.
-     * Has all permissions including deletion of users.
-     * Only Have those permissions in this app.
-     */
-    ADMIN_TEST(EnumSet.of(
-            USER_READ,
-            USER_WRITE,
-            USER_UPDATE,
-            USER_DELETE)),
-
-    /**
      * Manager role with extended permissions.
      * Can manage users, but cannot delete them.
      */
@@ -52,6 +41,17 @@ public enum RoleEnum {
      * Has all permissions including deletion of users.
      */
     ADMIN(EnumSet.of(
+            USER_READ,
+            USER_WRITE,
+            USER_UPDATE,
+            USER_DELETE)),
+
+    /**
+     * Administrator role with full system access.
+     * Has all permissions including deletion of users.
+     * Only Have those permissions in this app.
+     */
+    ADMIN_TEST(EnumSet.of(
             USER_READ,
             USER_WRITE,
             USER_UPDATE,

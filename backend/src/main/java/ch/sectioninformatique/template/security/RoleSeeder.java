@@ -56,16 +56,9 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
 
         Map<RoleEnum, String> roleDescriptionMap = Map.of(
                 RoleEnum.USER, "Default user role",
-                RoleEnum.ADMIN_TEST, "test user role",
                 RoleEnum.MANAGER, "Manager role",
-                RoleEnum.ADMIN, "Administrator role");
-
-                // Concept test
-                Map<RoleEnum, String> roleDomaineMap = Map.of(
-                RoleEnum.USER, "auth",
-                RoleEnum.ADMIN_TEST, "frontBack",
-                RoleEnum.MANAGER, "auth",
-                RoleEnum.ADMIN, "auth");
+                RoleEnum.ADMIN, "Administrator role",
+                RoleEnum.ADMIN_TEST, "test user role");
 
         Arrays.stream(roleNames).forEach((roleName) -> {
             Optional<Role> optionalRole = roleRepository.findByName(roleName);
@@ -73,7 +66,6 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
                 Role roleToCreate = new Role();
                 roleToCreate.setName(roleName);
                 roleToCreate.setDescription(roleDescriptionMap.get(roleName));
-                roleToCreate.setDomaine(roleDomaineMap.get(roleName));
                 roleRepository.save(roleToCreate);
             });
         });
