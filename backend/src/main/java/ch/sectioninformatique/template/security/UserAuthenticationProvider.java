@@ -150,7 +150,7 @@ public class UserAuthenticationProvider {
                 .permissions(decoded.getClaim("permissions").asList(String.class))
                 .build();
 
-        List<User> users = userRepository.findAllById(Arrays.asList(currentUser.getId()));
+        List<User> users = userRepository.findAll();
         User localUser = null;
         for (User user : users) {
             if (user.getUsername().contains(currentUser.getLogin())) {
