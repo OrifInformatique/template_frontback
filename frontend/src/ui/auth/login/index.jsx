@@ -5,11 +5,14 @@ import Image from '../../image/Image';
 import InputText from '../../inputs/text/InputText';
 import InputPassword from '../../inputs/password/InputPassword';
 import Link from '../../link';
-import handleLoginFormSubmit from '../api/authService';
+import { useLogin } from '../api/authService';
+import useAuthStore from '../../../../authStore';
 
 const Login = () => {
     const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =
         useState(false);
+    const { login } = useLogin();
+    const accessToken = useAuthStore((state) => state.accessToken);
 
     return (
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
@@ -29,10 +32,7 @@ const Login = () => {
 
                 {showLocalAccountLoginForm ? (
                     <>
-                        <form
-                            onSubmit={handleLoginFormSubmit}
-                            className="flex flex-col gap-4"
-                        >
+                        <form onSubmit={login} className="flex flex-col gap-4">
                             <InputText
                                 id="identifier"
                                 name="identifier"

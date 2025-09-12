@@ -24,7 +24,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-project-template": "file:",
-    "react-router-dom": "^6.26.2"
+    "react-router-dom": "^6.26.2",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.25.7",
