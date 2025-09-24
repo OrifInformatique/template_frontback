@@ -43,10 +43,10 @@ public class UserDto {
     
     /**
      * User's role in the system.
-     * Defaults to "ROLE_USER" if not specified.
+     * Defaults to "USER" if not specified.
      */
     @Builder.Default
-    private String mainRole = "ROLE_USER";
+    private String mainRole = "USER";
 
     /**
      * List of additional app specific roles.

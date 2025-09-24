@@ -69,9 +69,7 @@ class UserMapperTest {
         
         Role role = new Role();
         role.setName(RoleEnum.MANAGER);
-        Set<Role> roles = new HashSet<>();
-        roles.add(role);
-        user.setAppSpecificRoles(roles);
+        user.setMainRole(role);
 
         // When
         UserDto userDto = userMapper.toUserDto(user);
