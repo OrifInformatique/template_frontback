@@ -7,7 +7,7 @@ import axios from 'axios';
 const AuthApiCall = () => {
     const accessToken = useAuthStore((state) => state.accessToken);
     const [open, setOpen] = useState(false);
-    const [apiResult, stApiResult] = useState(null);
+    const [apiResult, setApiResult] = useState(null);
 
     const callApi = async () => {
         try {
@@ -16,6 +16,7 @@ const AuthApiCall = () => {
                     Authorization: `Bearer ${accessToken}`,
                 },
             });
+            setApiResult(userResponse.data);
         } catch (error) {
             console.log(error);
         }
@@ -31,7 +32,21 @@ const AuthApiCall = () => {
             />
             {open && (
                 <PopUp title="Test" onClose={() => setOpen(false)}>
-                    <p>{userResponse}</p>
+                    <div className="flex flex-col">
+                        <p>{apiResult.firstName}</p>
+                        <p>{apiResult.lastName}</p>
+                        <p>{apiResult.login}</p>
+                        <p>{apiResult.role}</p>
+                        <p>{apiResult.token}</p>
+                        <div>
+                            <h3 className="font-bold">Permissions:</h3>
+                            <ul>
+                                {apiResult?.permissions?.map((perm, idx) => (
+                                    <li key={idx}>{perm}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
                 </PopUp>
             )}
         </div>
