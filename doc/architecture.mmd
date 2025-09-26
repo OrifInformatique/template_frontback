@@ -1,0 +1,25 @@
+---
+id: a4c1f6ef-73d3-499e-bd86-38679bf3369c
+---
+architecture-beta
+    group frontend(cloud)[Frontend]
+        service react(logos:react)[React App] in frontend
+
+    group backend(cloud)[Backend]
+        service backendAuthAPI(internet)[Authentication API] in backend
+        service backendSpring(logos:spring)[Spring App] in backend
+        service backendDB(database)[Database] in backend
+
+        backendAuthAPI:B -- T:backendSpring
+        backendSpring:B -- T:backendDB
+    
+    group auth(cloud)[Spring Auth]
+        service authAPI(internet)[Authentication API] in auth
+        service springAuth(logos:spring)[Spring App] in auth
+        service authDB(database)[Database] in auth
+
+        authAPI:B -- T:springAuth
+        springAuth:B -- T:authDB
+
+    react:B -- T:backendAuthAPI
+    backendSpring:R -- L:authAPI
