@@ -14,12 +14,27 @@ architecture-beta
         backendSpring:B -- T:backendDB
     
     group auth(cloud)[Spring Auth]
-        service authAPI(internet)[Authentication API] in auth
+        service registerAPI(internet)[register] in auth
+        service loginAPI(internet)[login] in auth
+        service refreshAPI(internet)[refresh] in auth
         service springAuth(logos:spring)[Spring App] in auth
         service authDB(database)[Database] in auth
 
-        authAPI:B -- T:springAuth
-        springAuth:B -- T:authDB
+        junction authRightTop in auth
+        junction authRightCenter in auth
+        junction authRightBottom in auth
+
+        authRightTop:B -- T:authRightCenter
+        authRightCenter:B -- T:authRightBottom
+        
+        registerAPI:R -- L:authRightTop
+        loginAPI:R -- L:authRightCenter
+        refreshAPI:R -- L:authRightBottom
+
+        authRightCenter:R -- L:springAuth
+        springAuth:R -- L:authDB
 
     react:B -- T:backendAuthAPI
-    backendSpring:R -- L:authAPI
+    backendSpring:R -- L:registerAPI
+    backendSpring:R -- L:loginAPI
+    backendSpring:R -- L:refreshAPI
