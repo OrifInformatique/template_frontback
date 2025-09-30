@@ -10,14 +10,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.CredentialsDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 /**
  * REST controller for managing items in the system.
@@ -35,6 +41,8 @@ public class testController {
 
     @Autowired
     private Environment environment;
+
+    private final AuthClient authClient;
 
     /**
      * Returns system information and environment variables.
@@ -109,6 +117,13 @@ public class testController {
     public ResponseEntity<List<User>> allUsers() {
         List<User> users = userService.allUsers();
         return ResponseEntity.ok(users);
+    }
+
+    @PostMapping("/login")
+    public Mono<String> testCall(@RequestBody @Valid CredentialsDto credentialsDto) {
+        
+
+        return ResponseEntity.ok(authClient.login(credentialsDto.login(), credentialsDto.password())).getBody();
     }
 
 }
