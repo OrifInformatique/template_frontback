@@ -1,9 +1,11 @@
 package ch.sectioninformatique.template.test;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -121,9 +123,16 @@ public class testController {
 
     @PostMapping("/login")
     public Mono<String> testCall(@RequestBody @Valid CredentialsDto credentialsDto) {
-        
 
         return ResponseEntity.ok(authClient.login(credentialsDto.login(), credentialsDto.password())).getBody();
+    }
+
+    @GetMapping("/oauth2/login")
+    public ResponseEntity<Object> testCallOAuth2() {
+
+        // Redirect frontend to App A (central auth app)
+        URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
+        return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
     }
 
 }

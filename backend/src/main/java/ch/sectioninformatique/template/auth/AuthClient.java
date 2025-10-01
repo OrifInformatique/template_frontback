@@ -23,6 +23,14 @@ public class AuthClient {
                 .retrieve()
                 .bodyToMono(String.class); // expect the response as a String (e.g., a token or message)
     }
+
+    public Mono<String> loginOAUth2() {
+
+        return webClient.get()
+                .uri("/oauth2/authorization/azure") // your login endpoint path
+                .retrieve()
+                .bodyToMono(String.class); // expect the response as a String (e.g., a token or message)
+    }
 }
 
 
