@@ -119,12 +119,9 @@ public class SecurityConfig {
                     log.debug("Configuring HTTP request authorization rules");
                     requests
                             .requestMatchers("/test/login").permitAll()
+                            .requestMatchers("/test/register").permitAll()
                             .requestMatchers("/test/oauth2/login").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                            .requestMatchers("/oauth2/authorization/**").permitAll()
-                            .requestMatchers("/oauth2/success").authenticated()
-                            .requestMatchers("/oauth2/error").permitAll()
-                            .requestMatchers("/login/oauth2/code/**").permitAll()
                             .anyRequest().authenticated();
                     log.debug("HTTP request authorization rules configured");
                 });

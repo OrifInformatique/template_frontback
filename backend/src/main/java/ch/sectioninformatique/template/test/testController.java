@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.CredentialsDto;
+import ch.sectioninformatique.template.auth.RegisterDto;
+import ch.sectioninformatique.template.auth.SignUpDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -28,10 +30,14 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing items in the system.
- * This controller provides endpoints for CRUD operations ona variety of items,
- * with appropriate security checks and authorization requirements.
- * All responses are automatically converted to JSON format.
+ * Controller for test endpoints.
+ * This controller provides various endpoints for testing purposes,
+ * including:
+ * - A hello world endpoint to verify the application is running
+ * - An endpoint to retrieve the currently authenticated user's information
+ * - An endpoint to promote a user to a test admin role
+ * - An endpoint to retrieve all users in the system
+ * - Endpoints to test login and registration functionalities via the AuthClient
  */
 @RequestMapping("/test")
 @RequiredArgsConstructor
@@ -121,18 +127,67 @@ public class testController {
         return ResponseEntity.ok(users);
     }
 
+    /**
+     * Handles POST requests to "/login"
+     * Accepts login credentials (login and password) as a request body, validated
+     * for correctness
+     * Calls the authentication client to perform login with provided credentials
+     * Returns a reactive Mono<String> containing the login response (e.g., token or
+     * status message)
+     * 
+     * @param credentialsDto
+     * @return Mono<String> with login response
+     */
     @PostMapping("/login")
     public Mono<String> testCall(@RequestBody @Valid CredentialsDto credentialsDto) {
 
         return ResponseEntity.ok(authClient.login(credentialsDto.login(), credentialsDto.password())).getBody();
     }
 
+    /**
+     * Handles GET requests to "/oauth2/login"
+     * Redirects the client to the OAuth2 authorization endpoint for Azure
+     * This initiates the OAuth2 login flow
+     * After successful login, the user will be redirected back to the application
+     * 
+     * @return ResponseEntity with redirection to OAuth2 login URL
+     */
     @GetMapping("/oauth2/login")
     public ResponseEntity<Object> testCallOAuth2() {
 
-        // Redirect frontend to App A (central auth app)
+        // Redirect frontend to spring-auth OAuth2 login endpoint
         URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
         return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
+    }
+
+    /**
+     * Handles POST requests to "/register"
+     * Accepts user registration data as a request body, validated for correctness
+     * Calls the authentication client to perform registration with provided user data
+     * On successful registration, also registers the user locally in the system
+     * Returns a reactive Mono<ResponseEntity<String>> containing the registration
+     * response or error message
+     * 
+     * @param user
+     * @return Mono<ResponseEntity<String>> with registration response
+     */
+    @PostMapping("/register")
+    public Mono<ResponseEntity<String>> testCallRegister(@RequestBody @Valid SignUpDto user) {
+        return authClient.register(user)
+                .flatMap(response -> {
+                    // On successful registration, also register user locally
+                    RegisterDto userRegister = new RegisterDto(user.firstName(), user.lastName(), user.login());
+                    userService.register(userRegister);
+
+                    // Return HTTP 200 OK with the response body
+                    return Mono.just(ResponseEntity.ok(response));
+                })
+                .onErrorResume(ex -> {
+                    // Handle errors here (e.g., registration failure)
+                    // You can customize the error message or status code based on exception type
+                    String errorMessage = "Registration failed: " + ex.getMessage();
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage));
+                });
     }
 
 }
