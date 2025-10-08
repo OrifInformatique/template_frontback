@@ -5,7 +5,7 @@ import { Button,
          InputText,
          InputPassword,
          Link
-       } from "@orif-informatique/react-component-library";
+       } from "@orif-informatique/react-components-library";
 
 const Login = () =>
 {

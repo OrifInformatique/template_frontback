@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Button,
          InputPassword,
-       } from "@orif-informatique/react-component-library";
+       } from "@orif-informatique/react-components-library";
 
 const ChangePassword = () =>
 {

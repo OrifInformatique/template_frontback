@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 import { Header,
          Footer,
          ScrollToTopButton
-       } from "@orif-informatique/react-component-library";
+       } from "@orif-informatique/react-components-library";
 
 const MainLayout = () => {
   return (<>

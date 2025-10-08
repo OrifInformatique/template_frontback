@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button,
          InputEmail,
          InputPassword
-       } from "@orif-informatique/react-component-library";
+       } from "@orif-informatique/react-components-library";
 
 const ResetPassword = () =>
 {

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button,
          InputEmail,
          InputText
-       } from "@orif-informatique/react-component-library";
+       } from "@orif-informatique/react-components-library";
 
 const Azure = () =>
 {
