@@ -17,6 +17,7 @@ import ResetPassword from './ui/auth/reset-password';
 import Redirect from './utils/Redirect'
 
 // Styles
+import '@orif-informatique/react-components-library/styles.css';
 import './index.pcss';
 
 const container = document.getElementById('root');
