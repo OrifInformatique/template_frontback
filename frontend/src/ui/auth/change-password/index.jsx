@@ -1,7 +1,8 @@
 import React from 'react';
 
-import Button from "../../../ui/buttons/default/Button";
-import InputPassword from "../../../ui/inputs/password/InputPassword"
+import { Button,
+         InputPassword,
+       } from "@orif-informatique/react-component-library";
 
 const ChangePassword = () =>
 {

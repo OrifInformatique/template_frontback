@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 
-import Button from "../../buttons/default/Button";
-import InputEmail from "../../inputs/email/InputEmail"
-import InputPassword from "../../inputs/password/InputPassword";
+import { Button,
+         InputEmail,
+         InputPassword
+       } from "@orif-informatique/react-component-library";
 
 const ResetPassword = () =>
 {

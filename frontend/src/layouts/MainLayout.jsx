@@ -1,9 +1,10 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 
-import Footer from "../ui/footer/Footer";
-import Header from "../ui/header/Header";
-import ScrollToTopButton from "../ui/buttons/scroll-to-top/ScrollToTopButton";
+import { Header,
+         Footer,
+         ScrollToTopButton
+       } from "@orif-informatique/react-component-library";
 
 const MainLayout = () => {
   return (<>
