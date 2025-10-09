@@ -18,6 +18,7 @@ import ApiAuthCall from './modules/api-auth-call';
 import Redirect from './utils/Redirect'
 
 // Styles
+import '@orif-informatique/react-components-library/styles.css';
 import './index.pcss';
 
 const container = document.getElementById('root');
@@ -55,20 +56,20 @@ root.render(
                 path="/"
                 element={<MainLayout />}
             >
-                <Route
-                    index
-                    element={<Home />}
-                />
+            <Route
+                index
+                element={<Home />}
+            />
 
-                <Route
-                    path="contact"
-                    element={<Contact />}
-                />
+            <Route
+                path="contact"
+                element={<Contact />}
+            />
 
-                <Route
-                    path="*"
-                    element={<Redirect to="/" />}
-                />
+            <Route
+                path="*"
+                element={<Redirect to="/" />}
+            />
             </Route>
         </Routes>
     </BrowserRouter>
