@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 
-import Button from "../../buttons/default/Button";
-import InputEmail from "../../inputs/email/InputEmail"
-import InputText from "../../inputs/text/InputText";
-import Link from '../../link';
+import { Button,
+         InputEmail,
+         InputText
+       } from "@orif-informatique/react-components-library";
 
 const Azure = () =>
 {
