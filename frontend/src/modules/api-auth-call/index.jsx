@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import Button from '../../ui/buttons/default/Button';
-import PopUp from '../../ui/pop-up/PopUp';
+
+import { Button,
+         PopUp
+       } from "@orif-informatique/react-components-library";
 import useAuthStore from '../../../authStore';
 import axios from 'axios';
 
