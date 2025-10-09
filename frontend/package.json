@@ -18,7 +18,7 @@
   "dependencies": {
     "@headlessui/react": "^2.1.9",
     "@heroicons/react": "^2.1.5",
-    "@orif-informatique/react-components-library": "^1.0.0",
+    "@orif-informatique/react-components-library": "^1.0.1",
     "clsx": "^2.1.1",
     "idb": "^8.0.0",
     "react": "^19.1.1",
