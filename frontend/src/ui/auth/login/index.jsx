@@ -5,9 +5,9 @@ import useAuthStore from '../../../../authStore';
 import { Button,
          Image,
          InputText,
-         InputPassword,
-         Link
+         InputPassword
        } from "@orif-informatique/react-components-library";
+import Link from '../../link';
 
 const Login = () => {
     const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =
