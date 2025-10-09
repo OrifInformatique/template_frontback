@@ -50,20 +50,20 @@ root.render(
                 path="/"
                 element={<MainLayout />}
             >
-                <Route
-                    index
-                    element={<Home />}
-                />
+            <Route
+                index
+                element={<Home />}
+            />
 
-                <Route
-                    path="contact"
-                    element={<Contact />}
-                />
+            <Route
+                path="contact"
+                element={<Contact />}
+            />
 
-                <Route
-                    path="*"
-                    element={<Redirect to="/" />}
-                />
+            <Route
+                path="*"
+                element={<Redirect to="/" />}
+            />
             </Route>
         </Routes>
     </BrowserRouter>
