@@ -2,12 +2,14 @@ package ch.sectioninformatique.template.auth;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 import org.springframework.http.MediaType;
 
 /**
  * Client service for authentication operations.
- * This service provides methods to interact with the authentication endpoints,
+ * This service provides methods to interact with the spring-auth application's endpoints,
  * including login and registration functionalities.
  * It uses WebClient to perform HTTP requests and handle responses reactively.
  */
@@ -19,22 +21,26 @@ public class AuthClient {
 
     /** Constructor to initialize the WebClient */
     public AuthClient(WebClient webClient) {
-        this.webClient = webClient;
+        /**
+         * TODO : We should externalize the URL in a configuration file or environment variable
+         * Attention : don't use https://auth.sectioninformatique.ch beacause the SSL certificate is not valid for this domain
+         * Use https://spring-auth.jcloud.ik-server.com/ as it is the Jelastic server domain name, with a valid SSL certificate
+        */
+        this.webClient = WebClient.create("https://spring-auth.jcloud.ik-server.com/");
     }
 
     /** 
      * Performs user login by sending credentials to the authentication endpoint.
      * 
-     * @param login The user's login identifier
-     * @param password The user's password as a character array
+     * @param credentialsDto The CredentialsDto containing user login data
      * @return A Mono<String> containing the authentication response (e.g., token or status message)
      */
-    public Mono<String> login(String login, char[] password) {
+    public Mono<String> login(@Valid CredentialsDto credentialsDto) {
 
         return webClient.post()
-                .uri("/auth/login") // your login endpoint path
+                .uri("/auth/login") // login endpoint path in spring-auth application
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new CredentialsDto(login, password)) // assuming LoginRequest is a class with login and password fields
+                .bodyValue(credentialsDto)
                 .retrieve()
                 .bodyToMono(String.class); // expect the response as a String (e.g., a token or message)
     }
