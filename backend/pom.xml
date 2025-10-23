@@ -31,12 +31,20 @@
     <properties>
         <java.version>21</java.version>
         <mapstruct.version>1.5.3.Final</mapstruct.version>
+        <spring-restdocs.version>3.0.1</spring-restdocs.version>
+        <!-- Match Spring Boot 3 -->
     </properties>
     <dependencies>
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
             <version>3.0.0</version>
+        </dependency>
+        <!-- Spring REST Docs for MockMvc (JUnit 5 supported) -->
+        <dependency>
+            <groupId>org.springframework.restdocs</groupId>
+            <artifactId>spring-restdocs-mockmvc</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -141,6 +149,89 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>generate-docs</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                        <configuration>
+                            <backend>html</backend>
+                            <doctype>book</doctype>
+                            <attributes>
+                                <toc>right</toc>
+                                <toclevels>4</toclevels>
+                                <toc-title>Table of Contents</toc-title>
+                                <snippets>${project.build.directory}/generated-snippets</snippets>
+                            </attributes>
+                            <sourceDocumentName>index.adoc</sourceDocumentName>
+                            <sourceDirectory>${project.basedir}/src/asciidoc</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/generated-snippets-html</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.restdocs</groupId>
+                        <artifactId>spring-restdocs-asciidoctor</artifactId>
+                        <version>${spring-restdocs.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>test-all</id>
+            <build>
+                <plugins>
+                    <!-- Integration Tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>3.1.2</version>
+                        <executions>
+                            <execution>
+                                <id>integration-tests</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <groups>integration</groups>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- REST Docs Tests (Run after integration tests) -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.1.2</version>
+                        <executions>
+                            <execution>
+                                <id>restdocs-tests</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <groups>restdocs</groups>
+                                    <useModulePath>false</useModulePath>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+    </profiles>
 </project>
