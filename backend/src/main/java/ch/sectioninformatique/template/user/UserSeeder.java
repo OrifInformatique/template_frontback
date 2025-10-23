@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template.user;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import ch.sectioninformatique.template.security.Role;
@@ -21,6 +22,7 @@ import java.util.Arrays;
  */
 @Component
 @Order(2)
+@Profile({"dev","build", "prod"})
 public class UserSeeder implements CommandLineRunner {
 
 	/** Repository for user data access */

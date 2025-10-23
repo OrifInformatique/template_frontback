@@ -184,11 +184,11 @@ public class UserService {
      * get the list of roles attribuated to the user
      * This method:
      * - Test if the current user's has app specifique roles registered
-     * - add the app specifique roles to a list 
+     * - add the app specifique roles to a list
      * - add the main role of the user to the list
      *
-     * @param localUser   The local user's data
-     * @return list of roles 
+     * @param localUser The local user's data
+     * @return list of roles
      */
     public List<String> getRolesList(User localUser) {
 
@@ -203,5 +203,39 @@ public class UserService {
         allRoles.add(localUser.getMainRole().getName().name());
 
         return allRoles;
+    }
+
+    /**
+     * Finds a user by their login.
+     * This method:
+     * - Searches the database for a user with the specified login
+     * - Throws an exception if the user is not found
+     * - Maps the User entity to a UserDto
+     *
+     * @param login The login of the user to find
+     * @return UserDto containing the user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto findByLogin(String login) {
+        log.debug("Searching for user with login: {}", login);
+
+        Optional<User> userOptional = userRepository.findByLogin(login);
+        log.debug("User found in database: {}", userOptional.isPresent());
+
+        User user = userOptional
+                .orElseThrow(() -> {
+                    log.error("User not found with login: {}", login);
+                    return new AppException("Unknown user", HttpStatus.NOT_FOUND);
+                });
+
+        log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
+                user.getId(), user.getFirstName(), user.getLastName(),
+                user.getMainRole());
+
+        UserDto userDto = userMapper.toUserDto(user);
+        log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
+                userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
+
+        return userDto;
     }
 }

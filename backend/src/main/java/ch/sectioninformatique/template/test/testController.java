@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
  * - An endpoint to retrieve all users in the system
  * - Endpoints to test login and registration functionalities via the AuthClient
  */
-@RequestMapping("/test")
+@RequestMapping("/tests")
 @RequiredArgsConstructor
 @RestController
 public class testController {
