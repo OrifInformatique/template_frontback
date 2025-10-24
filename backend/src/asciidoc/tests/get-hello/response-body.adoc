@@ -1,0 +1,4 @@
+[source,json,options="nowrap"]
+----
+<strong>Hello World !</strong><br><strong>JAVA_HOME : </strong>/usr/lib/jvm/default-jvm<br><strong>Spring active profile : </strong>test<br><strong>Database used : </strong>jdbc:mariadb://db:3306/test_db
+----

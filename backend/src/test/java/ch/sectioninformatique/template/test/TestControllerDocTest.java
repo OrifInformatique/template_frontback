@@ -98,6 +98,39 @@ public class TestControllerDocTest {
         private AuthClient authClient;
 
         /**
+         * Generates REST documentation for the /tests/ endpoint using mocked service.
+         * This test:
+         * - Reads pre-saved token from file
+         * - Mocks the SecurityContext to simulate an authenticated user
+         * - Performs a GET request to the /tests/ endpoint
+         * - Verifies the response status is OK
+         * - Generates REST documentation snippets for the endpoint
+         * 
+         * @throws Exception
+         */
+        @Test
+        void getHello_withMockedService_generatesDoc() throws Exception {
+
+                Path pathToken = Paths.get("target/test-data/tests-get-hello-token.txt");
+                if (!Files.exists(pathToken)) {
+                        throw new IllegalStateException(
+                                        "Missing required token data. Make sure TestControllerIntegrationTest ran first.");
+                }
+                String getHelloToken = Files.readString(pathToken);
+
+                when(authentication.getPrincipal()).thenReturn(null);
+                when(securityContext.getAuthentication()).thenReturn(authentication);
+                SecurityContextHolder.setContext(securityContext);
+
+                this.mockMvc.perform(get("/tests/")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + getHelloToken))
+                                .andExpect(status().isOk())
+                                .andDo(document("tests/get-hello", preprocessRequest(prettyPrint()),
+                                                preprocessResponse(prettyPrint())));
+        }
+
+        /**
          * Generates REST documentation for the /tests/me endpoint using mocked UserService.
          * This test:
          * - Reads pre-saved user response data and token from files

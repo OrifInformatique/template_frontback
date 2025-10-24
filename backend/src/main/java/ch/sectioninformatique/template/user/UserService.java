@@ -56,12 +56,12 @@ public class UserService {
 
         for (Role role : user.getAppSpecificRoles()) {
             if (role.getName().equals(RoleEnum.ADMIN_TEST)) {
-                throw new RuntimeException("The user is already a test admin");
+                throw new AppException("The user is already a test admin", HttpStatus.CONFLICT);
             }
         }
 
         Role testAdminRole = roleRepository.findByName(RoleEnum.ADMIN_TEST)
-                .orElseThrow(() -> new RuntimeException("ADMIN_TEST role not found"));
+                .orElseThrow(() -> new AppException("ADMIN_TEST role not found", HttpStatus.NOT_FOUND));
 
         user.getAppSpecificRoles().add(testAdminRole);
         userRepository.save(user);

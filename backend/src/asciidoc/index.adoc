@@ -5,6 +5,17 @@
 
 == 1 Test Endpoints
 
+=== 1.1 Get Hello
+This is an example output for the `GET /tests/` endpoint.
+
+.request
+include::tests/get-hello/http-request.adoc[]
+
+.response
+include::tests/get-hello/http-response.adoc[]
+
+It returns a greeting message along with user details based on the provided JWT token.
+
 === 1.2 Me
 This is an example output for the `POST /tests/me` endpoint.
 

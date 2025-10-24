@@ -103,12 +103,8 @@ public class TestController {
     @PutMapping("/{userId}/promote-test")
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
-        try {
-            userService.promoteToTestAdmin(userId);
-            return ResponseEntity.ok().body("User promoted to test user successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        userService.promoteToTestAdmin(userId);
+        return ResponseEntity.ok().body("User promoted to test user successfully");
     }
 
     /**
@@ -163,7 +159,8 @@ public class TestController {
     /**
      * Handles POST requests to "/register"
      * Accepts user registration data as a request body, validated for correctness
-     * Calls the authentication client to perform registration with provided user data
+     * Calls the authentication client to perform registration with provided user
+     * data
      * On successful registration, also registers the user locally in the system
      * Returns a reactive Mono<ResponseEntity<String>> containing the registration
      * response or error message
