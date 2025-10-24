@@ -37,7 +37,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class TestControllerIntegrationTest {
 
-    /** Helper method to perform HTTP requests and save responses and tokens to files */
+    /**
+     * Performs an HTTP request and saves the response and token to files.
+     * 
+     * @param requestTypeString The HTTP request method (GET, POST, PUT, DELETE)
+     * @param endpoint          The endpoint to send the request to
+     * @param token             The authentication token to include in the request
+     * @param contentType       The content type of the request
+     * @param expectedStatus    The expected HTTP status code of the response
+     * @param responseFileName  The name of the file to save the response body
+     * @param tokenFileName     The name of the file to save the token
+     * @param extraExpectations Additional expectations to apply to the response
+     * @throws Exception
+     */
     private void performRequest(
             String requestTypeString,
             String endpoint,

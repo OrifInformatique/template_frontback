@@ -25,6 +25,7 @@ import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserMapper;
 import ch.sectioninformatique.template.user.UserRepository;
 import ch.sectioninformatique.template.user.UserService;
+import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue.Consumer;
 
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -98,103 +99,119 @@ public class TestControllerDocTest {
         private AuthClient authClient;
 
         /**
-         * Generates REST documentation for the /tests/ endpoint using mocked service.
-         * This test:
-         * - Reads pre-saved token from file
-         * - Mocks the SecurityContext to simulate an authenticated user
-         * - Performs a GET request to the /tests/ endpoint
-         * - Verifies the response status is OK
-         * - Generates REST documentation snippets for the endpoint
+         * Performs a mocked HTTP GET request to the specified endpoint,
+         * using token and response data from files, and generates REST Docs.
+         * 
+         * @param endpoint          The endpoint to send the request to
+         * @param responseFileName  The name of the file containing the mocked response JSON
+         * @param tokenFileName     The name of the file containing the authentication token
+         * @param documentName      The name for the generated REST Docs snippet
+         * @param mockUserConsumer  A consumer to customize user mocking behavior
+         * @throws Exception
+         */
+        private void performMockedRequest(
+                        String endpoint,
+                        String responseFileName,
+                        String tokenFileName,
+                        String documentName,
+                        Consumer<UserDto> mockUserConsumer) throws Exception {
+
+                // Read token from file
+                Path tokenPath = Paths.get("target/test-data/" + tokenFileName);
+                if (!Files.exists(tokenPath)) {
+                        throw new IllegalStateException("Missing token file: " + tokenPath);
+                }
+                String token = Files.readString(tokenPath);
+
+                UserDto userDto = null;
+
+                // If a response file is provided, read and parse it
+                if (responseFileName != null) {
+                        Path responsePath = Paths.get("target/test-data/" + responseFileName);
+                        if (!Files.exists(responsePath)) {
+                                throw new IllegalStateException("Missing response file: " + responsePath);
+                        }
+
+                        String jsonResponse = Files.readString(responsePath);
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode jsonNode = objectMapper.readTree(jsonResponse);
+
+                        userDto = UserDto.builder()
+                                        .id(jsonNode.get("id").asLong())
+                                        .firstName(jsonNode.get("firstName").asText())
+                                        .lastName(jsonNode.get("lastName").asText())
+                                        .login(jsonNode.get("login").asText())
+                                        .token(jsonNode.has("token") ? jsonNode.get("token").asText(token) : token)
+                                        .mainRole(jsonNode.has("mainRole") ? jsonNode.get("mainRole").asText("USER")
+                                                        : "USER")
+                                        .appSpecificRoles(new ObjectMapper().convertValue(
+                                                        jsonNode.get("appSpecificRoles"),
+                                                        new TypeReference<List<String>>() {
+                                                        }))
+                                        .permissions(new ObjectMapper().convertValue(
+                                                        jsonNode.get("permissions"), new TypeReference<List<String>>() {
+                                                        }))
+                                        .build();
+                }
+
+                // Allow test method to customize user mocking
+                if (mockUserConsumer != null && userDto != null) {
+                        mockUserConsumer.accept(userDto);
+                }
+
+                // Default authentication mocking
+                when(authentication.getPrincipal()).thenReturn(userDto);
+                when(authentication.isAuthenticated()).thenReturn(true);
+                when(securityContext.getAuthentication()).thenReturn(authentication);
+                SecurityContextHolder.setContext(securityContext);
+
+                if (userDto != null) {
+                        when(userService.me(userDto)).thenReturn(userDto);
+                }
+
+                // Perform and document
+                mockMvc.perform(get(endpoint)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + token))
+                                .andExpect(status().isOk())
+                                .andDo(document(documentName,
+                                                preprocessRequest(prettyPrint()),
+                                                preprocessResponse(prettyPrint())));
+        }
+
+        /**
+         * Test generating REST Docs for GET /tests/ endpoint.
          * 
          * @throws Exception
          */
         @Test
         void getHello_withMockedService_generatesDoc() throws Exception {
-
-                Path pathToken = Paths.get("target/test-data/tests-get-hello-token.txt");
-                if (!Files.exists(pathToken)) {
-                        throw new IllegalStateException(
-                                        "Missing required token data. Make sure TestControllerIntegrationTest ran first.");
-                }
-                String getHelloToken = Files.readString(pathToken);
-
-                when(authentication.getPrincipal()).thenReturn(null);
-                when(securityContext.getAuthentication()).thenReturn(authentication);
-                SecurityContextHolder.setContext(securityContext);
-
-                this.mockMvc.perform(get("/tests/")
-                                .accept(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + getHelloToken))
-                                .andExpect(status().isOk())
-                                .andDo(document("tests/get-hello", preprocessRequest(prettyPrint()),
-                                                preprocessResponse(prettyPrint())));
+                performMockedRequest(
+                                "/tests/",
+                                null, // No response body for this test
+                                "tests-get-hello-token.txt", // Token file
+                                "tests/get-hello", // REST Docs name
+                                userDto -> {
+                                        // No special mocking needed for /tests/
+                                });
         }
 
         /**
-         * Generates REST documentation for the /tests/me endpoint using mocked UserService.
-         * This test:
-         * - Reads pre-saved user response data and token from files
-         * - Mocks the SecurityContext to simulate an authenticated user
-         * - Mocks the UserService to return the user data
-         * - Performs a GET request to the /tests/me endpoint
-         * - Verifies the response status is OK
-         * - Generates REST documentation snippets for the endpoint
+         * Test generating REST Docs for GET /tests/me endpoint.
          * 
          * @throws Exception
          */
         @Test
         void me_withMockedService_generatesDoc() throws Exception {
-
-                Path path = Paths.get("target/test-data/tests-me-response.json");
-                if (!Files.exists(path)) {
-                        throw new IllegalStateException(
-                                        "Missing required me response data. Make sure TestControllerIntegrationTest ran first.");
-                }
-                String meResponseJson = Files.readString(path);
-
-                Path pathToken = Paths.get("target/test-data/tests-me-token.txt");
-                if (!Files.exists(pathToken)) {
-                        throw new IllegalStateException(
-                                        "Missing required token data. Make sure TestControllerIntegrationTest ran first.");
-                }
-                String meToken = Files.readString(pathToken);
-
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode jsonNode = objectMapper.readTree(meResponseJson);
-
-                UserDto userDto = UserDto.builder()
-                                .id(jsonNode.get("id").asLong())
-                                .firstName(jsonNode.get("firstName").asText())
-                                .lastName(jsonNode.get("lastName").asText())
-                                .login(jsonNode.get("login").asText())
-                                .token(jsonNode.get("token").asText(meToken))
-                                .mainRole(jsonNode.get("mainRole").asText("USER"))
-                                .appSpecificRoles(
-                                                objectMapper.convertValue(
-                                                                jsonNode.get("appSpecificRoles"),
-                                                                new TypeReference<List<String>>() {
-                                                                }))
-                                .permissions(
-                                                objectMapper.convertValue(
-                                                                jsonNode.get("permissions"),
-                                                                new TypeReference<List<String>>() {
-                                                                }))
-                                .build();
-
-                when(authentication.getPrincipal()).thenReturn(userDto);
-                when(authentication.isAuthenticated()).thenReturn(true);
-                when(securityContext.getAuthentication()).thenReturn(authentication);
-
-                SecurityContextHolder.setContext(securityContext);
-
-                when(userService.me(userDto)).thenReturn(userDto);
-
-                this.mockMvc.perform(get("/tests/me")
-                                .accept(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + meToken))
-                                .andExpect(status().isOk())
-                                .andDo(document("tests/me", preprocessRequest(prettyPrint()),
-                                                preprocessResponse(prettyPrint())));
+                performMockedRequest(
+                                "/tests/me",
+                                "tests-me-response.json", // JSON file from integration test
+                                "tests-me-token.txt", // Token file
+                                "tests/me", // REST Docs name
+                                userDto -> {
+                                        // Customize user mocking if needed
+                                        when(userService.me(userDto)).thenReturn(userDto);
+                                });
         }
 
 }
