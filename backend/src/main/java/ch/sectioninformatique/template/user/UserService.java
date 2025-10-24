@@ -84,15 +84,11 @@ public class UserService {
      *
      * @return List of all User entities
      */
-    public User me(UserDto currentUser) {
-        List<User> users = userRepository.findAll();
-        User localUser = null;
-        for (User user : users) {
-            if (user.getUsername().contains(currentUser.getLogin())) {
-                localUser = user;
-            }
-        }
-        return localUser;
+    public UserDto me(UserDto currentUser) {
+        User user = userRepository.findByLogin(currentUser.getLogin())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        UserDto userMapped = userMapper.toUserDto(user);
+        return userMapped;
     }
 
     /**

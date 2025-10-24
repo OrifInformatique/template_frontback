@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/tests")
 @RequiredArgsConstructor
 @RestController
-public class testController {
+public class TestController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
@@ -80,13 +80,13 @@ public class testController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
-    public ResponseEntity<User> authenticatedUser() {
+    public ResponseEntity<UserDto> authenticatedUser() {
         Authentication authentication = SecurityContextHolder
                 .getContext()
                 .getAuthentication();
 
         UserDto currentUser = (UserDto) authentication.getPrincipal();
-        User localUser = userService.me(currentUser);
+        UserDto localUser = userService.me(currentUser);
         return ResponseEntity.ok(localUser);
     }
 

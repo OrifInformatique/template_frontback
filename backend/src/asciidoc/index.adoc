@@ -2,3 +2,16 @@
 :toc: right
 :toclevels: 4 
 :toc-title: Table of Contents
+
+== 1 Test Endpoints
+
+=== 1.2 Me
+This is an example output for the `POST /tests/me` endpoint.
+
+.request
+include::tests/me/http-request.adoc[]
+
+.response
+include::tests/me/http-response.adoc[]
+
+It returns the currently authenticated user information based on the provided JWT token.
