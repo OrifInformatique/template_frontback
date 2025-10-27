@@ -1,0 +1,242 @@
+package ch.sectioninformatique.template.test;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
+
+import ch.sectioninformatique.template.AuthApplication;
+import ch.sectioninformatique.template.security.UserAuthenticationProvider;
+import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.http.MediaType;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+
+/**
+ * Integration tests for the "TestController" REST endpoints.
+ *
+ * This class uses Spring Boot's test context to run against a real
+ * application context (with database and services), while using MockMvc
+ * to simulate HTTP requests and verify API responses.
+ *
+ * It also integrates Spring REST Docs to automatically generate
+ * documentation snippets during test execution.
+ */
+@SpringBootTest(classes = AuthApplication.class)
+@AutoConfigureMockMvc
+@AutoConfigureRestDocs(outputDir = "target/generated-snippets")
+public class TestControllerTest {
+
+    /** Service for handling user-related operations */
+    @Autowired
+    private UserService userService;
+
+    /** Provider for user authentication and token generation */
+    @Autowired
+    private UserAuthenticationProvider userAuthenticationProvider;
+
+    /** MockMvc for simulating HTTP requests in tests */
+    @Autowired
+    private MockMvc mockMvc;
+
+    /**
+     * Helper method for performing and documenting HTTP requests in tests.
+     *
+     * @param requestTypeString HTTP method (GET, POST, PUT, etc.)
+     * @param endpoint          API endpoint to call
+     * @param token             Optional JWT token for authentication
+     * @param contentType       Content type for the request
+     * @param expectedStatus    Expected HTTP status code (e.g. 200)
+     * @param docsFileName      Name for the generated REST Docs snippet
+     * @param extraExpectations Additional response matchers (e.g. JSON field
+     *                          assertions)
+     * 
+     * @throws Exception
+     */
+    private void performRequest(
+            String requestTypeString,
+            String endpoint,
+            String token,
+            MediaType contentType,
+            int expectedStatus,
+            String docsFileName,
+            Consumer<ResultActions> script) throws Exception {
+
+        // Execute the request using a helper utility
+        ResultActions request = TestControllerHelper.performTest(
+                mockMvc,
+                requestTypeString,
+                endpoint,
+                token,
+                contentType,
+                expectedStatus);
+
+        if (script != null) {
+            script.accept(request);
+        }
+
+        // Generate a REST Docs snippet for the request/response pair
+        request.andDo(document("tests/" + docsFileName, preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint())));
+
+    }
+
+    /**
+     * Test: GET /tests/
+     *
+     * Ensures that an authenticated user can access the test endpoint successfully.
+     * Verifies that the API returns a 200 OK status.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void getHello_withRealData_shouldReturnSuccess() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        String token = userAuthenticationProvider.createToken(userDto);
+        performRequest(
+                "GET",
+                "/tests/",
+                token,
+                MediaType.ALL,
+                200,
+                "get-hello",
+                null);
+    }
+
+    /**
+     * Test: GET /tests/me
+     *
+     * Ensures that the authenticated user can retrieve their own profile details.
+     * Verifies that the returned JSON matches expected user attributes.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void me_withRealData_shouldReturnSuccess() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        String token = userAuthenticationProvider.createToken(userDto);
+        performRequest(
+                "GET",
+                "/tests/me",
+                token,
+                MediaType.APPLICATION_JSON,
+                200,
+                "me",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.firstName").value("Test"));
+                        request.andExpect(jsonPath("$.lastName").value("User"));
+                        request.andExpect(jsonPath("$.login").value("test.user@test.com"));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+
+                });
+    }
+
+    /**
+     * Test: PUT /tests/{id}/promote-test
+     *
+     * Ensures that an admin user can promote another user to a "test admin" role.
+     * Verifies the response contains a "message" field.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void promoteToTestAdmin_withRealData_shouldReturnSuccess() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        UserDto adminDto = userService.findByLogin("test.admin@test.com");
+
+        String token = userAuthenticationProvider.createToken(adminDto);
+        performRequest(
+                "PUT",
+                "/tests/" + userDto.getId() + "/promote-test",
+                token,
+                MediaType.APPLICATION_JSON,
+                200,
+                "promote-test",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
+    @Transactional
+    public void all_withRealData_shouldReturnSuccess() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        String token = userAuthenticationProvider.createToken(userDto);
+        performRequest(
+                "GET",
+                "/tests/all",
+                token,
+                MediaType.APPLICATION_JSON,
+                200,
+                "all",
+                request -> {
+                    try {
+                        MvcResult result = request.andReturn();
+                        String responseBody = result.getResponse().getContentAsString();
+
+                        ObjectMapper mapper = new ObjectMapper();
+                        List<Map<String, Object>> users = mapper.readValue(
+                                responseBody,
+                                new TypeReference<List<Map<String, Object>>>() {
+                                });
+
+                        assertEquals(4, users.size(), "Should return 4 users");
+
+                        List<String> expectedLogins = List.of(
+                                "test.user@test.com",
+                                "test.manager@test.com",
+                                "test.admin@test.com",
+                                "test.admin2@test.com");
+
+                        List<String> returnedLogins = users.stream()
+                                .map(user -> (String) user.get("login"))
+                                .collect(Collectors.toList());
+
+                        assertTrue(returnedLogins.containsAll(expectedLogins),
+                                "Returned users should include all seeded logins");
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+}
