@@ -48,3 +48,14 @@ include::tests/all/http-request.adoc[]
 include::tests/all/http-response.adoc[]
 
 It returns a list of users.
+
+=== 1.5 Login
+This is an example output for the `GET /tests/all` endpoint.
+
+.request
+include::tests/login/http-request.adoc[]
+
+.response
+include::tests/login/http-response.adoc[]
+
+It returns the profil of the newly logged user.

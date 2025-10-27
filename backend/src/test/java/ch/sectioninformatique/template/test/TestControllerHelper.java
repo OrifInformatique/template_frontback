@@ -11,7 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Utility class providing a helper method for executing MockMvc HTTP requests in tests.
+ * Utility class providing a helper method for executing MockMvc HTTP requests
+ * in tests.
  *
  * This class simplifies request execution by:
  * - Accepting a request type as a string (GET, POST, PUT, DELETE)
@@ -26,19 +27,23 @@ public class TestControllerHelper {
     /**
      * Performs a MockMvc HTTP request with the specified parameters.
      *
-     * @param mockMvc               The MockMvc instance used to execute the request
-     * @param requestTypeString     The HTTP method ("GET", "POST", "PUT", "DELETE")
-     * @param endpoint              The URL path to call (e.g. "/tests/me")
-     * @param token                 The JWT token for the Authorization header (can be null)
-     * @param contentType           The content type of the request (e.g. MediaType.APPLICATION_JSON)
-     * @param expectedStatus        The expected HTTP response status code (e.g. 200)
-     * @return ResultActions  The result of the request, allowing for further assertions or documentation
+     * @param mockMvc           The MockMvc instance used to execute the request
+     * @param requestTypeString The HTTP method ("GET", "POST", "PUT", "DELETE")
+     * @param endpoint          The URL path to call (e.g. "/tests/me")
+     * @param token             The JWT token for the Authorization header (can be
+     *                          null)
+     * @param contentType       The content type of the request (e.g.
+     *                          MediaType.APPLICATION_JSON)
+     * @param expectedStatus    The expected HTTP response status code (e.g. 200)
+     * @return ResultActions The result of the request, allowing for further
+     *         assertions or documentation
      * @throws Exception
      */
     public static ResultActions performTest(
             MockMvc mockMvc,
             String requestTypeString,
             String endpoint,
+            String content,
             String token,
             MediaType contentType,
             int expectedStatus) throws Exception {
@@ -57,10 +62,21 @@ public class TestControllerHelper {
             throw new IllegalArgumentException("Unsupported request type: " + requestTypeString);
         }
 
+        // Set content only if it's not null
+        if (content != null) {
+            requestType.content(content);
+        }
+
+        // Set Authorization header only if token is provided
+        if (token != null) {
+            requestType.header("Authorization", "Bearer " + token);
+        }
+
+        // Set content type
+        requestType.contentType(contentType);
+
         // Perform request
-        var request = mockMvc.perform(requestType
-                .contentType(contentType)
-                .header("Authorization", "Bearer " + token))
+        var request = mockMvc.perform(requestType)
                 .andExpect(status().is(expectedStatus));
 
         return request;

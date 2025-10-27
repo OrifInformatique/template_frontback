@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,9 @@ public class TestController {
     private Environment environment;
 
     private final AuthClient authClient;
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfile;
 
     /**
      * Returns system information and environment variables.
@@ -136,7 +140,13 @@ public class TestController {
      * @return Mono<String> with login response
      */
     @PostMapping("/login")
-    public Mono<String> testCall(@RequestBody @Valid CredentialsDto credentialsDto) {
+    public Object testCall(@RequestBody @Valid CredentialsDto credentialsDto) {
+
+        if ("test".equals(activeProfile)) {
+            // Test profile: return a blocking String 
+            return authClient.login(credentialsDto.login(), credentialsDto.password())
+                    .block(); // only for tests
+        }
 
         return ResponseEntity.ok(authClient.login(credentialsDto.login(), credentialsDto.password())).getBody();
     }

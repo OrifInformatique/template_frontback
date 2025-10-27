@@ -1,10 +1,9 @@
 package ch.sectioninformatique.template.test;
 
+// Import statements for testing, Spring Boot, JSON handling, and REST Docs
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.ResultMatcher;
-
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
@@ -27,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -48,9 +45,9 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
  * It also integrates Spring REST Docs to automatically generate
  * documentation snippets during test execution.
  */
-@SpringBootTest(classes = AuthApplication.class)
-@AutoConfigureMockMvc
-@AutoConfigureRestDocs(outputDir = "target/generated-snippets")
+@SpringBootTest(classes = AuthApplication.class) // Loads the full Spring Boot application context for tests
+@AutoConfigureMockMvc // Automatically configures MockMvc for simulating HTTP requests
+@AutoConfigureRestDocs(outputDir = "target/generated-snippets") // Configures REST Docs to generate API documentation
 public class TestControllerTest {
 
     /** Service for handling user-related operations */
@@ -67,6 +64,7 @@ public class TestControllerTest {
 
     /**
      * Helper method for performing and documenting HTTP requests in tests.
+     * This reduces repetition by centralizing the request execution and REST Docs generation.
      *
      * @param requestTypeString HTTP method (GET, POST, PUT, etc.)
      * @param endpoint          API endpoint to call
@@ -74,29 +72,31 @@ public class TestControllerTest {
      * @param contentType       Content type for the request
      * @param expectedStatus    Expected HTTP status code (e.g. 200)
      * @param docsFileName      Name for the generated REST Docs snippet
-     * @param extraExpectations Additional response matchers (e.g. JSON field
-     *                          assertions)
+     * @param script            Optional lambda to perform additional assertions
      * 
      * @throws Exception
      */
     private void performRequest(
             String requestTypeString,
             String endpoint,
+            String content,
             String token,
             MediaType contentType,
             int expectedStatus,
             String docsFileName,
             Consumer<ResultActions> script) throws Exception {
 
-        // Execute the request using a helper utility
+        // Execute the HTTP request using a helper class
         ResultActions request = TestControllerHelper.performTest(
                 mockMvc,
                 requestTypeString,
                 endpoint,
+                content,
                 token,
                 contentType,
                 expectedStatus);
 
+        // Execute any additional assertions provided in the lambda
         if (script != null) {
             script.accept(request);
         }
@@ -116,7 +116,7 @@ public class TestControllerTest {
      * @throws Exception
      */
     @Test
-    @Transactional
+    @Transactional // Each test runs in a transaction that rolls back at the end
     public void getHello_withRealData_shouldReturnSuccess() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
@@ -124,6 +124,7 @@ public class TestControllerTest {
         performRequest(
                 "GET",
                 "/tests/",
+                null,
                 token,
                 MediaType.ALL,
                 200,
@@ -148,6 +149,7 @@ public class TestControllerTest {
         performRequest(
                 "GET",
                 "/tests/me",
+                null,
                 token,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -183,6 +185,7 @@ public class TestControllerTest {
         performRequest(
                 "PUT",
                 "/tests/" + userDto.getId() + "/promote-test",
+                null,
                 token,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -196,6 +199,12 @@ public class TestControllerTest {
                 });
     }
 
+    /**
+     * Test case: GET /tests/all
+     *
+     * Verifies that all users can be retrieved and match expected seeded users.
+     * Expects 4 users in the response with specific logins.
+     */
     @Test
     @Transactional
     public void all_withRealData_shouldReturnSuccess() throws Exception {
@@ -205,12 +214,14 @@ public class TestControllerTest {
         performRequest(
                 "GET",
                 "/tests/all",
+                null,
                 token,
                 MediaType.APPLICATION_JSON,
                 200,
                 "all",
                 request -> {
                     try {
+                        // Parse response JSON
                         MvcResult result = request.andReturn();
                         String responseBody = result.getResponse().getContentAsString();
 
@@ -220,8 +231,10 @@ public class TestControllerTest {
                                 new TypeReference<List<Map<String, Object>>>() {
                                 });
 
+                        // Verify total number of users
                         assertEquals(4, users.size(), "Should return 4 users");
 
+                        // Verify that all expected logins are present
                         List<String> expectedLogins = List.of(
                                 "test.user@test.com",
                                 "test.manager@test.com",
@@ -238,5 +251,25 @@ public class TestControllerTest {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    
+    /**
+     * Test: POST /tests/login
+     *
+     * Verifies that a user can log in successfully with valid credentials.
+     */
+    @Test
+    @Transactional
+    public void login_withRealData_shouldReturnSuccess() throws Exception {
+        performRequest(
+                "POST",
+                "/tests/login",
+                "{\"login\":\"john.doe@test.com\", \"password\":\"Secure123@Pass\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                200,
+                "login",
+                null);
     }
 }
