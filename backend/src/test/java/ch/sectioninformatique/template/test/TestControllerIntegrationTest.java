@@ -1,9 +1,8 @@
 package ch.sectioninformatique.template.test;
 
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import ch.sectioninformatique.template.AuthApplication;
@@ -12,6 +11,7 @@ import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -20,21 +20,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.http.MediaType;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.util.function.Consumer;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@Tag("integration")
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+
 @SpringBootTest(classes = AuthApplication.class)
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs(outputDir = "target/generated-snippets")
 public class TestControllerIntegrationTest {
 
     /**
@@ -56,48 +51,26 @@ public class TestControllerIntegrationTest {
             String token,
             MediaType contentType,
             int expectedStatus,
-            String responseFileName,
-            String tokenFileName,
-            ResultMatcher... extraExpectations
-            ) throws Exception {
-
-        var requestType = get(endpoint);
-
-        if (requestTypeString.equals("GET")) {
-            requestType = get(endpoint);
-        } else if (requestTypeString.equals("POST")) {
-            requestType = post(endpoint);
-        } else if (requestTypeString.equals("PUT")) {
-            requestType = put(endpoint);
-        } else if (requestTypeString.equals("DELETE")) {
-            requestType = delete(endpoint);
-        } else {
-            throw new IllegalArgumentException("Unsupported request type: " + requestTypeString);
-        }
+            String docsFileName,
+            ResultMatcher... extraExpectations) throws Exception {
 
         // Perform request
-        var request = mockMvc.perform(requestType
-                .contentType(contentType)
-                .header("Authorization", "Bearer " + token))
-                .andExpect(status().is(expectedStatus));
+        ResultActions request = TestControllerHelper.performTest(
+                mockMvc,
+                requestTypeString,
+                endpoint,
+                token,
+                contentType,
+                expectedStatus);
 
-        for (ResultMatcher matcher : extraExpectations) {
-            request.andExpect(matcher);
+        if (extraExpectations != null) {
+            for (ResultMatcher matcher : extraExpectations) {
+                request.andExpect(matcher);
+            }
         }
-        
-        MvcResult result = request.andReturn();
 
-        String responseBody = result.getResponse().getContentAsString();
-
-        // Save response to file
-        Path responsePath = Paths.get("target/test-data/" + responseFileName);
-        Files.createDirectories(responsePath.getParent());
-        Files.writeString(responsePath, responseBody);
-
-        // Save token to file
-        Path tokenPath = Paths.get("target/test-data/" + tokenFileName);
-        Files.createDirectories(tokenPath.getParent());
-        Files.writeString(tokenPath, token);
+        request.andDo(document("tests/" + docsFileName, preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint())));
     }
 
     /** Service for handling user-related operations */
@@ -129,15 +102,13 @@ public class TestControllerIntegrationTest {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
         String token = userAuthenticationProvider.createToken(userDto);
-         performRequest(
+        performRequest(
                 "GET",
                 "/tests/",
                 token,
                 MediaType.ALL,
                 200,
-                "tests-get-hello-response.txt",
-                "tests-get-hello-token.txt"
-        );
+                "get-hello");
     }
 
     /**
@@ -163,11 +134,38 @@ public class TestControllerIntegrationTest {
                 token,
                 MediaType.APPLICATION_JSON,
                 200,
-                "tests-me-response.json",
-                "tests-me-token.txt",
+                "me",
                 jsonPath("$.firstName").value("Test"),
                 jsonPath("$.lastName").value("User"),
-                jsonPath("$.login").value("test.user@test.com")
-        );
+                jsonPath("$.login").value("test.user@test.com"));
+    }
+
+    /**
+     * Tests the /tests/me endpoint with real user data.
+     * This test:
+     * - Retrieves a test user from the database
+     * - Generates an authentication token for the user
+     * - Performs a GET request to the /tests/me endpoint with the token
+     * - Verifies the response contains the correct user information
+     * - Saves the response and token to files for later use
+     *
+     * @throws Exception if an error occurs during the test
+     */
+    @Test
+    @Transactional
+    public void promoteToTestAdmin_withRealData_shouldReturnSuccess() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        UserDto adminDto = userService.findByLogin("test.admin@test.com");
+
+        String token = userAuthenticationProvider.createToken(adminDto);
+        performRequest(
+                "PUT",
+                "/tests/" + userDto.getId() + "/promote-test",
+                token,
+                MediaType.APPLICATION_JSON,
+                200,
+                "promote-test",
+                jsonPath("$.message").exists());
     }
 }

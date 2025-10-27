@@ -5,7 +5,7 @@
   "firstName" : "Test",
   "lastName" : "User",
   "login" : "test.user@test.com",
-  "token" : "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTI5MzAxOSwiaWF0IjoxNzYxMjg5NDE5fQ.WmaerzXupcZkqhveO2hSAEOHWk7I5xmQ_ZKH3FbmzD8",
+  "token" : null,
   "mainRole" : "USER",
   "appSpecificRoles" : [ "USER" ],
   "permissions" : [ "ROLE_USER", "user:read" ]

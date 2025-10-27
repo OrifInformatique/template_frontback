@@ -2,6 +2,7 @@ package ch.sectioninformatique.template.test;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -104,7 +105,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
         userService.promoteToTestAdmin(userId);
-        return ResponseEntity.ok().body("User promoted to test user successfully");
+        return ResponseEntity.ok().body(Map.of("message", "User promoted to test admin successfully"));
     }
 
     /**

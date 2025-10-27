@@ -11,16 +11,9 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 219
+Content-Length: 60
 
 {
-  "id" : 1,
-  "firstName" : "Test",
-  "lastName" : "User",
-  "login" : "test.user@test.com",
-  "token" : null,
-  "mainRole" : "USER",
-  "appSpecificRoles" : [ "USER" ],
-  "permissions" : [ "ROLE_USER", "user:read" ]
+  "message" : "User promoted to test admin successfully"
 }
 ----
