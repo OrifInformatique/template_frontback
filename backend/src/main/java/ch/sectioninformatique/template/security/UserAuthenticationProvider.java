@@ -87,6 +87,33 @@ public class UserAuthenticationProvider {
     }
 
     /**
+     * Creates a JWT token for a user with their information and permissions.
+     * The token includes:
+     * - User login as subject
+     * - First name and last name as claims
+     * - Role and permissions as claims
+     * - Issue time and expiration time (1 hour validity)
+     *
+     * @param user The user to create a token for
+     * @return A JWT token string containing the user's information and permissions
+     */
+    public String createToken(UserDto user, Date... testDate) {
+        Date now = testDate.length > 0 ? testDate[0] : new Date();
+        Date validity = new Date(now.getTime() + 3600000); // 1 hour
+
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        return JWT.create()
+                .withSubject(user.getLogin())
+                .withIssuedAt(now)
+                .withExpiresAt(validity)
+                .withClaim("firstName", user.getFirstName())
+                .withClaim("lastName", user.getLastName())
+                .withClaim("mainRole", user.getMainRole())
+                .withClaim("appSpecificRoles", user.getAppSpecificRoles())
+                .sign(algorithm);
+    }
+
+    /**
      * Builds a list of authorities from a role and permissions.
      * This method converts:
      * - Role into a "ROLE_" prefixed authority
@@ -120,7 +147,8 @@ public class UserAuthenticationProvider {
      * - Token expiration
      * - Token claims (user information)
      * 
-     * It also modify the local informations based on the the validated token informations
+     * It also modify the local informations based on the the validated token
+     * informations
      * - It add new validated user
      * - it update main Roles for users
      *
@@ -145,7 +173,6 @@ public class UserAuthenticationProvider {
                 .appSpecificRoles(decoded.getClaim("appSpecificRoles").asList(String.class))
                 .permissions(decoded.getClaim("permissions").asList(String.class))
                 .build();
-
 
         User localUser = userService.getOrCreateAuthenticatedUser(currentUser);
 

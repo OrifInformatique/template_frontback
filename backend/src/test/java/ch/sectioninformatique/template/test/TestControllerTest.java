@@ -26,6 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -172,6 +176,24 @@ public class TestControllerTest {
                 MediaType.ALL,
                 401,
                 "get-hello/401/malformed-token",
+                null);
+    }
+
+    @Test
+    @Transactional
+    public void getHello_withExpiredToken_shouldReturnUnauthorized() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        String token = userAuthenticationProvider.createToken(userDto, Date.from(
+                                Instant.now().minus(2, ChronoUnit.HOURS)));
+        performRequest(
+                "GET",
+                "/tests/",
+                null,
+                token,
+                MediaType.ALL,
+                401,
+                "get-hello/401/expired-token",
                 null);
     }
 
