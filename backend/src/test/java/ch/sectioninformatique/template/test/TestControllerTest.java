@@ -132,6 +132,13 @@ public class TestControllerTest {
                 null);
     }
 
+    /**
+     * Test: GET /tests/
+     *
+     * Ensures that an error 401 is thrown in case of missing token.
+     * 
+     * @throws Exception
+     */
     @Test
     @Transactional // Each test runs in a transaction that rolls back at the end
     public void getHello_missingToken_shouldReturnUnauthorized() throws Exception {
