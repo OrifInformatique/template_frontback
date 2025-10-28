@@ -2,7 +2,6 @@ package ch.sectioninformatique.template.test;
 
 // Import statements for testing, Spring Boot, JSON handling, and REST Docs
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
@@ -723,7 +722,7 @@ public class TestControllerTest {
      */
     @Test
     @Transactional
-    public void register_withRealData_shouldReturnSuccess() throws Exception {
+    public void register_withMockedService_shouldReturnSuccess() throws Exception {
         String mockedJsonResponse = """
                 {
                   "id": 5,

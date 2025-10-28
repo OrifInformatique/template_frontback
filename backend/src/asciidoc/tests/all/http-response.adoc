@@ -18,57 +18,59 @@ Content-Length: 3264
   "firstName" : "Test",
   "lastName" : "User",
   "login" : "test.user@test.com",
-  "createdAt" : 1761663019478,
-  "updatedAt" : 1761663019478,
+  "createdAt" : 1761664277634,
+  "updatedAt" : 1761664277634,
   "mainRole" : {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761663019441,
-    "updatedAt" : 1761663019441
+    "createdAt" : 1761664277597,
+    "updatedAt" : 1761664277597
   },
   "appSpecificRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761663019441,
-    "updatedAt" : 1761663019441
+    "createdAt" : 1761664277597,
+    "updatedAt" : 1761664277597
   } ],
   "allRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761663019441,
-    "updatedAt" : 1761663019441
+    "createdAt" : 1761664277597,
+    "updatedAt" : 1761664277597
   } ],
+  "username" : "test.user@test.com",
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "ROLE_USER"
   }, {
     "authority" : "user:read"
   } ],
-  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "USER" ],
-  "username" : "test.user@test.com",
   "enabled" : true
 }, {
   "id" : 2,
   "firstName" : "Test",
   "lastName" : "Manager",
   "login" : "test.manager@test.com",
-  "createdAt" : 1761663019479,
-  "updatedAt" : 1761663019479,
+  "createdAt" : 1761664277635,
+  "updatedAt" : 1761664277635,
   "mainRole" : {
     "id" : 3,
     "name" : "MANAGER",
     "description" : "Manager role",
-    "createdAt" : 1761663019456,
-    "updatedAt" : 1761663019456
+    "createdAt" : 1761664277608,
+    "updatedAt" : 1761664277608
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
+  "username" : "test.manager@test.com",
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:read"
@@ -79,27 +81,27 @@ Content-Length: 3264
   }, {
     "authority" : "user:update"
   } ],
-  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "MANAGER" ],
-  "username" : "test.manager@test.com",
   "enabled" : true
 }, {
   "id" : 3,
   "firstName" : "Test",
   "lastName" : "Admin",
   "login" : "test.admin@test.com",
-  "createdAt" : 1761663019480,
-  "updatedAt" : 1761663019480,
+  "createdAt" : 1761664277636,
+  "updatedAt" : 1761664277636,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1761663019461,
-    "updatedAt" : 1761663019461
+    "createdAt" : 1761664277613,
+    "updatedAt" : 1761664277613
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
+  "username" : "test.admin@test.com",
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:delete"
@@ -112,27 +114,27 @@ Content-Length: 3264
   }, {
     "authority" : "ROLE_ADMIN"
   } ],
-  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "ADMIN" ],
-  "username" : "test.admin@test.com",
   "enabled" : true
 }, {
   "id" : 4,
   "firstName" : "Test2",
   "lastName" : "Admin2",
   "login" : "test.admin2@test.com",
-  "createdAt" : 1761663019481,
-  "updatedAt" : 1761663019481,
+  "createdAt" : 1761664277637,
+  "updatedAt" : 1761664277637,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1761663019461,
-    "updatedAt" : 1761663019461
+    "createdAt" : 1761664277613,
+    "updatedAt" : 1761664277613
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
+  "username" : "test.admin2@test.com",
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:delete"
@@ -145,9 +147,7 @@ Content-Length: 3264
   }, {
     "authority" : "ROLE_ADMIN"
   } ],
-  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "ADMIN" ],
-  "username" : "test.admin2@test.com",
   "enabled" : true
 } ]
 ----
