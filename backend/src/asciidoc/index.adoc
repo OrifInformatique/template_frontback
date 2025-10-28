@@ -88,6 +88,17 @@ include::tests/me/401/malformed-token/http-response.adoc[]
 
 It returns a message indicating the token problem.
 
+===== 1.2.1.3 Expired Token
+This is an example output for the `GET /tests/me` endpoint when a request with an expired token is sent.
+
+.request
+include::tests/me/401/expired-token/http-request.adoc[]
+
+.response
+include::tests/me/401/expired-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
 === 1.3 Promote Test Admin
 This is an example output for the `PUT /tests/{userId}/promote-test` endpoint.
 

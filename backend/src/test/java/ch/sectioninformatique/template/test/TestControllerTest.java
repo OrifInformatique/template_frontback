@@ -277,6 +277,13 @@ public class TestControllerTest {
                 null);
     }
 
+    /**
+     * Test: GET /tests/me
+     *
+     * Ensures that an error 401 is thrown in case of malformed token.
+     * 
+     * @throws Exception
+     */
     @Test
     @Transactional
     public void me_withMalformedToken_shouldReturnUnauthorized() throws Exception {
@@ -288,6 +295,37 @@ public class TestControllerTest {
                 MediaType.APPLICATION_JSON,
                 401,
                 "me/401/malformed-token",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: GET /tests/me
+     *
+     * Ensures that an error 401 is thrown in case of expired token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void me_withExpiredToken_shouldReturnUnauthorized() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        String token = userAuthenticationProvider.createToken(userDto, Date.from(
+                Instant.now().minus(2, ChronoUnit.HOURS)));
+        performRequest(
+                "GET",
+                "/tests/me",
+                null,
+                token,
+                MediaType.APPLICATION_JSON,
+                401,
+                "me/401/expired-token",
                 request -> {
                     try {
                         request.andExpect(jsonPath("$.message").exists());
