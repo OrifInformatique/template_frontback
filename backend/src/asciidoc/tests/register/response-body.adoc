@@ -1,0 +1,13 @@
+[source,plain,options="nowrap"]
+----
+{
+  "id" : 5,
+  "firstName" : "Test",
+  "lastName" : "NewUser",
+  "login" : "test.newuser@test.com",
+  "token" : "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refreshToken" : "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "mainRole" : "USER",
+  "permissions" : [ ]
+}
+----

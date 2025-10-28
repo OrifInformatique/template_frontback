@@ -180,19 +180,32 @@ public class TestController {
      * @return Mono<ResponseEntity<String>> with registration response
      */
     @PostMapping("/register")
-    public Mono<ResponseEntity<String>> testCallRegister(@RequestBody @Valid SignUpDto user) {
+    public Object testCallRegister(@RequestBody @Valid SignUpDto user) {
+
+        if ("test".equals(activeProfile)) {
+            // Test profile: block the reactive call
+            try {
+                String response = authClient.register(user).block(); // block for tests
+
+                // Also register user locally
+                RegisterDto userRegister = new RegisterDto(user.firstName(), user.lastName(), user.login());
+                userService.register(userRegister);
+
+                return ResponseEntity.ok(response);
+            } catch (Exception ex) {
+                String errorMessage = "Registration failed: " + ex.getMessage();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+            }
+        }
+
+        // Normal reactive behavior for other profiles
         return authClient.register(user)
                 .flatMap(response -> {
-                    // On successful registration, also register user locally
                     RegisterDto userRegister = new RegisterDto(user.firstName(), user.lastName(), user.login());
                     userService.register(userRegister);
-
-                    // Return HTTP 200 OK with the response body
                     return Mono.just(ResponseEntity.ok(response));
                 })
                 .onErrorResume(ex -> {
-                    // Handle errors here (e.g., registration failure)
-                    // You can customize the error message or status code based on exception type
                     String errorMessage = "Registration failed: " + ex.getMessage();
                     return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage));
                 });

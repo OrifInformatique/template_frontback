@@ -8,6 +8,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.SignUpDto;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -713,5 +714,51 @@ public class TestControllerTest {
                 200,
                 "login",
                 null);
+    }
+
+    /**
+     * Test: POST /tests/register
+     *
+     * Mock a user registering successfully.
+     */
+    @Test
+    @Transactional
+    public void register_withRealData_shouldReturnSuccess() throws Exception {
+        String mockedJsonResponse = """
+                {
+                  "id": 5,
+                  "firstName": "Test",
+                  "lastName": "NewUser",
+                  "login": "test.newuser@test.com",
+                  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+                  "refreshToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+                  "mainRole": "USER",
+                  "permissions": []
+                }
+                """;
+
+        when(authClient.register(any(SignUpDto.class)))
+                .thenReturn(Mono.just(mockedJsonResponse));
+
+        performRequest(
+                "POST",
+                "/tests/register",
+                "{\"firstName\":\"Test\",\"lastName\":\"NewUser\",\"login\":\"test.newuser@test.com\",\"password\":\"testPassword\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                200,
+                "register",
+                request -> {
+                    try {
+
+                        UserDto updatedUser = userService.findByLogin("test.newuser@test.com");
+
+                        assertEquals("Test", updatedUser.getFirstName());
+                        assertEquals("NewUser", updatedUser.getLastName());
+                        assertEquals("USER", updatedUser.getMainRole());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 }
