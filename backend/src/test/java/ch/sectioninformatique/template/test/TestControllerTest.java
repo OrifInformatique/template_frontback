@@ -274,7 +274,13 @@ public class TestControllerTest {
                 MediaType.APPLICATION_JSON,
                 401,
                 "me/401/missing-token",
-                null);
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     /**
@@ -339,7 +345,7 @@ public class TestControllerTest {
      * Test: PUT /tests/{id}/promote-test
      *
      * Ensures that an admin user can promote another user to a "test admin" role.
-     * Verifies the response contains a "message" field.
+     * Verifies the response contains a "message" field and that the User did get the ADMIN_TEST role.
      * 
      * @throws Exception
      */
@@ -359,6 +365,39 @@ public class TestControllerTest {
                 MediaType.APPLICATION_JSON,
                 200,
                 "promote-test",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+
+                        UserDto updatedUser = userService.findByLogin("test.user@test.com");
+                        
+                        assertTrue(updatedUser.getAppSpecificRoles().stream().anyMatch(e -> e == "ADMIN_TEST"));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+        /**
+     * Test: PUT /tests/{userID}/promote-test
+     *
+     * Ensures that an error 401 is thrown in case of missing token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void promoteToTestAdmin_missingToken_shouldReturnUnauthorized() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        performRequest(
+                "PUT",
+                "/tests/" + userDto.getId() + "/promote-test",
+                null,
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "promote-test/401/missing-token",
                 request -> {
                     try {
                         request.andExpect(jsonPath("$.message").exists());
