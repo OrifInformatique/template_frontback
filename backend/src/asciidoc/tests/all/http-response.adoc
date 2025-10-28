@@ -18,28 +18,28 @@ Content-Length: 3264
   "firstName" : "Test",
   "lastName" : "User",
   "login" : "test.user@test.com",
-  "createdAt" : 1761642962738,
-  "updatedAt" : 1761642962738,
+  "createdAt" : 1761643909195,
+  "updatedAt" : 1761643909195,
   "mainRole" : {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761642962701,
-    "updatedAt" : 1761642962701
+    "createdAt" : 1761643909154,
+    "updatedAt" : 1761643909154
   },
   "appSpecificRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761642962701,
-    "updatedAt" : 1761642962701
+    "createdAt" : 1761643909154,
+    "updatedAt" : 1761643909154
   } ],
   "allRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761642962701,
-    "updatedAt" : 1761642962701
+    "createdAt" : 1761643909154,
+    "updatedAt" : 1761643909154
   } ],
   "accountNonExpired" : true,
   "accountNonLocked" : true,
@@ -57,14 +57,14 @@ Content-Length: 3264
   "firstName" : "Test",
   "lastName" : "Manager",
   "login" : "test.manager@test.com",
-  "createdAt" : 1761642962740,
-  "updatedAt" : 1761642962740,
+  "createdAt" : 1761643909197,
+  "updatedAt" : 1761643909197,
   "mainRole" : {
     "id" : 3,
     "name" : "MANAGER",
     "description" : "Manager role",
-    "createdAt" : 1761642962714,
-    "updatedAt" : 1761642962714
+    "createdAt" : 1761643909168,
+    "updatedAt" : 1761643909168
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
@@ -88,14 +88,14 @@ Content-Length: 3264
   "firstName" : "Test",
   "lastName" : "Admin",
   "login" : "test.admin@test.com",
-  "createdAt" : 1761642962740,
-  "updatedAt" : 1761642962741,
+  "createdAt" : 1761643909198,
+  "updatedAt" : 1761643909198,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1761642962721,
-    "updatedAt" : 1761642962721
+    "createdAt" : 1761643909172,
+    "updatedAt" : 1761643909172
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
@@ -121,14 +121,14 @@ Content-Length: 3264
   "firstName" : "Test2",
   "lastName" : "Admin2",
   "login" : "test.admin2@test.com",
-  "createdAt" : 1761642962741,
-  "updatedAt" : 1761642962741,
+  "createdAt" : 1761643909199,
+  "updatedAt" : 1761643909199,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1761642962721,
-    "updatedAt" : 1761642962721
+    "createdAt" : 1761643909172,
+    "updatedAt" : 1761643909172
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],

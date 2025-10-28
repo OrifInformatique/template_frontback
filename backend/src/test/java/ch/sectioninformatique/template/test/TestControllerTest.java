@@ -470,6 +470,36 @@ public class TestControllerTest {
                 });
     }
 
+        /**
+     * Test: PUT /tests/{userID}/promote-test
+     *
+     * Ensures that an error 403 is thrown in case of non admin demande.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void promoteToTestAdmin_asNonAdmin_shouldReturnForbidden() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        String token = userAuthenticationProvider.createToken(userDto);
+        performRequest(
+                "PUT",
+                "/tests/" + userDto.getId() + "/promote-test",
+                null,
+                token,
+                MediaType.APPLICATION_JSON,
+                403,
+                "promote-test/403/non-admin",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
     /**
      * Test case: GET /tests/all
      *

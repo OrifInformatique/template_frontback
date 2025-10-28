@@ -2,5 +2,5 @@
 ----
 $ http GET 'http://localhost:8080/tests/me' \
     'Content-Type:application/json;charset=UTF-8' \
-    'Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTYzOTM2MywiaWF0IjoxNzYxNjM1NzYzfQ.rLQMhchSxCClFGxq1je2U50Aov1iYNmaXWzgNjsRpM0'
+    'Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTY0MDMxMCwiaWF0IjoxNzYxNjM2NzEwfQ.T9zIaOhNPeDGWvYjv3aajmBKg0UWyBz1-61FZ0J6sqs'
 ----
