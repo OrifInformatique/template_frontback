@@ -2,5 +2,5 @@
 ----
 $ curl 'http://localhost:8080/tests/' -i -X GET \
     -H 'Content-Type: */*;charset=UTF-8' \
-    -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTY1NTI4NywiaWF0IjoxNzYxNjUxNjg3fQ.rPQcDrjR2V3Pt2d_GqUwislTpjnkbF7_s087PY7luBo'
+    -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTY1NTYxNiwiaWF0IjoxNzYxNjUyMDE2fQ.EZmMNiCQDPFug1CjnVQ6mCSKY6drJHpcSAXgaxpaDck'
 ----

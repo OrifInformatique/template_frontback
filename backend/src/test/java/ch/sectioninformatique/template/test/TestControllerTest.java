@@ -617,6 +617,37 @@ public class TestControllerTest {
     /**
      * Test case: GET /tests/all
      *
+     * Ensures that an error 401 is thrown in case of expired token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void all_withExpiredToken_shouldReturnUnauthorized() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        String token = userAuthenticationProvider.createToken(userDto, Date.from(
+                Instant.now().minus(2, ChronoUnit.HOURS)));
+        performRequest(
+                "GET",
+                "/tests/all",
+                null,
+                token,
+                MediaType.APPLICATION_JSON,
+                401,
+                "all/401/expired-token",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test case: GET /tests/all
+     *
      * Ensures that an error 401 is thrown in case of malformed token.
      * 
      * @throws Exception
