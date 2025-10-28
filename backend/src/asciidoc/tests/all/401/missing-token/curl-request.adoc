@@ -1,5 +1,5 @@
 [source,bash]
 ----
-$ curl 'http://localhost:8080/tests/mall' -i -X GET \
+$ curl 'http://localhost:8080/tests/all' -i -X GET \
     -H 'Content-Type: application/json;charset=UTF-8'
 ----

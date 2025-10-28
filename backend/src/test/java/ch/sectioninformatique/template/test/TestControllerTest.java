@@ -599,12 +599,39 @@ public class TestControllerTest {
     public void all_missingToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/tests/mall",
+                "/tests/all",
                 null,
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
                 "all/401/missing-token",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test case: GET /tests/all
+     *
+     * Ensures that an error 401 is thrown in case of malformed token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void all_withMalformedToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "GET",
+                "/tests/all",
+                null,
+                "this.is.not.a.valid.token",
+                MediaType.APPLICATION_JSON,
+                401,
+                "all/401/malformed-token",
                 request -> {
                     try {
                         request.andExpect(jsonPath("$.message").exists());
