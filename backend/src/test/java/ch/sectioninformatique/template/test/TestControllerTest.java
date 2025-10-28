@@ -155,7 +155,13 @@ public class TestControllerTest {
                 MediaType.ALL,
                 401,
                 "get-hello/401/missing-token",
-                null);
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     /**
@@ -176,16 +182,29 @@ public class TestControllerTest {
                 MediaType.ALL,
                 401,
                 "get-hello/401/malformed-token",
-                null);
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
+    /**
+     * Test: GET /tests/
+     *
+     * Ensures that an error 401 is thrown in case of expired token.
+     * 
+     * @throws Exception
+     */
     @Test
     @Transactional
     public void getHello_withExpiredToken_shouldReturnUnauthorized() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
         String token = userAuthenticationProvider.createToken(userDto, Date.from(
-                                Instant.now().minus(2, ChronoUnit.HOURS)));
+                Instant.now().minus(2, ChronoUnit.HOURS)));
         performRequest(
                 "GET",
                 "/tests/",
@@ -194,7 +213,13 @@ public class TestControllerTest {
                 MediaType.ALL,
                 401,
                 "get-hello/401/expired-token",
-                null);
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     /**
@@ -229,6 +254,27 @@ public class TestControllerTest {
                     }
 
                 });
+    }
+
+    /**
+     * Test: GET /tests/me
+     *
+     * Ensures that an error 401 is thrown in case of missing token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void me_missingToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "GET",
+                "/tests/me",
+                null,
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "me/401/missing-token",
+                null);
     }
 
     /**
