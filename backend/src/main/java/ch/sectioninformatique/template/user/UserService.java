@@ -52,7 +52,7 @@ public class UserService {
      */
     public UserDto promoteToTestAdmin(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
         for (Role role : user.getAppSpecificRoles()) {
             if (role.getName().equals(RoleEnum.ADMIN_TEST)) {

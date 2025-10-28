@@ -470,7 +470,7 @@ public class TestControllerTest {
                 });
     }
 
-        /**
+    /**
      * Test: PUT /tests/{userID}/promote-test
      *
      * Ensures that an error 403 is thrown in case of non admin demande.
@@ -491,6 +491,39 @@ public class TestControllerTest {
                 MediaType.APPLICATION_JSON,
                 403,
                 "promote-test/403/non-admin",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+        /**
+     * Test: PUT /tests/{userID}/promote-test
+     *
+     * Ensures that an error 404 is thrown in case the user to promote isn't found.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void promoteToTestAdmin_userNotFound_shouldReturnNotFound() throws Exception {
+        UserDto adminDto = userService.findByLogin("test.admin@test.com");
+
+        String token = userAuthenticationProvider.createToken(adminDto);
+
+        String fakeUserId = "9999";
+
+        performRequest(
+                "PUT",
+                "/tests/" + fakeUserId + "/promote-test",
+                null,
+                token,
+                MediaType.APPLICATION_JSON,
+                404,
+                "promote-test/404/user-not-found",
                 request -> {
                     try {
                         request.andExpect(jsonPath("$.message").exists());
