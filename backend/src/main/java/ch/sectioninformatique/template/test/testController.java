@@ -143,7 +143,7 @@ public class TestController {
     public Object testCall(@RequestBody @Valid CredentialsDto credentialsDto) {
 
         if ("test".equals(activeProfile)) {
-            // Test profile: return a blocking String 
+            // Test profile: return a blocking String
             return authClient.login(credentialsDto.login(), credentialsDto.password())
                     .block(); // only for tests
         }

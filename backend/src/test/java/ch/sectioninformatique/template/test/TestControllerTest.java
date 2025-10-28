@@ -132,6 +132,20 @@ public class TestControllerTest {
                 null);
     }
 
+    @Test
+    @Transactional // Each test runs in a transaction that rolls back at the end
+    public void getHello_missingToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "GET",
+                "/tests/",
+                null,
+                null,
+                MediaType.ALL,
+                401,
+                "get-hello/401/missing-token",
+                null);
+    }
+
     /**
      * Test: GET /tests/me
      *
