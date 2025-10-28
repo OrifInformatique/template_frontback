@@ -1,5 +1,5 @@
 [source,bash]
 ----
 $ http --form GET 'http://localhost:8080/tests/' \
-    'Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTYzNjE4OCwiaWF0IjoxNzYxNjMyNTg4fQ.oawOjVK6YhQEp_OS1XkI9KcjIMx7o1D0cZYo7nC3z18'
+    'Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTYzNjU3MywiaWF0IjoxNzYxNjMyOTczfQ.Eg4PI3XoLQEWiTWYVjgxHK8Mf7yM0ekZfIkrtEmjpAA'
 ----

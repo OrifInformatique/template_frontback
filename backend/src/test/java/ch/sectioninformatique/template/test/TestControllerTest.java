@@ -277,6 +277,26 @@ public class TestControllerTest {
                 null);
     }
 
+    @Test
+    @Transactional
+    public void me_withMalformedToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "GET",
+                "/tests/me",
+                null,
+                "this.is.not.a.valid.token",
+                MediaType.APPLICATION_JSON,
+                401,
+                "me/401/malformed-token",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
     /**
      * Test: PUT /tests/{id}/promote-test
      *

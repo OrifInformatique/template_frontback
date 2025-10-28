@@ -77,6 +77,17 @@ include::tests/me/401/missing-token/http-response.adoc[]
 
 It returns a message Indicating the lack of authorisations.
 
+===== 1.2.1.2 Malformed Token
+This is an example output for the `GET /tests/me` endpoint when a request with a malformed token is sent.
+
+.request
+include::tests/me/401/malformed-token/http-request.adoc[]
+
+.response
+include::tests/me/401/malformed-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
 === 1.3 Promote Test Admin
 This is an example output for the `PUT /tests/{userId}/promote-test` endpoint.
 
