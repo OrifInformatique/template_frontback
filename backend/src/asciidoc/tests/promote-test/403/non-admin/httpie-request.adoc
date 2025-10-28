@@ -2,5 +2,5 @@
 ----
 $ http PUT 'http://localhost:8080/tests/1/promote-test' \
     'Content-Type:application/json;charset=UTF-8' \
-    'Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTY0ODIwNCwiaWF0IjoxNzYxNjQ0NjA0fQ.Y7Bxq5o2nbAJTg-xZ9gvoB4uC3iV0ZBArl7RP8jIi8s'
+    'Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2MTY1NDg0NywiaWF0IjoxNzYxNjUxMjQ3fQ.HoXjvL8PWGEmyqYsUE4e2Ko0AhKVZI0e2p-Y6enhRVQ'
 ----

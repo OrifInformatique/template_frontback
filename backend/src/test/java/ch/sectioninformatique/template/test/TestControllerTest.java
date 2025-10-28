@@ -500,7 +500,7 @@ public class TestControllerTest {
                 });
     }
 
-        /**
+    /**
      * Test: PUT /tests/{userID}/promote-test
      *
      * Ensures that an error 404 is thrown in case the user to promote isn't found.
@@ -581,6 +581,33 @@ public class TestControllerTest {
 
                         assertTrue(returnedLogins.containsAll(expectedLogins),
                                 "Returned users should include all seeded logins");
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test case: GET /tests/all
+     *
+     * Ensures that an error 401 is thrown in case of missing token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void all_missingToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "GET",
+                "/tests/mall",
+                null,
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "all/401/missing-token",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

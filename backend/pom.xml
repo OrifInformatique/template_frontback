@@ -167,11 +167,11 @@
                                 <toc>right</toc>
                                 <toclevels>4</toclevels>
                                 <toc-title>Table of Contents</toc-title>
-                                <snippets>${project.build.directory}/generated-snippets</snippets>
+                                <snippets>${project.basedir}/target/generated-snippets</snippets>
                             </attributes>
                             <sourceDocumentName>index.adoc</sourceDocumentName>
                             <sourceDirectory>${project.basedir}/src/asciidoc</sourceDirectory>
-                            <outputDirectory>${project.build.directory}/generated-snippets-html</outputDirectory>
+                            <outputDirectory>${project.basedir}/target/generated-snippets-html</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
