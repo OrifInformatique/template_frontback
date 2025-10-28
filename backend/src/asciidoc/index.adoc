@@ -30,6 +30,17 @@ include::tests/get-hello//401/missing-token/http-response.adoc[]
 
 It returns a message Indicating the lack of authorisations.
 
+===== 1.1.1.1 Malformed Token
+This is an example output for the `POST /tests/me` endpoint when a request with a malformed token is sent.
+
+.request
+include::tests/get-hello/401/malformed-token/http-request.adoc[]
+
+.response
+include::tests/get-hello//401/malformed-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
 === 1.2 Me
 This is an example output for the `POST /tests/me` endpoint.
 

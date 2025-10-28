@@ -64,7 +64,8 @@ public class TestControllerTest {
 
     /**
      * Helper method for performing and documenting HTTP requests in tests.
-     * This reduces repetition by centralizing the request execution and REST Docs generation.
+     * This reduces repetition by centralizing the request execution and REST Docs
+     * generation.
      *
      * @param requestTypeString HTTP method (GET, POST, PUT, etc.)
      * @param endpoint          API endpoint to call
@@ -140,7 +141,7 @@ public class TestControllerTest {
      * @throws Exception
      */
     @Test
-    @Transactional // Each test runs in a transaction that rolls back at the end
+    @Transactional
     public void getHello_missingToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
@@ -150,6 +151,27 @@ public class TestControllerTest {
                 MediaType.ALL,
                 401,
                 "get-hello/401/missing-token",
+                null);
+    }
+
+    /**
+     * Test: GET /tests/
+     *
+     * Ensures that an error 401 is thrown in case of malformed token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void getHello_withMalformedToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "GET",
+                "/tests/",
+                null,
+                "this.is.not.a.valid.token",
+                MediaType.ALL,
+                401,
+                "get-hello/401/malformed-token",
                 null);
     }
 
@@ -274,7 +296,6 @@ public class TestControllerTest {
                 });
     }
 
-    
     /**
      * Test: POST /tests/login
      *

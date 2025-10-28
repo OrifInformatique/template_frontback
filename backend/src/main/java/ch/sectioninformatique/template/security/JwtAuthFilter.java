@@ -5,13 +5,20 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * JWT Authentication Filter for processing JWT tokens in incoming requests.
@@ -26,6 +33,7 @@ import java.io.IOException;
  * - GET requests use standard token validation
  * - Other methods use strong token validation
  */
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -38,6 +46,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * - Manages user authentication state
      */
     private final UserAuthenticationProvider userAuthenticationProvider;
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Processes each incoming request to validate JWT tokens.
@@ -76,7 +86,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(
                             userAuthenticationProvider.validateToken(authElements[1]));
 
+                } catch (JWTVerificationException e) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("Invalid JWT token: {}", e.getMessage());
+
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+
+                    Map<String, String> errorBody = Map.of("message", e.getMessage());
+                    mapper.writeValue(response.getWriter(), errorBody); // serializes JSON safely
+                    response.getWriter().flush();
+                    return;
                 } catch (RuntimeException e) {
+                    // Preserve behavior for other runtime exceptions
                     SecurityContextHolder.clearContext();
                     throw e;
                 }
