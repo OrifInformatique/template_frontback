@@ -24,6 +24,7 @@ import org.springframework.http.MediaType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -428,6 +429,38 @@ public class TestControllerTest {
                 MediaType.APPLICATION_JSON,
                 401,
                 "promote-test/401/malformed-token",
+                request -> {
+                    try {
+                        request.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: PUT /tests/{userID}/promote-test
+     *
+     * Ensures that an error 401 is thrown in case of expired token.
+     * 
+     * @throws Exception
+     */
+    @Test
+    @Transactional
+    public void promoteToTestAdmin_withExpiredToken_shouldReturnUnauthorized() throws Exception {
+        UserDto userDto = userService.findByLogin("test.user@test.com");
+
+        UserDto adminDto = userService.findByLogin("test.admin@test.com");
+        String token = userAuthenticationProvider.createToken(adminDto, Date.from(
+                Instant.now().minus(2, ChronoUnit.HOURS)));
+        performRequest(
+                "PUT",
+                "/tests/" + userDto.getId() + "/promote-test",
+                null,
+                token,
+                MediaType.APPLICATION_JSON,
+                401,
+                "promote-test/401/expired-token",
                 request -> {
                     try {
                         request.andExpect(jsonPath("$.message").exists());
