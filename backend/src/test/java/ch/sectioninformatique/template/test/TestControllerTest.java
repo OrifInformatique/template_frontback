@@ -2,12 +2,16 @@ package ch.sectioninformatique.template.test;
 
 // Import statements for testing, Spring Boot, JSON handling, and REST Docs
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
 import ch.sectioninformatique.template.AuthApplication;
+import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
+import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -24,7 +28,8 @@ import org.springframework.http.MediaType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -66,6 +71,9 @@ public class TestControllerTest {
     /** MockMvc for simulating HTTP requests in tests */
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private AuthClient authClient;
 
     /**
      * Helper method for performing and documenting HTTP requests in tests.
@@ -675,11 +683,27 @@ public class TestControllerTest {
     /**
      * Test: POST /tests/login
      *
-     * Verifies that a user can log in successfully with valid credentials.
+     * Mock a user log in successfull with valid credentials.
      */
     @Test
     @Transactional
     public void login_withRealData_shouldReturnSuccess() throws Exception {
+        String mockedJsonResponse = """
+                {
+                  "id": 2,
+                  "firstName": "John",
+                  "lastName": "DOE",
+                  "login": "john.doe@test.com",
+                  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+                  "refreshToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+                  "mainRole": "USER",
+                  "permissions": []
+                }
+                """;
+
+        when(authClient.login(any(String.class), any(char[].class)))
+                .thenReturn(Mono.just(mockedJsonResponse));
+
         performRequest(
                 "POST",
                 "/tests/login",
