@@ -1,5 +1,17 @@
 # Application Documentation
 
+## Table of Contents
+- [Overview](#overview)
+- [1. Backend](#1-backend)
+  - [1.1 General Information](#11-general-information)
+  - [1.2 Root Files](#12-root-files)
+  - [1.3 Root Folders](#13-root-folders)
+  - [1.4 Source Structure (`src`)](#14-source-structure-src)
+    - [1.4.1 `main`](#141-main)
+    - [1.4.2 `test`](#142-test)
+  - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
+  - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
+
 ## Overview
 This document describes the structure and processes of the backend application, including configuration files, folder organization, and module responsibilities.  
 
