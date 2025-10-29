@@ -96,7 +96,7 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${AUTH_API_URL}/test/login`, {
+            const response = await axios.post(`${AUTH_API_URL}/auth/login`, {
                 login: username,
                 password,
             });
@@ -131,7 +131,7 @@ const Login = () => {
     // Redirects the browser to the backend OAuth2 login URL.
     // After Azure login, the backend should redirect back to your app at /oauth2/success.
     const handleOAuth2Login = () => {
-        window.location.href = `${AUTH_API_URL}/test/oauth2/login`;
+        window.location.href = `${AUTH_API_URL}/oauth2/authorization/azure`;
     };
 
     const handleLogout = () => {

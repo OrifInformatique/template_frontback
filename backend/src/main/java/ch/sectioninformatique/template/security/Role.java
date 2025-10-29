@@ -1,28 +1,16 @@
 package ch.sectioninformatique.template.security;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import ch.sectioninformatique.template.user.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.*;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Entity class representing a role in the system.
@@ -61,7 +49,7 @@ public class Role {
      * - Is unique across all roles
      * - Cannot be null
      * - Is stored as a string in the database
-     * - Maps to predefined role types (USER, MANAGER, ADMIN)
+     * - Maps to predefined role types (USER, ADMIN, SUPER_ADMIN)
      */
     @Column(unique = true, nullable = false)
     @Enumerated(EnumType.STRING)
@@ -100,29 +88,16 @@ public class Role {
     private Date updatedAt;
 
     /**
-     * Set of users who have this role as mainRole.
-     * This field:
-     * - Implements a one-to-many relationship with User entity
-     * - Is mapped by the 'mainRole' field in the User class
-     * - Uses eager fetching to ensure the mainRole are always available
-     * - Is ignored during JSON serialization to prevent infinite recursion
-     * - Is initialized as an empty HashSet to prevent null pointer exceptions
-     */
-    @OneToMany(mappedBy = "mainRole", fetch = FetchType.EAGER)
-    @JsonIgnore
-    private Set<User> usersMains = new HashSet<>();
-
-    /**
-     * Set of users who have this appSpecificRole.
+     * Set of users who have this role.
      * This field:
      * - Implements a many-to-many relationship with User entity
-     * - Is mapped by the 'appSpecificRole' field in the User class
-     * - Uses eager fetching to ensure appSpecificRole are always available
+     * - Is mapped by the 'roles' field in the User class
+     * - Uses eager fetching to ensure roles are always available
      * - Is ignored during JSON serialization to prevent infinite recursion
      * - Is initialized as an empty HashSet to prevent null pointer exceptions
      */
-    @ManyToMany(mappedBy = "appSpecificRoles", fetch = FetchType.EAGER)
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
     @JsonIgnore
-    private Set<User> usersAppSpecifique = new HashSet<>();
+    private Set<User> users = new HashSet<>();
 }
 

@@ -1,16 +1,15 @@
 package ch.sectioninformatique.template.user;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.security.core.GrantedAuthority;
+
+import ch.sectioninformatique.template.auth.SignUpDto;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
-import org.springframework.security.core.GrantedAuthority;
-
-import ch.sectioninformatique.template.auth.RegisterDto;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Mapper interface for converting between User entities and DTOs.
@@ -21,13 +20,7 @@ import ch.sectioninformatique.template.auth.RegisterDto;
  * - Authorities to permissions conversion
  */
 @Mapper(componentModel = "spring")
-public interface UserMapper {
-
-    /**
-     * By convention for MapStruct, the interface declares a member INSTANCE,
-     * providing clients access to the mapper implementation.
-     */
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+public interface UserMapper { 
 
     /**
      * Converts a User entity to a UserDto.
@@ -40,8 +33,7 @@ public interface UserMapper {
      * @param user The User entity to convert
      * @return A UserDto containing the user's information
      */
-    @Mapping(target = "mainRole", expression = "java(user.getMainRole().getName().name())")
-    @Mapping(target = "appSpecificRoles", expression = "java(user.getAppSpecificRolesString())")
+    @Mapping(target = "role", source = "role.name")
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")
     @Mapping(target = "token", ignore = true)
     @Mapping(target = "id", source = "id")
@@ -54,22 +46,21 @@ public interface UserMapper {
      * Converts a SignUpDto to a User entity.
      * This method:
      * - Maps basic user properties from the signup data
-     * - Ignores  roles (these are handled separately)
+     * - Ignores password and roles (these are handled separately)
      * - Ignores ID and timestamps (these are set by the system)
      *
-     * @param RegisterDto The SignUpDto containing user registration data
+     * @param signUpDto The SignUpDto containing user registration data
      * @return A new User entity with the signup information
      */
-    @Mapping(target = "mainRole", ignore = true)
-    @Mapping(target = "appSpecificRoles", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    User signUpToUser(RegisterDto registerDto);
+    User signUpToUser(SignUpDto signUpDto);
 
     /**
-     * Converts a collection of GrantedAuthority objects to a list of permission
-     * strings.
+     * Converts a collection of GrantedAuthority objects to a list of permission strings.
      * This method is used to transform Spring Security authorities into a format
      * suitable for the UserDto.
      *
@@ -78,10 +69,9 @@ public interface UserMapper {
      */
     @Named("authoritiesToPermissions")
     default List<String> authoritiesToPermissions(Collection<? extends GrantedAuthority> authorities) {
-        if (authorities == null)
-            return null;
+        if (authorities == null) return null;
         return authorities.stream()
-                .map(auth -> auth.getAuthority())
-                .collect(Collectors.toList());
+            .map(auth -> auth.getAuthority())
+            .collect(Collectors.toList());
     }
 }

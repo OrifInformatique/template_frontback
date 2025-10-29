@@ -1,7 +1,6 @@
 package ch.sectioninformatique.template.user;
 
 import org.junit.jupiter.api.Test;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,13 +21,13 @@ class UserDtoTest {
     private static final String TEST_LAST_NAME = "Doe";
     private static final String TEST_LOGIN = "john.doe@example.com";
     private static final String TEST_TOKEN = "test-token";
-    private static final String TEST_ROLE = "USER";
+    private static final String TEST_ROLE = "ROLE_USER";
     private static final List<String> TEST_PERMISSIONS = Arrays.asList("read", "write");
 
     /**
      * Tests the default values initialization.
      * Verifies that:
-     * - Role defaults to "USER"
+     * - Role defaults to "ROLE_USER"
      * - Permissions list is initialized but empty
      */
     @Test
@@ -37,7 +36,7 @@ class UserDtoTest {
         UserDto userDto = UserDto.builder().build();
 
         // Then
-        assertEquals("USER", userDto.getMainRole());
+        assertEquals("ROLE_USER", userDto.getRole());
         assertNotNull(userDto.getPermissions());
         assertTrue(userDto.getPermissions().isEmpty());
     }
@@ -57,7 +56,7 @@ class UserDtoTest {
                 .lastName(TEST_LAST_NAME)
                 .login(TEST_LOGIN)
                 .token(TEST_TOKEN)
-                .mainRole(TEST_ROLE)
+                .role(TEST_ROLE)
                 .permissions(TEST_PERMISSIONS)
                 .build();
 
@@ -67,7 +66,7 @@ class UserDtoTest {
         assertEquals(TEST_LAST_NAME, userDto.getLastName());
         assertEquals(TEST_LOGIN, userDto.getLogin());
         assertEquals(TEST_TOKEN, userDto.getToken());
-        assertEquals(TEST_ROLE, userDto.getMainRole());
+        assertEquals(TEST_ROLE, userDto.getRole());
         assertEquals(TEST_PERMISSIONS, userDto.getPermissions());
     }
 
@@ -85,7 +84,6 @@ class UserDtoTest {
                 .firstName(TEST_FIRST_NAME)
                 .lastName(TEST_LAST_NAME)
                 .login(TEST_LOGIN)
-                .mainRole(TEST_ROLE)
                 .build();
 
         // When
