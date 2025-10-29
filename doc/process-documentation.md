@@ -11,6 +11,7 @@
     - [1.4.2 `test`](#142-test)
   - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
   - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
+  - [1.7 Users Module (`main/java/users`)](#17-users-module-mainjavausers)
 
 ## Overview
 This document describes the structure and processes of the backend application, including configuration files, folder organization, and module responsibilities.  
@@ -101,3 +102,17 @@ Contains test classes for unit and integration tests:
 | `SignUpDto.java` | Data transfer object for registration functionalities. |
 
 > **Reference:** For full authentication implementation, see the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) branch/repository.
+
+---
+
+### 1.7 Users Module (`main/java/users`)
+
+| File | Description |
+|------|-------------|
+| `User.java` | User entity class representing a user in the system. |
+| `UserController.java` | Contains user-related REST endpoints (CRUD, profile management, etc.). | 
+| `UserDto.java` | Data transfer object for communication between the backend and frontend. |
+| `UserMapper.java` | Handles conversion between `User` entities and `UserDto` objects. |
+| `UserRepository.java` | Interface for database operations related to users. |
+| `UserSeeder.java` | Seeds the database with test users for development and testing. |
+| `UserService.java` | Business logic and services managing user functionalities (creation, update, role assignment, etc.). |
