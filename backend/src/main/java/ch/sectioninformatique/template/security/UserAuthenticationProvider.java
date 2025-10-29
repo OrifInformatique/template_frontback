@@ -3,13 +3,8 @@ package ch.sectioninformatique.template.security;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-<<<<<<< HEAD
-import java.util.Set;
-import java.util.ArrayList;
-=======
 import java.util.ArrayList;
 import java.util.stream.Collectors;
->>>>>>> 860a3fbc728ff9eef6db142c35ac09b385924783
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,10 +17,6 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-<<<<<<< HEAD
-import ch.sectioninformatique.template.user.User;
-=======
->>>>>>> 860a3fbc728ff9eef6db142c35ac09b385924783
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.annotation.PostConstruct;
@@ -46,17 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UserAuthenticationProvider {
 
-<<<<<<< HEAD
-    private final UserService userService;
-
-    /**
-     * Secret key for JWT token signing and verification, configured via application
-     * properties
-     */
-    @Value("${security.jwt.token.secret-key:secret-key}")
-    private String secretKey;
-
-=======
     /** Secret key for JWT token signing and verification, configured via application properties */
     @Value("${security.jwt.token.secret-key:secret-key}")
     private String secretKey;
@@ -64,7 +44,6 @@ public class UserAuthenticationProvider {
     /** Service for user-related operations, including user creation and retrieval */
     private final UserService userService;
 
->>>>>>> 860a3fbc728ff9eef6db142c35ac09b385924783
     /**
      * Initializes the authentication provider by encoding the secret key.
      * This method is called after dependency injection to ensure the secret key
@@ -82,11 +61,7 @@ public class UserAuthenticationProvider {
      * The token includes:
      * - User login as subject
      * - First name and last name as claims
-<<<<<<< HEAD
-     * - Roles
-=======
      * - Role and permissions as claims
->>>>>>> 860a3fbc728ff9eef6db142c35ac09b385924783
      * - Issue time and expiration time (1 hour validity)
      *
      * @param user The user to create a token for

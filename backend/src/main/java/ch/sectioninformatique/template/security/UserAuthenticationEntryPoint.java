@@ -1,15 +1,10 @@
 package ch.sectioninformatique.template.security;
 
-<<<<<<< HEAD
-import java.io.IOException;
-
-=======
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
->>>>>>> 860a3fbc728ff9eef6db142c35ac09b385924783
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
