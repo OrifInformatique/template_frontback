@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +37,14 @@ public class AuthController {
      * Accepts login credentials (login and password) as a request body, validated
      * for correctness
      * Calls the authentication client to perform login with provided credentials
-     * Returns a reactive Mono<ResponseEntity<String>>containing the login response (e.g., token or
+     * Returns a reactive Mono<ResponseEntity<UserDto>>containing the login response (e.g., token or
      * status message)
      * 
      * @param credentialsDto
-     * @return Mono<ResponseEntity<String>> with login response
+     * @return Mono<ResponseEntity<UserDto>> with login response
      */
     @PostMapping("/login")
-    public Mono<ResponseEntity<String>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
+    public Mono<ResponseEntity<UserDto>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
         /** TODO : Return datas in JSON format and not in String format */
         return ResponseEntity.ok(authClient.login(credentialsDto)).getBody();
     }
@@ -59,7 +61,7 @@ public class AuthController {
      * @return Mono<ResponseEntity<String>> with registration response
      */
     @PostMapping("/register")
-    public Mono<ResponseEntity<String>> register(@RequestBody @Valid SignUpDto user) {
+    public Mono<ResponseEntity<UserDto>> register(@RequestBody @Valid SignUpDto user) {
         /** TODO : Return datas in JSON format and not in String format */
         return authClient.register(user)
                 .flatMap(response -> {
@@ -70,11 +72,6 @@ public class AuthController {
                     // Return HTTP 200 OK with the response body
                     return Mono.just(response);
                 })
-                .onErrorResume(ex -> {
-                    // Handle errors here (e.g., registration failure)
-                    // You can customize the error message or status code based on exception type
-                    String errorMessage = "Registration failed: " + ex.getMessage();
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage));
-                });
+                .onErrorResume(ex -> Mono.error(new AppException("Frontback registration failed", HttpStatus.BAD_REQUEST)));
     }
 }
