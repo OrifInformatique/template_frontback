@@ -35,14 +35,14 @@ public class AuthController {
      * Accepts login credentials (login and password) as a request body, validated
      * for correctness
      * Calls the authentication client to perform login with provided credentials
-     * Returns a reactive Mono<String> containing the login response (e.g., token or
+     * Returns a reactive Mono<ResponseEntity<String>>containing the login response (e.g., token or
      * status message)
      * 
      * @param credentialsDto
-     * @return Mono<String> with login response
+     * @return Mono<ResponseEntity<String>> with login response
      */
     @PostMapping("/login")
-    public Mono<String> login(@RequestBody @Valid CredentialsDto credentialsDto) {
+    public Mono<ResponseEntity<String>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
         /** TODO : Return datas in JSON format and not in String format */
         return ResponseEntity.ok(authClient.login(credentialsDto)).getBody();
     }
@@ -68,7 +68,7 @@ public class AuthController {
                     userService.register(userRegister);
 
                     // Return HTTP 200 OK with the response body
-                    return Mono.just(ResponseEntity.ok(response));
+                    return Mono.just(response);
                 })
                 .onErrorResume(ex -> {
                     // Handle errors here (e.g., registration failure)
