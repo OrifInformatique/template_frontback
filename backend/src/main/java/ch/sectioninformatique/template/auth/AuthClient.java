@@ -102,7 +102,6 @@ public class AuthClient {
         return webClient.get()
                 .uri("/oauth2/authorization/azure") // your login endpoint path
                 .retrieve()
-
                 .toEntity(String.class); // expect the response as a ResponseEntity<String> (e.g., a token or message)
     }
 }
