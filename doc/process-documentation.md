@@ -143,6 +143,56 @@ Contains test classes for unit and integration tests.
 
 ### 1.8 Security Module (`main/java/security`)
 
+```mermaid
+flowchart LR
+    %% Client Request Entry
+    Client["Client Request"] --> CORS["CORS Filter (WebConfig)"]
+
+    %% JWT Authentication Filter
+    CORS --> JwtFilter["JwtAuthFilter"]
+    JwtFilter --> CheckHeader{"Authorization header?"}
+    CheckHeader -->|No| SkipJwt["Skip JWT Validation"]
+    CheckHeader -->|Yes| ParseToken["Parse Bearer Token"]
+
+    ParseToken --> MethodCheck{"HTTP Method GET?"}
+    MethodCheck -->|Yes| ValidateToken["userAuthenticationProvider.validateToken()"]
+    MethodCheck -->|No| ValidateTokenStrong["userAuthenticationProvider.validateTokenStrongly()"]
+
+    ValidateToken -->|Success| SetContext["Set SecurityContext"]
+    ValidateTokenStrong -->|Success| SetContext
+    ValidateToken -->|Failure| ClearContext["Clear SecurityContext & Throw Exception"]
+    ValidateTokenStrong -->|Failure| ClearContext
+
+    SkipJwt --> Controller["Controller / Endpoint"]
+    SetContext --> Controller
+    ClearContext --> AuthEntry["UserAuthenticationEntryPoint"]
+
+    %% OAuth2 Login Flow
+    subgraph OAuth2_Flow["OAuth2 Login"]
+        direction TB
+        Client --> OAuthLogin["Access OAuth2 Endpoint (/oauth2/authorization/**)"]
+        OAuthLogin --> OAuthService["DefaultOAuth2UserService"]
+        OAuthService --> OAuthLogin
+        OAuthLogin --> OAuthController["OAuth2Controller /success"]
+        OAuthController --> JWTGen["Generate JWT Token (UserAuthenticationProvider)"]
+        JWTGen --> Redirect["Redirect to Frontend with JWT"]
+        OAuthController -->|Auth Error| AuthEntry
+    end
+
+    %% Global Exception Handling
+    subgraph Exception_Flow["Global Exception Handling"]
+        Controller -->|Throws AppException| RestHandler["RestExceptionHandler"]
+        OAuthController -->|Throws AppException| RestHandler
+        RestHandler --> Response["HTTP Response to Client"]
+    end
+
+    %% Final Response to Client
+    Controller --> Response
+    Redirect --> Response
+    AuthEntry --> Response
+```
+
+
 | File | Description |
 |------|-------------|
 | `JwtAuthFilter.java` | Authentication filter that processes tokens for incoming requests. |
