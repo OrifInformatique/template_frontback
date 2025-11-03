@@ -12,16 +12,38 @@
   - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
   - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
   - [1.7 Users Module (`main/java/users`)](#17-users-module-mainjavausers)
+  - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
+  - [1.9 Testing (Planned)](#19-testing-planned)
+- [Related Documentation](#related-documentation)
+
+---
 
 ## Overview
-This document describes the structure and processes of the backend application, including configuration files, folder organization, and module responsibilities.  
+
+This document describes the **structure, components, and processes** of the backend application, including configuration files, folder organization, and module responsibilities.  
+
+This backend powers a **multi-user test system**, providing:
+- Secure authentication and authorization (delegated to spring-auth)
+- User and role management  
+- (Future) Stock and inventory tracking  
 
 ![Frontend and Backend Architecture](frontend_backend_auth_architecture.png)  
-*Illustrates interactions between the frontend, backend, and `spring-auth` modules.*
+*Illustrates interactions between the frontend and backend modules, as well as the `spring-auth` app.*
 
 ---
 
 ## 1. Backend
+
+``` mermaid
+graph TD
+    A[Client / Browser] -->|HTTP Request| B[Controller]
+    B --> C[Service]
+    C --> D[Repository]
+    D -->|CRUD Operations| E[(Database)]
+    
+    classDef layer fill:#2c3e50,stroke:#ecf0f1,stroke-width:1px,color:#ecf0f1;
+    class A,B,C,D,E layer;
+```
 
 ### 1.1 General Information
 
@@ -32,7 +54,7 @@ This document describes the structure and processes of the backend application, 
 - MariaDB 11.4  
 - Docker Desktop  
 
-> **Note:** Detailed setup and run instructions are provided in the project’s README.
+> **Note:** Detailed setup and run instructions are provided in the project’s main [`README.md`](../README.md).
 
 ---
 
@@ -44,8 +66,8 @@ This document describes the structure and processes of the backend application, 
 | `init.sql` | SQL script to create and initialize the database schema. |
 | `Dockerfile` | Defines Docker image build stages and application setup. |
 | `compose.yml` | Configures Docker environment and additional services. |
-| `application.properties` | Spring Boot global configuration properties. |
-| `.env` | Environment variables for local development or deployment. |
+| `application.properties` | Global configuration properties for Spring Boot. |
+| `.env` | Environment variables for local development and deployment. |
 
 ---
 
@@ -54,7 +76,7 @@ This document describes the structure and processes of the backend application, 
 | Folder | Description |
 |--------|-------------|
 | `src` | Contains the application’s source code and resources. |
-| `target` | Contains compiled classes and build artifacts. |
+| `target` | Compiled classes and build artifacts. |
 | `docs` | Auto-generated REST API documentation (HTML format). |
 | `doc` | Manually created documentation (designs, requirements, diagrams). |
 
@@ -63,18 +85,18 @@ This document describes the structure and processes of the backend application, 
 ### 1.4 Source Structure (`src`)
 
 #### 1.4.1 `main`
-Contains the core functional processes of the application:  
+Contains the core functionality of the application.  
 
-- **`java`** – Application source code (controllers, services, entities, etc.)  
-- **`resources`** – Configuration files, static resources, templates  
+- **`java`** – Source code (controllers, services, entities, configurations, etc.)  
+- **`resources`** – Configuration files, static resources, and templates  
 
 #### 1.4.2 `test`
-Contains test classes for unit and integration tests:  
+Contains test classes for unit and integration tests.  
 
-- **`java`** – Test classes corresponding to the application source code  
-- **`resources`** – Test-specific configuration or resources  
+- **`java`** – Test classes corresponding to the application’s source code  
+- **`resources`** – Test-specific configuration or data  
 
-> *Testing frameworks, execution instructions, and coverage details will be documented once the Java part is complete.*
+> *Testing frameworks, execution instructions, and coverage details will be added once the Java modules are finalized.*
 
 ---
 
@@ -82,12 +104,12 @@ Contains test classes for unit and integration tests:
 
 | Module | Responsibility |
 |--------|----------------|
-| `app` | Error and exception handling used throughout the application. |
-| `auth` | Handles authorization processes: login, regidter. (Some fonctionalities moved to `spring-auth` branch) |
-| `item` | Manages stock and inventory functionalities. (not implemented yet) |
-| `security` | Security-related classes: JWT filters, password encoding, authentication management. |
+| `app` | Global error and exception handling used throughout the application. |
+| `auth` | Handles authorization processes such as login and registration. (Some functionalities moved to the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.) |
+| `item` | Manages stock and inventory functionalities (not implemented yet). |
+| `security` | Security-related classes: JWT filters, password encoding, and authentication management. |
 | `users` | Manages user profiles, roles, and permissions. |
-| `TemplateApplication.java` | Main Spring Boot entry point containing `main()` method. Run the project from this class. |
+| `TemplateApplication.java` | Main Spring Boot entry point containing the `main()` method. Run the project from this class. |
 
 ---
 
@@ -95,13 +117,13 @@ Contains test classes for unit and integration tests:
 
 | File | Description |
 |------|-------------|
-| `AuthController.java` | Authentication endpoints (fonctionalities moved to `spring-auth` branch). |
-| `CredentialsDto.java` | Data transfer object for login credentials. |
-| `OAuth2Controller.java` | Handles OAuth2 and Azure operations (currently only success scenario, fonctionalities moved to `spring-auth`). |
-| `PasswordConfig.java` | Manages password encryption (fonctionalities moved to `spring-auth`). |
-| `SignUpDto.java` | Data transfer object for registration functionalities. |
+| `AuthController.java` | Authentication endpoints (moved to `spring-auth` in the newest branches). |
+| `CredentialsDto.java` | Data Transfer Object (DTO) for login credentials. |
+| `OAuth2Controller.java` | Handles OAuth2 and Azure login operations (success scenario only; now in `spring-auth` in the newest branches). |
+| `PasswordConfig.java` | Manages password encryption (moved to `spring-auth` in the newest branches). |
+| `SignUpDto.java` | DTO for registration functionalities. |
 
-> **Reference:** For full authentication implementation, see the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) branch/repository.
+> **Reference:** For full authentication implementation, see the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.
 
 ---
 
@@ -109,10 +131,37 @@ Contains test classes for unit and integration tests:
 
 | File | Description |
 |------|-------------|
-| `User.java` | User entity class representing a user in the system. |
-| `UserController.java` | Contains user-related REST endpoints (CRUD, profile management, etc.). | 
-| `UserDto.java` | Data transfer object for communication between the backend and frontend. |
+| `User.java` | Entity class representing a user in the system. |
+| `UserController.java` | Contains REST endpoints for user management (CRUD, profile, etc.). | 
+| `UserDto.java` | DTO for communication between backend and frontend. |
 | `UserMapper.java` | Handles conversion between `User` entities and `UserDto` objects. |
 | `UserRepository.java` | Interface for database operations related to users. |
-| `UserSeeder.java` | Seeds the database with test users for development and testing. |
-| `UserService.java` | Business logic and services managing user functionalities (creation, update, role assignment, etc.). |
+| `UserSeeder.java` | Seeds the database with test users for development. |
+| `UserService.java` | Business logic for user functionalities (creation, update, role assignment, etc.). |
+
+---
+
+### 1.8 Security Module (`main/java/security`)
+
+| File | Description |
+|------|-------------|
+| `JwtAuthFilter.java` | Authentication filter that processes tokens for incoming requests. |
+| `PermissionEnum.java` | Enumeration defining available permissions. |
+| `Role.java` | Role entity class representing a user role. |
+| `RoleEnum.java` | Enumeration defining roles and their permissions. |
+| `RoleRepository.java` | Interface for database operations related to roles. |
+| `RoleSeeder.java` | Seeds the database with predefined roles. |
+| `SecurityConfig.java` | Security configuration defining the filter chain and access rules. |
+| `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response. |
+| `UserAuthenticationProvider.java` | Authentication provider for validating user credentials. |
+| `WebConfig.java` | Web configuration for general web-related settings. |
+
+> **Suggested addition:** A simple diagram showing the authentication flow (Request → JWT Filter → Provider → SecurityContext → Controller) can improve understanding.
+
+---
+
+## Related Documentation
+
+- [Project README](../README.md)  
+- [API Documentation (`docs/index.html`)](../docs/index.html)  
+- [Frontend Repository](../frontend/README.md)  
