@@ -106,40 +106,22 @@ Contains test classes for unit and integration tests.
 sequenceDiagram
     participant Client
     participant AuthController
-    participant UserService
-    participant UserRepository
-    participant UserMapper
-    participant UserAuthenticationProvider
+    participant AuthClient
+    participant spring-auth
 
     Client->>AuthController: /auth/login with credentials
-    AuthController->>UserService: userService.login(credentialsDto)
-    UserService->>UserRepository: userRepository.findByLogin(credentialsDto.login())
-    UserRepository->>UserService: User
-    UserService->>UserMapper: userMapper.toUserDto(user)
-    UserMapper->>AuthController: UserDto
-    AuthController->>UserAuthenticationProvider: userAuthenticationProvider.createToken(userDto)
-    UserAuthenticationProvider->>AuthController: Token
-<<<<<<< HEAD
-    AuthController->>Client: Response with UserDto and access token 
-=======
-    AuthController->>Client: Response with UserDto and access token
->>>>>>> feature/backend/use-spring-auth
+    AuthController->>AuthClient: authClient.login(credentialsDto)).getBody()
+    AuthClient->>spring-auth: Send request to spring-auth/auth/login
+    spring-auth->>Client: Response with UserDto
 ```
 *Sequence Diagram showing an example of the authentication flow.*
 
 | File | Description |
 |------|-------------|
-<<<<<<< HEAD
 | `AuthClient.java` | Client service for authentication operations which send requests to `spring-auth`. |
+| `AuthController.java` | Controller handling user authentication and registration which send requests to `AuthClient.java`. |
 | `CredentialsDto.java` | Data Transfer Object (DTO) for login credentials. |
 | `RegisterDto.java` | DTO for registration functionalities. |
-=======
-| `AuthController.java` | Authentication endpoints (moved to `spring-auth` in the newest branches). |
-| `CredentialsDto.java` | Data Transfer Object (DTO) for login credentials. |
-| `OAuth2Controller.java` | Handles OAuth2 and Azure login operations (success scenario only; now in `spring-auth` in the newest branches). |
-| `PasswordConfig.java` | Manages password encryption (moved to `spring-auth` in the newest branches). |
-| `SignUpDto.java` | DTO for registration functionalities. |
->>>>>>> feature/backend/use-spring-auth
 
 > **Reference:** For full authentication implementation, see the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.
 
