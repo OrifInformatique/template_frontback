@@ -119,15 +119,27 @@ sequenceDiagram
     UserMapper->>AuthController: UserDto
     AuthController->>UserAuthenticationProvider: userAuthenticationProvider.createToken(userDto)
     UserAuthenticationProvider->>AuthController: Token
+<<<<<<< HEAD
     AuthController->>Client: Response with UserDto and access token 
+=======
+    AuthController->>Client: Response with UserDto and access token
+>>>>>>> feature/backend/use-spring-auth
 ```
 *Sequence Diagram showing an example of the authentication flow.*
 
 | File | Description |
 |------|-------------|
+<<<<<<< HEAD
 | `AuthClient.java` | Client service for authentication operations which send requests to `spring-auth`. |
 | `CredentialsDto.java` | Data Transfer Object (DTO) for login credentials. |
 | `RegisterDto.java` | DTO for registration functionalities. |
+=======
+| `AuthController.java` | Authentication endpoints (moved to `spring-auth` in the newest branches). |
+| `CredentialsDto.java` | Data Transfer Object (DTO) for login credentials. |
+| `OAuth2Controller.java` | Handles OAuth2 and Azure login operations (success scenario only; now in `spring-auth` in the newest branches). |
+| `PasswordConfig.java` | Manages password encryption (moved to `spring-auth` in the newest branches). |
+| `SignUpDto.java` | DTO for registration functionalities. |
+>>>>>>> feature/backend/use-spring-auth
 
 > **Reference:** For full authentication implementation, see the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.
 

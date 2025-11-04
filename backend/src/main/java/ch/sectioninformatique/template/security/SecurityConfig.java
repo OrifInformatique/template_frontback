@@ -97,7 +97,7 @@ public class SecurityConfig {
                     log.debug("Configuring CORS");
                     cors.configurationSource(request -> {
                         var corsConfig = new CorsConfiguration();
-                        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:4000"));
+                        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:4000", "http://localhost:8080"));
                         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                         corsConfig.setAllowedHeaders(Arrays.asList("*"));
                         corsConfig.setAllowCredentials(true);
@@ -118,9 +118,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> {
                     log.debug("Configuring HTTP request authorization rules");
                     requests
-                            .requestMatchers("/tests/login").permitAll()
-                            .requestMatchers("/tests/register").permitAll()
-                            .requestMatchers("/tests/oauth2/login").permitAll()
+                            .requestMatchers("/error").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/auth/oauth2/login").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .anyRequest().authenticated();
                     log.debug("HTTP request authorization rules configured");

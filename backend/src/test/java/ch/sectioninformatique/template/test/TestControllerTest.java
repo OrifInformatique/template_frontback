@@ -7,6 +7,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.CredentialsDto;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,6 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -688,21 +692,19 @@ public class TestControllerTest {
     @Test
     @Transactional
     public void login_withRealData_shouldReturnSuccess() throws Exception {
-        String mockedJsonResponse = """
-                {
-                  "id": 2,
-                  "firstName": "John",
-                  "lastName": "DOE",
-                  "login": "john.doe@test.com",
-                  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-                  "refreshToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-                  "mainRole": "USER",
-                  "permissions": []
-                }
-                """;
+    UserDto mockedUser = UserDto.builder()
+            .id(2L)
+            .firstName("John")
+            .lastName("DOE")
+            .login("john.doe@test.com")
+            .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
+            .refreshToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
+            .mainRole("USER")
+            .permissions(new ArrayList<String>())
+            .build();
 
-        when(authClient.login(any(String.class), any(char[].class)))
-                .thenReturn(Mono.just(mockedJsonResponse));
+    when(authClient.login(any(CredentialsDto.class)))
+            .thenReturn(Mono.just(ResponseEntity.ok(mockedUser)));
 
         performRequest(
                 "POST",
@@ -723,21 +725,20 @@ public class TestControllerTest {
     @Test
     @Transactional
     public void register_withMockedService_shouldReturnSuccess() throws Exception {
-        String mockedJsonResponse = """
-                {
-                  "id": 5,
-                  "firstName": "Test",
-                  "lastName": "NewUser",
-                  "login": "test.newuser@test.com",
-                  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-                  "refreshToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-                  "mainRole": "USER",
-                  "permissions": []
-                }
-                """;
+
+        UserDto mockedUser = UserDto.builder()
+            .id(5L)
+            .firstName("Test")
+            .lastName("NewUser")
+            .login("test.newuser@test.com")
+            .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
+            .refreshToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
+            .mainRole("USER")
+            .permissions(new ArrayList<String>())
+            .build();
 
         when(authClient.register(any(RegisterDto.class)))
-                .thenReturn(Mono.just(mockedJsonResponse));
+                .thenReturn(Mono.just(ResponseEntity.ok(mockedUser)));
 
         performRequest(
                 "POST",

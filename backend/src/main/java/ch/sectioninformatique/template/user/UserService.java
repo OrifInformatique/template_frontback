@@ -144,7 +144,7 @@ public class UserService {
 
         if (localUser == null) {
             RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                    userDto.getLogin());
+                    userDto.getLogin(), null);
 
             localUser = this.register(newUser);
         }

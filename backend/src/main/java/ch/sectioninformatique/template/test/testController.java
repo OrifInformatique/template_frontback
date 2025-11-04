@@ -14,21 +14,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.sectioninformatique.template.auth.AuthClient;
-import ch.sectioninformatique.template.auth.CredentialsDto;
-import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
 
 /**
  * Controller for test endpoints.
@@ -50,11 +43,6 @@ public class TestController {
 
     @Autowired
     private Environment environment;
-
-    private final AuthClient authClient;
-
-    @Value("${spring.profiles.active:}")
-    private String activeProfile;
 
     /**
      * Returns system information and environment variables.
@@ -128,29 +116,6 @@ public class TestController {
     }
 
     /**
-     * Handles POST requests to "/login"
-     * Accepts login credentials (login and password) as a request body, validated
-     * for correctness
-     * Calls the authentication client to perform login with provided credentials
-     * Returns a reactive Mono<String> containing the login response (e.g., token or
-     * status message)
-     * 
-     * @param credentialsDto
-     * @return Mono<String> with login response
-     */
-    @PostMapping("/login")
-    public Object testCall(@RequestBody @Valid CredentialsDto credentialsDto) {
-
-        if ("test".equals(activeProfile)) {
-            // Test profile: return a blocking String
-            return authClient.login(credentialsDto.login(), credentialsDto.password())
-                    .block(); // only for tests
-        }
-
-        return ResponseEntity.ok(authClient.login(credentialsDto.login(), credentialsDto.password())).getBody();
-    }
-
-    /**
      * Handles GET requests to "/oauth2/login"
      * Redirects the client to the OAuth2 authorization endpoint for Azure
      * This initiates the OAuth2 login flow
@@ -165,48 +130,4 @@ public class TestController {
         URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
         return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
     }
-
-    /**
-     * Handles POST requests to "/register"
-     * Accepts user registration data as a request body, validated for correctness
-     * Calls the authentication client to perform registration with provided user
-     * data
-     * On successful registration, also registers the user locally in the system
-     * Returns a reactive Mono<ResponseEntity<String>> containing the registration
-     * response or error message
-     * 
-     * @param user
-     * @return Mono<ResponseEntity<String>> with registration response
-     */
-    @PostMapping("/register")
-    public Object testCallRegister(@RequestBody @Valid RegisterDto user) {
-
-        if ("test".equals(activeProfile)) {
-            // Test profile: block the reactive call
-            try {
-                String response = authClient.register(user).block(); // block for tests
-
-                // Also register user locally
-                userService.register(user);
-
-                return ResponseEntity.ok(response);
-            } catch (Exception ex) {
-                String errorMessage = "Registration failed: " + ex.getMessage();
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
-            }
-        }
-
-        // Normal reactive behavior for other profiles
-        return authClient.register(user)
-                .flatMap(response -> {
-                    RegisterDto userRegister = new RegisterDto(user.firstName(), user.lastName(), user.login());
-                    userService.register(userRegister);
-                    return Mono.just(ResponseEntity.ok(response));
-                })
-                .onErrorResume(ex -> {
-                    String errorMessage = "Registration failed: " + ex.getMessage();
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage));
-                });
-    }
-
 }
