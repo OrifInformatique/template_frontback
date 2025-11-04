@@ -186,7 +186,7 @@ classDiagram
         +String firstName
         +String lastName
         +String login
-        +String password
+        +char[] password
     }
 
     class UserMapper {
@@ -204,7 +204,7 @@ classDiagram
     UserMapper ..> SignUpDto : uses
     User ..|> UserDetails
 ```
-*Class Diagrame Showing an Exemple of the User Class.*
+*Class Diagrame Showing an Exemple of the User, Role, UserDto and SignUpDto Class.*
 ```mermaid
 sequenceDiagram
     participant Client
