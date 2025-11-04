@@ -127,6 +127,38 @@ Contains test classes for unit and integration tests.
 
 ### 1.7 Users Module (`main/java/users`)
 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Security Layer
+    participant UserController
+    participant UserService
+    participant UserRepository
+    participant UserMapper
+
+    Client->>Security Layer: /users/me
+    Security Layer->>UserController: Authorised UserDto extracted from token
+    UserController->>Client: UserDto in response
+
+    Client->>Security Layer: users/all
+    Security Layer->>UserController: Authorised UserDto extracted from token
+    UserController->>UserService: UserService.allUsers()
+    UserService->>UserRepository: UserRepository.findAll()
+    UserRepository->>UserController: List of Users
+    UserController->>Client: Response containing th list of users
+
+    Client->>Security Layer: users/{userId}/promote-admin
+    Security Layer->>UserController: Authorised UserDto with authority user:update extracted from token
+    UserController->>UserService: UserService.promoteToAdmin(userId)
+    UserService->>UserRepository: UserRepository.findById(userId)
+    UserRepository->>UserService: Found User
+    UserService->>UserRepository: UserRepository.save(user) with a modified role
+    UserService->>UserMapper: UserMapper.toUserDto(user)
+    UserMapper->>UserController: UserDto
+    UserController->>Client: Response "User promoted to admin successfully"
+
+```
+
 | File | Description |
 |------|-------------|
 | `User.java` | Entity class representing a user in the system. |
