@@ -102,6 +102,101 @@ Contains test classes for unit and integration tests.
 
 ### 1.5 Main Java Modules (`main/java`)
 
+```mermaid
+classDiagram
+    direction TB
+
+    class AuthController {
+        +POST /login()
+        +POST /register()
+    }
+
+    class UserService {
+        +login(CredentialsDto)
+        +register(SignUpDto)
+        +findByLogin(String)
+        +allUsers()
+        +promoteToAdmin(Long)
+        +revokeAdminRole(Long)
+        +promoteToSuperAdmin(Long)
+        +downgradeSuperAdminRole(Long)
+        +revokeSuperAdminRole(Long)
+        +deleteUser(Long)
+        +createAzureUser(UserDto)
+    }
+
+    class UserAuthenticationProvider {
+        +createToken(UserDto)
+    }
+
+    class CredentialsDto {
+        +String username
+        +String password
+    }
+
+    class SignUpDto {
+        +String username
+        +String password
+        +String email
+    }
+
+    class UserDto {
+        +Long id
+        +String username
+        +String email
+        +String token
+    }
+
+    class UserRepository {
+        +findByLogin(String)
+        +findById(Long)
+        +save(User)
+        +deleteById(Long)
+        +existsByLogin(String)
+        +findAll()
+    }
+
+    class RoleRepository {
+        +findByName(RoleEnum)
+    }
+
+    class ItemRepository {
+        +findAll()
+        +save(Item)
+    }
+
+    class UserMapper {
+        +toUserDto(User)
+        +signUpToUser(SignUpDto)
+    }
+
+    class Role {
+        +RoleEnum name
+    }
+
+    class RoleEnum {
+        <<enumeration>>
+        USER
+        ADMIN
+        SUPER_ADMIN
+    }
+
+    %% Relationships
+    AuthController --> CredentialsDto : uses
+    AuthController --> SignUpDto : uses
+    AuthController --> UserService : delegates
+    AuthController --> UserAuthenticationProvider : generates JWT
+
+    UserService --> UserRepository : interacts with
+    UserService --> RoleRepository : interacts with
+    UserService --> ItemRepository : transfers items
+    UserService --> UserMapper : maps entities/DTOs
+    UserService --> Role : assigns roles
+
+    UserRepository --> UserDto : returns
+    RoleRepository --> Role : returns
+```
+
 | Module | Responsibility |
 |--------|----------------|
 | `app` | Global error and exception handling used throughout the application. |
@@ -144,52 +239,42 @@ Contains test classes for unit and integration tests.
 ### 1.8 Security Module (`main/java/security`)
 
 ```mermaid
-flowchart LR
-    %% Client Request Entry
-    Client["Client Request"] --> CORS["CORS Filter (WebConfig)"]
+classDiagram
+    direction TB
 
-    %% JWT Authentication Filter
-    CORS --> JwtFilter["JwtAuthFilter"]
-    JwtFilter --> CheckHeader{"Authorization header?"}
-    CheckHeader -->|No| SkipJwt["Skip JWT Validation"]
-    CheckHeader -->|Yes| ParseToken["Parse Bearer Token"]
+    class AuthController {
+        +POST /login()
+        +POST /register()
+        +Handles authentication endpoints
+    }
 
-    ParseToken --> MethodCheck{"HTTP Method GET?"}
-    MethodCheck -->|Yes| ValidateToken["userAuthenticationProvider.validateToken()"]
-    MethodCheck -->|No| ValidateTokenStrong["userAuthenticationProvider.validateTokenStrongly()"]
+    class OAuth2Controller {
+        +GET /oauth2/success()
+        +Handles OAuth2 + Azure login
+    }
 
-    ValidateToken -->|Success| SetContext["Set SecurityContext"]
-    ValidateTokenStrong -->|Success| SetContext
-    ValidateToken -->|Failure| ClearContext["Clear SecurityContext & Throw Exception"]
-    ValidateTokenStrong -->|Failure| ClearContext
+    class PasswordConfig {
+        +passwordEncoder()
+        +Manages password encryption
+    }
 
-    SkipJwt --> Controller["Controller / Endpoint"]
-    SetContext --> Controller
-    ClearContext --> AuthEntry["UserAuthenticationEntryPoint"]
+    class CredentialsDto {
+        +String username
+        +String password
+        +Used for login
+    }
 
-    %% OAuth2 Login Flow
-    subgraph OAuth2_Flow["OAuth2 Login"]
-        direction TB
-        Client --> OAuthLogin["Access OAuth2 Endpoint (/oauth2/authorization/**)"]
-        OAuthLogin --> OAuthService["DefaultOAuth2UserService"]
-        OAuthService --> OAuthLogin
-        OAuthLogin --> OAuthController["OAuth2Controller /success"]
-        OAuthController --> JWTGen["Generate JWT Token (UserAuthenticationProvider)"]
-        JWTGen --> Redirect["Redirect to Frontend with JWT"]
-        OAuthController -->|Auth Error| AuthEntry
-    end
+    class SignUpDto {
+        +String username
+        +String password
+        +String email
+        +Used for registration
+    }
 
-    %% Global Exception Handling
-    subgraph Exception_Flow["Global Exception Handling"]
-        Controller -->|Throws AppException| RestHandler["RestExceptionHandler"]
-        OAuthController -->|Throws AppException| RestHandler
-        RestHandler --> Response["HTTP Response to Client"]
-    end
-
-    %% Final Response to Client
-    Controller --> Response
-    Redirect --> Response
-    AuthEntry --> Response
+    AuthController --> CredentialsDto : uses for login
+    AuthController --> SignUpDto : uses for registration
+    AuthController --> PasswordConfig : uses for encryption
+    OAuth2Controller --> PasswordConfig : may use for password handling
 ```
 
 
@@ -205,8 +290,6 @@ flowchart LR
 | `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response. |
 | `UserAuthenticationProvider.java` | Authentication provider for validating user credentials. |
 | `WebConfig.java` | Web configuration for general web-related settings. |
-
-> **Suggested addition:** A simple diagram showing the authentication flow (Request → JWT Filter → Provider → SecurityContext → Controller) can improve understanding.
 
 ---
 
