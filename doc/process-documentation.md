@@ -112,6 +112,25 @@ Contains test classes for unit and integration tests.
 ---
 
 ### 1.6 Auth Module (`main/java/auth`)
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AuthController
+    participant UserService
+    participant UserRepository
+    participant UserMapper
+    participant UserAuthenticationProvider
+
+    Client->>AuthController: /auth/login with credentials
+    AuthController->>UserService: userService.login(credentialsDto)
+    UserService->>UserRepository: userRepository.findByLogin(credentialsDto.login())
+    UserRepository->>UserService: User
+    UserService->>UserMapper: userMapper.toUserDto(user)
+    UserMapper->>AuthController: UserDto
+    AuthController->>UserAuthenticationProvider: userAuthenticationProvider.createToken(userDto)
+    UserAuthenticationProvider->>AuthController: Token
+    AuthController->>Client: Response with UserDto and access Token
+```
 
 | File | Description |
 |------|-------------|
