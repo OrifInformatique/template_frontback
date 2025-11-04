@@ -1,6 +1,7 @@
 # Application Documentation
 
 ## Table of Contents
+- [Documentation Tools](#documentation-tools)
 - [Overview](#overview)
 - [1. Backend](#1-backend)
   - [1.1 General Information](#11-general-information)
@@ -19,6 +20,10 @@
 - [Related Documentation](#related-documentation)
 ---
 
+## Documentation Tools
+Recomended Mermaid Preview Tool [Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid).
+
+---
 ## Overview
 
 This document describes the **structure, components, and processes** of the backend application, including configuration files, folder organization, and module responsibilities.  
@@ -32,6 +37,7 @@ This backend powers a **multi-user test system**, providing:
 *Illustrates interactions between the frontend and backend modules, as well as the `spring-auth` app.*
 
 ---
+
 
 ## 1. Backend
 
