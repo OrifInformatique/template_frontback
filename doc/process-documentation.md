@@ -34,15 +34,6 @@ This backend powers a **multi-user test system**, providing:
 
 ## 1. Backend
 
-``` mermaid
-graph TD
-    A[Client / Browser] -->|HTTP Request| B[Controller]
-    B --> C[Service]
-    C --> D[Repository]
-    D -->|CRUD Operations| E[(Database)]
-    class A,B,C,D,E layer;
-```
-
 ### 1.1 General Information
 
 **Tools & Dependencies:**
@@ -131,6 +122,7 @@ sequenceDiagram
     UserAuthenticationProvider->>AuthController: Token
     AuthController->>Client: Response with UserDto and access Token
 ```
+*Sequence Diagrame Showing an Exemple of the Authorisation Flow.*
 
 | File | Description |
 |------|-------------|
@@ -146,6 +138,73 @@ sequenceDiagram
 
 ### 1.7 Users Module (`main/java/users`)
 
+```mermaid
+classDiagram
+    class User {
+        +long id
+        +String firstName
+        +String lastName
+        +String login
+        +String password
+        +Date createdAt
+        +Date updatedAt
+        +Set<Role> roles
+        +Collection<GrantedAuthority> getAuthorities()
+        +String getPassword()
+        +String getUsername()
+        +boolean isAccountNonExpired()
+        +boolean isAccountNonLocked()
+        +boolean isCredentialsNonExpired()
+        +boolean isEnabled()
+        +Role getRole()
+        +void addRole(Role role)
+    }
+
+    class Role {
+        +long id
+        +RoleEnum name
+        +String description
+        +Date createdAt
+        +Date updatedAt
+        +Set<User> users
+        +Set<SimpleGrantedAuthority> getGrantedAuthorities()
+    }
+
+    class UserDto {
+        <<DTO>>
+        +Long id
+        +String firstName
+        +String lastName
+        +String login
+        +String token
+        +String role = "ROLE_USER"
+        +List<String> permissions = new ArrayList<>()
+    }
+
+    class SignUpDto {
+        <<DTO>>
+        +String firstName
+        +String lastName
+        +String login
+        +String password
+    }
+
+    class UserMapper {
+        <<interface>>
+        +UserDto toUserDto(User user)
+        +User signUpToUser(SignUpDto signUpDto)
+        +List<String> authoritiesToPermissions(Collection<GrantedAuthority> authorities)
+    }
+
+    %% Relationships
+    User --> "0..*" Role : roles
+    Role --> "0..*" User : users
+    UserMapper ..> User : uses
+    UserMapper ..> UserDto : creates
+    UserMapper ..> SignUpDto : uses
+    User ..|> UserDetails
+```
+*Class Diagrame Showing an Exemple of the User Class.*
 ```mermaid
 sequenceDiagram
     participant Client
@@ -177,6 +236,7 @@ sequenceDiagram
     UserController->>Client: Response "User promoted to admin successfully"
 
 ```
+*Sequence Diagrame Showing an Exemple of the User Managment Flow.*
 
 | File | Description |
 |------|-------------|
