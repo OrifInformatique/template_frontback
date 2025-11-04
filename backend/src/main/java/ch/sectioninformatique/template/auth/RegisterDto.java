@@ -8,4 +8,4 @@ package ch.sectioninformatique.template.auth;
  * @param lastName The user's last name
  * @param login The user's login identifier
  */
-public record RegisterDto (String firstName, String lastName, String login) { }
+public record RegisterDto (String firstName, String lastName, String login, char[] password) { }

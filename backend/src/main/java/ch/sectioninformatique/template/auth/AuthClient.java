@@ -68,7 +68,7 @@ public class AuthClient {
          *         (e.g., token or
          *         status message)
          */
-        public Mono<ResponseEntity<UserDto>> register(SignUpDto user) {
+        public Mono<ResponseEntity<UserDto>> register(RegisterDto user) {
 
                 return webClient.post()
                                 .uri("/auth/register") // your register endpoint path

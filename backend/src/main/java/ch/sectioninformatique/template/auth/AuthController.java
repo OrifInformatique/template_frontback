@@ -53,23 +53,22 @@ public class AuthController {
      * Accepts user registration data as a request body, validated for correctness
      * Calls the authentication client to perform registration with provided user data
      * On successful registration, also registers the user locally in the system
-     * Returns a reactive Mono<ResponseEntity<String>> containing the registration
+     * Returns a reactive Mono<ResponseEntity<UserDto>> containing the registration
      * response or error message
      * 
      * @param user
-     * @return Mono<ResponseEntity<String>> with registration response
+     * @return Mono<ResponseEntity<UserDto>> with registration response
      */
     @PostMapping("/register")
-    public Mono<ResponseEntity<UserDto>> register(@RequestBody @Valid SignUpDto user) {
+    public Mono<ResponseEntity<UserDto>> register(@RequestBody @Valid RegisterDto user) {
         return authClient.register(user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
-                    RegisterDto userRegister = new RegisterDto(user.firstName(), user.lastName(), user.login());
-                    userService.register(userRegister);
+                    userService.register(user);
 
                     // Return HTTP 200 OK with the response body
                     return Mono.just(response);
                 })
-                .onErrorResume(ex -> Mono.error(new AppException("Frontback registration failed", HttpStatus.BAD_REQUEST)));
+                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
     }
 }
