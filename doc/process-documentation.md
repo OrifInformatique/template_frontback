@@ -304,3 +304,7 @@ sequenceDiagram
 - [Project README](../README.md)  
 - [API Documentation (`docs/index.html`)](../docs/index.html)  
 - [Frontend Repository](../frontend/README.md)  
+---
+
+**Author:** Ken D. Cacciabue
+**Last Updated:** 04.11.2025
