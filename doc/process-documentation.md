@@ -15,6 +15,7 @@
   - [1.8 Tests Controlleurs (`main/java/test`)](#18-tests-controlleurs-mainjavatest)
   - [1.9 Security Module (`main/java/security`)](#19-security-module-mainjavasecurity)
   - [1.10 Error and Exception Managment (`main/java/app`)](#110-error-and-exception-managment-mainjavaapp)
+  - [1.11 Main Test Modules (`main/test`)](#111-main-test-modules-maintest)
 - [Related Documentation](#related-documentation)
 ---
 
@@ -142,7 +143,7 @@ classDiagram
         +Role mainRole
         +Set<Role> appSpecificRoles
         +Collection<GrantedAuthority> getAuthorities()
-        +String getUsername()
+        +String getUsername() 
         +boolean isAccountNonExpired()
         +boolean isAccountNonLocked()
         +boolean isCredentialsNonExpired()
@@ -311,6 +312,15 @@ sequenceDiagram
 | `exceptions/AppException.java` | Custome exception class for application specifique errors. |
 | `exceptions/RestExceptionHandler.java` | Global exception handler for REST API endpoints. |
 
+---
+### 1.11 Main Test Modules (`main/test`)
+| File | Description |
+|------|-------------|
+| `security` | Tests related to the security and authentification fonctionalities of the app. |
+| `test` | Tests related to the test endpoints of the app. |
+| `user` | Tests related to the user managment fonctionalities of the app. |
+| `TemplateApplicationTests.java` | Load the context of the app. |
+| `TestConfigurationDebug.java` | Test the existence of the environnment variables. |
 ---
 
 ## Related Documentation
