@@ -270,20 +270,20 @@ sequenceDiagram
     note right of UserAuthenticationProvider: Check token & optionally fetch user
     UserAuthenticationProvider->>UserService: Lookup user in DB
     alt User exists
-        UserService-->>UserAuthenticationProvider: Return user info
+        UserService->>UserAuthenticationProvider: Return user info
     else User not found
-        UserService-->>UserAuthenticationProvider: Create new Azure user
+        UserService->>UserAuthenticationProvider: Create new Azure user
     end
-    UserAuthenticationProvider-->>JwtAuthFilter: Return Authentication object
+    UserAuthenticationProvider->>JwtAuthFilter: Return Authentication object
     alt Authentication fails
         JwtAuthFilter->>UserAuthenticationEntryPoint: 401 Unauthorized
-        UserAuthenticationEntryPoint-->>Client: Return 401 response
+        UserAuthenticationEntryPoint->>Client: Return 401 response
     else Authentication succeeds
-        JwtAuthFilter-->>UserController: Forward request
+        JwtAuthFilter->>UserController: Forward request
         note right of UserController: Controller handles action
         UserController->>UserService: Perform business logic
-        UserService-->>UserController: Return result
-        UserController-->>Client: Return HTTP response
+        UserService->>UserController: Return result
+        UserController->>Client: Return HTTP response
     end
 ```
 *Sequence Diagram showing JWT authentication and request handling flow.*
@@ -299,6 +299,7 @@ sequenceDiagram
 | `SecurityConfig.java` | Security configuration defining the filter chain and access rules. |
 | `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response. |
 | `UserAuthenticationProvider.java` | Authentication provider for validating user credentials. |
+| `WebClientConfig.java` | Web client configuration for communication with other apps. |
 | `WebConfig.java` | Web configuration for general web-related settings. |
 
 ---
