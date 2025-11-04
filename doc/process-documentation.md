@@ -13,9 +13,8 @@
   - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
   - [1.7 Users Module (`main/java/users`)](#17-users-module-mainjavausers)
   - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
-  - [1.9 Testing (Planned)](#19-testing-planned)
+  - [1.9 Error and Exception Managment (`main/java/app`)](#19-error-and-exception-managment-mainjavaapp)
 - [Related Documentation](#related-documentation)
-
 ---
 
 ## Overview
@@ -296,6 +295,15 @@ sequenceDiagram
 | `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response. |
 | `UserAuthenticationProvider.java` | Authentication provider for validating user credentials. |
 | `WebConfig.java` | Web configuration for general web-related settings. |
+
+---
+### 1.9 Error and Exception Managment (`main/java/app`)
+
+| File | Description |
+|------|-------------|
+| `errors/ErrorDto.java` | Record serving as Data Transfer object for Errors. |
+| `exceptions/AppException.java` | Custome exception class for application specifique errors. |
+| `exceptions/RestExceptionHandler.java` | Global exception handler for REST API endpoints. |
 
 ---
 
