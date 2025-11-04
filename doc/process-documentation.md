@@ -40,8 +40,6 @@ graph TD
     B --> C[Service]
     C --> D[Repository]
     D -->|CRUD Operations| E[(Database)]
-    
-    classDef layer fill:#2c3e50,stroke:#ecf0f1,stroke-width:1px,color:#ecf0f1;
     class A,B,C,D,E layer;
 ```
 
@@ -102,101 +100,6 @@ Contains test classes for unit and integration tests.
 
 ### 1.5 Main Java Modules (`main/java`)
 
-```mermaid
-classDiagram
-    direction TB
-
-    class AuthController {
-        +POST /login()
-        +POST /register()
-    }
-
-    class UserService {
-        +login(CredentialsDto)
-        +register(SignUpDto)
-        +findByLogin(String)
-        +allUsers()
-        +promoteToAdmin(Long)
-        +revokeAdminRole(Long)
-        +promoteToSuperAdmin(Long)
-        +downgradeSuperAdminRole(Long)
-        +revokeSuperAdminRole(Long)
-        +deleteUser(Long)
-        +createAzureUser(UserDto)
-    }
-
-    class UserAuthenticationProvider {
-        +createToken(UserDto)
-    }
-
-    class CredentialsDto {
-        +String username
-        +String password
-    }
-
-    class SignUpDto {
-        +String username
-        +String password
-        +String email
-    }
-
-    class UserDto {
-        +Long id
-        +String username
-        +String email
-        +String token
-    }
-
-    class UserRepository {
-        +findByLogin(String)
-        +findById(Long)
-        +save(User)
-        +deleteById(Long)
-        +existsByLogin(String)
-        +findAll()
-    }
-
-    class RoleRepository {
-        +findByName(RoleEnum)
-    }
-
-    class ItemRepository {
-        +findAll()
-        +save(Item)
-    }
-
-    class UserMapper {
-        +toUserDto(User)
-        +signUpToUser(SignUpDto)
-    }
-
-    class Role {
-        +RoleEnum name
-    }
-
-    class RoleEnum {
-        <<enumeration>>
-        USER
-        ADMIN
-        SUPER_ADMIN
-    }
-
-    %% Relationships
-    AuthController --> CredentialsDto : uses
-    AuthController --> SignUpDto : uses
-    AuthController --> UserService : delegates
-    AuthController --> UserAuthenticationProvider : generates JWT
-
-    UserService --> UserRepository : interacts with
-    UserService --> RoleRepository : interacts with
-    UserService --> ItemRepository : transfers items
-    UserService --> UserMapper : maps entities/DTOs
-    UserService --> Role : assigns roles
-
-    UserRepository --> UserDto : returns
-    RoleRepository --> Role : returns
-```
-
 | Module | Responsibility |
 |--------|----------------|
 | `app` | Global error and exception handling used throughout the application. |
@@ -239,44 +142,36 @@ classDiagram
 ### 1.8 Security Module (`main/java/security`)
 
 ```mermaid
-classDiagram
-    direction TB
+sequenceDiagram
+    participant Client
+    participant JwtAuthFilter
+    participant UserAuthenticationProvider
+    participant UserService
+    participant UserController
+    participant UserAuthenticationEntryPoint
 
-    class AuthController {
-        +POST /login()
-        +POST /register()
-        +Handles authentication endpoints
-    }
-
-    class OAuth2Controller {
-        +GET /oauth2/success()
-        +Handles OAuth2 + Azure login
-    }
-
-    class PasswordConfig {
-        +passwordEncoder()
-        +Manages password encryption
-    }
-
-    class CredentialsDto {
-        +String username
-        +String password
-        +Used for login
-    }
-
-    class SignUpDto {
-        +String username
-        +String password
-        +String email
-        +Used for registration
-    }
-
-    AuthController --> CredentialsDto : uses for login
-    AuthController --> SignUpDto : uses for registration
-    AuthController --> PasswordConfig : uses for encryption
-    OAuth2Controller --> PasswordConfig : may use for password handling
+    Client->>JwtAuthFilter: HTTP request with JWT token
+    note right of JwtAuthFilter: Filter intercepts request
+    JwtAuthFilter->>UserAuthenticationProvider: validateToken(token)
+    note right of UserAuthenticationProvider: Check token & optionally fetch user
+    UserAuthenticationProvider->>UserService: Lookup user in DB
+    alt User exists
+        UserService-->>UserAuthenticationProvider: Return user info
+    else User not found
+        UserService-->>UserAuthenticationProvider: Create new Azure user
+    end
+    UserAuthenticationProvider-->>JwtAuthFilter: Return Authentication object
+    alt Authentication fails
+        JwtAuthFilter->>UserAuthenticationEntryPoint: 401 Unauthorized
+        UserAuthenticationEntryPoint-->>Client: Return 401 response
+    else Authentication succeeds
+        JwtAuthFilter-->>UserController: Forward request
+        note right of UserController: Controller handles action
+        UserController->>UserService: Perform business logic
+        UserService-->>UserController: Return result
+        UserController-->>Client: Return HTTP response
+    end  
 ```
-
 
 | File | Description |
 |------|-------------|
