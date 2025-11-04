@@ -29,17 +29,6 @@ public class AuthClient {
 
         /** Constructor to initialize the WebClient */
         public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
-                /**
-                 * TODO : We should externalize the URL in a configuration file or environment
-                 * variable
-                 * Attention : don't use https://auth.sectioninformatique.ch beacause the SSL
-                 * certificate is not valid for this domain
-                 * Use https://spring-auth.jcloud.ik-server.com/ as it is the Jelastic server
-                 * domain name, with a valid SSL certificate
-                 */
-                // Use http://host.docker.internal:{spring-auth's port} to test locally with
-                // Docker desktop and add http://host.docker.internal:{template_frontback's
-                // port} in the CORS configuration of spring-auth
                 this.webClient = WebClient.create(authUrl);
         }
 
