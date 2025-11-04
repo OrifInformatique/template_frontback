@@ -12,8 +12,9 @@
   - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
   - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
   - [1.7 Users Module (`main/java/users`)](#17-users-module-mainjavausers)
-  - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
-  - [1.9 Error and Exception Managment (`main/java/app`)](#19-error-and-exception-managment-mainjavaapp)
+  - [1.8 Tests Controlleurs (`main/java/test`)](#18-tests-controlleurs-mainjavatest)
+  - [1.9 Security Module (`main/java/security`)](#19-security-module-mainjavasecurity)
+  - [1.10 Error and Exception Managment (`main/java/app`)](#110-error-and-exception-managment-mainjavaapp)
 - [Related Documentation](#related-documentation)
 ---
 
@@ -136,19 +137,21 @@ classDiagram
         +String firstName
         +String lastName
         +String login
-        +String password
         +Date createdAt
         +Date updatedAt
-        +Set<Role> roles
+        +Role mainRole
+        +Set<Role> appSpecificRoles
         +Collection<GrantedAuthority> getAuthorities()
-        +String getPassword()
         +String getUsername()
         +boolean isAccountNonExpired()
         +boolean isAccountNonLocked()
         +boolean isCredentialsNonExpired()
         +boolean isEnabled()
-        +Role getRole()
-        +void addRole(Role role)
+        +Role getMainRole()
+        +void setMainRole(Role role)
+        +void addAppSpecificRoles(Role role)
+        +List<String> getAppSpecificRolesString()
+        +Set<Role> getAllRoles()
     }
 
     class Role {
@@ -168,31 +171,33 @@ classDiagram
         +String lastName
         +String login
         +String token
-        +String role = "ROLE_USER"
+        +String refreshToken
+        +String mainRole = "USER"
+        +List<String> appSpecificRoles = new ArrayList<>()
         +List<String> permissions = new ArrayList<>()
     }
 
-    class SignUpDto {
+    class RegisterDto {
         <<DTO>>
         +String firstName
         +String lastName
         +String login
-        +char[] password
     }
 
     class UserMapper {
-        <<interface>>
+        <<interface / singleton>>
         +UserDto toUserDto(User user)
-        +User signUpToUser(SignUpDto signUpDto)
+        +User signUpToUser(RegisterDto registerDto)
         +List<String> authoritiesToPermissions(Collection<GrantedAuthority> authorities)
     }
 
     %% Relationships
-    User --> "0..*" Role : roles
+    User --> "0..1" Role : mainRole
+    User --> "0..*" Role : appSpecificRoles
     Role --> "0..*" User : users
     UserMapper ..> User : uses
     UserMapper ..> UserDto : creates
-    UserMapper ..> SignUpDto : uses
+    UserMapper ..> RegisterDto : uses
     User ..|> UserDetails
 ```
 *Class Diagram showing the `User`, `Role`, `UserDto`, and `SignUpDto` structure.*
@@ -200,38 +205,40 @@ classDiagram
 sequenceDiagram
     participant Client
     participant SecurityLayer
-    participant UserController
+    participant TestController
     participant UserService
     participant UserRepository
     participant UserMapper
 
-    Client->>SecurityLayer: /users/me
-    SecurityLayer->>UserController: Authorized UserDto extracted from token
-    UserController->>Client: UserDto in response
+    Client->>SecurityLayer: /tests/me
+    SecurityLayer->>TestController: Authorized UserDto extracted from token
+    TestController->>UserService: UserService.me()
+    UserService->>UserRepository: userRepository.findByLogin(currentUser.getLogin())
+    UserRepository->>TestController: Local User
+    TestController->>Client: UserDto in response
 
-    Client->>SecurityLayer: /users/all
-    SecurityLayer->>UserController: Authorized UserDto extracted from token
-    UserController->>UserService: UserService.allUsers()
+    Client->>SecurityLayer: /tests/all
+    SecurityLayer->>TestController: Authorized UserDto extracted from token
+    TestController->>UserService: UserService.all()
     UserService->>UserRepository: UserRepository.findAll()
-    UserRepository->>UserController: List of Users
-    UserController->>Client: Response containing the list of users
+    UserRepository->>TestController: List of Users
+    TestController->>Client: Response containing the list of users
 
-    Client->>SecurityLayer: /users/{userId}/promote-admin
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    UserController->>UserService: UserService.promoteToAdmin(userId)
+    Client->>SecurityLayer: /tests/{userId}/promote-test
+    SecurityLayer->>TestController: Authorized UserDto with `user:update` authority extracted from token
+    TestController->>UserService: userService.promoteToTestAdmin(userId)
     UserService->>UserRepository: UserRepository.findById(userId)
     UserRepository->>UserService: Found User
     UserService->>UserRepository: UserRepository.save(user) with updated role
     UserService->>UserMapper: UserMapper.toUserDto(user)
-    UserMapper->>UserController: UserDto
-    UserController->>Client: Response "User promoted to admin successfully"
+    UserMapper->>TestController: UserDto
+    TestController->>Client: Response "User promoted to test admin successfully"
 ```
 *Sequence Diagram showing an example of the user management flow.*
 
 | File | Description |
 |------|-------------|
 | `User.java` | Entity class representing a user in the system. |
-| `UserController.java` | Contains REST endpoints for user management (CRUD, profile, etc.). | 
 | `UserDto.java` | DTO for communication between backend and frontend. |
 | `UserMapper.java` | Handles conversion between `User` entities and `UserDto` objects. |
 | `UserRepository.java` | Interface for database operations related to users. |
@@ -239,8 +246,14 @@ sequenceDiagram
 | `UserService.java` | Business logic for user functionalities (creation, update, role assignment, etc.). |
 
 ---
+### 1.8 Tests Controlleurs (`main/java/test`)
 
-### 1.8 Security Module (`main/java/security`)
+| File | Description |
+|------|-------------|
+| `TestControlleur.java` | Controlleur to test fonctionalities. |
+---
+
+### 1.9 Security Module (`main/java/security`)
 
 ```mermaid
 sequenceDiagram
@@ -289,7 +302,7 @@ sequenceDiagram
 | `WebConfig.java` | Web configuration for general web-related settings. |
 
 ---
-### 1.9 Error and Exception Managment (`main/java/app`)
+### 1.10 Error and Exception Managment (`main/java/app`)
 
 | File | Description |
 |------|-------------|
