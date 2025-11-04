@@ -45,7 +45,6 @@ public class AuthController {
      */
     @PostMapping("/login")
     public Mono<ResponseEntity<UserDto>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-        /** TODO : Return datas in JSON format and not in String format */
         return ResponseEntity.ok(authClient.login(credentialsDto)).getBody();
     }
 
@@ -62,7 +61,6 @@ public class AuthController {
      */
     @PostMapping("/register")
     public Mono<ResponseEntity<UserDto>> register(@RequestBody @Valid SignUpDto user) {
-        /** TODO : Return datas in JSON format and not in String format */
         return authClient.register(user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
