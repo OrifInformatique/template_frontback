@@ -42,15 +42,15 @@ public class AuthClient {
     /** 
      * Performs user registration by sending user details to the registration endpoint.
      * 
-     * @param user The SignUpDto containing user registration data
+     * @param user The RegisterDto containing user registration data
      * @return A Mono<String> containing the registration response (e.g., token or status message)
      */
-    public Mono<String> register(SignUpDto user) {
+    public Mono<String> register(RegisterDto user) {
 
         return webClient.post()
                 .uri("/auth/register") // your register endpoint path
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(user) // use the SignUpDto directly
+                .bodyValue(user) // use the RegisterDto directly
                 .retrieve()
                 .bodyToMono(String.class); // expect the response as a String (e.g., a token or message)
     }

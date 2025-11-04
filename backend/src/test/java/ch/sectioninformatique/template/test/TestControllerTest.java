@@ -7,7 +7,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
-import ch.sectioninformatique.template.auth.SignUpDto;
+import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -736,7 +736,7 @@ public class TestControllerTest {
                 }
                 """;
 
-        when(authClient.register(any(SignUpDto.class)))
+        when(authClient.register(any(RegisterDto.class)))
                 .thenReturn(Mono.just(mockedJsonResponse));
 
         performRequest(

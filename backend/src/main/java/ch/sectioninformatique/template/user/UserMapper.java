@@ -17,7 +17,7 @@ import ch.sectioninformatique.template.auth.RegisterDto;
  * This interface uses MapStruct to generate implementation classes for mapping
  * between different user-related objects, including:
  * - User entity to UserDto conversion
- * - SignUpDto to User entity conversion
+ * - RegisterDto to User entity conversion
  * - Authorities to permissions conversion
  */
 @Mapper(componentModel = "spring")
@@ -51,13 +51,13 @@ public interface UserMapper {
     UserDto toUserDto(User user);
 
     /**
-     * Converts a SignUpDto to a User entity.
+     * Converts a RegisterDto to a User entity.
      * This method:
      * - Maps basic user properties from the signup data
      * - Ignores  roles (these are handled separately)
      * - Ignores ID and timestamps (these are set by the system)
      *
-     * @param RegisterDto The SignUpDto containing user registration data
+     * @param RegisterDto The RegisterDto containing user registration data
      * @return A new User entity with the signup information
      */
     @Mapping(target = "mainRole", ignore = true)

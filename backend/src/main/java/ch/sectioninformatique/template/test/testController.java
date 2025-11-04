@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.CredentialsDto;
 import ch.sectioninformatique.template.auth.RegisterDto;
-import ch.sectioninformatique.template.auth.SignUpDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -180,7 +179,7 @@ public class TestController {
      * @return Mono<ResponseEntity<String>> with registration response
      */
     @PostMapping("/register")
-    public Object testCallRegister(@RequestBody @Valid SignUpDto user) {
+    public Object testCallRegister(@RequestBody @Valid RegisterDto user) {
 
         if ("test".equals(activeProfile)) {
             // Test profile: block the reactive call
@@ -188,8 +187,7 @@ public class TestController {
                 String response = authClient.register(user).block(); // block for tests
 
                 // Also register user locally
-                RegisterDto userRegister = new RegisterDto(user.firstName(), user.lastName(), user.login());
-                userService.register(userRegister);
+                userService.register(user);
 
                 return ResponseEntity.ok(response);
             } catch (Exception ex) {
