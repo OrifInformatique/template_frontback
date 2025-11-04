@@ -120,9 +120,9 @@ sequenceDiagram
     UserMapper->>AuthController: UserDto
     AuthController->>UserAuthenticationProvider: userAuthenticationProvider.createToken(userDto)
     UserAuthenticationProvider->>AuthController: Token
-    AuthController->>Client: Response with UserDto and access Token
+    AuthController->>Client: Response with UserDto and access token
 ```
-*Sequence Diagrame Showing an Exemple of the Authorisation Flow.*
+*Sequence Diagram showing an example of the authentication flow.*
 
 | File | Description |
 |------|-------------|
@@ -204,39 +204,38 @@ classDiagram
     UserMapper ..> SignUpDto : uses
     User ..|> UserDetails
 ```
-*Class Diagrame Showing an Exemple of the User, Role, UserDto and SignUpDto Class.*
+*Class Diagram showing the `User`, `Role`, `UserDto`, and `SignUpDto` structure.*
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Security Layer
+    participant SecurityLayer
     participant UserController
     participant UserService
     participant UserRepository
     participant UserMapper
 
-    Client->>Security Layer: /users/me
-    Security Layer->>UserController: Authorised UserDto extracted from token
+    Client->>SecurityLayer: /users/me
+    SecurityLayer->>UserController: Authorized UserDto extracted from token
     UserController->>Client: UserDto in response
 
-    Client->>Security Layer: users/all
-    Security Layer->>UserController: Authorised UserDto extracted from token
+    Client->>SecurityLayer: /users/all
+    SecurityLayer->>UserController: Authorized UserDto extracted from token
     UserController->>UserService: UserService.allUsers()
     UserService->>UserRepository: UserRepository.findAll()
     UserRepository->>UserController: List of Users
-    UserController->>Client: Response containing th list of users
+    UserController->>Client: Response containing the list of users
 
-    Client->>Security Layer: users/{userId}/promote-admin
-    Security Layer->>UserController: Authorised UserDto with authority user:update extracted from token
+    Client->>SecurityLayer: /users/{userId}/promote-admin
+    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
     UserController->>UserService: UserService.promoteToAdmin(userId)
     UserService->>UserRepository: UserRepository.findById(userId)
     UserRepository->>UserService: Found User
-    UserService->>UserRepository: UserRepository.save(user) with a modified role
+    UserService->>UserRepository: UserRepository.save(user) with updated role
     UserService->>UserMapper: UserMapper.toUserDto(user)
     UserMapper->>UserController: UserDto
     UserController->>Client: Response "User promoted to admin successfully"
-
 ```
-*Sequence Diagrame Showing an Exemple of the User Managment Flow.*
+*Sequence Diagram showing an example of the user management flow.*
 
 | File | Description |
 |------|-------------|
@@ -281,8 +280,9 @@ sequenceDiagram
         UserController->>UserService: Perform business logic
         UserService-->>UserController: Return result
         UserController-->>Client: Return HTTP response
-    end  
+    end
 ```
+*Sequence Diagram showing JWT authentication and request handling flow.*
 
 | File | Description |
 |------|-------------|
