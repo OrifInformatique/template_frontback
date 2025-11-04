@@ -127,7 +127,7 @@ sequenceDiagram
 |------|-------------|
 | `AuthClient.java` | Client service for authentication operations which send requests to `spring-auth`. |
 | `CredentialsDto.java` | Data Transfer Object (DTO) for login credentials. |
-| `SignUpDto.java` | DTO for registration functionalities. |
+| `RegisterDto.java` | DTO for registration functionalities. |
 
 > **Reference:** For full authentication implementation, see the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.
 
