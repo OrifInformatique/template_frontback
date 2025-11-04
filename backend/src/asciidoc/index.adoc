@@ -1,0 +1,246 @@
+= Template FrontBack API Documentation
+:toc: right
+:toclevels: 4 
+:toc-title: Table of Contents
+
+== 1 Test Endpoints
+
+=== 1.1 Get Hello
+This is an example output for the `GET /tests/` endpoint.
+
+Test
+
+.request
+include::tests/get-hello/http-request.adoc[]
+
+.response
+include::tests/get-hello/http-response.adoc[]
+
+It returns a greeting message along with user details based on the provided JWT token.
+
+==== 1.1.1 Error 401 - Unauthorised
+Those are examples output for the `GET /tests/` endpoint in case of error 401 Unauthorised.
+
+===== 1.1.1.1 Missing Token
+This is an example output for the `GET /tests/` endpoint when a request with a missing token is sent.
+
+.request
+include::tests/get-hello/401/missing-token/http-request.adoc[]
+
+.response
+include::tests/get-hello/401/missing-token/http-response.adoc[]
+
+It returns a message Indicating the lack of authorisations.
+
+===== 1.1.1.2 Malformed Token
+This is an example output for the `GET /tests/` endpoint when a request with a malformed token is sent.
+
+.request
+include::tests/get-hello/401/malformed-token/http-request.adoc[]
+
+.response
+include::tests/get-hello/401/malformed-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+===== 1.1.1.3 Expired Token
+This is an example output for the `GET /tests/` endpoint when a request with an expired token is sent.
+
+.request
+include::tests/get-hello/401/expired-token/http-request.adoc[]
+
+.response
+include::tests/get-hello/401/expired-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+=== 1.2 Me
+This is an example output for the `GET /tests/me` endpoint.
+
+.request
+include::tests/me/http-request.adoc[]
+
+.response
+include::tests/me/http-response.adoc[]
+
+It returns the currently authenticated user information based on the provided JWT token.
+
+==== 1.2.1 Error 401 - Unauthorised
+Those are examples output for the `GET /tests/me` endpoint in case of error 401 Unauthorised.
+
+===== 1.2.1.1 Missing Token
+This is an example output for the `GET /tests/` endpoint when a request with a missing token is sent.
+
+.request
+include::tests/me/401/missing-token/http-request.adoc[]
+
+.response
+include::tests/me/401/missing-token/http-response.adoc[]
+
+It returns a message Indicating the lack of authorisations.
+
+===== 1.2.1.2 Malformed Token
+This is an example output for the `GET /tests/me` endpoint when a request with a malformed token is sent.
+
+.request
+include::tests/me/401/malformed-token/http-request.adoc[]
+
+.response
+include::tests/me/401/malformed-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+===== 1.2.1.3 Expired Token
+This is an example output for the `GET /tests/me` endpoint when a request with an expired token is sent.
+
+.request
+include::tests/me/401/expired-token/http-request.adoc[]
+
+.response
+include::tests/me/401/expired-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+=== 1.3 Promote Test Admin
+This is an example output for the `PUT /tests/{userId}/promote-test` endpoint.
+
+.request
+include::tests/promote-test/http-request.adoc[]
+
+.response
+include::tests/promote-test/http-response.adoc[]
+
+It returns the confirmation that the user was promoted to the test admin role.
+
+==== 1.3.1 Error 401 - Unauthorised
+Those are examples output for the `PUT /tests/{userId}/promote-test` endpoint in case of error 401 Unauthorised.
+
+===== 1.3.1.1 Missing Token
+This is an example output for the `PUT /tests/{userId}/promote-test` endpoint when a request with a missing token is sent.
+
+.request
+include::tests/promote-test/401/missing-token/http-request.adoc[]
+
+.response
+include::tests/promote-test/401/missing-token/http-response.adoc[]
+
+It returns a message Indicating the lack of authorisations.
+
+===== 1.3.1.2 Malformed Token
+This is an example output for the `PUT /tests/{userId}/promote-test` endpoint when a request with a malformed token is sent.
+
+.request
+include::tests/promote-test/401/malformed-token/http-request.adoc[]
+
+.response
+include::tests/promote-test/401/malformed-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+===== 1.3.1.3 Expired Token
+This is an example output for the `PUT /tests/{userId}/promote-test` endpoint when a request with an expired token is sent.
+
+.request
+include::tests/promote-test/401/expired-token/http-request.adoc[]
+
+.response
+include::tests/promote-test/401/expired-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+==== 1.3.2 Error 403 - Forbidden
+Those are examples output for the `PUT /tests/{userId}/promote-test` endpoint in case of error 403 Forbidden.
+
+===== 1.3.2.1 Non-Admin User
+This is an example output for the `PUT /tests/{userId}/promote-test` endpoint when a request is made from a user without the correct permissions.
+
+.request
+include::tests/promote-test/403/non-admin/http-request.adoc[]
+
+.response
+include::tests/promote-test/403/non-admin/http-response.adoc[]
+
+It returns a message indicating that the access was denied.
+
+==== 1.3.3 Error 404 - Not Found
+Those are examples output for the `PUT /tests/{userId}/promote-test` endpoint in case of error 404 Not Found.
+
+===== 1.3.3.1 User Not Found
+This is an example output for the `PUT /tests/{userId}/promote-test` endpoint when a user to promote isn't found.
+
+.request
+include::tests/promote-test/404/user-not-found/http-request.adoc[]
+
+.response
+include::tests/promote-test/404/user-not-found/http-response.adoc[]
+
+It returns a message indicating that the user wasn't found.
+
+=== 1.4 All 
+This is an example output for the `GET /tests/all` endpoint.
+
+.request
+include::tests/all/http-request.adoc[]
+
+.response
+include::tests/all/http-response.adoc[]
+
+It returns a list of users.
+
+==== 1.4.1 Error 401 - Unauthorised
+Those are examples output for the `GET /tests/all` endpoint in case of error 401 Unauthorised.
+
+===== 1.4.1.1 Missing Token
+This is an example output for the `GET /tests/all` endpoint when a request with a missing token is sent.
+
+.request
+include::tests/all/401/missing-token/http-request.adoc[]
+
+.response
+include::tests/all/401/missing-token/http-response.adoc[]
+
+It returns a message Indicating the lack of authorisations.
+
+===== 1.4.1.2 Malformed Token
+This is an example output for the `GET /tests/all` endpoint when a request with a malformed token is sent.
+
+.request
+include::tests/all/401/malformed-token/http-request.adoc[]
+
+.response
+include::tests/all/401/malformed-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+===== 1.4.1.3 Expired Token
+This is an example output for the `GET /tests/all` endpoint when a request with an expired token is sent.
+
+.request
+include::tests/all/401/expired-token/http-request.adoc[]
+
+.response
+include::tests/all/401/expired-token/http-response.adoc[]
+
+It returns a message indicating the token problem.
+
+=== 1.5 Login
+This is an example output for the `POST /tests/login` endpoint.
+
+.request
+include::tests/login/http-request.adoc[]
+
+.response
+include::tests/login/http-response.adoc[]
+
+It returns the profil of the newly logged user.
+
+=== 1.6 Register
+This is an example output for the `GET /tests/register` endpoint.
+
+.request
+include::tests/register/http-request.adoc[]
+
+.response
+include::tests/register/http-response.adoc[]
+
+It returns the profil of the newly registered user.

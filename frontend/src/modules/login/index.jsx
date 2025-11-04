@@ -131,7 +131,7 @@ const Login = () => {
     // Redirects the browser to the backend OAuth2 login URL.
     // After Azure login, the backend should redirect back to your app at /oauth2/success.
     const handleOAuth2Login = () => {
-        window.location.href = `${AUTH_API_URL}/oauth2/authorization/azure`;
+        window.location.href = `${AUTH_API_URL}/test/oauth2/login`;
     };
 
     const handleLogout = () => {

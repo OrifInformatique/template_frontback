@@ -1,11 +1,12 @@
 package ch.sectioninformatique.template.user;
 
-import ch.sectioninformatique.template.security.Role;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+
+import ch.sectioninformatique.template.security.Role;
+
 import org.springframework.security.core.GrantedAuthority;
 import java.util.*;
 import lombok.Builder;
@@ -24,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 @Builder
 @NoArgsConstructor
-public class User implements UserDetails {
+public class User {
     
     /**
      * Unique identifier for the user.
@@ -53,12 +54,6 @@ public class User implements UserDetails {
     private String login;
 
     /**
-     * User's hashed password.
-     */
-    @Column(nullable = false)
-    private String password;
-
-    /**
      * Timestamp when the user account was created.
      * This field cannot be updated after creation.
      */
@@ -80,14 +75,22 @@ public class User implements UserDetails {
      *
      * @return Collection of GrantedAuthority objects representing the user's roles
      */
-    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        for (Role role : this.roles) {
+        Set<Role> roleList = this.appSpecificRoles;
+        roleList.add(this.mainRole);
+        for (Role role : roleList) {
             authorities.addAll(role.getName().getGrantedAuthorities());
         }
         return authorities;
     }
+
+    /**
+     * Main role of the user
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @Builder.Default
+    private Role mainRole = new Role();
     
     /**
      * Set of roles assigned to the user.
@@ -95,7 +98,9 @@ public class User implements UserDetails {
      */
     @ManyToMany(fetch = FetchType.EAGER)
     @Builder.Default
-    private Set<Role> roles = new HashSet<>();
+    private Set<Role> appSpecificRoles = new HashSet<>();
+
+    
 
     /**
      * Constructs a new User with all required fields.
@@ -104,39 +109,28 @@ public class User implements UserDetails {
      * @param firstName The user's first name
      * @param lastName The user's last name
      * @param login The user's unique login identifier
-     * @param password The user's hashed password
      * @param createdAt The timestamp when the user was created
      * @param updatedAt The timestamp when the user was last updated
-     * @param roles The set of roles assigned to the user
+     * @param mainRole The Main role assigned to the user
+     * @param appSpecificRoles The set of app specifique roles assigned to the user
      */
     public User(long id,
                 String firstName, 
                 String lastName, 
                 String login,
-                String password, 
                 Date createdAt, 
                 Date updatedAt,
-                Set<Role> roles) {
+                Role mainRole,
+                Set<Role> appSpecificRoles) {
         super();
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.login = login;
-        this.password = password;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.roles = roles;
-    }
-
-    /**
-     * Returns the user's password.
-     * Required by the UserDetails interface.
-     *
-     * @return The user's hashed password
-     */
-    @Override
-    public String getPassword() {
-        return password;
+        this.mainRole = mainRole;
+        this.appSpecificRoles = appSpecificRoles;
     }
 
     /**
@@ -145,7 +139,6 @@ public class User implements UserDetails {
      *
      * @return The user's login identifier
      */
-    @Override
     public String getUsername() {
         return login;
     }
@@ -156,7 +149,6 @@ public class User implements UserDetails {
      *
      * @return true if the account is valid (not expired), false otherwise
      */
-    @Override
     public boolean isAccountNonExpired() {
         return true;
     }
@@ -167,18 +159,16 @@ public class User implements UserDetails {
      *
      * @return true if the account is not locked, false otherwise
      */
-    @Override
     public boolean isAccountNonLocked() {
         return true;
     }
 
     /**
-     * Indicates whether the user's credentials (password) has expired.
+     * Indicates whether the user's credentials has expired.
      * Required by the UserDetails interface.
      *
      * @return true if the credentials are valid (not expired), false otherwise
      */
-    @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
@@ -189,27 +179,63 @@ public class User implements UserDetails {
      *
      * @return true if the account is enabled, false otherwise
      */
-    @Override
     public boolean isEnabled() {
         return true;
     }
 
     /**
-     * Returns the first role assigned to the user.
+     * Returns the Main role assigned to the user.
      * This method assumes the user has at least one role.
      *
-     * @return The first role in the user's role set
+     * @return The main role 
      */
-    public Role getRole() {
-        return roles.iterator().next();
+    public Role getMainRole() {
+        return mainRole;
+    }
+
+    /**
+     * Returns a list of app specific roles' names assigned to the user.
+     *
+     * @return The user's app specific role set
+     */
+    public List<String> getAppSpecificRolesString() {
+        List<String> appSpecificRolesSrting = new ArrayList<String>();
+        for(Role role : appSpecificRoles){
+            appSpecificRolesSrting.add(role.getName().name());
+        }
+        return appSpecificRolesSrting;
     }
     
     /**
-     * Adds a new role to the user's set of roles.
+     * Returns all roles assigned to the user.
      *
-     * @param role The role to add to the user
+     * @return The all roles assigned to the user
      */
-    public void addRole(Role role) {
-        roles.add(role);
-    }   
+    public Set<Role> getAllRoles() {
+        Set<Role> allRoles = new HashSet<>();
+            if (appSpecificRoles != null) {
+                for (Role role : appSpecificRoles) {
+                    allRoles.add(role);
+                }
+            }
+        return allRoles;
+    }
+
+    /**
+     * Adds a new main role to the user.
+     *
+     * @param role The main role to set for the user
+     */
+    public void setMainRole(Role role) {
+        mainRole = role;
+    } 
+    
+    /**
+     * Adds a new role to the user's set of app specific roles.
+     *
+     * @param role The app specific role to add to the user
+     */
+    public void addAppSpecificRoles(Role role) {
+        appSpecificRoles.add(role);
+    }
 }

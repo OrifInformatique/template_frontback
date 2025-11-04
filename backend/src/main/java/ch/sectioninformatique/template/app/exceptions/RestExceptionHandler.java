@@ -1,6 +1,8 @@
 package ch.sectioninformatique.template.app.exceptions;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -35,6 +37,27 @@ public class RestExceptionHandler {
         return ResponseEntity
                 .status(ex.getStatus())
                 .body(new ErrorDto(ex.getMessage()));
+    }
+
+    
+    /**
+     * Handles access denied exceptions and converts them to error responses.
+     * This method:
+     * - Is annotated with @ExceptionHandler to catch AccessDeniedException
+     * instances
+     * - Returns a ResponseEntity with HTTP 403 Forbidden status and error message
+     * - Wraps the error message in an ErrorDto object
+     * - Is used for all REST endpoints in the application
+     *
+     * @param ex The AccessDeniedException that was thrown
+     * @return ResponseEntity containing the error details and HTTP 403 status
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseBody
+    public ResponseEntity<ErrorDto> handleAccessDeniedException(AccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorDto("Access is denied"));
     }
 }
 
