@@ -361,8 +361,4 @@ sequenceDiagram
 ---
 
 **Author:** Ken D. Cacciabue
-<<<<<<< HEAD
 **Last Updated:** 05.11.2025
-=======
-**Last Updated:** 04.11.2025
->>>>>>> eb4d0e4f6024a921ec871b6fea04067f7937d03b
