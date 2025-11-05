@@ -17,6 +17,9 @@
   - [1.9 Security Module (`main/java/security`)](#19-security-module-mainjavasecurity)
   - [1.10 Error and Exception Managment (`main/java/app`)](#110-error-and-exception-managment-mainjavaapp)
   - [1.11 Main Test Modules (`main/test`)](#111-main-test-modules-maintest)
+  - [1.12 Security Tests (`main/test/security`)](#112-security-tests-maintestsecurity)
+  - [1.13 Test Tests (`main/test/test`)](#113-test-tests-maintesttest)
+  - [1.14 User Tests (`main/test/user`)](#114-user-tests-maintestuser)
 - [Related Documentation](#related-documentation)
 ---
 
@@ -328,6 +331,27 @@ sequenceDiagram
 | `TemplateApplicationTests.java` | Load the context of the app. |
 | `TestConfigurationDebug.java` | Test the existence of the environnment variables. |
 ---
+### 1.12 Security Tests (`main/test/security`)
+| File | Description |
+|------|-------------|
+| `UserAuthentificationProvider.java` | Tests the methodes in `UserAuthentificationProvider`. |
+
+---
+### 1.13 Test Tests (`main/test/test`)
+| File | Description |
+|------|-------------|
+| `TestControllerTest.java` | Test and document the API test endpoint. Write an Asciidoc in `src/asciidoc` that is then transformed into an html for the `Github Page`. |
+| `TestControllerHelper.java` | Externalise some of the `TestControllerTest` fonctionalities. |
+
+---
+### 1.14 User Tests (`main/test/user`)
+| File | Description |
+|------|-------------|
+| `TestUserSeeder.java` | Specialised seeder that create `Users` only in test mode. |
+| `UserDtoTest.java` | Test the `UserDto` object. |
+| `UserMapperTest.java` | Test the `UserMapper` interface. |
+| `UserTest.java` | Test the `User` object. |
+---
 
 ## Related Documentation
 
@@ -337,4 +361,4 @@ sequenceDiagram
 ---
 
 **Author:** Ken D. Cacciabue
-**Last Updated:** 04.11.2025
+**Last Updated:** 05.11.2025
