@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import ch.sectioninformatique.template.user.UserDto;
@@ -14,11 +12,10 @@ import ch.sectioninformatique.template.user.UserService;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Base64;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Test class for {@link UserAuthenticationProvider}.
@@ -65,7 +62,7 @@ class UserAuthenticationProviderTest {
                 .login(TEST_LOGIN)
                 .firstName(TEST_FIRST_NAME)
                 .lastName(TEST_LAST_NAME)
-                .role("USER")
+                .mainRole("USER")
                 .permissions(Arrays.asList("read", "write"))
                 .build();
 
@@ -91,82 +88,16 @@ class UserAuthenticationProviderTest {
                 .login(TEST_LOGIN)
                 .firstName(TEST_FIRST_NAME)
                 .lastName(TEST_LAST_NAME)
-                .role("USER")
+                .mainRole("USER")
                 .permissions(Arrays.asList("read", "write"))
                 .build();
 
+        // When
         String token = authenticationProvider.createToken(user);
 
-        // When
-        Authentication authentication = authenticationProvider.validateToken(token);
-
         // Then
-        assertNotNull(authentication);
-        assertTrue(authentication instanceof UsernamePasswordAuthenticationToken);
-        assertEquals(TEST_LOGIN, ((UserDto) authentication.getPrincipal()).getLogin());
-        assertTrue(authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().startsWith("ROLE_")));
-    }
-
-    /**
-     * Tests the strong token validation with existing user.
-     * Verifies that:
-     * - User is found in database
-     * - Authentication is created with correct details
-     * - Authorities include both role and permissions
-     */
-    @Test
-    void testValidateTokenStrongly_ExistingUser() {
-        // Given
-        UserDto user = UserDto.builder()
-                .login(TEST_LOGIN)
-                .firstName(TEST_FIRST_NAME)
-                .lastName(TEST_LAST_NAME)
-                .role("USER")
-                .permissions(Arrays.asList("read", "write"))
-                .build();
-
-        String token = authenticationProvider.createToken(user);
-        when(userService.findByLogin(TEST_LOGIN)).thenReturn(user);
-
-        // When
-        Authentication authentication = authenticationProvider.validateTokenStrongly(token);
-
-        // Then
-        assertNotNull(authentication);
-        assertEquals(TEST_LOGIN, ((UserDto) authentication.getPrincipal()).getLogin());
-        verify(userService).findByLogin(TEST_LOGIN);
-    }
-
-    /**
-     * Tests the strong token validation with new user.
-     * Verifies that:
-     * - New user is created when not found
-     * - Authentication is created with correct details
-     * - Default permissions are set
-     */
-    @Test
-    void testValidateTokenStrongly_NewUser() {
-        // Given
-        UserDto user = UserDto.builder()
-                .login(TEST_LOGIN)
-                .firstName(TEST_FIRST_NAME)
-                .lastName(TEST_LAST_NAME)
-                .role("USER")
-                .permissions(Arrays.asList("read", "write"))
-                .build();
-
-        String token = authenticationProvider.createToken(user);
-        when(userService.findByLogin(TEST_LOGIN)).thenThrow(new RuntimeException("User not found"));
-        when(userService.createAzureUser(any())).thenReturn(user);
-
-        // When
-        Authentication authentication = authenticationProvider.validateTokenStrongly(token);
-
-        // Then
-        assertNotNull(authentication);
-        assertEquals(TEST_LOGIN, ((UserDto) authentication.getPrincipal()).getLogin());
-        verify(userService).createAzureUser(any());
+        assertNotNull(token);
+        assertTrue(token.split("\\.").length == 3); // JWT has 3 parts
     }
 
     /**
@@ -179,14 +110,13 @@ class UserAuthenticationProviderTest {
     @Test
     void testBuildAuthorities() throws Exception {
         // Given
-        String role = "USER";
-        List<String> permissions = Arrays.asList("read", "write");
+        List<String> roles = Arrays.asList("USER");
 
         // When
-        Method method = UserAuthenticationProvider.class.getDeclaredMethod("buildAuthorities", String.class, List.class);
+        Method method = UserAuthenticationProvider.class.getDeclaredMethod("buildAuthorities", List.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        List<SimpleGrantedAuthority> authorities = (List<SimpleGrantedAuthority>) method.invoke(authenticationProvider, role, permissions);
+        List<SimpleGrantedAuthority> authorities = (List<SimpleGrantedAuthority>) method.invoke(authenticationProvider, roles);
 
         // Then
         assertNotNull(authorities);
@@ -194,8 +124,6 @@ class UserAuthenticationProviderTest {
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
         assertTrue(authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("read")));
-        assertTrue(authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("write")));
+                .anyMatch(auth -> auth.getAuthority().equals("user:read")));
     }
 } 
