@@ -8,5 +8,6 @@ package ch.sectioninformatique.template.auth;
  * @param firstName The user's first name
  * @param lastName  The user's last name
  * @param login     The user's login identifier
+ * @param password  The user's password as a character array
  */
 public record RegisterDto(String firstName, String lastName, String login, char[] password) {}
