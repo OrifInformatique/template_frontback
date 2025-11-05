@@ -6,6 +6,7 @@
   "lastName" : "User",
   "login" : "test.user@test.com",
   "token" : null,
+  "refreshToken" : null,
   "mainRole" : "USER",
   "appSpecificRoles" : [ "USER" ],
   "permissions" : [ "ROLE_USER", "user:read" ]

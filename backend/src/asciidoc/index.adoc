@@ -223,24 +223,26 @@ include::tests/all/401/expired-token/http-response.adoc[]
 
 It returns a message indicating the token problem.
 
-=== 1.5 Login
+== 2 Auth Endpoints
+
+=== 2.1 Login
 This is an example output for the `POST /tests/login` endpoint.
 
 .request
-include::tests/login/http-request.adoc[]
+include::auth/login/http-request.adoc[]
 
 .response
-include::tests/login/http-response.adoc[]
+include::auth/login/http-response.adoc[]
 
 It returns the profil of the newly logged user.
 
-=== 1.6 Register
+=== 2.2 Register
 This is an example output for the `GET /tests/register` endpoint.
 
 .request
-include::tests/register/http-request.adoc[]
+include::auth/register/http-request.adoc[]
 
 .response
-include::tests/register/http-response.adoc[]
+include::auth/register/http-response.adoc[]
 
 It returns the profil of the newly registered user.
