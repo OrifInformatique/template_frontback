@@ -5,59 +5,57 @@
   "firstName" : "Test",
   "lastName" : "User",
   "login" : "test.user@test.com",
-  "createdAt" : 1761664277634,
-  "updatedAt" : 1761664277634,
+  "createdAt" : 1762336197719,
+  "updatedAt" : 1762336197719,
   "mainRole" : {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761664277597,
-    "updatedAt" : 1761664277597
+    "createdAt" : 1762336197689,
+    "updatedAt" : 1762336197689
   },
   "appSpecificRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761664277597,
-    "updatedAt" : 1761664277597
+    "createdAt" : 1762336197689,
+    "updatedAt" : 1762336197689
   } ],
   "allRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1761664277597,
-    "updatedAt" : 1761664277597
+    "createdAt" : 1762336197689,
+    "updatedAt" : 1762336197689
   } ],
-  "username" : "test.user@test.com",
   "accountNonExpired" : true,
-  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "ROLE_USER"
   }, {
     "authority" : "user:read"
   } ],
+  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "USER" ],
+  "username" : "test.user@test.com",
   "enabled" : true
 }, {
   "id" : 2,
   "firstName" : "Test",
   "lastName" : "Manager",
   "login" : "test.manager@test.com",
-  "createdAt" : 1761664277635,
-  "updatedAt" : 1761664277635,
+  "createdAt" : 1762336197720,
+  "updatedAt" : 1762336197720,
   "mainRole" : {
     "id" : 3,
     "name" : "MANAGER",
     "description" : "Manager role",
-    "createdAt" : 1761664277608,
-    "updatedAt" : 1761664277608
+    "createdAt" : 1762336197699,
+    "updatedAt" : 1762336197699
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
-  "username" : "test.manager@test.com",
   "accountNonExpired" : true,
-  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:read"
@@ -68,27 +66,27 @@
   }, {
     "authority" : "user:update"
   } ],
+  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "MANAGER" ],
+  "username" : "test.manager@test.com",
   "enabled" : true
 }, {
   "id" : 3,
   "firstName" : "Test",
   "lastName" : "Admin",
   "login" : "test.admin@test.com",
-  "createdAt" : 1761664277636,
-  "updatedAt" : 1761664277636,
+  "createdAt" : 1762336197721,
+  "updatedAt" : 1762336197721,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1761664277613,
-    "updatedAt" : 1761664277613
+    "createdAt" : 1762336197704,
+    "updatedAt" : 1762336197704
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
-  "username" : "test.admin@test.com",
   "accountNonExpired" : true,
-  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:delete"
@@ -101,27 +99,27 @@
   }, {
     "authority" : "ROLE_ADMIN"
   } ],
+  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "ADMIN" ],
+  "username" : "test.admin@test.com",
   "enabled" : true
 }, {
   "id" : 4,
   "firstName" : "Test2",
   "lastName" : "Admin2",
   "login" : "test.admin2@test.com",
-  "createdAt" : 1761664277637,
-  "updatedAt" : 1761664277637,
+  "createdAt" : 1762336197722,
+  "updatedAt" : 1762336197722,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1761664277613,
-    "updatedAt" : 1761664277613
+    "createdAt" : 1762336197704,
+    "updatedAt" : 1762336197704
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
-  "username" : "test.admin2@test.com",
   "accountNonExpired" : true,
-  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:delete"
@@ -134,7 +132,9 @@
   }, {
     "authority" : "ROLE_ADMIN"
   } ],
+  "credentialsNonExpired" : true,
   "appSpecificRolesString" : [ "ADMIN" ],
+  "username" : "test.admin2@test.com",
   "enabled" : true
 } ]
 ----
