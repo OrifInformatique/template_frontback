@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UserAuthenticationProvider {
 
+    /** Service for user-related operations, including user creation and retrieval */
     private final UserService userService;
 
     /**

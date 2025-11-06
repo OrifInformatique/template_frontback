@@ -94,8 +94,8 @@ public class testController {
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
         try {
-            userService.promoteToTestAdmin(userId);
-            return ResponseEntity.ok().body("User promoted to test user successfully");
+            userService.promoteToLocalAppRole(userId);
+            return ResponseEntity.ok().body("User promoted to local app role successfully.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
