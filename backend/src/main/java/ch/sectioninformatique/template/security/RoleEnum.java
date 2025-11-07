@@ -47,15 +47,13 @@ public enum RoleEnum {
             USER_DELETE)),
 
     /**
-     * Administrator role with full system access.
-     * Has all permissions including deletion of users.
-     * Only Have those permissions in this app.
+     * Example of a local application role wich is specific to this app and not
+     * transmitted from spring-auth application.
      */
-    ADMIN_TEST(EnumSet.of(
+    LOCAL_APP_ROLE(EnumSet.of(
             USER_READ,
             USER_WRITE,
-            USER_UPDATE,
-            USER_DELETE));
+            USER_UPDATE));
 
     /** Set of permissions associated with this role */
     private final Set<PermissionEnum> permissions;

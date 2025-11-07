@@ -39,31 +39,31 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to the local admin role.
+     * Promotes a user to the local application example role.
      * This operation:
      * - Verifies the user exists
-     * - Checks if the user is already an manager or admin
-     * - Removes existing roles and assigns the admin role
+     * - Checks if the user has already the local application example role
+     * - Removes existing roles and assigns the local application example role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
-     * @throws RuntimeException if the user is not found, already an manager, or the
-     *                          manager role is not found
+     * @throws RuntimeException if the user is not found, already has the role, or the
+     *                          role is not found
      */
-    public UserDto promoteToTestAdmin(Long userId) {
+    public UserDto promoteToLocalAppRole(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
         for (Role role : user.getAppSpecificRoles()) {
-            if (role.getName().equals(RoleEnum.ADMIN_TEST)) {
-                throw new AppException("The user is already a test admin", HttpStatus.CONFLICT);
+            if (role.getName().equals(RoleEnum.LOCAL_APP_ROLE)) {
+                throw new RuntimeException("The user has already the local app role");
             }
         }
 
-        Role testAdminRole = roleRepository.findByName(RoleEnum.ADMIN_TEST)
-                .orElseThrow(() -> new AppException("ADMIN_TEST role not found", HttpStatus.NOT_FOUND));
+        Role localAppRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
+                .orElseThrow(() -> new RuntimeException("LOCAL_APP_ROLE role not found"));
 
-        user.getAppSpecificRoles().add(testAdminRole);
+        user.getAppSpecificRoles().add(localAppRole);
         userRepository.save(user);
         return userMapper.toUserDto(user);
     }
@@ -144,7 +144,7 @@ public class UserService {
 
         if (localUser == null) {
             RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                    userDto.getLogin());
+                    userDto.getLogin(), null);
 
             localUser = this.register(newUser);
         }

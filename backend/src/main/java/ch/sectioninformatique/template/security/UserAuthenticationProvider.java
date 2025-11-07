@@ -3,7 +3,9 @@ package ch.sectioninformatique.template.security;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +21,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserRepository;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +41,12 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UserAuthenticationProvider {
 
+    /**
+     * Service for user-related operations, including user creation and retrieval
+     */
     private final UserService userService;
+
+    private final UserRepository userRepository;
 
     /**
      * Secret key for JWT token signing and verification, configured via application
@@ -75,6 +83,9 @@ public class UserAuthenticationProvider {
         Date validity = new Date(now.getTime() + 3600000); // 1 hour
 
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
+
+        List<String> authorities = this.getLocalPermissions(user);
+
         return JWT.create()
                 .withSubject(user.getLogin())
                 .withIssuedAt(now)
@@ -83,6 +94,7 @@ public class UserAuthenticationProvider {
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
                 .withClaim("appSpecificRoles", user.getAppSpecificRoles())
+                .withClaim("permissions", authorities)
                 .sign(algorithm);
     }
 
@@ -112,6 +124,37 @@ public class UserAuthenticationProvider {
                 .withClaim("appSpecificRoles", user.getAppSpecificRoles())
                 .sign(algorithm);
     }
+    
+    /**
+     * Return a list of authorities as Strings from a UserDto.
+     *
+     * @param user The UserDto
+     * 
+     * @return List of String of authorities
+     */
+    public List<String> getLocalPermissions(UserDto user) {
+        Optional<User> localUser = userRepository.findByLogin(user.getLogin());
+
+        List<String> roles = new ArrayList<>();
+
+        List<String> authorities = new ArrayList<>();
+
+        if (localUser.isPresent()) {
+            roles.add(localUser.get().getMainRole().getName().name());
+
+            for (String role : localUser.get().getAppSpecificRolesString()) {
+                roles.add(role);
+            }
+
+            authorities = this.buildAuthorities(roles).stream()
+                    .map(SimpleGrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+        } else {
+            authorities = user.getPermissions();
+        }
+
+        return authorities;
+    }
 
     /**
      * Builds a list of authorities from a role and permissions.
@@ -129,7 +172,6 @@ public class UserAuthenticationProvider {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             if (role != null && !role.isEmpty()) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                 Set<SimpleGrantedAuthority> authoritySet = RoleEnum.valueOf(role).getGrantedAuthorities();
                 authorities.addAll(authoritySet);
             }

@@ -14,22 +14,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.sectioninformatique.template.auth.AuthClient;
-import ch.sectioninformatique.template.auth.CredentialsDto;
-import ch.sectioninformatique.template.auth.RegisterDto;
-import ch.sectioninformatique.template.auth.SignUpDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
-import jakarta.validation.Valid;
+import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.CredentialsDto;
+import ch.sectioninformatique.template.auth.RegisterDto;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
 
 /**
  * Controller for test endpoints.
@@ -108,8 +103,12 @@ public class TestController {
     @PutMapping("/{userId}/promote-test")
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
-        userService.promoteToTestAdmin(userId);
-        return ResponseEntity.ok().body(Map.of("message", "User promoted to test admin successfully"));
+        try {
+            userService.promoteToLocalAppRole(userId);
+            return ResponseEntity.ok().body("User promoted to local app role successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     /**
@@ -180,7 +179,7 @@ public class TestController {
      * @return Mono<ResponseEntity<String>> with registration response
      */
     @PostMapping("/register")
-    public Object testCallRegister(@RequestBody @Valid SignUpDto user) {
+    public Object testCallRegister(@RequestBody @Valid RegisterDto user) {
 
         if ("test".equals(activeProfile)) {
             // Test profile: block the reactive call

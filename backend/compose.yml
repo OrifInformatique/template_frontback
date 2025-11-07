@@ -22,6 +22,7 @@ services:
       TEST_SPRING_DATASOURCE_URL: "${TEST_SPRING_DATASOURCE_URL}"
       SPRING_DATASOURCE_USERNAME: "${DB_USERNAME}"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
+      SPRING_AUTH_URL: "${SPRING_AUTH_URL}"
     ports:
       - "${PORT}:${PORT}"
     depends_on:
@@ -38,11 +39,11 @@ services:
     ports:
       - "3306:3306" # Expose the database port to connect from outside the container
     volumes:
-    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - spring_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
