@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.validation.Valid;
@@ -28,6 +29,8 @@ public class AuthController {
     /** Service for handling user-related operations */
     private final UserService userService;
 
+    private final UserAuthenticationProvider userAuthenticationProvider;
+
     /** Client to send authentication requests to the spring-auth application */
     @Autowired
     private final AuthClient authClient;
@@ -45,7 +48,17 @@ public class AuthController {
      */
     @PostMapping("/login")
     public Mono<ResponseEntity<UserDto>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-        return ResponseEntity.ok(authClient.login(credentialsDto)).getBody();
+        return authClient.login(credentialsDto)
+            .map(responseEntity -> {
+                UserDto userDto = responseEntity.getBody();
+                if (userDto != null) {
+                    userDto.setPermissions(userAuthenticationProvider.getLocalPermissions(userDto));
+                    return ResponseEntity.ok(userDto);
+                } else {
+                    // Handle null body just in case
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
+            });
     }
 
     /**
