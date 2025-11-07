@@ -1,17 +1,19 @@
 package ch.sectioninformatique.template.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ch.sectioninformatique.template.app.errors.ErrorDto;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ch.sectioninformatique.template.app.errors.ErrorDto;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Entry point for handling unauthenticated requests.

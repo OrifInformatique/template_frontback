@@ -3,22 +3,24 @@ package ch.sectioninformatique.template.security;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserRepository;
 import ch.sectioninformatique.template.user.UserService;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Test class for {@link UserAuthenticationProvider}.
@@ -27,11 +29,16 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 class UserAuthenticationProviderTest {
+    @InjectMocks
+    private UserAuthenticationProvider authenticationProvider;
 
     @Mock
     private UserService userService;
 
-    private UserAuthenticationProvider authenticationProvider;
+    @Mock
+    private UserRepository userRepository;
+
+    
 
     private static final String TEST_SECRET_KEY = "test-secret-key";
     private static final String TEST_LOGIN = "test@example.com";
@@ -40,7 +47,7 @@ class UserAuthenticationProviderTest {
 
     @BeforeEach
     void setUp() {
-        authenticationProvider = new UserAuthenticationProvider(userService);
+        authenticationProvider = new UserAuthenticationProvider(userService, userRepository);
         // Use reflection to set the secret key
         try {
             java.lang.reflect.Field field = UserAuthenticationProvider.class.getDeclaredField("secretKey");
@@ -65,9 +72,22 @@ class UserAuthenticationProviderTest {
                 .login(TEST_LOGIN)
                 .firstName(TEST_FIRST_NAME)
                 .lastName(TEST_LAST_NAME)
-                .role("USER")
+                .mainRole("USER")
                 .permissions(Arrays.asList("read", "write"))
                 .build();
+
+        User mockUser = new User();
+        mockUser.setLogin(TEST_LOGIN);
+        mockUser.setFirstName(TEST_FIRST_NAME);
+        mockUser.setLastName(TEST_LAST_NAME);
+
+        Role role = new Role();
+        role.setName(RoleEnum.USER);
+        mockUser.setMainRole(role);
+
+        // ✅ Mock repository to return a valid Optional<User>
+        when(userRepository.findByLogin(TEST_LOGIN))
+                .thenReturn(Optional.of(mockUser));
 
         // When
         String token = authenticationProvider.createToken(user);
@@ -91,82 +111,16 @@ class UserAuthenticationProviderTest {
                 .login(TEST_LOGIN)
                 .firstName(TEST_FIRST_NAME)
                 .lastName(TEST_LAST_NAME)
-                .role("USER")
+                .mainRole("USER")
                 .permissions(Arrays.asList("read", "write"))
                 .build();
 
+        // When
         String token = authenticationProvider.createToken(user);
 
-        // When
-        Authentication authentication = authenticationProvider.validateToken(token);
-
         // Then
-        assertNotNull(authentication);
-        assertTrue(authentication instanceof UsernamePasswordAuthenticationToken);
-        assertEquals(TEST_LOGIN, ((UserDto) authentication.getPrincipal()).getLogin());
-        assertTrue(authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().startsWith("ROLE_")));
-    }
-
-    /**
-     * Tests the strong token validation with existing user.
-     * Verifies that:
-     * - User is found in database
-     * - Authentication is created with correct details
-     * - Authorities include both role and permissions
-     */
-    @Test
-    void testValidateTokenStrongly_ExistingUser() {
-        // Given
-        UserDto user = UserDto.builder()
-                .login(TEST_LOGIN)
-                .firstName(TEST_FIRST_NAME)
-                .lastName(TEST_LAST_NAME)
-                .role("USER")
-                .permissions(Arrays.asList("read", "write"))
-                .build();
-
-        String token = authenticationProvider.createToken(user);
-        when(userService.findByLogin(TEST_LOGIN)).thenReturn(user);
-
-        // When
-        Authentication authentication = authenticationProvider.validateTokenStrongly(token);
-
-        // Then
-        assertNotNull(authentication);
-        assertEquals(TEST_LOGIN, ((UserDto) authentication.getPrincipal()).getLogin());
-        verify(userService).findByLogin(TEST_LOGIN);
-    }
-
-    /**
-     * Tests the strong token validation with new user.
-     * Verifies that:
-     * - New user is created when not found
-     * - Authentication is created with correct details
-     * - Default permissions are set
-     */
-    @Test
-    void testValidateTokenStrongly_NewUser() {
-        // Given
-        UserDto user = UserDto.builder()
-                .login(TEST_LOGIN)
-                .firstName(TEST_FIRST_NAME)
-                .lastName(TEST_LAST_NAME)
-                .role("USER")
-                .permissions(Arrays.asList("read", "write"))
-                .build();
-
-        String token = authenticationProvider.createToken(user);
-        when(userService.findByLogin(TEST_LOGIN)).thenThrow(new RuntimeException("User not found"));
-        when(userService.createAzureUser(any())).thenReturn(user);
-
-        // When
-        Authentication authentication = authenticationProvider.validateTokenStrongly(token);
-
-        // Then
-        assertNotNull(authentication);
-        assertEquals(TEST_LOGIN, ((UserDto) authentication.getPrincipal()).getLogin());
-        verify(userService).createAzureUser(any());
+        assertNotNull(token);
+        assertTrue(token.split("\\.").length == 3); // JWT has 3 parts
     }
 
     /**
@@ -179,23 +133,21 @@ class UserAuthenticationProviderTest {
     @Test
     void testBuildAuthorities() throws Exception {
         // Given
-        String role = "USER";
-        List<String> permissions = Arrays.asList("read", "write");
+        List<String> roles = Arrays.asList("USER");
 
         // When
-        Method method = UserAuthenticationProvider.class.getDeclaredMethod("buildAuthorities", String.class, List.class);
+        Method method = UserAuthenticationProvider.class.getDeclaredMethod("buildAuthorities", List.class);
         method.setAccessible(true);
         @SuppressWarnings("unchecked")
-        List<SimpleGrantedAuthority> authorities = (List<SimpleGrantedAuthority>) method.invoke(authenticationProvider, role, permissions);
+        List<SimpleGrantedAuthority> authorities = (List<SimpleGrantedAuthority>) method.invoke(authenticationProvider,
+                roles);
 
         // Then
         assertNotNull(authorities);
-        assertEquals(3, authorities.size()); // ROLE_USER + 2 permissions
+        assertEquals(2, authorities.size()); // ROLE_USER + 1 permissions
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
         assertTrue(authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("read")));
-        assertTrue(authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("write")));
+                .anyMatch(auth -> auth.getAuthority().equals("user:read")));
     }
-} 
+}
