@@ -5,38 +5,38 @@
   "firstName" : "Test",
   "lastName" : "User",
   "login" : "test.user@test.com",
-  "createdAt" : 1762334645120,
-  "updatedAt" : 1762334645120,
+  "createdAt" : 1762507859598,
+  "updatedAt" : 1762507859598,
   "mainRole" : {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1762334645085,
-    "updatedAt" : 1762334645085
+    "createdAt" : 1762507859562,
+    "updatedAt" : 1762507859562
   },
   "appSpecificRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1762334645085,
-    "updatedAt" : 1762334645085
+    "createdAt" : 1762507859562,
+    "updatedAt" : 1762507859562
   } ],
   "allRoles" : [ {
     "id" : 1,
     "name" : "USER",
     "description" : "Default user role",
-    "createdAt" : 1762334645085,
-    "updatedAt" : 1762334645085
+    "createdAt" : 1762507859562,
+    "updatedAt" : 1762507859562
   } ],
-  "appSpecificRolesString" : [ "USER" ],
-  "credentialsNonExpired" : true,
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "ROLE_USER"
   }, {
     "authority" : "user:read"
   } ],
+  "appSpecificRolesString" : [ "USER" ],
   "username" : "test.user@test.com",
   "enabled" : true
 }, {
@@ -44,20 +44,19 @@
   "firstName" : "Test",
   "lastName" : "Manager",
   "login" : "test.manager@test.com",
-  "createdAt" : 1762334645121,
-  "updatedAt" : 1762334645121,
+  "createdAt" : 1762507859599,
+  "updatedAt" : 1762507859599,
   "mainRole" : {
     "id" : 3,
     "name" : "MANAGER",
     "description" : "Manager role",
-    "createdAt" : 1762334645098,
-    "updatedAt" : 1762334645098
+    "createdAt" : 1762507859578,
+    "updatedAt" : 1762507859578
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
-  "appSpecificRolesString" : [ ],
-  "credentialsNonExpired" : true,
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:read"
@@ -68,6 +67,7 @@
   }, {
     "authority" : "user:update"
   } ],
+  "appSpecificRolesString" : [ "MANAGER" ],
   "username" : "test.manager@test.com",
   "enabled" : true
 }, {
@@ -75,20 +75,19 @@
   "firstName" : "Test",
   "lastName" : "Admin",
   "login" : "test.admin@test.com",
-  "createdAt" : 1762334645121,
-  "updatedAt" : 1762334645121,
+  "createdAt" : 1762507859600,
+  "updatedAt" : 1762507859600,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1762334645103,
-    "updatedAt" : 1762334645103
+    "createdAt" : 1762507859582,
+    "updatedAt" : 1762507859582
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
-  "appSpecificRolesString" : [ ],
-  "credentialsNonExpired" : true,
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:delete"
@@ -101,6 +100,7 @@
   }, {
     "authority" : "ROLE_ADMIN"
   } ],
+  "appSpecificRolesString" : [ "ADMIN" ],
   "username" : "test.admin@test.com",
   "enabled" : true
 }, {
@@ -108,20 +108,19 @@
   "firstName" : "Test2",
   "lastName" : "Admin2",
   "login" : "test.admin2@test.com",
-  "createdAt" : 1762334645122,
-  "updatedAt" : 1762334645122,
+  "createdAt" : 1762507859601,
+  "updatedAt" : 1762507859601,
   "mainRole" : {
     "id" : 4,
     "name" : "ADMIN",
     "description" : "Administrator role",
-    "createdAt" : 1762334645103,
-    "updatedAt" : 1762334645103
+    "createdAt" : 1762507859582,
+    "updatedAt" : 1762507859582
   },
   "appSpecificRoles" : [ ],
   "allRoles" : [ ],
-  "appSpecificRolesString" : [ ],
-  "credentialsNonExpired" : true,
   "accountNonExpired" : true,
+  "credentialsNonExpired" : true,
   "accountNonLocked" : true,
   "authorities" : [ {
     "authority" : "user:delete"
@@ -134,6 +133,7 @@
   }, {
     "authority" : "ROLE_ADMIN"
   } ],
+  "appSpecificRolesString" : [ "ADMIN" ],
   "username" : "test.admin2@test.com",
   "enabled" : true
 } ]

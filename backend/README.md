@@ -159,7 +159,7 @@ Check if the project's structure is valid
 ---
 
 ## Complementary documentation
-[Processes documentation](../doc/process-documentation.md)
+[Processes documentation](../docs/process-documentation.md)
 
 [REST documentation Acsiidoc](src/asciidoc/index.adoc)
 
