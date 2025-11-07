@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,7 +19,6 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserRepository;
