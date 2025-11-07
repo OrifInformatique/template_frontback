@@ -40,7 +40,8 @@ public class AuthController {
      * Accepts login credentials (login and password) as a request body, validated
      * for correctness
      * Calls the authentication client to perform login with provided credentials
-     * Returns a reactive Mono<ResponseEntity<UserDto>>containing the login response (e.g., token or
+     * Returns a reactive Mono<ResponseEntity<UserDto>>containing the login response
+     * (e.g., token or
      * status message)
      * 
      * @param credentialsDto
@@ -49,22 +50,23 @@ public class AuthController {
     @PostMapping("/login")
     public Mono<ResponseEntity<UserDto>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
         return authClient.login(credentialsDto)
-            .map(responseEntity -> {
-                UserDto userDto = responseEntity.getBody();
-                if (userDto != null) {
-                    userDto.setPermissions(userAuthenticationProvider.getLocalPermissions(userDto));
-                    return ResponseEntity.ok(userDto);
-                } else {
-                    // Handle null body just in case
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                }
-            });
+                .map(responseEntity -> {
+                    UserDto userDto = responseEntity.getBody();
+                    if (userDto != null) {
+                        userDto.setPermissions(userAuthenticationProvider.getLocalPermissions(userDto));
+                        return ResponseEntity.ok(userDto);
+                    } else {
+                        // Handle null body just in case
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    }
+                });
     }
 
     /**
      * Handles POST requests to "/register"
      * Accepts user registration data as a request body, validated for correctness
-     * Calls the authentication client to perform registration with provided user data
+     * Calls the authentication client to perform registration with provided user
+     * data
      * On successful registration, also registers the user locally in the system
      * Returns a reactive Mono<ResponseEntity<UserDto>> containing the registration
      * response or error message
@@ -76,11 +78,20 @@ public class AuthController {
     public Mono<ResponseEntity<UserDto>> register(@RequestBody @Valid RegisterDto user) {
         return authClient.register(user)
                 .flatMap(response -> {
-                    // On successful registration, also register user locally
-                    userService.register(user);
+                    UserDto userDto = response.getBody();
 
-                    // Return HTTP 200 OK with the response body
-                    return Mono.just(response);
+                    if (userDto != null) {
+                        // Register user locally
+                        userService.register(user);
+
+                        // Set local permissions
+                        userDto.setPermissions(userAuthenticationProvider.getLocalPermissions(userDto));
+
+                        return Mono.<ResponseEntity<UserDto>>just(ResponseEntity.ok(userDto));
+                    } else {
+                        return Mono.<ResponseEntity<UserDto>>just(
+                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                    }
                 })
                 .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
     }

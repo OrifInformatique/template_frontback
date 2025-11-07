@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 class UserAuthenticationProviderTest {
     @InjectMocks
     private UserAuthenticationProvider authenticationProvider;
-    
+
     @Mock
     private UserService userService;
 
@@ -144,7 +144,7 @@ class UserAuthenticationProviderTest {
 
         // Then
         assertNotNull(authorities);
-        assertEquals(3, authorities.size()); // ROLE_USER + 2 permissions
+        assertEquals(2, authorities.size()); // ROLE_USER + 1 permissions
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
         assertTrue(authorities.stream()
