@@ -24,6 +24,7 @@ Template to start developing a new REST API application with Spring Boot.
   - [Commands cheat-sheet](#commands-cheat-sheet)
     - [Simplified sequence diagram](#simplified-sequence-diagram)
 - [Sources](#sources)
+- [Complementary Documentation](#complementary-documentation)
 
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -156,3 +157,10 @@ Check if the project's structure is valid
 [Microsoft oAuth2 grant flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow)
 
 ---
+
+## Complementary documentation
+[Processes documentation](../doc/process-documentation.md)
+
+[REST documentation Acsiidoc](src/asciidoc/index.adoc)
+
+[REST documentation Github Page](https://orifinformatique.github.io/template_frontback/)
