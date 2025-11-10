@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -82,6 +83,35 @@ public class AuthClient {
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.rawStatusCode())))))
                                 .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
+                                                          // token or message);
+        }
+
+        /**
+         * Sets a new password for the user by sending the new password to the set
+         * password endpoint.
+         * 
+         * @param token           The authorization token
+         * @param newPasswordDto The NewPasswordDto containing the new password data
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the set
+         *         password response
+         *         (e.g., token or
+         *         status message)
+         */
+        public Mono<ResponseEntity<MessageResponseDto>> setPassword(String token, NewPasswordDto newPasswordDto) {
+
+                return webClient.put()
+                                .uri("/auth/set-password") // your set-password endpoint path
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .bodyValue(newPasswordDto) // use the NewPasswordDto directly
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.rawStatusCode())))))
+                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String> (e.g., a
                                                           // token or message);
         }
 
