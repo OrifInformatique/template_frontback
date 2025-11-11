@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import ch.sectioninformatique.template.app.exceptions.AppException;
@@ -47,7 +48,8 @@ public class UserService {
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
-     * @throws RuntimeException if the user is not found, already has the role, or the
+     * @throws RuntimeException if the user is not found, already has the role, or
+     *                          the
      *                          role is not found
      */
     public UserDto promoteToLocalAppRole(Long userId) {
@@ -184,11 +186,11 @@ public class UserService {
      * get the list of roles attribuated to the user
      * This method:
      * - Test if the current user's has app specifique roles registered
-     * - add the app specifique roles to a list 
+     * - add the app specifique roles to a list
      * - add the main role of the user to the list
      *
-     * @param localUser   The local user's data
-     * @return list of roles 
+     * @param localUser The local user's data
+     * @return list of roles
      */
     public List<String> getRolesList(User localUser) {
 
@@ -203,5 +205,45 @@ public class UserService {
         allRoles.add(localUser.getMainRole().getName().name());
 
         return allRoles;
+    }
+
+    /**
+     * Deletes a user from the system.
+     * This method:
+     * - Verifies the user exists
+     * - Deletes the user from the database
+     *
+     * @param userId The ID of the user to delete
+     * @return UserDto containing the deleted user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto deleteUser(Long userId) {
+        // Get the user to delete
+        User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Delete the user
+        userRepository.deleteById(userId);
+        return userMapper.toUserDto(userToDelete);
+    }
+
+    /**
+     * Deletes a user from the system by login.
+     * This method:
+     * - Verifies the user exists
+     * - Deletes the user from the database
+     *
+     * @param login The login of the user to delete
+     * @return UserDto containing the deleted user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto deleteUserByLogin(String login) {
+        // Get the user to delete
+        User userToDelete = userRepository.findByLogin(login)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Delete the user
+        userRepository.deleteById(userToDelete.getId());
+        return userMapper.toUserDto(userToDelete);
     }
 }

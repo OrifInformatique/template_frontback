@@ -9,7 +9,10 @@ import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -90,7 +93,7 @@ public class AuthClient {
          * Sets a new password for the user by sending the new password to the set
          * password endpoint.
          * 
-         * @param token           The authorization token
+         * @param token          The authorization token
          * @param newPasswordDto The NewPasswordDto containing the new password data
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the set
          *         password response
@@ -111,8 +114,35 @@ public class AuthClient {
                                                                                 new AppException(error.message(),
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.rawStatusCode())))))
-                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                          // token or message);
+                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
+                                                                     // (e.g., a
+                // token or message);
+        }
+
+        /**
+         * Deletes a user by sending a delete request to the user deletion endpoint.
+         * 
+         * @param token  The authorization token
+         * @param userId The ID of the user to delete
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
+         *         response
+         *         (e.g., token or
+         *         status message)
+         */
+        public Mono<ResponseEntity<Map<String, String>>> deleteUser(String token, Long userId) {
+                return webClient.delete()
+                                .uri("/users/" + userId) // your delete user endpoint path
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.rawStatusCode())))))
+                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                                })
+                                .map(body -> ResponseEntity.ok(body)); 
         }
 
         /**
@@ -130,4 +160,5 @@ public class AuthClient {
                                 .toEntity(String.class); // expect the response as a ResponseEntity<String> (e.g., a
                                                          // token or message)
         }
+
 }
