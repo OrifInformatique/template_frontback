@@ -156,9 +156,54 @@ public class AuthController {
                         // Extract body from ResponseEntity
                         Map<String, String> body = response.getBody();
                         if (body != null && body.containsKey("deletedUserLogin")) {
-                            
+
                             // Delete user locally
                             userService.deleteUserByLogin(body.get("deletedUserLogin"));
+
+                            // Include both message in response
+                            return Mono.just((ResponseEntity<?>) ResponseEntity.ok(Map.of(
+                                    "message", body.get("message"))));
+
+                        } else {
+                            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                    .body(Map.of("message", "Failed to delete user: missing response data")));
+                        }
+                    })
+                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+        }
+    }
+
+    /**
+     * Handles DELETE requests to "/{userId}/{local}/permanent"
+     * Permanently deletes a user either locally or from the auth service based on
+     * the 'local' flag
+     * If 'local' is true, permanently deletes the user from the local database
+     * If 'local' is false, permanently deletes the user from the local database and
+     * calls the authClient to delete the user from the auth
+     * service
+     * Returns a ResponseEntity with success message or error details
+     * 
+     * @param userId The ID of the user to permanently delete
+     * @param local  Flag indicating whether to delete locally or from auth service
+     * @return ResponseEntity with permanent deletion result message
+     */
+    @DeleteMapping("/{userId}/{local}/permanent")
+    public Mono<ResponseEntity<?>> hardDeleteUser(@RequestHeader("Authorization") String token, @PathVariable Long userId,
+            @PathVariable boolean local) {
+        if (local) {
+            userService.hardDeleteUser(userId);
+            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
+        } else {
+            // Call authClient to delete user from auth service if needed
+            return authClient.hardDeleteUser(token, userId)
+                    .flatMap(response -> {
+
+                        // Extract body from ResponseEntity
+                        Map<String, String> body = response.getBody();
+                        if (body != null && body.containsKey("deletedUserLogin")) {
+                            
+                            // Delete user locally
+                            userService.hardDeleteUserByLogin(body.get("deletedUserLogin"));
 
                             // Include both message in response
                             return Mono.just((ResponseEntity<?>) ResponseEntity.ok(Map.of(

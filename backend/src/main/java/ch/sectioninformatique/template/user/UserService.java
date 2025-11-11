@@ -228,6 +228,26 @@ public class UserService {
     }
 
     /**
+     * Hard Deletes a user from the system.
+     * This method:
+     * - Verifies the user exists
+     * - Deletes the user from the database
+     *
+     * @param userId The ID of the user to delete
+     * @return UserDto containing the deleted user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto hardDeleteUser(Long userId) {
+        // Get the user to delete
+        User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Delete the user
+        userRepository.deletePermanentlyById(userId);
+        return userMapper.toUserDto(userToDelete);
+    }
+
+    /**
      * Deletes a user from the system by login.
      * This method:
      * - Verifies the user exists
@@ -244,6 +264,26 @@ public class UserService {
 
         // Delete the user
         userRepository.deleteById(userToDelete.getId());
+        return userMapper.toUserDto(userToDelete);
+    }
+
+    /**
+     * Hard Deletes a user from the system by login.
+     * This method:
+     * - Verifies the user exists
+     * - Deletes the user from the database
+     *
+     * @param login The login of the user to delete
+     * @return UserDto containing the deleted user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto hardDeleteUserByLogin(String login) {
+        // Get the user to delete
+        User userToDelete = userRepository.findByLogin(login)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Delete the user
+        userRepository.deletePermanentlyById(userToDelete.getId());
         return userMapper.toUserDto(userToDelete);
     }
 }
