@@ -117,6 +117,38 @@ public class testController {
         return ResponseEntity.ok(users);
     }
 
+        /**
+     * Retrieves all users in the system including soft-deleted ones.
+     * This endpoint:
+     * - Requires the 'user:read' authority
+     * - Returns a list of all users
+     * - Is typically used by administrators
+     *
+     * @return ResponseEntity containing a list of all deleted users
+     */
+    @GetMapping("/all/deleted")
+    @PreAuthorize("hasAuthority('user:read')")
+    public ResponseEntity<List<User>> allDeletedUsers() {
+        List<User> users = userService.allDeletedUsers();
+        return ResponseEntity.ok(users); 
+    }
+
+    /**
+     * Retrieves all soft-deleted users in the system.
+     * This endpoint:
+     * - Requires the 'user:read' authority
+     * - Returns a list of all soft-deleted users
+     * - Is typically used by administrators
+     *
+     * @return ResponseEntity containing a list of all soft-deleted users
+     */
+    @GetMapping("/deleted")
+    @PreAuthorize("hasAuthority('user:read')")
+    public ResponseEntity<List<User>> deletedUsers() {
+        List<User> users = userService.deletedUsers();
+        return ResponseEntity.ok(users);
+    }
+
     /**
      * Handles GET requests to "/oauth2/login"
      * Redirects the client to the OAuth2 authorization endpoint for Azure

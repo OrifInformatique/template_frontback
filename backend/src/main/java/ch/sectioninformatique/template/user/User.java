@@ -26,7 +26,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
-@Where(clause = "deleted = false")
+@FilterDef(name = "deletedFilter", parameters = @ParamDef(name = "isDeleted", type = Boolean.class))
+@Filter(name = "deletedFilter", condition = "deleted = :isDeleted")
 public class User {
 
     /** Unique identifier for the user */
