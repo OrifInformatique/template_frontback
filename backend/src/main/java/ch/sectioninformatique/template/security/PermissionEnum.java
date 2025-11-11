@@ -10,7 +10,11 @@ public enum PermissionEnum {
     USER_READ("user:read"),
     USER_WRITE("user:write"),
     USER_UPDATE("user:update"),
-    USER_DELETE("user:delete");
+    USER_DELETE("user:delete"),
+    ITEM_READ("item:read"),
+    ITEM_WRITE("item:write"),
+    ITEM_UPDATE("item:update"),
+    ITEM_DELETE("item:delete");
 
     /** The string representation of the permission used in Spring Security */
     private final String permission;
