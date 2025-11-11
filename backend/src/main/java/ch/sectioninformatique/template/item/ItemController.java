@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -17,30 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
  * with appropriate security checks and authorization requirements.
  * All responses are automatically converted to JSON format.
  */
+@RequestMapping("/items")
 @RestController
 public class ItemController {
 
     @Autowired
     private ItemService itemService;
-
-    @Autowired
-    private Environment environment;
-
-    /**
-     * Returns system information and environment variables.
-     * This endpoint is used to verify that the application is running
-     * and to display configuration information.
-     *
-     * @return A formatted string containing system information
-     */
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/")
-    public String getHello() {
-        return "<strong>Hello World !</strong><br>" +
-               "<strong>JAVA_HOME : </strong>" + environment.getProperty("JAVA_HOME") + "<br>" +
-               "<strong>Spring active profile : </strong>" + environment.getProperty("spring.profiles.active") + "<br>" +
-               "<strong>Database used : </strong>" + environment.getProperty("spring.datasource.url");
-    }
 
     /**
      * Retrieves all items in the system.
@@ -49,7 +32,7 @@ public class ItemController {
      * @return An Iterable containing all items
      */
     @PreAuthorize("hasAuthority('item:read')")
-    @GetMapping("/items")
+    @GetMapping("/")
     public Iterable<Item> getItems() {
         return itemService.getItems();
     }
@@ -63,7 +46,7 @@ public class ItemController {
      * @throws ItemNotFoundException if the item is not found
      */
     @PreAuthorize("hasAuthority('item:read')")
-    @GetMapping("/items/{id}")
+    @GetMapping("/{id}")
     public Item getItemById(@PathVariable Long id) {
         return itemService.getItem(id)
             .orElseThrow(() -> new ItemNotFoundException(id));
@@ -77,7 +60,7 @@ public class ItemController {
      * @return The newly created item
      */
     @PreAuthorize("hasAuthority('item:write')")
-    @PostMapping("/items")
+    @PostMapping("/")
     public Item createItem(@RequestBody Item item) {
         return itemService.createItem(item);
     }
@@ -93,7 +76,7 @@ public class ItemController {
      * @throws UnauthorizedItemException if the user is not authorized to update the item
      */
     @PreAuthorize("hasAuthority('item:update')")
-    @PutMapping("/items/{id}")
+    @PutMapping("/{id}")
     public Item updateItem(@PathVariable Long id, @RequestBody Item item) {
         return itemService.updateItem(id, item);
     }
@@ -108,7 +91,7 @@ public class ItemController {
      * @throws UnauthorizedItemException if the user is not authorized to delete the item
      */
     @PreAuthorize("hasAuthority('item:delete') || ((hasRole('ROLE_USER') || hasRole('ROLE_ADMIN')) && hasAuthority('item:write'))")
-    @DeleteMapping("/items/{id}")
+    @DeleteMapping("/{id}")
     public void deleteItem(@PathVariable Long id) {
         itemService.deleteItem(id);
     }
