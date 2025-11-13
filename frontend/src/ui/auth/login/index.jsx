@@ -1,21 +1,19 @@
 import React, { useState } from 'react';
 
+import { useLogin } from '../api/authService';
+import useAuthStore from '../../../../authStore';
 import { Button,
          Image,
          InputText,
-         InputPassword,
-         Link
+         InputPassword
        } from "@orif-informatique/react-components-library";
+import Link from '../../link';
 
-const Login = () =>
-{
-    const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] = useState(false);
-
-    const handleLoginFormSubmit = (e) =>
-    {
-        e.preventDefault();
-        console.log(handleLoginFormSubmit);
-    }
+const Login = () => {
+    const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =
+        useState(false);
+    const { login } = useLogin();
+    const accessToken = useAuthStore((state) => state.accessToken);
 
     return (
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
@@ -35,10 +33,7 @@ const Login = () =>
 
                 {showLocalAccountLoginForm ? (
                     <>
-                        <form
-                            onSubmit={handleLoginFormSubmit}
-                            className="flex flex-col gap-4"
-                        >
+                        <form onSubmit={login} className="flex flex-col gap-4">
                             <InputText
                                 id="identifier"
                                 name="identifier"
@@ -73,7 +68,7 @@ const Login = () =>
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default Login;

@@ -12,6 +12,7 @@ import Login from './ui/auth/login';
 import Azure from './ui/auth/login/azure';
 import ChangePassword from './ui/auth/change-password';
 import ResetPassword from './ui/auth/reset-password';
+import ApiAuthCall from './modules/api-auth-call';
 
 // Utils
 import Redirect from './utils/Redirect'
@@ -45,6 +46,11 @@ root.render(
                 path="/reset-password"
                 element={<ResetPassword />}
             />
+
+			<Route
+				path="/testAPI"
+				element={<ApiAuthCall />}
+			/>
 
             <Route
                 path="/"
