@@ -1,6 +1,0 @@
-[source,json,options="nowrap"]
-----
-{
-  "message" : "User promoted to test admin successfully"
-}
-----

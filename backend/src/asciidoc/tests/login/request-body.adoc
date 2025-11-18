@@ -1,7 +1,0 @@
-[source,json,options="nowrap"]
-----
-{
-  "login" : "john.doe@test.com",
-  "password" : "Secure123@Pass"
-}
-----

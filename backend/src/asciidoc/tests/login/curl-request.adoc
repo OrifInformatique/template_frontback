@@ -1,9 +1,0 @@
-[source,bash]
-----
-$ curl 'http://localhost:8080/tests/login' -i -X POST \
-    -H 'Content-Type: application/json;charset=UTF-8' \
-    -d '{
-  "login" : "john.doe@test.com",
-  "password" : "Secure123@Pass"
-}'
-----
