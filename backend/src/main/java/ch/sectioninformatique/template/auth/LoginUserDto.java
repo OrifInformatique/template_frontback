@@ -2,7 +2,9 @@ package ch.sectioninformatique.template.auth;
 
 import lombok.Data;
 
-/* @Data annotation from the Lombok library automatically adds getters and setters */
+/**
+ * Data transfer object for the login request
+ */
 @Data
 public class LoginUserDto {
     private String email;

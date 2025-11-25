@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 const Link = ({ to, children, className }) => {
   return (<>
-    <RouterLink className={clsx("text-primary font-light text-lg uppercase tracking-wide hover:underline sm:text-2xl", className)} to={to}>{children}</RouterLink>
+    <RouterLink className={clsx("text-primary hover:underline focus:underline", className)} to={to}>{children}</RouterLink>
   </>)
 }
 

@@ -1,8 +1,9 @@
-package ch.sectioninformatique.template.auth;
+package ch.sectioninformatique.template.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,15 +13,27 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import ch.sectioninformatique.template.jwt.JwtAuthenticationFilter;
+
 import java.util.List;
 
+/**
+ * SecurityConfig class provides configuration for Spring Security.
+ */
 @Configuration
 @EnableWebSecurity
-public class SecurityConfiguration {
+@EnableMethodSecurity
+public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfiguration(
+    /**
+     * Constructor for the SecurityConfig class
+     * 
+     * @param jwtAuthenticationFilter The JwtAuthenticationFilter
+     * @param authenticationProvider The AuthenticationProvider
+     */
+    public SecurityConfig(
         JwtAuthenticationFilter jwtAuthenticationFilter,
         AuthenticationProvider authenticationProvider
     ) {
@@ -28,14 +41,17 @@ public class SecurityConfiguration {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    /**
+     * Configure the security filter chain.
+     * 
+     * @param http The HttpSecurity object
+     * @return The SecurityFilterChain
+     * @throws Exception If an error occurs
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
-                .anyRequest().authenticated()
-            )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
@@ -44,11 +60,16 @@ public class SecurityConfiguration {
             .build();
     }
 
+    /**
+     * Configure the CORS configuration source.
+     * 
+     * @return The CorsConfigurationSource
+     */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:8080"));
+        configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(List.of(
             "Authorization",
