@@ -188,11 +188,11 @@ public class AuthController {
      * @return ResponseEntity with permanent deletion result message
      */
     @DeleteMapping("/{userId}/{global}/permanent")
-    public Mono<ResponseEntity<?>> hardDeleteUser(@RequestHeader("Authorization") String token, @PathVariable Long userId,
+    public Mono<ResponseEntity<?>> deleteUserPermanent(@RequestHeader("Authorization") String token, @PathVariable Long userId,
             @PathVariable boolean global) {
         if (global) {
             // Call authClient to delete user from the global auth service
-            return authClient.hardDeleteUser(token, userId)
+            return authClient.deleteUserPermanent(token, userId)
                     .flatMap(response -> {
 
                         // Extract body from ResponseEntity
@@ -200,7 +200,7 @@ public class AuthController {
                         if (body != null && body.containsKey("deletedUserLogin")) {
                             
                             // Delete user locally
-                            userService.hardDeleteUserByLogin(body.get("deletedUserLogin"));
+                            userService.deleteUserPermanentByLogin(body.get("deletedUserLogin"));
 
                             // Include both message in response
                             return Mono.just((ResponseEntity<?>) ResponseEntity.ok(Map.of(
@@ -213,7 +213,7 @@ public class AuthController {
                     })
                     .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));            
         } else {
-            userService.hardDeleteUser(userId);
+            userService.deleteUserPermanent(userId);
             return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
         }
     }

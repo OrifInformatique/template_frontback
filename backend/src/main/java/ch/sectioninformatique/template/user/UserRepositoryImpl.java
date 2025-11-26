@@ -7,12 +7,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implementation of custom repository methods for User entity.
- * This class provides the implementation for hard deletion of users,
+ * This class provides the implementation for permanent deletion of users,
  * allowing permanent removal of user records from the database.
  */
 @Repository
 @Transactional
-public class UserRepositoryImpl implements UserRepositoryHardDelete {
+public class UserRepositoryImpl implements UserRepositoryPermanentDelete {
 
     @PersistenceContext
     private EntityManager entityManager;

@@ -262,7 +262,7 @@ public class UserService {
     }
 
     /**
-     * Hard Deletes a user from the system.
+     * Permanently deletes a user from the system.
      * This method:
      * - Verifies the user exists
      * - Deletes the user from the database
@@ -271,7 +271,7 @@ public class UserService {
      * @return UserDto containing the deleted user's information
      * @throws AppException if the user is not found
      */
-    public UserDto hardDeleteUser(Long userId) {
+    public UserDto deleteUserPermanent(Long userId) {
         // Get the user to delete
         User userToDelete = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
@@ -302,7 +302,7 @@ public class UserService {
     }
 
     /**
-     * Hard Deletes a user from the system by login.
+     * Permanently deletes a user from the system by login.
      * This method:
      * - Verifies the user exists
      * - Deletes the user from the database
@@ -311,7 +311,7 @@ public class UserService {
      * @return UserDto containing the deleted user's information
      * @throws AppException if the user is not found
      */
-    public UserDto hardDeleteUserByLogin(String login) {
+    public UserDto deleteUserPermanentByLogin(String login) {
         // Get the user to delete
         User userToDelete = userRepository.findByLogin(login)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));

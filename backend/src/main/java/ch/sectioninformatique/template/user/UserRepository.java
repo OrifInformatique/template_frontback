@@ -18,7 +18,7 @@ import java.util.Optional;
  * - Checking user existence
  * - Standard CRUD operations inherited from JpaRepository
  */
-public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryHardDelete {
+public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryPermanentDelete {
 
     /**
      * Finds a user by their login username.

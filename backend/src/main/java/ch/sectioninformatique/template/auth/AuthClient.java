@@ -150,12 +150,12 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
          *         deletion response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<Map<String, String>>> hardDeleteUser(String token, Long userId) {
+        public Mono<ResponseEntity<Map<String, String>>> deleteUserPermanent(String token, Long userId) {
                 return webClient.delete()
-                                .uri("/users/" + userId + "/permanent") // your hard delete user endpoint path
+                                .uri("/users/" + userId + "/permanent")
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
+                                .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
