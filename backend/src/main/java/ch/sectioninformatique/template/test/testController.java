@@ -2,6 +2,7 @@ package ch.sectioninformatique.template.test;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -31,10 +32,10 @@ import lombok.RequiredArgsConstructor;
  * - An endpoint to retrieve all users in the system
  * - Endpoints to test login and registration functionalities via the AuthClient
  */
-@RequestMapping("/test")
+@RequestMapping("/tests")
 @RequiredArgsConstructor
 @RestController
-public class testController {
+public class TestController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
@@ -70,13 +71,13 @@ public class testController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
-    public ResponseEntity<User> authenticatedUser() {
+    public ResponseEntity<UserDto> authenticatedUser() {
         Authentication authentication = SecurityContextHolder
                 .getContext()
                 .getAuthentication();
 
         UserDto currentUser = (UserDto) authentication.getPrincipal();
-        User localUser = userService.me(currentUser);
+        UserDto localUser = userService.me(currentUser);
         return ResponseEntity.ok(localUser);
     }
 
@@ -93,12 +94,10 @@ public class testController {
     @PutMapping("/{userId}/promote-test")
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
-        try {
-            userService.promoteToLocalAppRole(userId);
-            return ResponseEntity.ok().body("User promoted to local app role successfully.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+            userService.promoteToTestAdmin(userId);
+            return ResponseEntity.ok(Map.of("message", "User promoted to local app role successfully."));
+
     }
 
     /**

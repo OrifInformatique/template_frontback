@@ -1,0 +1,5 @@
+[source,bash]
+----
+$ curl 'http://localhost:8080/tests/' -i -X GET \
+    -H 'Content-Type: */*;charset=UTF-8'
+----

@@ -1,0 +1,6 @@
+[source,bash]
+----
+$ http PUT 'http://localhost:8080/tests/1/promote-test' \
+    'Content-Type:application/json;charset=UTF-8' \
+    'Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LmFkbWluQHRlc3QuY29tIiwiZmlyc3ROYW1lIjoiVGVzdCIsImxhc3ROYW1lIjoiQWRtaW4iLCJtYWluUm9sZSI6IkFETUlOIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJBRE1JTiJdLCJleHAiOjE3NjQxNTMwNzcsImlhdCI6MTc2NDE0OTQ3N30.1AD6F-G1Ek9MoZ7pXvxdxuC_UaJpTLND9GVu3oknJ08'
+----

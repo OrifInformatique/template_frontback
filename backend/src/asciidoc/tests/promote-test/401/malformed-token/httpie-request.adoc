@@ -1,0 +1,6 @@
+[source,bash]
+----
+$ http PUT 'http://localhost:8080/tests/1/promote-test' \
+    'Content-Type:application/json;charset=UTF-8' \
+    'Authorization:Bearer this.is.not.a.valid.token'
+----

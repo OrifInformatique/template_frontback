@@ -3,9 +3,7 @@ package ch.sectioninformatique.template.security;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +19,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
-import ch.sectioninformatique.template.user.UserRepository;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -41,12 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UserAuthenticationProvider {
 
-    /**
-     * Service for user-related operations, including user creation and retrieval
-     */
     private final UserService userService;
-
-    private final UserRepository userRepository;
 
     /**
      * Secret key for JWT token signing and verification, configured via application
@@ -83,9 +75,6 @@ public class UserAuthenticationProvider {
         Date validity = new Date(now.getTime() + 3600000); // 1 hour
 
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-        List<String> authorities = this.getLocalPermissions(user);
-
         return JWT.create()
                 .withSubject(user.getLogin())
                 .withIssuedAt(now)
@@ -94,39 +83,34 @@ public class UserAuthenticationProvider {
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
                 .withClaim("appSpecificRoles", user.getAppSpecificRoles())
-                .withClaim("permissions", authorities)
                 .sign(algorithm);
     }
 
     /**
-     * Return a list of authorities as Strings from a UserDto.
+     * Creates a JWT token for a user with their information and permissions.
+     * The token includes:
+     * - User login as subject
+     * - First name and last name as claims
+     * - Role and permissions as claims
+     * - Issue time and expiration time (1 hour validity)
      *
-     * @param user The UserDto
-     * 
-     * @return List of String of authorities
+     * @param user The user to create a token for
+     * @return A JWT token string containing the user's information and permissions
      */
-    public List<String> getLocalPermissions(UserDto user) {
-        Optional<User> localUser = userRepository.findByLogin(user.getLogin());
+    public String createToken(UserDto user, Date... testDate) {
+        Date now = testDate.length > 0 ? testDate[0] : new Date();
+        Date validity = new Date(now.getTime() + 3600000); // 1 hour
 
-        List<String> roles = new ArrayList<>();
-
-        List<String> authorities = new ArrayList<>();
-
-        if (localUser.isPresent()) {
-            roles.add(localUser.get().getMainRole().getName().name());
-
-            for (String role : localUser.get().getAppSpecificRolesString()) {
-                roles.add(role);
-            }
-
-            authorities = this.buildAuthorities(roles).stream()
-                    .map(SimpleGrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-        } else {
-            authorities = user.getPermissions();
-        }
-
-        return authorities;
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        return JWT.create()
+                .withSubject(user.getLogin())
+                .withIssuedAt(now)
+                .withExpiresAt(validity)
+                .withClaim("firstName", user.getFirstName())
+                .withClaim("lastName", user.getLastName())
+                .withClaim("mainRole", user.getMainRole())
+                .withClaim("appSpecificRoles", user.getAppSpecificRoles())
+                .sign(algorithm);
     }
 
     /**
@@ -145,6 +129,7 @@ public class UserAuthenticationProvider {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             if (role != null && !role.isEmpty()) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                 Set<SimpleGrantedAuthority> authoritySet = RoleEnum.valueOf(role).getGrantedAuthorities();
                 authorities.addAll(authoritySet);
             }

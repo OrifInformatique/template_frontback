@@ -1,0 +1,5 @@
+[source,bash]
+----
+$ http --form GET 'http://localhost:8080/tests/' \
+    'Authorization:Bearer this.is.not.a.valid.token'
+----
