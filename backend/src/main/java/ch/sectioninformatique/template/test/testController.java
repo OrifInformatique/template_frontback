@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/tests")
 @RequiredArgsConstructor
 @RestController
-public class testController {
+public class TestController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
