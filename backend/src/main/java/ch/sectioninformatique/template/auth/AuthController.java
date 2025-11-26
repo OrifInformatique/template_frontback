@@ -1,14 +1,10 @@
 package ch.sectioninformatique.template.auth;
 
 import java.net.URI;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -105,6 +101,31 @@ public class AuthController {
     }
 
     /**
+     * Handles GET requests to "/refresh"
+     * Accepts Bearer token as header
+     * 
+     * On successful refresh send the UserDto with the new token 
+     * 
+     * @param token
+     * @return Mono<ResponseEntity<UserDto>> with new token
+     */
+    @GetMapping("/refresh")
+    public Mono<ResponseEntity<UserDto>> refreshLogin(@RequestHeader("Authorization") String token) {
+        return authClient.refreshLogin(token)
+                .flatMap(response -> {
+                    UserDto userDto = response.getBody();
+
+                    if (userDto != null) {
+                        return Mono.<ResponseEntity<UserDto>>just(ResponseEntity.ok(userDto));
+                    } else {
+                        return Mono.<ResponseEntity<UserDto>>just(
+                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                    }
+                })
+                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+    }
+
+    /**
      * Handles PUT requests to "/set-password"
      * Accepts new password data as a request body, validated for correctness
      * Calls the authentication client to set the new password for the user
@@ -128,98 +149,6 @@ public class AuthController {
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                     }
                 });
-    }
-
-    /**
-     * Handles soft DELETE requests to "/{userId}/{global}"
-     * Soft deletes a user either locally or from the global auth service, based
-     * on the 'global' flag
-     * If 'global' is false, deletes the user from the local database
-     * If 'global' is true, deletes the user from the local database and calls the
-     * authClient to delete the user from the global auth service
-     * Returns a ResponseEntity with success message or error details
-     * 
-     * @param userId The ID of the user to delete
-     * @param global Flag indicating whether to delete locally or globally
-     * @return ResponseEntity with deletion result message
-     */
-    @DeleteMapping("/{userId}/{global}")
-    public Mono<ResponseEntity<?>> deleteUser(@RequestHeader("Authorization") String token, @PathVariable Long userId,
-            @PathVariable boolean global) {
-
-        if (global) {
-            // Call authClient to delete user from global auth service
-            // then delete locally if successful
-            return authClient.deleteUser(token, userId)
-                    .flatMap(response -> {
-
-                        // Extract body from ResponseEntity
-                        Map<String, String> body = response.getBody();
-                        if (body != null && body.containsKey("deletedUserLogin")) {
-
-                            // Delete user locally
-                            userService.deleteUserByLogin(body.get("deletedUserLogin"));
-
-                            // Include both message in response
-                            return Mono.just((ResponseEntity<?>) ResponseEntity.ok(Map.of(
-                                    "message", body.get("message"))));
-
-                        } else {
-                            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .body(Map.of("message", "Failed to delete user: missing response data")));
-                        }
-                    })
-                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
-        } else {
-            // Delete user locally only
-            userService.deleteUser(userId);
-            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
-        }
-    }
-
-    /**
-     * Handles permanent DELETE requests to "/{userId}/{global}/permanent"
-     * Permanently deletes a user either locally or from the global auth service,
-     * based on the 'global' flag
-     * If 'global' is false, permanently deletes the user from the local database
-     * If 'global' is true, permanently deletes the user from the local database and
-     * calls the authClient to permanently delete the user from the auth service
-     * Returns a ResponseEntity with success message or error details
-     * 
-     * @param userId The ID of the user to permanently delete
-     * @param global Flag indicating whether to delete locally or globally
-     * @return ResponseEntity with permanent deletion result message
-     */
-    @DeleteMapping("/{userId}/{global}/permanent")
-    public Mono<ResponseEntity<?>> deleteUserPermanent(@RequestHeader("Authorization") String token,
-            @PathVariable Long userId,
-            @PathVariable boolean global) {
-        if (global) {
-            // Call authClient to delete user from the global auth service
-            return authClient.deleteUserPermanent(token, userId)
-                    .flatMap(response -> {
-
-                        // Extract body from ResponseEntity
-                        Map<String, String> body = response.getBody();
-                        if (body != null && body.containsKey("deletedUserLogin")) {
-
-                            // Delete user locally
-                            userService.deleteUserPermanentByLogin(body.get("deletedUserLogin"));
-
-                            // Include both message in response
-                            return Mono.just((ResponseEntity<?>) ResponseEntity.ok(Map.of(
-                                    "message", body.get("message"))));
-
-                        } else {
-                            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .body(Map.of("message", "Failed to delete user: missing response data")));
-                        }
-                    })
-                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
-        } else {
-            userService.deleteUserPermanent(userId);
-            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
-        }
     }
 
     /**

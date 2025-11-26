@@ -90,15 +90,40 @@ public class AuthClient {
         }
 
         /**
+         * Refresh the token with a refresh token
+         * 
+         * @param token The authorization token
+         * @return A Mono<ResponseEntity<UserDto>> containing the new token
+         */
+        public Mono<ResponseEntity<UserDto>> refreshLogin(String token) {
+
+                return webClient.get()
+                                .uri("/auth/refresh") // your register endpoint path
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.rawStatusCode())))))
+                                .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
+                                                          // token or message);
+        }
+
+        /**
          * Sets a new password for the user by sending the new password to the set
          * password endpoint.
          * 
-         * @param token           The authorization token
-         * @param passwordUpdateDto The PasswordUpdateDto containing the old and new passwords
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password update
+         * @param token             The authorization token
+         * @param passwordUpdateDto The PasswordUpdateDto containing the old and new
+         *                          passwords
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password
+         *         update
          *         response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token, PasswordUpdateDto passwordUpdateDto) {
+        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
+                        PasswordUpdateDto passwordUpdateDto) {
 
                 return webClient.put()
                                 .uri("/auth/update-password")
@@ -118,7 +143,8 @@ public class AuthClient {
         }
 
         /**
-         * Soft deletes a user by sending a delete request to the user deletion endpoint.
+         * Soft deletes a user by sending a delete request to the user deletion
+         * endpoint.
          * 
          * @param token  The authorization token
          * @param userId The ID of the user to delete
@@ -138,11 +164,12 @@ public class AuthClient {
                                                                                                                 response.rawStatusCode())))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
-                                .map(body -> ResponseEntity.ok(body)); 
+                                .map(body -> ResponseEntity.ok(body));
         }
 
         /**
-         * Permanently deletes a user by sending a delete request to the permanent delete
+         * Permanently deletes a user by sending a delete request to the permanent
+         * delete
          * user endpoint.
          * 
          * @param token  The authorization token
@@ -163,7 +190,7 @@ public class AuthClient {
                                                                                                                 response.rawStatusCode())))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
-                                .map(body -> ResponseEntity.ok(body)); 
+                                .map(body -> ResponseEntity.ok(body));
         }
 
         /**

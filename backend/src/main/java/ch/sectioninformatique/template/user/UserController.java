@@ -145,7 +145,7 @@ public class UserController {
         if (global) {
             // Call authClient to delete user from global auth service
             // then delete locally if successful
-            return authClient.deleteAuthUser(token, userId)
+            return authClient.deleteGlobalUser(token, userId)
                     .flatMap(response -> {
 
                         // Extract body from ResponseEntity
@@ -191,7 +191,7 @@ public class UserController {
             @PathVariable boolean global) {
         if (global) {
             // Call authClient to delete user from the global auth service
-            return authClient.deletePermanent(token, userId)
+            return authClient.deleteGlobalUserPermanent(token, userId)
                     .flatMap(response -> {
 
                         // Extract body from ResponseEntity
