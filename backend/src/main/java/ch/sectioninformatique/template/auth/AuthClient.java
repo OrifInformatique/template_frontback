@@ -91,21 +91,19 @@ public class AuthClient {
          * password endpoint.
          * 
          * @param token           The authorization token
-         * @param PasswordUpdateDto The PasswordUpdateDto containing the new password data
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the set
-         *         password response
-         *         (e.g., token or
-         *         status message)
+         * @param passwordUpdateDto The PasswordUpdateDto containing the old and new passwords
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password update
+         *         response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<MessageResponseDto>> setPassword(String token, PasswordUpdateDto PasswordUpdateDto) {
+        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token, PasswordUpdateDto passwordUpdateDto) {
 
                 return webClient.put()
-                                .uri("/auth/set-password") // your set-password endpoint path
+                                .uri("/auth/update-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
-                                .bodyValue(PasswordUpdateDto) // use the PasswordUpdateDto directly
+                                .bodyValue(passwordUpdateDto)
                                 .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
+                                .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
