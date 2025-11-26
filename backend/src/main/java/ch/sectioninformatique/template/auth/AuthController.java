@@ -110,13 +110,12 @@ public class AuthController {
      * response message
      * 
      * @param token          The authorization token from the request header
-     * @param setPasswordDto The NewPasswordDto containing the new password data
+     * @param setPasswordDto The PasswordUpdateDto containing the new password data
      * @return Mono<ResponseEntity<MessageResponseDto>> with set password response
      */
-    @PutMapping("/set-password")
-    public Mono<ResponseEntity<MessageResponseDto>> setPassword(@RequestHeader("Authorization") String token,
-            @RequestBody @Valid NewPasswordDto setPasswordDto) {
-        return authClient.setPassword(token, setPasswordDto)
+    @PutMapping("/update-password")
+    public Mono<ResponseEntity<MessageResponseDto>> updatePassword(@RequestHeader("Authorization") String token, @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
+        return authClient.updatePassword(token, updatePasswordDto)
                 .map(responseEntity -> {
                     MessageResponseDto messageResponse = responseEntity.getBody();
                     if (messageResponse != null) {
