@@ -125,7 +125,7 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
          *         response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteUser(String token, Long userId) {
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
                 return webClient.delete()
                                 .uri("/users/" + userId)
                                 .header(HttpHeaders.AUTHORIZATION, token)
@@ -150,7 +150,7 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
          *         deletion response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteUserPermanent(String token, Long userId) {
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
                 return webClient.delete()
                                 .uri("/users/" + userId + "/permanent")
                                 .header(HttpHeaders.AUTHORIZATION, token)

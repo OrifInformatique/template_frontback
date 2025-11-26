@@ -139,13 +139,13 @@ public class UserController {
      * @return ResponseEntity with deletion result message
      */
     @DeleteMapping("/{userId}/{global}")
-    public Mono<ResponseEntity<?>> deleteUser(@RequestHeader("Authorization") String token, @PathVariable Long userId,
+    public Mono<ResponseEntity<?>> delete(@RequestHeader("Authorization") String token, @PathVariable Long userId,
             @PathVariable boolean global) {
 
         if (global) {
             // Call authClient to delete user from global auth service
             // then delete locally if successful
-            return authClient.deleteUser(token, userId)
+            return authClient.deleteAuthUser(token, userId)
                     .flatMap(response -> {
 
                         // Extract body from ResponseEntity
@@ -186,12 +186,12 @@ public class UserController {
      * @return ResponseEntity with permanent deletion result message
      */
     @DeleteMapping("/{userId}/{global}/permanent")
-    public Mono<ResponseEntity<?>> deleteUserPermanent(@RequestHeader("Authorization") String token,
+    public Mono<ResponseEntity<?>> deletePermanent(@RequestHeader("Authorization") String token,
             @PathVariable Long userId,
             @PathVariable boolean global) {
         if (global) {
             // Call authClient to delete user from the global auth service
-            return authClient.deleteUserPermanent(token, userId)
+            return authClient.deletePermanent(token, userId)
                     .flatMap(response -> {
 
                         // Extract body from ResponseEntity
