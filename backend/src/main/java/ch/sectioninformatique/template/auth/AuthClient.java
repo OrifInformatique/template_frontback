@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -82,6 +83,33 @@ public class AuthClient {
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.rawStatusCode())))))
                                 .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
+                                                          // token or message);
+        }
+
+        /**
+         * Sets a new password for the user by sending the new password to the set
+         * password endpoint.
+         * 
+         * @param token           The authorization token
+         * @param passwordUpdateDto The PasswordUpdateDto containing the old and new passwords
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password update
+         *         response (e.g., token or status message)
+         */
+        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token, PasswordUpdateDto passwordUpdateDto) {
+
+                return webClient.put()
+                                .uri("/auth/update-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .bodyValue(passwordUpdateDto)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.rawStatusCode())))))
+                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String> (e.g., a
                                                           // token or message);
         }
 

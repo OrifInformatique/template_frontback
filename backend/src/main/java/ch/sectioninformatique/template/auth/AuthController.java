@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -94,5 +96,30 @@ public class AuthController {
                     }
                 })
                 .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+    }
+
+    /**
+     * Handles PUT requests to "/set-password"
+     * Accepts new password data as a request body, validated for correctness
+     * Calls the authentication client to set the new password for the user
+     * Returns a reactive Mono<ResponseEntity<MessageResponseDto>> containing the
+     * response message
+     * 
+     * @param token          The authorization token from the request header
+     * @param setPasswordDto The PasswordUpdateDto containing the new password data
+     * @return Mono<ResponseEntity<MessageResponseDto>> with set password response
+     */
+    @PutMapping("/update-password")
+    public Mono<ResponseEntity<MessageResponseDto>> updatePassword(@RequestHeader("Authorization") String token, @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
+        return authClient.updatePassword(token, updatePasswordDto)
+                .map(responseEntity -> {
+                    MessageResponseDto messageResponse = responseEntity.getBody();
+                    if (messageResponse != null) {
+                        return ResponseEntity.ok(messageResponse);
+                    } else {
+                        // Handle null body just in case
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                    }
+                });
     }
 }
