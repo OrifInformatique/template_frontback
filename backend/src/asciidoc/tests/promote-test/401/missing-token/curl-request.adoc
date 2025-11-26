@@ -1,5 +1,0 @@
-[source,bash]
-----
-$ curl 'http://localhost:8080/tests/1/promote-test' -i -X PUT \
-    -H 'Content-Type: application/json;charset=UTF-8'
-----

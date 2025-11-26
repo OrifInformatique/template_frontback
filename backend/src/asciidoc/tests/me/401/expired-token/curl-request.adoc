@@ -1,6 +1,0 @@
-[source,bash]
-----
-$ curl 'http://localhost:8080/tests/me' -i -X GET \
-    -H 'Content-Type: application/json;charset=UTF-8' \
-    -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2NDE0NTg3NywiaWF0IjoxNzY0MTQyMjc3fQ.QeZ2ZdyFAw7CUJGMHL86kY-665wvID77YOxjPsJ04sA'
-----
