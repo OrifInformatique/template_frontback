@@ -75,14 +75,14 @@ public class AuthController {
     }
 
     /**
-     * Handles PUT requests to "/set-password"
+     * Handles PUT requests to "/update-password"
      * Accepts new password data as a request body, validated for correctness
      * Calls the authentication client to set the new password for the user
      * Returns a reactive Mono<ResponseEntity<MessageResponseDto>> containing the
      * response message
      * 
-     * @param token          The authorization token from the request header
-     * @param setPasswordDto The PasswordUpdateDto containing the new password data
+     * @param token The authorization token from the request header
+     * @param updatePasswordDto The UpdatePasswordDto containing the old and new passwords
      * @return Mono<ResponseEntity<MessageResponseDto>> with set password response
      */
     @PutMapping("/update-password")
