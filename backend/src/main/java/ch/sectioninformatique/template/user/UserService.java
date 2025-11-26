@@ -39,31 +39,31 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to the local application example role.
+     * Promotes a user to the local admin role.
      * This operation:
      * - Verifies the user exists
-     * - Checks if the user has already the local application example role
-     * - Removes existing roles and assigns the local application example role
+     * - Checks if the user is already an manager or admin
+     * - Removes existing roles and assigns the admin role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
-     * @throws RuntimeException if the user is not found, already has the role, or the
-     *                          role is not found
+     * @throws RuntimeException if the user is not found, already an manager, or the
+     *                          manager role is not found
      */
-    public UserDto promoteToLocalAppRole(Long userId) {
+    public UserDto promoteToTestAdmin(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
         for (Role role : user.getAppSpecificRoles()) {
             if (role.getName().equals(RoleEnum.LOCAL_APP_ROLE)) {
-                throw new RuntimeException("The user has already the local app role");
+                throw new AppException("The user is already a test admin", HttpStatus.CONFLICT);
             }
         }
 
-        Role localAppRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
-                .orElseThrow(() -> new RuntimeException("LOCAL_APP_ROLE role not found"));
+        Role testAdminRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
+                .orElseThrow(() -> new AppException("LOCAL_APP_ROLE role not found", HttpStatus.NOT_FOUND));
 
-        user.getAppSpecificRoles().add(localAppRole);
+        user.getAppSpecificRoles().add(testAdminRole);
         userRepository.save(user);
         return userMapper.toUserDto(user);
     }
@@ -84,15 +84,11 @@ public class UserService {
      *
      * @return List of all User entities
      */
-    public User me(UserDto currentUser) {
-        List<User> users = userRepository.findAll();
-        User localUser = null;
-        for (User user : users) {
-            if (user.getUsername().contains(currentUser.getLogin())) {
-                localUser = user;
-            }
-        }
-        return localUser;
+    public UserDto me(UserDto currentUser) {
+        User user = userRepository.findByLogin(currentUser.getLogin())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        UserDto userMapped = userMapper.toUserDto(user);
+        return userMapped;
     }
 
     /**
@@ -184,11 +180,11 @@ public class UserService {
      * get the list of roles attribuated to the user
      * This method:
      * - Test if the current user's has app specifique roles registered
-     * - add the app specifique roles to a list 
+     * - add the app specifique roles to a list
      * - add the main role of the user to the list
      *
-     * @param localUser   The local user's data
-     * @return list of roles 
+     * @param localUser The local user's data
+     * @return list of roles
      */
     public List<String> getRolesList(User localUser) {
 
@@ -203,5 +199,39 @@ public class UserService {
         allRoles.add(localUser.getMainRole().getName().name());
 
         return allRoles;
+    }
+
+    /**
+     * Finds a user by their login.
+     * This method:
+     * - Searches the database for a user with the specified login
+     * - Throws an exception if the user is not found
+     * - Maps the User entity to a UserDto
+     *
+     * @param login The login of the user to find
+     * @return UserDto containing the user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto findByLogin(String login) {
+        log.debug("Searching for user with login: {}", login);
+
+        Optional<User> userOptional = userRepository.findByLogin(login);
+        log.debug("User found in database: {}", userOptional.isPresent());
+
+        User user = userOptional
+                .orElseThrow(() -> {
+                    log.error("User not found with login: {}", login);
+                    return new AppException("Unknown user", HttpStatus.NOT_FOUND);
+                });
+
+        log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
+                user.getId(), user.getFirstName(), user.getLastName(),
+                user.getMainRole());
+
+        UserDto userDto = userMapper.toUserDto(user);
+        log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
+                userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
+
+        return userDto;
     }
 }

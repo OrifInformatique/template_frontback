@@ -27,24 +27,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 class UserMapperTest {
 
-    /**
-     * Test configuration to provide necessary beans.
-     * This internal configuration provides a UserMapper instance
-     * for testing purposes.
-     */
-    @Configuration
-    static class TestConfig {
-        /**
-         * Creates and returns a UserMapper instance for testing.
-         *
-         * @return A UserMapper instance
-         */
-        @org.springframework.context.annotation.Bean
-        public UserMapper userMapper() {
-            return UserMapper.INSTANCE;
-        }
-    }
-
     /** Mapper to test, injected by Spring */
     @Autowired
     private UserMapper userMapper;
