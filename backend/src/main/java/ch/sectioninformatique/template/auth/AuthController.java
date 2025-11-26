@@ -1,11 +1,13 @@
 package ch.sectioninformatique.template.auth;
 
+import java.net.URI;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -114,7 +116,8 @@ public class AuthController {
      * @return Mono<ResponseEntity<MessageResponseDto>> with set password response
      */
     @PutMapping("/update-password")
-    public Mono<ResponseEntity<MessageResponseDto>> updatePassword(@RequestHeader("Authorization") String token, @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
+    public Mono<ResponseEntity<MessageResponseDto>> updatePassword(@RequestHeader("Authorization") String token,
+            @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
         return authClient.updatePassword(token, updatePasswordDto)
                 .map(responseEntity -> {
                     MessageResponseDto messageResponse = responseEntity.getBody();
@@ -143,7 +146,7 @@ public class AuthController {
     @DeleteMapping("/{userId}/{global}")
     public Mono<ResponseEntity<?>> deleteUser(@RequestHeader("Authorization") String token, @PathVariable Long userId,
             @PathVariable boolean global) {
-        
+
         if (global) {
             // Call authClient to delete user from global auth service
             // then delete locally if successful
@@ -170,7 +173,7 @@ public class AuthController {
         } else {
             // Delete user locally only
             userService.deleteUser(userId);
-            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));        
+            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
         }
     }
 
@@ -188,7 +191,8 @@ public class AuthController {
      * @return ResponseEntity with permanent deletion result message
      */
     @DeleteMapping("/{userId}/{global}/permanent")
-    public Mono<ResponseEntity<?>> deleteUserPermanent(@RequestHeader("Authorization") String token, @PathVariable Long userId,
+    public Mono<ResponseEntity<?>> deleteUserPermanent(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId,
             @PathVariable boolean global) {
         if (global) {
             // Call authClient to delete user from the global auth service
@@ -198,7 +202,7 @@ public class AuthController {
                         // Extract body from ResponseEntity
                         Map<String, String> body = response.getBody();
                         if (body != null && body.containsKey("deletedUserLogin")) {
-                            
+
                             // Delete user locally
                             userService.deleteUserPermanentByLogin(body.get("deletedUserLogin"));
 
@@ -211,10 +215,26 @@ public class AuthController {
                                     .body(Map.of("message", "Failed to delete user: missing response data")));
                         }
                     })
-                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));            
+                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
         } else {
             userService.deleteUserPermanent(userId);
             return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
         }
+    }
+
+    /**
+     * Handles GET requests to "/oauth2/login"
+     * Redirects the client to the OAuth2 authorization endpoint for Azure
+     * This initiates the OAuth2 login flow
+     * After successful login, the user will be redirected back to the application
+     * 
+     * @return ResponseEntity with redirection to OAuth2 login URL
+     */
+    @GetMapping("/oauth2/login")
+    public ResponseEntity<Object> testCallOAuth2() {
+
+        // Redirect frontend to spring-auth OAuth2 login endpoint
+        URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
+        return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
     }
 }

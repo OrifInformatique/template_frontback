@@ -1,0 +1,8 @@
+[source,http,options="nowrap"]
+----
+GET /tests/me HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2NDE1NjE1MywiaWF0IjoxNzY0MTUyNTUzfQ.DDVAvlk2GfFWJO-ykq4GG0VO2HY3JKQmnM9i7aMKbcw
+Host: localhost:8080
+
+----
