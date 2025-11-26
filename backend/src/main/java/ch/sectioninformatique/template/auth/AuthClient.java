@@ -118,21 +118,19 @@ public class AuthClient {
         }
 
         /**
-         * Deletes a user by sending a delete request to the user deletion endpoint.
+         * Soft deletes a user by sending a delete request to the user deletion endpoint.
          * 
          * @param token  The authorization token
          * @param userId The ID of the user to delete
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
-         *         response
-         *         (e.g., token or
-         *         status message)
+         *         response (e.g., token or status message)
          */
         public Mono<ResponseEntity<Map<String, String>>> deleteUser(String token, Long userId) {
                 return webClient.delete()
-                                .uri("/users/" + userId) // your delete user endpoint path
+                                .uri("/users/" + userId)
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
+                                .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
@@ -144,15 +142,13 @@ public class AuthClient {
         }
 
         /**
-         * Permanently deletes a user by sending a delete request to the hard delete
+         * Permanently deletes a user by sending a delete request to the permanent delete
          * user endpoint.
          * 
          * @param token  The authorization token
-         * @param userId The ID of the user to hard delete
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the hard
-         *         deletion response
-         *         (e.g., token or
-         *         status message)
+         * @param userId The ID of the user to delete permanently
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
+         *         deletion response (e.g., token or status message)
          */
         public Mono<ResponseEntity<Map<String, String>>> hardDeleteUser(String token, Long userId) {
                 return webClient.delete()
