@@ -1,6 +1,0 @@
-[source,bash]
-----
-$ curl 'http://localhost:8080/tests/1/promote-test' -i -X PUT \
-    -H 'Content-Type: application/json;charset=UTF-8' \
-    -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LnVzZXJAdGVzdC5jb20iLCJmaXJzdE5hbWUiOiJUZXN0IiwibGFzdE5hbWUiOiJVc2VyIiwibWFpblJvbGUiOiJVU0VSIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJVU0VSIl0sImV4cCI6MTc2NDE2MzM1NCwiaWF0IjoxNzY0MTU5NzU0fQ.SjJ2q5Ic_1parUaL9hLmZJaWyGtgGILa04B5_HKXZFU'
-----
