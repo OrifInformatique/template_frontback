@@ -36,24 +36,23 @@ public class UserController {
     private final AuthClient authClient;
 
     /**
-     * Retrieves the currently authenticated user's information.
+     * Retrieves the currently authenticated user's informations.
      * This endpoint:
      * - Requires user authentication
-     * - Returns the user's profile information
+     * - Returns the user's informations
      * - Is accessible to all authenticated users
      *
      * @return ResponseEntity containing the current user's DTO
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
-    public ResponseEntity<User> authenticatedUser() {
+    public ResponseEntity<UserDto> authenticatedUser() {
         Authentication authentication = SecurityContextHolder
                 .getContext()
                 .getAuthentication();
 
         UserDto currentUser = (UserDto) authentication.getPrincipal();
-        User localUser = userService.me(currentUser);
-        return ResponseEntity.ok(localUser);
+        return ResponseEntity.ok(currentUser);
     }
 
     /**
