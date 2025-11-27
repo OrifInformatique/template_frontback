@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.lang.NonNull;
 
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.RegisterDto;
@@ -48,18 +49,18 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to the local admin role.
+     * Promotes a user to a local app role.
      * This operation:
      * - Verifies the user exists
-     * - Checks if the user is already an manager or admin
-     * - Removes existing roles and assigns the admin role
+     * - Checks if the user already has the local app role
+     * - Removes existing roles and assigns the local app role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
      * @throws RuntimeException if the user is not found, already has the role, or
      *                          the role is not found
      */
-    public UserDto promoteToTestAdmin(Long userId) {
+    public UserDto promoteToLocalAppRole(@NonNull Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
@@ -246,7 +247,7 @@ public class UserService {
      * @return UserDto containing the deleted user's information
      * @throws AppException if the user is not found
      */
-    public UserDto deleteUser(Long userId) {
+    public UserDto deleteUser(@NonNull Long userId) {
         // Get the user to delete
         User userToDelete = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
@@ -266,7 +267,7 @@ public class UserService {
      * @return UserDto containing the deleted user's information
      * @throws AppException if the user is not found
      */
-    public UserDto deleteUserPermanent(Long userId) {
+    public UserDto deleteUserPermanent(@NonNull Long userId) {
         // Get the user to delete
         User userToDelete = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
