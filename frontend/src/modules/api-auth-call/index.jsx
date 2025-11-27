@@ -41,14 +41,6 @@ const ApiAuthCall = () => {
                         <p>{apiResult.login}</p>
                         <p>{apiResult.role}</p>
                         <p>{apiResult.token}</p>
-                        {/* <div> */}
-                        {/*     <h3 className="font-bold">Permissions:</h3> */}
-                        {/*     <ul> */}
-                        {/*         {apiResult?.permissions?.map((perm, idx) => ( */}
-                        {/*             <li key={idx}>{perm}</li> */}
-                        {/*         ))} */}
-                        {/*     </ul> */}
-                        {/* </div> */}
                     </div>
                 </PopUp>
             )}
