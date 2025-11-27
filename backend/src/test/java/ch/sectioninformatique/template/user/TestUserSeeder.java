@@ -22,8 +22,8 @@ import java.util.Arrays;
  */
 @Component
 @Order(2)
-@Profile({"dev"})
-public class UserSeeder implements CommandLineRunner {
+@Profile({ "test" })
+public class TestUserSeeder implements CommandLineRunner {
 
 	/** Repository for user data access */
 	private final UserRepository userRepository;
@@ -35,9 +35,10 @@ public class UserSeeder implements CommandLineRunner {
 	 * Constructs a new UserSeeder with the required dependencies.
 	 *
 	 * @param userRepository  Repository for user data access
+	 * @param passwordEncoder Encoder for password hashing
 	 * @param roleRepository  Repository for role data access
 	 */
-	public UserSeeder(UserRepository userRepository,
+	public TestUserSeeder(UserRepository userRepository,
 			RoleRepository roleRepository) {
 		this.userRepository = userRepository;
 		this.roleRepository = roleRepository;
@@ -73,6 +74,7 @@ public class UserSeeder implements CommandLineRunner {
 	 * 
 	 * Each user is created with:
 	 * - Unique login (email format)
+	 * - Secure password (hashed)
 	 * - First and last name
 	 * - Appropriate role(s)
 	 *
@@ -89,63 +91,36 @@ public class UserSeeder implements CommandLineRunner {
 					.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
 			// Create users with User.builder()
-			User user0 = User.builder()
-					.firstName("deleted")
-					.lastName("user")
-					.login("deleted.user@test.com")
+
+			User testUser = User.builder()
+					.firstName("Test")
+					.lastName("User")
+					.login("test.user@test.com")
 					.mainRole(userRole)
 					.build();
 
-			User user1 = User.builder()
-					.firstName("John")
-					.lastName("DOE")
-					.login("john.doe@test.com")
-					.mainRole(userRole)
-					.build();
-
-			User user2 = User.builder()
-					.firstName("Jane")
-					.lastName("SMITH")
-					.login("jane.smith@test.com")
+			User testManager = User.builder()
+					.firstName("Test")
+					.lastName("Manager")
+					.login("test.manager@test.com")
 					.mainRole(managerRole)
 					.build();
 
-			User user3 = User.builder()
-					.firstName("Alice")
-					.lastName("JOHNSON")
-					.login("alice.johnson@test.com")
-					.mainRole(userRole)
-					.build();
-
-			User user4 = User.builder()
-					.firstName("Dan")
-					.lastName("SERGEANT")
-					.login("dan.sergeant@test.com")
-					.mainRole(userRole)
-					.build();
-
-			User user5 = User.builder()
-					.firstName("Bobby")
-					.lastName("BALLOONZI")
-					.login("bobby.balloonzi@test.com")
-					.mainRole(userRole)
-					.build();
-
-			User user6 = User.builder()
-					.firstName("Rob")
-					.lastName("JAKE")
-					.login("rob.jake@test.com")
-					.mainRole(userRole)
-					.build();
-
-			User user7 = User.builder()
-					.firstName("Super")
+			User testAdmin = User.builder()
+					.firstName("Test")
 					.lastName("Admin")
-					.login("super.admin@test.com")
+					.login("test.admin@test.com")
 					.mainRole(adminRole)
 					.build();
 
-			userRepository.saveAll(Arrays.asList(user0, user1, user2, user3, user4, user5, user6, user7));
+			User testAdmin2 = User.builder()
+					.firstName("Test2")
+					.lastName("Admin2")
+					.login("test.admin2@test.com")
+					.mainRole(adminRole)
+					.build();
+
+			userRepository.saveAll(Arrays.asList(testUser, testManager, testAdmin, testAdmin2));
 		} else {
 			System.out.println("Users table not empty - Skipping user seeding");
 		}
