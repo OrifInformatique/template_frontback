@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,18 +55,18 @@ public class UserController {
     }
 
     /**
-     * Promotes a user to the test admin role.
+     * Promotes a user to a local app role.
      * This endpoint:
      * - Requires the 'user:update' authority
-     * - Validates the user exists and isn't already an test admin
+     * - Validates the user exists and has not already the role
      * - Returns success/error message
      *
      * @param userId The ID of the user to promote
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userId}/promote-test")
+    @PutMapping("/{userId}/promote-local-app-role")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
+    public ResponseEntity<?> promoteToLocalAppRole(@PathVariable Long userId) {
         try {
             userService.promoteToLocalAppRole(userId);
             return ResponseEntity.ok().body("User promoted to local app role successfully.");
