@@ -13,12 +13,14 @@ const ApiAuthCall = () => {
 
     const callApi = async () => {
         try {
-            const userResponse = await axios.get('/users/me', {
+            const userResponse = await axios.get('/tests/me', {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },
             });
+            console.log(userResponse);
             setApiResult(userResponse.data);
+            
         } catch (error) {
             console.log(error);
         }
@@ -34,14 +36,12 @@ const ApiAuthCall = () => {
             />
             {open && (
                 <PopUp title="Test" onClose={() => setOpen(false)}>
-                    <div className="flex flex-col overflow-scroll">
                         <p>{accessToken}</p>
                         <p>{apiResult.firstName}</p>
                         <p>{apiResult.lastName}</p>
                         <p>{apiResult.login}</p>
                         <p>{apiResult.role}</p>
                         <p>{apiResult.token}</p>
-                    </div>
                 </PopUp>
             )}
         </div>
