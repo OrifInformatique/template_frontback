@@ -90,9 +90,9 @@ public class AuthClient {
         }
 
         /**
-         * Refresh the token with a refresh token
+         * Refresh the access token using a refresh token
          * 
-         * @param token The authorization token
+         * @param token The access token
          * @return A Mono<ResponseEntity<UserDto>> containing the new token
          */
         public Mono<ResponseEntity<UserDto>> refreshLogin(String token) {
