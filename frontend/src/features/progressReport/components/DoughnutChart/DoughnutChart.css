@@ -1,0 +1,20 @@
+/* Component container */
+.doughnut-container {
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  padding: 20px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+
+  /* Allows the donut shadow to extend beyond */
+  overflow: visible;
+}
+
+/* Shadow around the donut, twice to create a more realistic effect */
+.doughnut-shadow {
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.14))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
