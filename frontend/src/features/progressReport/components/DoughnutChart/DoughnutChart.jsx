@@ -89,12 +89,6 @@ export default function DoughnutChart({ data = [], showLegend = false }) {
   };
 
   return (
-    <div className="doughnut-container">
-      <Doughnut
-        data={chartData}
-        options={options}
-        className="doughnut-shadow"
-      />
-    </div>
+    <Doughnut data={chartData} options={options} className="doughnut-shadow" />
   );
 }
