@@ -78,23 +78,23 @@ public class AuthController {
 
     /**
      * Handles GET requests to "/refresh"
-     * Accepts Bearer token as header
+     * Accepts Bearer token as body
      * 
-     * On successful refresh send the UserDto with the new token 
+     * On successful refresh send the new token 
      * 
      * @param token
-     * @return Mono<ResponseEntity<UserDto>> with new token
+     * @return Mono<ResponseEntity<TokenResponseDto>> with new token
      */
-    @GetMapping("/refresh")
-    public Mono<ResponseEntity<UserDto>> refreshLogin(@RequestHeader("Authorization") String token) {
+    @PostMapping("/refresh")
+    public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(@RequestBody @Valid RefreshRequestDto token) {
         return authClient.refreshLogin(token)
                 .flatMap(response -> {
-                    UserDto userDto = response.getBody();
+                    TokenResponseDto tokenResponseDto = response.getBody();
 
-                    if (userDto != null) {
-                        return Mono.<ResponseEntity<UserDto>>just(ResponseEntity.ok(userDto));
+                    if (tokenResponseDto != null) {
+                        return Mono.<ResponseEntity<TokenResponseDto>>just(ResponseEntity.ok(tokenResponseDto));
                     } else {
-                        return Mono.<ResponseEntity<UserDto>>just(
+                        return Mono.<ResponseEntity<TokenResponseDto>>just(
                                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
                     }
                 })

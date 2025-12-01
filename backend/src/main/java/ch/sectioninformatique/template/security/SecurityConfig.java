@@ -121,6 +121,7 @@ public class SecurityConfig {
                             .requestMatchers("/error").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/oauth2/login").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .anyRequest().authenticated();

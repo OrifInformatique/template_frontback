@@ -9,6 +9,8 @@ import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -51,15 +53,33 @@ public class AuthClient {
                                 .uri("/auth/login") // login endpoint path in spring-auth application
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(credentialsDto)
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
-                                .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                          // token or message)
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new AppException(
+                                                                                error.message(),
+                                                                                HttpStatus.resolve(response
+                                                                                                .rawStatusCode()))));
+                                        }
+
+                                        // Extract response body
+                                        Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
+
+                                        return bodyMono.map(userDto -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                // Extract refresh_token cookie directly in the lambda
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .stream()
+                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                                .findFirst()
+                                                                .ifPresent(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+                                                return builder.body(userDto);
+                                        });
+                                });
 
         }
 
@@ -93,22 +113,38 @@ public class AuthClient {
          * Refresh the access token using a refresh token
          * 
          * @param token The access token
-         * @return A Mono<ResponseEntity<UserDto>> containing the new token
+         * @return A Mono<ResponseEntity<TokenResponseDto>> containing the new token
          */
-        public Mono<ResponseEntity<UserDto>> refreshLogin(String token) {
-
-                return webClient.get()
-                                .uri("/auth/refresh") // your register endpoint path
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
-                                                response -> response.bodyToMono(ErrorDto.class)
+        public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(RefreshRequestDto request) {
+                return webClient.post()
+                                .uri("/auth/refresh")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(request)
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
                                                                                                 HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
-                                .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                          // token or message);
+                                                                                                                response.rawStatusCode()))));
+                                        }
+
+                                        Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
+
+                                        return bodyMono.map(tokenDto -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                // Forward all Set-Cookie headers (including refresh_token) to the
+                                                // client
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .forEach(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+
+                                                return builder.body(tokenDto);
+                                        });
+                                });
         }
 
         /**
