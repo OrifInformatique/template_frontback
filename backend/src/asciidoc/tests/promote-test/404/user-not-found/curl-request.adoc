@@ -2,5 +2,5 @@
 ----
 $ curl 'http://localhost:8080/tests/9999/promote-test' -i -X PUT \
     -H 'Content-Type: application/json;charset=UTF-8' \
-    -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LmFkbWluQHRlc3QuY29tIiwiZmlyc3ROYW1lIjoiVGVzdCIsImxhc3ROYW1lIjoiQWRtaW4iLCJtYWluUm9sZSI6IkFETUlOIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJBRE1JTiJdLCJleHAiOjE3NjI1MTE0NjEsImlhdCI6MTc2MjUwNzg2MX0.-R845Nk0mxJ6LPexQoAIViynM7sVRt5FgqAebwNMm94'
+    -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LmFkbWluQHRlc3QuY29tIiwiZmlyc3ROYW1lIjoiVGVzdCIsImxhc3ROYW1lIjoiQWRtaW4iLCJtYWluUm9sZSI6IkFETUlOIiwiYXBwU3BlY2lmaWNSb2xlcyI6WyJBRE1JTiJdLCJleHAiOjE3NjQzMzAzNDAsImlhdCI6MTc2NDMyNjc0MH0.9lH5CJwsNfPh2QditGln6biFpY1yPzQru9nimoQokFo'
 ----
