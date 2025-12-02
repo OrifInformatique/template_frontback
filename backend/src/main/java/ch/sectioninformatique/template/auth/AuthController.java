@@ -48,8 +48,8 @@ public class AuthController {
      * @return Mono<ResponseEntity<UserDto>> with login response
      */
     @PostMapping("/login")
-    public Mono<ResponseEntity<UserDto>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-        return ResponseEntity.ok(authClient.login(credentialsDto)).getBody();
+    public ResponseEntity<UserDto> login(@RequestBody @Valid CredentialsDto credentialsDto) {
+        return authClient.login(credentialsDto).block();
     }
 
     /**
@@ -64,7 +64,7 @@ public class AuthController {
      * @return Mono<ResponseEntity<UserDto>> with registration response
      */
     @PostMapping("/register")
-    public Mono<ResponseEntity<UserDto>> register(@RequestBody @Valid RegisterDto user) {
+    public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterDto user) {
         return authClient.register(user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
@@ -73,7 +73,8 @@ public class AuthController {
                     // Return HTTP 200 OK with the response body
                     return Mono.just(response);
                 })
-                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .block();
     }
 
     /**

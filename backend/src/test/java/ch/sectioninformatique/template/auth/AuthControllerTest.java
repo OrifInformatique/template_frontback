@@ -1,5 +1,6 @@
 package ch.sectioninformatique.template.auth;
 
+import org.junit.jupiter.api.BeforeEach;
 // Import statements for testing, Spring Boot, JSON handling, and REST Docs
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,11 +16,15 @@ import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDoc
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
@@ -33,8 +38,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 
 /**
  * Integration tests for the "TestController" REST endpoints.
@@ -60,7 +66,7 @@ public class AuthControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private AuthClient authClient;
+    private AuthClient authClient; // mock this instead of the controller
 
     /**
      * Helper method for performing and documenting HTTP requests in tests.
@@ -136,20 +142,22 @@ public class AuthControllerTest {
      */
     @Test
     @Transactional
-    public void login_withRealData_shouldReturnSuccess() throws Exception {
+    public void login_withMockedService_shouldReturnSuccess() throws Exception {
         UserDto mockedUser = UserDto.builder()
                 .id(2L)
                 .firstName("John")
                 .lastName("DOE")
                 .login("john.doe@test.com")
                 .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
-                .refreshToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
                 .mainRole("USER")
                 .permissions(new ArrayList<String>())
                 .build();
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
         when(authClient.login(any(CredentialsDto.class)))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedUser)));
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(mockedUser)));
 
         performRequest(
                 "POST",
@@ -159,7 +167,22 @@ public class AuthControllerTest {
                 MediaType.APPLICATION_JSON,
                 200,
                 "login",
-                null);
+                response -> {
+                    try {
+                        // Assert status code
+                        response.andExpect(status().isOk());
+
+                        // Assert response body fields
+                        response.andExpect(jsonPath("$.firstName").value("John"));
+                        response.andExpect(jsonPath("$.login").value("john.doe@test.com"));
+
+                        // Assert refresh token cookie
+                        response.andExpect(header().string(HttpHeaders.SET_COOKIE,
+                                org.hamcrest.Matchers.containsString("refresh_token=fakeToken123")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     /**
@@ -182,8 +205,11 @@ public class AuthControllerTest {
                 .permissions(new ArrayList<String>())
                 .build();
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
         when(authClient.register(any(RegisterDto.class)))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedUser)));
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(mockedUser)));
 
         performRequest(
                 "POST",

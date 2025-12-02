@@ -22,5 +22,6 @@ DB_PASSWORD=pwd
 # certificate is not valid for this domain.
 # Use https://spring-auth.jcloud.ik-server.com/ as it is the Jelastic server
 # domain name, with a valid SSL certificate.
-# You can also user a local instance of spring-auth for development purpose.
+# You can also use a local instance of spring-auth for development purpose.
+# http://host.docker.internal:{YOUR PORT NUMBER}
 SPRING_AUTH_URL=https://spring-auth.jcloud.ik-server.com/
