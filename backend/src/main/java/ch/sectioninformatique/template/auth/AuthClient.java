@@ -98,15 +98,33 @@ public class AuthClient {
                                 .uri("/auth/register") // your register endpoint path
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(user) // use the SignUpDto directly
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
-                                .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                          // token or message);
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new AppException(
+                                                                                error.message(),
+                                                                                HttpStatus.resolve(response
+                                                                                                .rawStatusCode()))));
+                                        }
+
+                                        // Extract response body
+                                        Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
+
+                                        return bodyMono.map(userDto -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                // Extract refresh_token cookie directly in the lambda
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .stream()
+                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                                .findFirst()
+                                                                .ifPresent(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+                                                return builder.body(userDto);
+                                        });
+                                });
         }
 
         /**
