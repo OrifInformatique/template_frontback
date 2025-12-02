@@ -78,54 +78,42 @@ public class AuthController {
     }
 
     /**
-     * Handles GET requests to "/refresh"
-     * Accepts Bearer token as body
+     * Handles POST requests to "/refresh"
+     * Accepts refresh token in request body
      * 
-     * On successful refresh send the new token 
+     * On successful refresh send the new access token 
      * 
      * @param token
-     * @return Mono<ResponseEntity<TokenResponseDto>> with new token
+     * @return ResponseEntity<TokenResponseDto> with new token
      */
     @PostMapping("/refresh")
-    public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(@RequestBody @Valid RefreshRequestDto token) {
+    public ResponseEntity<TokenResponseDto> refreshLogin(@RequestBody @Valid RefreshRequestDto token) {
         return authClient.refreshLogin(token)
-                .flatMap(response -> {
-                    TokenResponseDto tokenResponseDto = response.getBody();
-
-                    if (tokenResponseDto != null) {
-                        return Mono.<ResponseEntity<TokenResponseDto>>just(ResponseEntity.ok(tokenResponseDto));
-                    } else {
-                        return Mono.<ResponseEntity<TokenResponseDto>>just(
-                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                    }
-                })
-                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+            .map(response -> ResponseEntity.status(response.getStatusCode())
+                              .headers(response.getHeaders())
+                              .body(response.getBody()))
+            .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+            .block();
     }
 
     /**
      * Handles PUT requests to "/update-password"
      * Accepts new password data as a request body, validated for correctness
      * Calls the authentication client to set the new password for the user
-     * Returns a reactive Mono<ResponseEntity<MessageResponseDto>> containing the
-     * response message
+     * Returns a ResponseEntity<MessageResponseDto> containing the response message
      * 
      * @param token The authorization token from the request header
-     * @param updatePasswordDto The UpdatePasswordDto containing the old and new passwords
-     * @return Mono<ResponseEntity<MessageResponseDto>> with set password response
+     * @param updatePasswordDto The PasswordUpdateDto containing the old and new passwords
+     * @return ResponseEntity<MessageResponseDto> with set password response
      */
     @PutMapping("/update-password")
-    public Mono<ResponseEntity<MessageResponseDto>> updatePassword(@RequestHeader("Authorization") String token,
+    public ResponseEntity<MessageResponseDto> updatePassword(@RequestHeader("Authorization") String token,
             @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
         return authClient.updatePassword(token, updatePasswordDto)
-                .map(responseEntity -> {
-                    MessageResponseDto messageResponse = responseEntity.getBody();
-                    if (messageResponse != null) {
-                        return ResponseEntity.ok(messageResponse);
-                    } else {
-                        // Handle null body just in case
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                    }
-                });
+                .map(responseEntity -> responseEntity.getBody())
+                .map(messageResponse -> ResponseEntity.ok(messageResponse))
+                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+                .block();
     }
 
     /**

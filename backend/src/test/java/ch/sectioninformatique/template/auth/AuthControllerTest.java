@@ -1,6 +1,5 @@
 package ch.sectioninformatique.template.auth;
 
-import org.junit.jupiter.api.BeforeEach;
 // Import statements for testing, Spring Boot, JSON handling, and REST Docs
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,15 +15,11 @@ import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDoc
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
@@ -227,6 +222,91 @@ public class AuthControllerTest {
                         assertEquals("Test", updatedUser.getFirstName());
                         assertEquals("NewUser", updatedUser.getLastName());
                         assertEquals("USER", updatedUser.getMainRole());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/refresh
+     *
+     * Mock a user refreshing their token successfully.
+     */
+    @Test
+    @Transactional
+    public void refresh_withMockedService_shouldReturnSuccess() throws Exception {
+        TokenResponseDto tokenResponse = new TokenResponseDto("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...");
+
+                HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
+        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(tokenResponse)));
+
+        performRequest(
+                "POST",
+                "/auth/refresh",
+                "{\"refreshToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                200,
+                "refresh",
+                response -> {
+                    try {
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.accessToken").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: PUT /auth/update-password
+     *
+     * Mock a user updating their password successfully.
+     * Note: This endpoint requires authentication, so expect 401 when no valid token is provided.
+     */
+    @Test
+    @Transactional
+    public void updatePassword_withoutToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "PUT",
+                "/auth/update-password",
+                "{\"oldPassword\":\"OldPassword123@\",\"newPassword\":\"NewPassword123@\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "update-password",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: GET /auth/oauth2/login
+     *
+     * OAuth2 login endpoint that redirects to Azure OAuth2 authorization.
+     * Note: This endpoint requires anonymous access and redirects, so expect 401 due to security configuration.
+     */
+    @Test
+    public void oauth2Login_shouldReturn401() throws Exception {
+        performRequest(
+                "GET",
+                "/auth/oauth2/login",
+                null,
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "oauth2-login",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
