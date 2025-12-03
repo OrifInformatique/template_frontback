@@ -195,7 +195,6 @@ public class AuthControllerTest {
                 .lastName("NewUser")
                 .login("test.newuser@test.com")
                 .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
-                .refreshToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
                 .mainRole("USER")
                 .permissions(new ArrayList<String>())
                 .build();
