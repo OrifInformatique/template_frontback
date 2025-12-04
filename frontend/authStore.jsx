@@ -8,10 +8,8 @@ const useAuthStore = create(
             setAccessToken: (token) => set({ accessToken: token }),
             clearAccessToken: () => set({ accessToken: null }),
         }),
-        {
-            name: 'auth-storage', // key for localStorage
-        },
-    ),
+        { name: 'auth-storage', getStorage: () => sessionStorage }
+    )
 );
 
 export default useAuthStore;
