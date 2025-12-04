@@ -93,22 +93,20 @@ public class AuthClient {
          * Sets a new password for the user by sending the new password to the set
          * password endpoint.
          * 
-         * @param token          The authorization token
-         * @param newPasswordDto The NewPasswordDto containing the new password data
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the set
-         *         password response
-         *         (e.g., token or
-         *         status message)
+         * @param token           The authorization token
+         * @param passwordUpdateDto The PasswordUpdateDto containing the old and new passwords
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password update
+         *         response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<MessageResponseDto>> setPassword(String token, NewPasswordDto newPasswordDto) {
+        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token, PasswordUpdateDto passwordUpdateDto) {
 
                 return webClient.put()
-                                .uri("/auth/set-password") // your set-password endpoint path
+                                .uri("/auth/update-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
-                                .bodyValue(newPasswordDto) // use the NewPasswordDto directly
+                                .bodyValue(passwordUpdateDto)
                                 .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
+                                .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
