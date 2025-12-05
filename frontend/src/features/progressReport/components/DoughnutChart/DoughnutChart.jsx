@@ -34,7 +34,7 @@ const CHART_DEFAULTS = {
  * If no data is provided, fallback to a default 4×25% dataset.
  */
 function normalizeData(data) {
-  if (!data || data.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     return [
       { label: "Autonome", value: 25, color: DEFAULT_COLORS[0] },
       { label: "Exercé", value: 25, color: DEFAULT_COLORS[1] },
@@ -43,11 +43,16 @@ function normalizeData(data) {
     ];
   }
 
-  return data.map((item, i) => ({
-    label: item.label,
-    value: Number(item.value) ?? 0,
-    color: item.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
-  }));
+  return data.map((item = {}, i) => {
+    const rawValue = Number(item.value);
+    const safeValue = Number.isFinite(rawValue) ? rawValue : 0;
+
+    return {
+      label: item.label ?? `Item ${i + 1}`,
+      value: safeValue,
+      color: item.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
+    };
+  });
 }
 
 /**
@@ -79,7 +84,7 @@ export default function DoughnutChart({ data = [], showLegend = false }) {
     plugins: {
       legend: {
         display: showLegend,
-        position: "bottom",
+        position: "left",
       },
       tooltip: {
         enabled: true,
