@@ -10,7 +10,7 @@
 import React from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
-import { percentagePlugin } from "./percentagePlugin";
+import { percentagePlugin } from "./percentage-plugin";
 import "./DoughnutChart.css";
 
 // Register elements and the custom plugin once at module level
