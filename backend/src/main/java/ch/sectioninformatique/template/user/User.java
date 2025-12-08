@@ -45,7 +45,7 @@ public class User {
     private String lastName;
 
     /** Login username of the user */
-    @Column(unique = true, length = 100, nullable = false)
+    @Column(unique = true, nullable = false)
     private String login;
 
     /** Timestamp indicating when the user was created */

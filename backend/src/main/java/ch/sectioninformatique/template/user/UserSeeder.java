@@ -22,7 +22,7 @@ import java.util.Arrays;
  */
 @Component
 @Order(2)
-@Profile({"dev"})
+@Profile({ "dev" })
 public class UserSeeder implements CommandLineRunner {
 
 	/** Repository for user data access */
@@ -34,8 +34,8 @@ public class UserSeeder implements CommandLineRunner {
 	/**
 	 * Constructs a new UserSeeder with the required dependencies.
 	 *
-	 * @param userRepository  Repository for user data access
-	 * @param roleRepository  Repository for role data access
+	 * @param userRepository Repository for user data access
+	 * @param roleRepository Repository for role data access
 	 */
 	public UserSeeder(UserRepository userRepository,
 			RoleRepository roleRepository) {
@@ -145,7 +145,14 @@ public class UserSeeder implements CommandLineRunner {
 					.mainRole(adminRole)
 					.build();
 
-			userRepository.saveAll(Arrays.asList(user0, user1, user2, user3, user4, user5, user6, user7));
+			User user8 = User.builder()
+					.firstName("Neuro")
+					.lastName("Sama")
+					.login("not.an.ia@vedal.ia")
+					.mainRole(adminRole)
+					.build();
+
+			userRepository.saveAll(Arrays.asList(user0, user1, user2, user3, user4, user5, user6, user7, user8));
 		} else {
 			System.out.println("Users table not empty - Skipping user seeding");
 		}
