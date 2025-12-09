@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -39,18 +38,16 @@ public class AuthClient {
         }
 
         /**
-         * Performs user login by sending credentials to the authentication endpoint.
+         * Performs user login by sending credentials to the authentication provider.
          * 
          * @param credentialsDto The CredentialsDto containing user login data
          * @return A Mono<ResponseEntity<UserDto>> containing the authentication
-         *         response
-         *         (e.g., token or
-         *         status message)
+         *         response (e.g., token or status message)
          */
         public Mono<ResponseEntity<UserDto>> login(@Valid CredentialsDto credentialsDto) {
 
                 return webClient.post()
-                                .uri("/auth/login") // login endpoint path in spring-auth application
+                                .uri("/auth/login") // login endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(credentialsDto)
                                 .exchangeToMono(response -> {
@@ -84,20 +81,18 @@ public class AuthClient {
         }
 
         /**
-         * Performs user registration by sending user details to the registration
-         * endpoint.
+         * Performs user registration by sending user details to the authentication provider.
          * 
          * @param user The SignUpDto containing user registration data
          * @return A Mono<ResponseEntity<UserDto>> containing the registration response
-         *         (e.g., token or
-         *         status message)
+         *         (e.g., token or status message)
          */
         public Mono<ResponseEntity<UserDto>> register(RegisterDto user) {
 
                 return webClient.post()
-                                .uri("/auth/register") // your register endpoint path
+                                .uri("/auth/register") // the registration endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(user) // use the SignUpDto directly
+                                .bodyValue(user)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
@@ -128,14 +123,14 @@ public class AuthClient {
         }
 
         /**
-         * Refresh the access token using a refresh token
+         * Call the authentication provider to refresh the access token using a refresh token
          * 
-         * @param token The access token
-         * @return A Mono<ResponseEntity<TokenResponseDto>> containing the new token
+         * @param request The RefreshRequestDto containing the refresh token
+         * @return A Mono<ResponseEntity<TokenResponseDto>> containing the new access token
          */
         public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(RefreshRequestDto request) {
                 return webClient.post()
-                                .uri("/auth/refresh")
+                                .uri("/auth/refresh") // the refresh token endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(request)
                                 .exchangeToMono(response -> {
@@ -152,8 +147,6 @@ public class AuthClient {
                                         return bodyMono.map(tokenDto -> {
                                                 ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
 
-                                                // Forward all Set-Cookie headers (including refresh_token) to the
-                                                // client
                                                 response.headers().asHttpHeaders()
                                                                 .getOrDefault(HttpHeaders.SET_COOKIE,
                                                                                 Collections.emptyList())
@@ -166,21 +159,19 @@ public class AuthClient {
         }
 
         /**
-         * Sets a new password for the user by sending the new password to the set
-         * password endpoint.
+         * Updates user's password by sending the new password to the authentication provider.
          * 
-         * @param token             The authorization token
+         * @param token             The access token
          * @param passwordUpdateDto The PasswordUpdateDto containing the old and new
          *                          passwords
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password
-         *         update
-         *         response (e.g., token or status message)
+         *         update response (e.g., token or status message)
          */
         public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
                         PasswordUpdateDto passwordUpdateDto) {
 
                 return webClient.put()
-                                .uri("/auth/update-password")
+                                .uri("/auth/update-password") // the password update endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .bodyValue(passwordUpdateDto)
@@ -192,22 +183,19 @@ public class AuthClient {
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.rawStatusCode())))))
                                 .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
-                                                                     // (e.g., a
-                // token or message);
         }
 
         /**
-         * Soft deletes a user by sending a delete request to the user deletion
-         * endpoint.
+         * Soft deletes a user by sending a delete request to the authentication provider.
          * 
-         * @param token  The authorization token
+         * @param token  The access token
          * @param userId The ID of the user to delete
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
          *         response (e.g., token or status message)
          */
         public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
                 return webClient.delete()
-                                .uri("/users/" + userId)
+                                .uri("/users/" + userId) // soft delete user endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
@@ -222,18 +210,16 @@ public class AuthClient {
         }
 
         /**
-         * Permanently deletes a user by sending a delete request to the permanent
-         * delete
-         * user endpoint.
+         * Permanently deletes a user by sending a delete request to the authentication provider.
          * 
-         * @param token  The authorization token
+         * @param token  The access token
          * @param userId The ID of the user to delete permanently
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
          *         deletion response (e.g., token or status message)
          */
         public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
                 return webClient.delete()
-                                .uri("/users/" + userId + "/permanent")
+                                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
@@ -248,19 +234,17 @@ public class AuthClient {
         }
 
         /**
-         * Initiates OAuth2 login by redirecting to the OAuth2 authorization endpoint.
+         * Initiates OAuth2 login by redirecting to the OAuth2 authorization endpoint of
+         * the authentication provider.
          * 
          * @return A Mono<ResponseEntity<String>> containing the OAuth2 login response
-         *         (e.g., token or
-         *         status message)
+         *         (e.g., token or status message)
          */
         public Mono<ResponseEntity<String>> loginOAUth2() {
 
                 return webClient.get()
-                                .uri("/oauth2/authorization/azure") // your login endpoint path
+                                .uri("/oauth2/authorization/azure") // the OAuth2 authorization endpoint path in authentication provider
                                 .retrieve()
-                                .toEntity(String.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                         // token or message)
+                                .toEntity(String.class); // expect the response as a ResponseEntity<String>
         }
-
 }
