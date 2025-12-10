@@ -4,17 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.lang.NonNull;
 
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.hibernate.Session;
 
 /**
  * Service class for managing user-related operations.
@@ -30,7 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UserService {
 
+    /** EntityManager for database operations */
+    @Autowired
+    private EntityManager entityManager;
+
     /** Repository for user data access */
+    @Autowired
     private final UserRepository userRepository;
 
     /** Repository for role data access */
@@ -40,18 +49,18 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to the local admin role.
+     * Promotes a user to a local app role.
      * This operation:
      * - Verifies the user exists
-     * - Checks if the user is already an manager or admin
-     * - Removes existing roles and assigns the admin role
+     * - Checks if the user already has the local app role
+     * - Removes existing roles and assigns the local app role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
-     * @throws RuntimeException if the user is not found, already an manager, or the
-     *                          manager role is not found
+     * @throws RuntimeException if the user is not found, already has the role, or
+     *                          the role is not found
      */
-    public UserDto promoteToTestAdmin(Long userId) {
+    public UserDto promoteToLocalAppRole(@NonNull Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
@@ -70,20 +79,46 @@ public class UserService {
     }
 
     /**
-     * Retrieves all users in the system.
+     * Retrieves all users in the system (not including soft-deleted users).
      *
      * @return List of all User entities
      */
     public List<User> allUsers() {
+        Session session = entityManager.unwrap(Session.class);
+        session.enableFilter("deletedFilter").setParameter("isDeleted", false);
         List<User> users = new ArrayList<>();
         userRepository.findAll().forEach(users::add);
         return users;
     }
 
     /**
-     * Retrieves the user in the system.
+     * Retrieves all users including soft-deleted ones.
      *
-     * @return List of all User entities
+     * @return List of all User entities including deleted
+     */
+    public List<User> allWithDeletedUsers() {
+        List<User> users = new ArrayList<>();
+        userRepository.findAllIncludingDeleted().forEach(users::add);
+        return users;
+    }
+
+    /**
+     * Retrieves only soft-deleted users.
+     *
+     * @return List of soft-deleted User entities
+     */
+    public List<User> deletedUsers() {
+        Session session = entityManager.unwrap(Session.class);
+        session.enableFilter("deletedFilter").setParameter("isDeleted", true);
+        List<User> users = new ArrayList<>();
+        userRepository.findAllDeleted().forEach(users::add);
+        return users;
+    }
+
+    /**
+     * Retrieves the authenticated user's information.
+     *
+     * @return UserDto containing the current user's information
      */
     public UserDto me(UserDto currentUser) {
         User user = userRepository.findByLogin(currentUser.getLogin())
@@ -99,19 +134,19 @@ public class UserService {
      * - Assigns the default USER role
      * - Saves the user to the database
      *
-     * @param userDto The user registration data
+     * @param registerDto The user registration data
      * @return User containing the created user's information
      * @throws AppException if the login already exists or the default role is not
      *                      found
      */
-    public User register(RegisterDto userDto) {
-        Optional<User> optionalUser = userRepository.findByLogin(userDto.login());
+    public User register(RegisterDto registerDto) {
+        Optional<User> optionalUser = userRepository.findByLogin(registerDto.login());
 
         if (optionalUser.isPresent()) {
             throw new AppException("Login already exists", HttpStatus.BAD_REQUEST);
         }
 
-        User user = userMapper.signUpToUser(userDto);
+        User user = userMapper.signUpToUser(registerDto);
 
         // Add default USER role
         Role userRole = roleRepository.findByName(RoleEnum.USER)
@@ -212,13 +247,33 @@ public class UserService {
      * @return UserDto containing the deleted user's information
      * @throws AppException if the user is not found
      */
-    public UserDto deleteUser(Long userId) {
+    public UserDto deleteUser(@NonNull Long userId) {
         // Get the user to delete
         User userToDelete = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
         // Delete the user
         userRepository.deleteById(userId);
+        return userMapper.toUserDto(userToDelete);
+    }
+
+    /**
+     * Permanently deletes a user from the system.
+     * This method:
+     * - Verifies the user exists
+     * - Deletes the user from the database
+     *
+     * @param userId The ID of the user to delete
+     * @return UserDto containing the deleted user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto deleteUserPermanent(@NonNull Long userId) {
+        // Get the user to delete
+        User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Delete the user
+        userRepository.deletePermanentlyById(userId);
         return userMapper.toUserDto(userToDelete);
     }
 
@@ -239,6 +294,26 @@ public class UserService {
 
         // Delete the user
         userRepository.deleteById(userToDelete.getId());
+        return userMapper.toUserDto(userToDelete);
+    }
+
+    /**
+     * Permanently deletes a user from the system by login.
+     * This method:
+     * - Verifies the user exists
+     * - Deletes the user from the database
+     *
+     * @param login The login of the user to delete
+     * @return UserDto containing the deleted user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto deleteUserPermanentByLogin(String login) {
+        // Get the user to delete
+        User userToDelete = userRepository.findByLogin(login)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // Delete the user
+        userRepository.deletePermanentlyById(userToDelete.getId());
         return userMapper.toUserDto(userToDelete);
     }
 

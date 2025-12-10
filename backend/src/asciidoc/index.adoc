@@ -224,7 +224,7 @@ include::tests/all/401/expired-token/http-response.adoc[]
 It returns a message indicating the token problem.
 
 === 1.5 Login
-This is an example output for the `POST /tests/login` endpoint.
+This is an example output for the `POST /auth/login` endpoint.
 
 .request
 include::auth/login/http-request.adoc[]
@@ -235,7 +235,7 @@ include::auth/login/http-response.adoc[]
 It returns the profil of the newly logged user.
 
 === 1.6 Register
-This is an example output for the `GET /tests/register` endpoint.
+This is an example output for the `GET /auth/register` endpoint.
 
 .request
 include::auth/register/http-request.adoc[]
@@ -244,3 +244,14 @@ include::auth/register/http-request.adoc[]
 include::auth/register/http-response.adoc[]
 
 It returns the profil of the newly registered user.
+
+=== 1.7 Refresh
+This is an example output for the `POST /auth/refresh` endpoint.
+
+.request
+include::auth/refresh/http-request.adoc[]
+
+.response
+include::auth/refresh/http-response.adoc[]
+
+It returns a new access token.

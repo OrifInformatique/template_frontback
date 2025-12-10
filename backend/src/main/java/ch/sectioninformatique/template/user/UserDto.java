@@ -43,11 +43,6 @@ public class UserDto {
     private String token;
 
     /**
-     * JWT token to refresh user's authentication.
-     */
-    private String refreshToken;
-
-    /**
      * User's role in the system.
      * Defaults to "USER" if not specified.
      */
