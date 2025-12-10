@@ -1,7 +1,12 @@
 package ch.sectioninformatique.template.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
+import jakarta.transaction.Transactional;
+
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,7 +18,7 @@ import java.util.Optional;
  * - Checking user existence
  * - Standard CRUD operations inherited from JpaRepository
  */
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryPermanentDelete {
 
     /**
      * Finds a user by their login username.
@@ -26,7 +31,27 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return Optional containing the user if found, empty Optional otherwise
      */
     Optional<User> findByLogin(String login);
-    
+
+    /**
+     * Returns all users including those that are soft-deleted.
+     */
+    @Query("SELECT u FROM User u")
+    List<User> findAllIncludingDeleted();
+
+    /**
+     * Returns only soft-deleted users.
+     */
+    @Query("SELECT u FROM User u WHERE u.deleted = true")
+    List<User> findAllDeleted();
+
+    /**
+     * Restores a soft-deleted user.
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.deleted = false WHERE u.id = :id")
+    void restoreById(Long id);
+
     /**
      * Checks if a user with the given login username exists.
      * This method is used for:
@@ -39,4 +64,3 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     boolean existsByLogin(String login);
 }
-

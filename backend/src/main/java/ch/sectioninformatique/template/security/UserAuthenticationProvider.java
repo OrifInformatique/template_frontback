@@ -41,10 +41,10 @@ public class UserAuthenticationProvider {
     private final UserService userService;
 
     /**
-     * Secret key for JWT token signing and verification, configured via application
-     * properties
+     * Secret key for JWT token signing and verification, configured via environment
+     * variable.
      */
-    @Value("${security.jwt.token.secret-key:secret-key}")
+    @Value("${SECURITY_JWT_TOKEN_SECRET_KEY}")
     private String secretKey;
 
     /**
@@ -106,6 +106,7 @@ public class UserAuthenticationProvider {
                 .withSubject(user.getLogin())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
+                .withClaim("typ", "access")
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
@@ -164,6 +165,12 @@ public class UserAuthenticationProvider {
 
         DecodedJWT decoded = verifier.verify(token);
         log.debug("Token verified for subject: {}", decoded.getSubject());
+
+        String type = decoded.getClaim("typ").asString();
+
+        if (type != null && !"access".equals(type)) {
+            throw new RuntimeException("Invalid token type for this endpoint");
+        }
 
         UserDto currentUser = UserDto.builder()
                 .login(decoded.getSubject())
