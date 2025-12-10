@@ -111,6 +111,7 @@ class UserAuthenticationProviderTest {
     void testBuildAuthorities() throws Exception {
         // Given
         List<String> roles = Arrays.asList("USER");
+        int authoritiesExpectedCount = RoleEnum.USER.getPermissions().size() + 1; // permissions + role_USER
 
         // When
         Method method = UserAuthenticationProvider.class.getDeclaredMethod("buildAuthorities", List.class);
@@ -120,7 +121,7 @@ class UserAuthenticationProviderTest {
 
         // Then
         assertNotNull(authorities);
-        assertEquals(3, authorities.size()); // ROLE_USER + 2 permissions
+        assertEquals(authoritiesExpectedCount, authorities.size()); 
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
         assertTrue(authorities.stream()
