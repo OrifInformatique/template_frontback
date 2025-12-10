@@ -102,8 +102,8 @@ public class UserController {
      */
     @GetMapping("/all-with-deleted")
     @PreAuthorize("hasAuthority('user:read')")
-    public ResponseEntity<List<User>> allDeletedUsers() {
-        List<User> users = userService.allDeletedUsers();
+    public ResponseEntity<List<User>> allWithDeletedUsers() {
+        List<User> users = userService.allWithDeletedUsers();
         return ResponseEntity.ok(users);
     }
 
@@ -137,6 +137,7 @@ public class UserController {
      * @return ResponseEntity with deletion result message
      */
     @DeleteMapping("/{userId}/{global}")
+    @PreAuthorize("hasAuthority('user:delete')")
     public Mono<ResponseEntity<?>> delete(@RequestHeader("Authorization") String token, @PathVariable Long userId,
             @PathVariable boolean global) {
 
@@ -184,6 +185,7 @@ public class UserController {
      * @return ResponseEntity with permanent deletion result message
      */
     @DeleteMapping("/{userId}/{global}/permanent")
+    @PreAuthorize("hasAuthority('user:delete')")
     public Mono<ResponseEntity<?>> deletePermanent(@RequestHeader("Authorization") String token,
             @PathVariable Long userId,
             @PathVariable boolean global) {

@@ -79,7 +79,7 @@ public class UserService {
     }
 
     /**
-     * Retrieves all users in the system.
+     * Retrieves all users in the system (not including soft-deleted users).
      *
      * @return List of all User entities
      */
@@ -96,7 +96,7 @@ public class UserService {
      *
      * @return List of all User entities including deleted
      */
-    public List<User> allDeletedUsers() {
+    public List<User> allWithDeletedUsers() {
         List<User> users = new ArrayList<>();
         userRepository.findAllIncludingDeleted().forEach(users::add);
         return users;
@@ -116,9 +116,9 @@ public class UserService {
     }
 
     /**
-     * Retrieves the user in the system.
+     * Retrieves the authenticated user's information.
      *
-     * @return List of all User entities
+     * @return UserDto containing the current user's information
      */
     public UserDto me(UserDto currentUser) {
         User user = userRepository.findByLogin(currentUser.getLogin())
@@ -134,19 +134,19 @@ public class UserService {
      * - Assigns the default USER role
      * - Saves the user to the database
      *
-     * @param userDto The user registration data
+     * @param registerDto The user registration data
      * @return User containing the created user's information
      * @throws AppException if the login already exists or the default role is not
      *                      found
      */
-    public User register(RegisterDto userDto) {
-        Optional<User> optionalUser = userRepository.findByLogin(userDto.login());
+    public User register(RegisterDto registerDto) {
+        Optional<User> optionalUser = userRepository.findByLogin(registerDto.login());
 
         if (optionalUser.isPresent()) {
             throw new AppException("Login already exists", HttpStatus.BAD_REQUEST);
         }
 
-        User user = userMapper.signUpToUser(userDto);
+        User user = userMapper.signUpToUser(registerDto);
 
         // Add default USER role
         Role userRole = roleRepository.findByName(RoleEnum.USER)
