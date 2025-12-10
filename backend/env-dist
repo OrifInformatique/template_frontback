@@ -27,4 +27,4 @@ DB_PASSWORD=pwd
 SPRING_AUTH_URL=https://spring-auth.jcloud.ik-server.com/
 
 # JWT Token Configuration
-SECURITY_JWT_TOKEN_SECRET_KEY=your-secret-jwt-token-key-here-change-in-production
+SECURITY_JWT_TOKEN_SECRET_ACCESS_KEY=your-secret-access-key-here-change-in-production

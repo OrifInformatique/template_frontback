@@ -44,7 +44,7 @@ public class UserAuthenticationProvider {
      * Secret key for JWT token signing and verification, configured via environment
      * variable.
      */
-    @Value("${SECURITY_JWT_TOKEN_SECRET_KEY}")
+    @Value("${SECURITY_JWT_TOKEN_SECRET_ACCESS_KEY}")
     private String secretKey;
 
     /**
