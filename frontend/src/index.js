@@ -27,6 +27,7 @@ const root = createRoot(container);
 root.render(
     <BrowserRouter basename={process.env.APP_ROOT}>
         <Routes>
+            {/* Standalone routes, not using a specific layout */}
             <Route
                 path="/login"
                 element={<Login />}
@@ -52,24 +53,29 @@ root.render(
 				element={<ApiAuthCall />}
 			/>
 
+            {/* 
+            Routes nested to the Main layout.
+            For each route, the React module specified in "element" is rendered at the place of the
+            <Outlet /> tag in the MainLayout.
+            */}
             <Route
                 path="/"
                 element={<MainLayout />}
             >
-            <Route
-                index
-                element={<Home />}
-            />
+                <Route
+                    index
+                    element={<Home />}
+                />
 
-            <Route
-                path="contact"
-                element={<Contact />}
-            />
+                <Route
+                    path="contact"
+                    element={<Contact />}
+                />
 
-            <Route
-                path="*"
-                element={<Redirect to="/" />}
-            />
+                <Route
+                    path="*"
+                    element={<Redirect to="/" />}
+                />
             </Route>
         </Routes>
     </BrowserRouter>
