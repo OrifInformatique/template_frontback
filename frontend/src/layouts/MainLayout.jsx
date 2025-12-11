@@ -9,8 +9,8 @@ import useAuthStore from "../../authStore";
 
 const MainLayout = () => {
   const navigate = useNavigate();
-  const accessToken = useAuthStore((s) => s.accessToken);
-  const clearAccessToken = useAuthStore((s) => s.clearAccessToken);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+
 
   return (
     <>
@@ -18,7 +18,7 @@ const MainLayout = () => {
         title="App title"
         logoPath="/images/logo.svg"
         onLogin={() => navigate('/login')}
-        onLogout={() => { clearAccessToken(); navigate('/'); }}
+        onLogout={() => { clearAuth(); navigate('/'); }}
       />
       {/* <Outlet /> */}
       <div className="flex justify-center items-center font-medium text-4xl text-gray-500 h-96 bg-background">
