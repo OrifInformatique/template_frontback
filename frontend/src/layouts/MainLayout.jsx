@@ -20,7 +20,7 @@ const MainLayout = () => {
         onLogin={() => navigate('/login')}
         onLogout={() => { clearAccessToken(); navigate('/'); }}
       />
-      <main>
+      <main className="p-5 sm:p-10 bg-background">
         <Outlet />
       </main>
       <ScrollToTopButton onClick={() => {}} />
