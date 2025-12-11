@@ -13,7 +13,7 @@ const ApiAuthCall = () => {
 
     const callApi = async () => {
         try {
-            const userResponse = await axios.get('/tests/me', {
+            const userResponse = await axios.get('/users/me', {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },
