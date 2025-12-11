@@ -6,9 +6,8 @@ import Title from '../../ui/title'
 
 const Home = () => {
   return (<>
-    <Logo />
-    <Title className="pt-4 sm:pt-6 ">Section Informatique</Title>
-    <Link className="pt-4 sm:pt-6" to="contact">Contact</Link>
+    <Title>Page d'accueil</Title>
+    <p>Lorem ipsum</p>
   </>)
 }
 
