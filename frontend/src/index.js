@@ -28,26 +28,6 @@ root.render(
     <BrowserRouter basename={process.env.APP_ROOT}>
         <Routes>
             {/* Standalone routes, not using a specific layout */}
-            <Route
-                path="/login"
-                element={<Login />}
-            />
-
-            <Route
-                path="/azure"
-                element={<Azure />}
-            />
-
-            <Route
-                path="/change-password"
-                element={<ChangePassword />}
-            />
-
-            <Route
-                path="/reset-password"
-                element={<ResetPassword />}
-            />
-
 			<Route
 				path="/testAPI"
 				element={<ApiAuthCall />}
@@ -75,6 +55,26 @@ root.render(
                 <Route
                     path="*"
                     element={<Redirect to="/" />}
+                />
+
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
+
+                <Route
+                    path="/azure"
+                    element={<Azure />}
+                />
+
+                <Route
+                    path="/change-password"
+                    element={<ChangePassword />}
+                />
+
+                <Route
+                    path="/reset-password"
+                    element={<ResetPassword />}
                 />
             </Route>
         </Routes>
