@@ -6,7 +6,6 @@ import Title from '../../ui/title'
 
 const Home = () => {
   return (<>
-    <Logo />
     <Title className="pt-4 sm:pt-6 ">Orif Pomy</Title>
     <ul className="text-center pt-4 text-lg">
         <li>Chem. du Mont-de-Brez 2</li>

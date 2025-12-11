@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate} from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 
 import { Header,
          Footer,
@@ -20,10 +20,9 @@ const MainLayout = () => {
         onLogin={() => navigate('/login')}
         onLogout={() => { clearAuth(); navigate('/'); }}
       />
-      {/* <Outlet /> */}
-      <div className="flex justify-center items-center font-medium text-4xl text-gray-500 h-96 bg-background">
-        C O N T E N T
-      </div>
+      <main className="p-5 sm:p-10 bg-background">
+        <Outlet />
+      </main>
       <ScrollToTopButton onClick={() => {}} />
       <Footer />
     </>
