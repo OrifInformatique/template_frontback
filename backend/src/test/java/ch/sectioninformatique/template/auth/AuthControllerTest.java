@@ -15,8 +15,8 @@ import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDoc
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 import org.springframework.transaction.annotation.Transactional;
-
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,8 +33,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 
 /**
  * Integration tests for the "TestController" REST endpoints.
@@ -60,7 +61,7 @@ public class AuthControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private AuthClient authClient;
+    private AuthClient authClient; // mock this instead of the controller
 
     /**
      * Helper method for performing and documenting HTTP requests in tests.
@@ -136,20 +137,22 @@ public class AuthControllerTest {
      */
     @Test
     @Transactional
-    public void login_withRealData_shouldReturnSuccess() throws Exception {
+    public void login_withMockedService_shouldReturnSuccess() throws Exception {
         UserDto mockedUser = UserDto.builder()
                 .id(2L)
                 .firstName("John")
                 .lastName("DOE")
                 .login("john.doe@test.com")
                 .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
-                .refreshToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
                 .mainRole("USER")
                 .permissions(new ArrayList<String>())
                 .build();
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
         when(authClient.login(any(CredentialsDto.class)))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedUser)));
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(mockedUser)));
 
         performRequest(
                 "POST",
@@ -159,7 +162,22 @@ public class AuthControllerTest {
                 MediaType.APPLICATION_JSON,
                 200,
                 "login",
-                null);
+                response -> {
+                    try {
+                        // Assert status code
+                        response.andExpect(status().isOk());
+
+                        // Assert response body fields
+                        response.andExpect(jsonPath("$.firstName").value("John"));
+                        response.andExpect(jsonPath("$.login").value("john.doe@test.com"));
+
+                        // Assert refresh token cookie
+                        response.andExpect(header().string(HttpHeaders.SET_COOKIE,
+                                org.hamcrest.Matchers.containsString("refresh_token=fakeToken123")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     /**
@@ -177,13 +195,15 @@ public class AuthControllerTest {
                 .lastName("NewUser")
                 .login("test.newuser@test.com")
                 .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
-                .refreshToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
                 .mainRole("USER")
                 .permissions(new ArrayList<String>())
                 .build();
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
         when(authClient.register(any(RegisterDto.class)))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedUser)));
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(mockedUser)));
 
         performRequest(
                 "POST",
@@ -201,6 +221,91 @@ public class AuthControllerTest {
                         assertEquals("Test", updatedUser.getFirstName());
                         assertEquals("NewUser", updatedUser.getLastName());
                         assertEquals("USER", updatedUser.getMainRole());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/refresh
+     *
+     * Mock a user refreshing their token successfully.
+     */
+    @Test
+    @Transactional
+    public void refresh_withMockedService_shouldReturnSuccess() throws Exception {
+        TokenResponseDto tokenResponse = new TokenResponseDto("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...");
+
+                HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
+        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(tokenResponse)));
+
+        performRequest(
+                "POST",
+                "/auth/refresh",
+                "{\"refreshToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                200,
+                "refresh",
+                response -> {
+                    try {
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.accessToken").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: PUT /auth/update-password
+     *
+     * Mock a user updating their password successfully.
+     * Note: This endpoint requires authentication, so expect 401 when no valid token is provided.
+     */
+    @Test
+    @Transactional
+    public void updatePassword_withoutToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "PUT",
+                "/auth/update-password",
+                "{\"oldPassword\":\"OldPassword123@\",\"newPassword\":\"NewPassword123@\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "update-password",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: GET /auth/oauth2/login
+     *
+     * OAuth2 login endpoint that redirects to Azure OAuth2 authorization.
+     * Note: This endpoint requires anonymous access and redirects, so expect 401 due to security configuration.
+     */
+    @Test
+    public void oauth2Login_shouldReturn401() throws Exception {
+        performRequest(
+                "GET",
+                "/auth/oauth2/login",
+                null,
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "oauth2-login",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

@@ -12,10 +12,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
@@ -95,7 +95,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
 
-            userService.promoteToTestAdmin(userId);
+            userService.promoteToLocalAppRole(userId);
             return ResponseEntity.ok(Map.of("message", "User promoted to local app role successfully."));
 
     }

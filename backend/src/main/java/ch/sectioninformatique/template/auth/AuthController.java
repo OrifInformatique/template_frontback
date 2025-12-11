@@ -1,8 +1,10 @@
 package ch.sectioninformatique.template.auth;
 
+import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,8 +48,8 @@ public class AuthController {
      * @return Mono<ResponseEntity<UserDto>> with login response
      */
     @PostMapping("/login")
-    public Mono<ResponseEntity<UserDto>> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-        return ResponseEntity.ok(authClient.login(credentialsDto)).getBody();
+    public ResponseEntity<UserDto> login(@RequestBody @Valid CredentialsDto credentialsDto) {
+        return authClient.login(credentialsDto).block();
     }
 
     /**
@@ -62,7 +64,7 @@ public class AuthController {
      * @return Mono<ResponseEntity<UserDto>> with registration response
      */
     @PostMapping("/register")
-    public Mono<ResponseEntity<UserDto>> register(@RequestBody @Valid RegisterDto user) {
+    public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterDto user) {
         return authClient.register(user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
@@ -71,31 +73,62 @@ public class AuthController {
                     // Return HTTP 200 OK with the response body
                     return Mono.just(response);
                 })
-                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .block();
+    }
+
+    /**
+     * Handles POST requests to "/refresh"
+     * Accepts refresh token in request body
+     * 
+     * On successful refresh send the new access token 
+     * 
+     * @param token
+     * @return ResponseEntity<TokenResponseDto> with new token
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponseDto> refreshLogin(@RequestBody @Valid RefreshRequestDto token) {
+        return authClient.refreshLogin(token)
+            .map(response -> ResponseEntity.status(response.getStatusCode())
+                              .headers(response.getHeaders())
+                              .body(response.getBody()))
+            .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+            .block();
     }
 
     /**
      * Handles PUT requests to "/update-password"
      * Accepts new password data as a request body, validated for correctness
      * Calls the authentication client to set the new password for the user
-     * Returns a reactive Mono<ResponseEntity<MessageResponseDto>> containing the
-     * response message
+     * Returns a ResponseEntity<MessageResponseDto> containing the response message
      * 
      * @param token The authorization token from the request header
-     * @param updatePasswordDto The UpdatePasswordDto containing the old and new passwords
-     * @return Mono<ResponseEntity<MessageResponseDto>> with set password response
+     * @param updatePasswordDto The PasswordUpdateDto containing the old and new passwords
+     * @return ResponseEntity<MessageResponseDto> with set password response
      */
     @PutMapping("/update-password")
-    public Mono<ResponseEntity<MessageResponseDto>> updatePassword(@RequestHeader("Authorization") String token, @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
+    public ResponseEntity<MessageResponseDto> updatePassword(@RequestHeader("Authorization") String token,
+            @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
         return authClient.updatePassword(token, updatePasswordDto)
-                .map(responseEntity -> {
-                    MessageResponseDto messageResponse = responseEntity.getBody();
-                    if (messageResponse != null) {
-                        return ResponseEntity.ok(messageResponse);
-                    } else {
-                        // Handle null body just in case
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                    }
-                });
+                .map(responseEntity -> responseEntity.getBody())
+                .map(messageResponse -> ResponseEntity.ok(messageResponse))
+                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+                .block();
+    }
+
+    /**
+     * Handles GET requests to "/oauth2/login"
+     * Redirects the client to the OAuth2 authorization endpoint for Azure
+     * This initiates the OAuth2 login flow
+     * After successful login, the user will be redirected back to the application
+     * 
+     * @return ResponseEntity with redirection to OAuth2 login URL
+     */
+    @GetMapping("/oauth2/login")
+    public ResponseEntity<Object> testCallOAuth2() {
+
+        // Redirect frontend to spring-auth OAuth2 login endpoint
+        URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
+        return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
     }
 }

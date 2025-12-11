@@ -25,55 +25,94 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 @Builder
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
+@FilterDef(name = "deletedFilter", parameters = @ParamDef(name = "isDeleted", type = Boolean.class))
+@Filter(name = "deletedFilter", condition = "deleted = :isDeleted")
 public class User {
-    
-    /**
-     * Unique identifier for the user.
-     */
+
+    /** Unique identifier for the user */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private long id;
 
-    /**
-     * User's first name.
-     */
+    /** First name of the user */
     @Column(nullable = false, name = "first_name")
     private String firstName;
 
-    /**
-     * User's last name.
-     */
+    /** Last name of the user */
     @Column(nullable = false, name = "last_name")
     private String lastName;
 
-    /**
-     * User's unique login identifier (email).
-     */
-    @Column(unique = true, length = 100, nullable = false)
+    /** Login username of the user */
+    @Column(unique = true, nullable = false)
     private String login;
 
-    /**
-     * Timestamp when the user account was created.
-     * This field cannot be updated after creation.
-     */
+    /** Timestamp indicating when the user was created */
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")
     private Date createdAt;
 
-    /**
-     * Timestamp when the user account was last updated.
-     */
+    /** Timestamp indicating when the user was last updated */
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    /**
-     * Retrieves the authorities granted to the user.
-     * This method is required by the UserDetails interface and converts
-     * the user's roles into Spring Security GrantedAuthority objects.
+    /** Flag indicating whether the user is soft-deleted */
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
+    /** Main role assigned to the user */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @Builder.Default
+    private Role mainRole = new Role();
+
+    /** Additional application-specific roles assigned to the user */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @Builder.Default
+    private Set<Role> appSpecificRoles = new HashSet<>();
+
+    /** 
+     * Constructs a new User with the specified details.
      *
-     * @return Collection of GrantedAuthority objects representing the user's roles
+     * @param id                 Unique identifier for the user
+     * @param firstName          First name of the user
+     * @param lastName           Last name of the user
+     * @param login              Login username of the user
+     * @param createdAt          Timestamp when the user was created
+     * @param updatedAt          Timestamp when the user was last updated
+     * @param deleted            Flag indicating if the user is soft-deleted
+     * @param mainRole           Main role assigned to the user
+     * @param appSpecificRoles   Additional application-specific roles assigned to the user
+     */
+    public User(long id,
+                String firstName,
+                String lastName,
+                String login,
+                Date createdAt,
+                Date updatedAt,
+                boolean deleted,
+                Role mainRole,
+                Set<Role> appSpecificRoles) {
+        super();
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.login = login;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.deleted = deleted;
+        this.mainRole = mainRole;
+        this.appSpecificRoles = appSpecificRoles;
+    }
+
+    /** 
+     * Returns the collection of granted authorities for the user.
+     * This includes authorities from both the main role and any
+     * application-specific roles assigned to the user.
+     *
+     * @return Collection of GrantedAuthority objects representing the user's authorities
      */
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
@@ -85,157 +124,88 @@ public class User {
         return authorities;
     }
 
-    /**
-     * Main role of the user
-     */
-    @ManyToOne(fetch = FetchType.EAGER)
-    @Builder.Default
-    private Role mainRole = new Role();
-    
-    /**
-     * Set of roles assigned to the user.
-     * Uses eager fetching to ensure roles are always available.
-     */
-    @ManyToMany(fetch = FetchType.EAGER)
-    @Builder.Default
-    private Set<Role> appSpecificRoles = new HashSet<>();
-
-    
-
-    /**
-     * Constructs a new User with all required fields.
-     *
-     * @param id The unique identifier for the user
-     * @param firstName The user's first name
-     * @param lastName The user's last name
-     * @param login The user's unique login identifier
-     * @param createdAt The timestamp when the user was created
-     * @param updatedAt The timestamp when the user was last updated
-     * @param mainRole The Main role assigned to the user
-     * @param appSpecificRoles The set of app specifique roles assigned to the user
-     */
-    public User(long id,
-                String firstName, 
-                String lastName, 
-                String login,
-                Date createdAt, 
-                Date updatedAt,
-                Role mainRole,
-                Set<Role> appSpecificRoles) {
-        super();
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.login = login;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.mainRole = mainRole;
-        this.appSpecificRoles = appSpecificRoles;
-    }
-
-    /**
+    /** 
      * Returns the username used to authenticate the user.
-     * Required by the UserDetails interface.
      *
-     * @return The user's login identifier
+     * @return The login username of the user
      */
     public String getUsername() {
         return login;
     }
 
-    /**
+    /** 
      * Indicates whether the user's account has expired.
-     * Required by the UserDetails interface.
      *
-     * @return true if the account is valid (not expired), false otherwise
+     * @return true if the account is non-expired, false otherwise
      */
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
-    /**
-     * Indicates whether the user is locked or unlocked.
-     * Required by the UserDetails interface.
+    /** 
+     * Indicates whether the user's account is locked.
      *
-     * @return true if the account is not locked, false otherwise
+     * @return true if the account is non-locked, false otherwise
      */
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
-    /**
-     * Indicates whether the user's credentials has expired.
-     * Required by the UserDetails interface.
+    /** 
+     * Indicates whether the user's credentials (password) have expired.
      *
-     * @return true if the credentials are valid (not expired), false otherwise
+     * @return true if the credentials are non-expired, false otherwise
      */
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
-    /**
+    /** 
      * Indicates whether the user is enabled or disabled.
-     * Required by the UserDetails interface.
      *
-     * @return true if the account is enabled, false otherwise
+     * @return true if the user is enabled, false otherwise
      */
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return !deleted; } // Optional tie-in
 
-    /**
-     * Returns the Main role assigned to the user.
-     * This method assumes the user has at least one role.
+    /** 
+     * Returns the main role assigned to the user.
      *
-     * @return The main role 
+     * @return The main Role of the user
      */
-    public Role getMainRole() {
-        return mainRole;
-    }
+    public Role getMainRole() { return mainRole; }
 
-    /**
-     * Returns a list of app specific roles' names assigned to the user.
+    /** 
+     * Returns a list of application-specific role names assigned to the user.
      *
-     * @return The user's app specific role set
+     * @return List of role names as strings
      */
     public List<String> getAppSpecificRolesString() {
-        List<String> appSpecificRolesSrting = new ArrayList<String>();
-        for(Role role : appSpecificRoles){
-            appSpecificRolesSrting.add(role.getName().name());
+        List<String> names = new ArrayList<>();
+        for (Role role : appSpecificRoles) {
+            names.add(role.getName().name());
         }
-        return appSpecificRolesSrting;
+        return names;
     }
-    
-    /**
-     * Returns all roles assigned to the user.
+
+    /** 
+     * Returns all roles assigned to the user, including the main role
+     * and any application-specific roles.
      *
-     * @return The all roles assigned to the user
+     * @return Set of all Role objects assigned to the user
      */
     public Set<Role> getAllRoles() {
         Set<Role> allRoles = new HashSet<>();
-            if (appSpecificRoles != null) {
-                for (Role role : appSpecificRoles) {
-                    allRoles.add(role);
-                }
-            }
+        if (appSpecificRoles != null) {
+            allRoles.addAll(appSpecificRoles);
+        }
         return allRoles;
     }
 
-    /**
-     * Adds a new main role to the user.
+    /** 
+     * Sets the main role assigned to the user.
      *
-     * @param role The main role to set for the user
+     * @param role The Role to set as the main role
      */
-    public void setMainRole(Role role) {
-        mainRole = role;
-    } 
-    
-    /**
-     * Adds a new role to the user's set of app specific roles.
+    public void setMainRole(Role role) { mainRole = role; }
+
+    /** 
+     * Adds an application-specific role to the user.
      *
-     * @param role The app specific role to add to the user
+     * @param role The Role to add to the user's application-specific roles
      */
-    public void addAppSpecificRoles(Role role) {
-        appSpecificRoles.add(role);
-    }
+    public void addAppSpecificRoles(Role role) { appSpecificRoles.add(role); }
 }

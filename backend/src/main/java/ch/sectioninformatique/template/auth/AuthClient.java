@@ -9,7 +9,11 @@ import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -34,71 +38,140 @@ public class AuthClient {
         }
 
         /**
-         * Performs user login by sending credentials to the authentication endpoint.
+         * Performs user login by sending credentials to the authentication provider.
          * 
          * @param credentialsDto The CredentialsDto containing user login data
          * @return A Mono<ResponseEntity<UserDto>> containing the authentication
-         *         response
-         *         (e.g., token or
-         *         status message)
+         *         response (e.g., token or status message)
          */
         public Mono<ResponseEntity<UserDto>> login(@Valid CredentialsDto credentialsDto) {
 
                 return webClient.post()
-                                .uri("/auth/login") // login endpoint path in spring-auth application
+                                .uri("/auth/login") // login endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(credentialsDto)
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
-                                .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                          // token or message)
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new AppException(
+                                                                                error.message(),
+                                                                                HttpStatus.resolve(response
+                                                                                                .rawStatusCode()))));
+                                        }
+
+                                        // Extract response body
+                                        Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
+
+                                        return bodyMono.map(userDto -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                // Extract refresh_token cookie directly in the lambda
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .stream()
+                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                                .findFirst()
+                                                                .ifPresent(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+                                                return builder.body(userDto);
+                                        });
+                                });
 
         }
 
         /**
-         * Performs user registration by sending user details to the registration
-         * endpoint.
+         * Performs user registration by sending user details to the authentication provider.
          * 
          * @param user The SignUpDto containing user registration data
          * @return A Mono<ResponseEntity<UserDto>> containing the registration response
-         *         (e.g., token or
-         *         status message)
+         *         (e.g., token or status message)
          */
         public Mono<ResponseEntity<UserDto>> register(RegisterDto user) {
 
                 return webClient.post()
-                                .uri("/auth/register") // your register endpoint path
+                                .uri("/auth/register") // the registration endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(user) // use the SignUpDto directly
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400, // any 4xx/5xx
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
-                                .toEntity(UserDto.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                          // token or message);
+                                .bodyValue(user)
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new AppException(
+                                                                                error.message(),
+                                                                                HttpStatus.resolve(response
+                                                                                                .rawStatusCode()))));
+                                        }
+
+                                        // Extract response body
+                                        Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
+
+                                        return bodyMono.map(userDto -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                // Extract refresh_token cookie directly in the lambda
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .stream()
+                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                                .findFirst()
+                                                                .ifPresent(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+                                                return builder.body(userDto);
+                                        });
+                                });
         }
 
         /**
-         * Sets a new password for the user by sending the new password to the set
-         * password endpoint.
+         * Call the authentication provider to refresh the access token using a refresh token
          * 
-         * @param token           The authorization token
-         * @param passwordUpdateDto The PasswordUpdateDto containing the old and new passwords
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password update
-         *         response (e.g., token or status message)
+         * @param request The RefreshRequestDto containing the refresh token
+         * @return A Mono<ResponseEntity<TokenResponseDto>> containing the new access token
          */
-        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token, PasswordUpdateDto passwordUpdateDto) {
+        public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(RefreshRequestDto request) {
+                return webClient.post()
+                                .uri("/auth/refresh") // the refresh token endpoint path in authentication provider
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(request)
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.rawStatusCode()))));
+                                        }
+
+                                        Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
+
+                                        return bodyMono.map(tokenDto -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .forEach(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+
+                                                return builder.body(tokenDto);
+                                        });
+                                });
+        }
+
+        /**
+         * Updates user's password by sending the new password to the authentication provider.
+         * 
+         * @param token             The access token
+         * @param passwordUpdateDto The PasswordUpdateDto containing the old and new
+         *                          passwords
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password
+         *         update response (e.g., token or status message)
+         */
+        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
+                        PasswordUpdateDto passwordUpdateDto) {
 
                 return webClient.put()
-                                .uri("/auth/update-password")
+                                .uri("/auth/update-password") // the password update endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .bodyValue(passwordUpdateDto)
@@ -109,23 +182,69 @@ public class AuthClient {
                                                                                 new AppException(error.message(),
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.rawStatusCode())))))
-                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                          // token or message);
+                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
         }
 
         /**
-         * Initiates OAuth2 login by redirecting to the OAuth2 authorization endpoint.
+         * Soft deletes a user by sending a delete request to the authentication provider.
+         * 
+         * @param token  The access token
+         * @param userId The ID of the user to delete
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
+         *         response (e.g., token or status message)
+         */
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
+                return webClient.delete()
+                                .uri("/users/" + userId) // soft delete user endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.rawStatusCode())))))
+                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                                })
+                                .map(body -> ResponseEntity.ok(body));
+        }
+
+        /**
+         * Permanently deletes a user by sending a delete request to the authentication provider.
+         * 
+         * @param token  The access token
+         * @param userId The ID of the user to delete permanently
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
+         *         deletion response (e.g., token or status message)
+         */
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
+                return webClient.delete()
+                                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.rawStatusCode())))))
+                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                                })
+                                .map(body -> ResponseEntity.ok(body));
+        }
+
+        /**
+         * Initiates OAuth2 login by redirecting to the OAuth2 authorization endpoint of
+         * the authentication provider.
          * 
          * @return A Mono<ResponseEntity<String>> containing the OAuth2 login response
-         *         (e.g., token or
-         *         status message)
+         *         (e.g., token or status message)
          */
         public Mono<ResponseEntity<String>> loginOAUth2() {
 
                 return webClient.get()
-                                .uri("/oauth2/authorization/azure") // your login endpoint path
+                                .uri("/oauth2/authorization/azure") // the OAuth2 authorization endpoint path in authentication provider
                                 .retrieve()
-                                .toEntity(String.class); // expect the response as a ResponseEntity<String> (e.g., a
-                                                         // token or message)
+                                .toEntity(String.class); // expect the response as a ResponseEntity<String>
         }
 }
