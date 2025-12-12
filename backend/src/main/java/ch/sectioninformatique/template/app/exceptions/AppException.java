@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template.app.exceptions;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 
 /**
  * Custom exception class for application-specific errors.
@@ -19,6 +20,7 @@ public class AppException extends RuntimeException {
      * - Represents the appropriate HTTP response status
      * - Is used to generate proper REST API responses
      */
+    @NonNull
     private final HttpStatus status;
 
     /**
@@ -31,7 +33,7 @@ public class AppException extends RuntimeException {
      * @param message The error message describing the exception
      * @param status The HTTP status code to be returned in the response
      */
-    public AppException(String message, HttpStatus status) {
+    public AppException(String message, @NonNull HttpStatus status) {
         super(message);
         this.status = status;
     }
@@ -44,6 +46,7 @@ public class AppException extends RuntimeException {
      *
      * @return The HTTP status code for this exception
      */
+    @NonNull
     public HttpStatus getStatus() {
         return status;
     }
