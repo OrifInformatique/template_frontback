@@ -4,25 +4,22 @@ import { Button,
          PopUp
        } from "@orif-informatique/react-components-library";
 import useAuthStore from '../../../authStore';
-import axios from 'axios';
+import callApi from '../../ui/auth/api/usersMe';
 
 const ApiAuthCall = () => {
     const accessToken = useAuthStore((state) => state.accessToken);
     const [open, setOpen] = useState(false);
     const [apiResult, setApiResult] = useState(null);
 
-    const callApi = async () => {
+    const callApiHandler = async () => {
         try {
-            const userResponse = await axios.get('/users/me', {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
-            console.log(userResponse);
-            setApiResult(userResponse.data);
-            
+            // callApi will read the access token from the auth store if none is provided
+            const data = await callApi();
+            console.log('API response data:', data);
+            setApiResult(data);
         } catch (error) {
             console.log(error);
+            setApiResult(null);
         }
         setOpen(true);
     };
@@ -32,7 +29,7 @@ const ApiAuthCall = () => {
             <Button
                 variant="primary"
                 label="Test API Call"
-                onClick={() => callApi()}
+                onClick={() => callApiHandler()}
             />
             {open && (
                 <PopUp title="Test" onClose={() => setOpen(false)}>
