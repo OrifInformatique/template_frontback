@@ -24,7 +24,7 @@ const Login = () => {
                 <h1>Connexion</h1>
 
                 <div className="mx-auto">
-                    <Link to="/azure">
+                    <Link to="/oauth2/authorization/azure">
                         <Image
                             src="https://learn.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-apps/ms-symbollockup_signin_light.svg"
                             alt="Connexion avec Microsoft Azure"
