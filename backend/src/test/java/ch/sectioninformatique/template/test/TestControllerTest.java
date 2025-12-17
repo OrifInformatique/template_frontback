@@ -3,7 +3,6 @@ package ch.sectioninformatique.template.test;
 // Import statements for testing, Spring Boot, JSON handling, and REST Docs
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
