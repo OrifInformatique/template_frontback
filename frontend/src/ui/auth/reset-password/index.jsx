@@ -55,6 +55,7 @@ const ResetPassword = () =>
                             <Button
                                 variant="tertiary"
                                 label="Annuler"
+                                type="button"
                                 className="basis-1/2"
                             />
 
