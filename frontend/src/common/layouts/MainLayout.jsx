@@ -5,7 +5,7 @@ import { Header,
          Footer,
          ScrollToTopButton
        } from "@orif-informatique/react-components-library";
-import useAuthStore from "../../authStore";
+import useAuthStore from "../../features/auth/authStore";
 
 const MainLayout = () => {
   const navigate = useNavigate();

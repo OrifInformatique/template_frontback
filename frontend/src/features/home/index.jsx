@@ -1,6 +1,6 @@
 import React from 'react'
 
-import Title from '../../ui/title'
+import Title from '../../common/ui/title'
 
 const Home = () => {
   return (

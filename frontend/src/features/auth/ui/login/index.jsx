@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
 import { useLogin } from '../api/authService';
-import useAuthStore from '../../../../authStore';
+import useAuthStore from '../../authStore';
 import {
     Button,
     Image,
     InputText,
     InputPassword,
 } from '@orif-informatique/react-components-library';
-import Link from '../../link';
-import LoginTestIndicator from '../../tests/loginTestIndicator';
+import Link from '../../../../common/ui/link';
+import LoginTestIndicator from './loginTestIndicator';
 
 const Login = () => {
     const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =

@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import useAuthStore from '../../../authStore';
+import useAuthStore from '../../../../authStore';
 import { PopUp } from '@orif-informatique/react-components-library';
 import usersMe from '../auth/api/usersMe';
 
