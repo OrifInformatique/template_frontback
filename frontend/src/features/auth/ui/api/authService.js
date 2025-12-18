@@ -1,4 +1,4 @@
-import useAuthStore from '../../../../authStore';
+import useAuthStore from '../../authStore';
 import api from './httpClient';
 
 export const useLogin = () => {

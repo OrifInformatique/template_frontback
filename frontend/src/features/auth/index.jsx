@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Button,
          PopUp
        } from "@orif-informatique/react-components-library";
-import useAuthStore from '../../../authStore';
-import callApi from '../../ui/auth/api/usersMe';
+import useAuthStore from './authStore';
+import callApi from './ui/api/usersMe';
 
 const ApiAuthCall = () => {
     const accessToken = useAuthStore((state) => state.accessToken);

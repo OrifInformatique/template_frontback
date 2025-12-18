@@ -3,19 +3,19 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Layouts
-import MainLayout from './layouts/MainLayout';
+import MainLayout from './common/layouts/MainLayout';
 
 // Modules
-import Home from './modules/home';
-import Contact from './modules/contact';
-import Login from './ui/auth/login';
-import Azure from './ui/auth/login/azure';
-import ChangePassword from './ui/auth/change-password';
-import ResetPassword from './ui/auth/reset-password';
-import ApiAuthCall from './modules/api-auth-call';
+import Home from './features/home';
+import Contact from './features/contact';
+import Login from './features/auth/ui/login';
+import Azure from './features/auth/ui/login/azure';
+import ChangePassword from './features/auth/ui/change-password';
+import ResetPassword from './features/auth/ui/reset-password';
+import ApiAuthCall from './features/auth';
 
 // Utils
-import Redirect from './utils/Redirect'
+import Redirect from './common/utils/Redirect'
 
 // Styles
 import '@orif-informatique/react-components-library/styles.css';
