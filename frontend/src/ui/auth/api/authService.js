@@ -1,5 +1,5 @@
-import axios from 'axios';
 import useAuthStore from '../../../../authStore';
+import api from './httpClient';
 
 export const useLogin = () => {
     const setAccessToken = useAuthStore((state) => state.setAccessToken);
@@ -12,7 +12,7 @@ export const useLogin = () => {
         const password = formData.get('password');
 
         try {
-            const response = await axios.post('/auth/login', {
+            const response = await api.post('/auth/login', {
                 login: identifier,
                 password: password,
             });

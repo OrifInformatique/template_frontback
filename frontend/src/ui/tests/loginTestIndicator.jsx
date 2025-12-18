@@ -41,7 +41,7 @@ const LoginTestIndicator = () => {
             <span
                 className={dotClass}
                 aria-hidden="true"
-                onClick={loggedIn ? () => callApiHandler() : null}
+                onClick={() => callApiHandler() }
             />
             <span className="text-xs ml-1">
                 {loggedIn ? 'Logged in' : 'Not logged in'}
