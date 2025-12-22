@@ -36,10 +36,12 @@ const CHART_DEFAULTS = {
 function normalizeData(data) {
   if (!Array.isArray(data) || data.length === 0) {
     return [
-      { label: "Autonome", value: 25, color: DEFAULT_COLORS[0] },
-      { label: "Exercé", value: 25, color: DEFAULT_COLORS[1] },
-      { label: "Expliqué", value: 25, color: DEFAULT_COLORS[2] },
-      { label: "Non expliqué", value: 25, color: DEFAULT_COLORS[3] },
+      {
+        label: "No data",
+        value: 100,
+        color: "#E0E0E0",
+        isEmpty: true,
+      },
     ];
   }
 
@@ -51,6 +53,7 @@ function normalizeData(data) {
       label: item.label ?? `Item ${i + 1}`,
       value: safeValue,
       color: item.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
+      isEmpty: item.isEmpty === true,
     };
   });
 }
@@ -60,6 +63,7 @@ function normalizeData(data) {
  */
 export default function DoughnutChart({ data = [], showLegend = false }) {
   const normalized = normalizeData(data);
+  const isEmpty = normalized.length === 1 && normalized[0].isEmpty === true;
 
   // Build dataset for Chart.js
   const chartData = {
@@ -83,13 +87,16 @@ export default function DoughnutChart({ data = [], showLegend = false }) {
     },
     plugins: {
       legend: {
-        display: showLegend,
+        display: showLegend && !isEmpty,
         position: "left",
       },
       tooltip: {
         enabled: true,
       },
-      percentagePlugin: CHART_DEFAULTS.percentage,
+      percentagePlugin: {
+        ...CHART_DEFAULTS.percentage,
+        isEmpty,
+      },
     },
   };
 

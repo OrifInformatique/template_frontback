@@ -19,6 +19,12 @@ export default meta;
 // Variant with legend
 export const Default = {};
 
+export const NoData = {
+  args: {
+    data: [{ label: "No data", value: 100, color: "#E0E0E0", isEmpty: true }],
+  },
+};
+
 export const WithLegend = {
   args: {
     showLegend: true,

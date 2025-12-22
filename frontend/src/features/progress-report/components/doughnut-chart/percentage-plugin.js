@@ -40,6 +40,9 @@ export const percentagePlugin = {
       starThreshold = 100, // draw the star only if the first segment reaches this %
     } = options || {};
 
+    const { isEmpty } = options || {};
+    if(isEmpty) return;
+
     const bubbleRadius = bubbleScale * ringThickness;
     // Font size proportional to the bubble size
     const fontSize = Math.max(10, Math.round(bubbleRadius * 0.5)); // min 10px
