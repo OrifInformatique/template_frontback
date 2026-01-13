@@ -3,7 +3,7 @@
 ENVIRONMENT=dev
 
 # Define the Tomcat server port for your Docker app container
-PORT=8080
+PORT=8081
 
 # WARN: Set your database production database in `application.properties`!
 
@@ -23,8 +23,9 @@ DB_PASSWORD=pwd
 # Use https://spring-auth.jcloud.ik-server.com/ as it is the Jelastic server
 # domain name, with a valid SSL certificate.
 # You can also use a local instance of spring-auth for development purpose.
-# http://host.docker.internal:{YOUR PORT NUMBER}
-SPRING_AUTH_URL=https://spring-auth.jcloud.ik-server.com/
+# If you are using docker desktop (Window or iOS) : http://host.docker.internal:{YOUR PORT NUMBER}
+# If you are on Linux, use the docker-compose service name : http://spring-auth-dev:8080
+SPRING_AUTH_URL=http://spring-auth-dev:8080
 
 # JWT Token Configuration
 SECURITY_JWT_TOKEN_SECRET_KEY=your-secret-access-key-here-change-in-production
