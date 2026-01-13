@@ -31,7 +31,7 @@ const CHART_DEFAULTS = {
 
 /**
  * Ensures the incoming dataset is always valid.
- * If no data is provided, fallback to a default 4×25% dataset.
+ * If no data is provided, a doughnut is showed.
  */
 function normalizeData(data) {
   if (!Array.isArray(data) || data.length === 0) {
