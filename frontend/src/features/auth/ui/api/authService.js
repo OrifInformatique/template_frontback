@@ -29,6 +29,9 @@ export const useLogin = () => {
 
             if (token) setAccessToken(token);
             if (user) setUser(user);
+            if (token) {
+                localStorage.setItem('loginType', 'local');
+            }
 
             console.log('Logged in — token set:', !!token, 'user set:', !!user);
         } catch (error) {
