@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 
 import { useLogin } from '../api/authService';
+import api from '../api/httpClient';
 import useAuthStore from '../../authStore';
 import {
     Button,
@@ -14,6 +14,7 @@ import LoginTestIndicator from './loginTestIndicator';
 
 const Login = () => {
     const AUTH_API_URL = process.env.AUTH_API_URL;
+    const BACKEND_API_URL = process.env.BACKEND_API_URL;
     const [loginType, setLoginType] = useState(
         localStorage.getItem('loginType'),
     );
@@ -35,10 +36,12 @@ const Login = () => {
 
         const refreshAccessToken = async () => {
             try {
-                const response = await axios.post(
-                    `${AUTH_API_URL}/auth/refresh`,
+                const response = await api.post(
+                    '/auth/refresh',
                     {},
-                    { withCredentials: true },
+                    {
+                        baseURL: BACKEND_API_URL || undefined,
+                    },
                 );
                 if (response?.data?.accessToken) {
                     setAccessToken(response.data.accessToken);
@@ -57,7 +60,7 @@ const Login = () => {
         };
 
         refreshAccessToken();
-    }, [AUTH_API_URL, accessToken, clearAuth, loginType, setAccessToken]);
+    }, [BACKEND_API_URL, accessToken, clearAuth, loginType, setAccessToken]);
 
     useEffect(() => {
         if (window.location.pathname !== '/oauth2/success') return;
@@ -77,8 +80,10 @@ const Login = () => {
             return;
         }
 
-        axios
-            .get(`${AUTH_API_URL}/oauth2/success`, { withCredentials: true })
+        api
+            .get('/oauth2/success', {
+                baseURL: AUTH_API_URL || BACKEND_API_URL || undefined,
+            })
             .then((response) => handleToken(response.data.token, 'azure'))
             .catch((error) => {
                 console.error(

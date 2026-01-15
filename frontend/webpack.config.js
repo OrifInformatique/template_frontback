@@ -30,7 +30,7 @@ module.exports = {
         proxy: [
             {
                 context: ['/auth', '/users', '/tests'],
-                target: 'http://localhost:8081',
+                target: process.env.BACKEND_API_URL || "http://localhost:8081",
                 changeOrigin: true,
                 secure: false,
             },

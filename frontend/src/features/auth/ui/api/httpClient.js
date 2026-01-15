@@ -3,6 +3,7 @@ import useAuthStore from '../../authStore';
 
 const api = axios.create({
     withCredentials: true,
+    baseURL: process.env.BACKEND_API_URL || 'http://localhost:8081',
 });
 
 const refreshClient = axios.create({
