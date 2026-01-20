@@ -29,8 +29,8 @@ module.exports = {
         historyApiFallback: true,
         proxy: [
             {
-                context: ['/auth', '/users'],
-                target: 'https://auth.sectioninformatique.ch',
+                context: ['/auth', '/users', '/tests'],
+                target: 'http://localhost:8080',
                 changeOrigin: true,
                 secure: false,
             },

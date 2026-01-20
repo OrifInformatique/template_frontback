@@ -56,7 +56,7 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(new AppException(
                                                                                 error.message(),
                                                                                 HttpStatus.resolve(response
-                                                                                                .rawStatusCode()))));
+                                                                                                .statusCode().value()))));
                                         }
 
                                         // Extract response body
@@ -99,7 +99,7 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(new AppException(
                                                                                 error.message(),
                                                                                 HttpStatus.resolve(response
-                                                                                                .rawStatusCode()))));
+                                                                                                .statusCode().value()))));
                                         }
 
                                         // Extract response body
@@ -139,7 +139,7 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
                                                                                                 HttpStatus.resolve(
-                                                                                                                response.rawStatusCode()))));
+                                                                                                                response.statusCode().value()))));
                                         }
 
                                         Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
@@ -181,7 +181,7 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
                                                                                                 HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
+                                                                                                                response.statusCode().value())))))
                                 .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
         }
 
@@ -203,7 +203,7 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
                                                                                                 HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
+                                                                                                                response.statusCode().value())))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
                                 .map(body -> ResponseEntity.ok(body));
@@ -227,7 +227,7 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppException(error.message(),
                                                                                                 HttpStatus.resolve(
-                                                                                                                response.rawStatusCode())))))
+                                                                                                                response.statusCode().value())))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
                                 .map(body -> ResponseEntity.ok(body));
