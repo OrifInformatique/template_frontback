@@ -130,7 +130,6 @@ public class UserAuthenticationProvider {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (String role : roles) {
             if (role != null && !role.isEmpty()) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                 Set<SimpleGrantedAuthority> authoritySet = RoleEnum.valueOf(role).getGrantedAuthorities();
                 authorities.addAll(authoritySet);
             }

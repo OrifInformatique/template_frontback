@@ -10,6 +10,10 @@ import static ch.sectioninformatique.template.security.PermissionEnum.USER_DELET
 import static ch.sectioninformatique.template.security.PermissionEnum.USER_READ;
 import static ch.sectioninformatique.template.security.PermissionEnum.USER_UPDATE;
 import static ch.sectioninformatique.template.security.PermissionEnum.USER_WRITE;
+import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_READ;
+import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_WRITE;
+import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_UPDATE;
+import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_DELETE;
 
 /**
  * Enumeration defining the available roles in the application.
@@ -25,7 +29,8 @@ public enum RoleEnum {
      * Can only read user information.
      */
     USER(EnumSet.of(
-            USER_READ)),
+            USER_READ,
+            ITEM_READ)),
 
     /**
      * Manager role with extended permissions.
@@ -34,7 +39,10 @@ public enum RoleEnum {
     MANAGER(EnumSet.of(
             USER_READ,
             USER_WRITE,
-            USER_UPDATE)),
+            USER_UPDATE,
+            ITEM_READ,
+            ITEM_WRITE,
+            ITEM_UPDATE)),
 
     /**
      * Administrator role with full system access.
@@ -44,7 +52,11 @@ public enum RoleEnum {
             USER_READ,
             USER_WRITE,
             USER_UPDATE,
-            USER_DELETE)),
+            USER_DELETE,
+            ITEM_READ,
+            ITEM_WRITE,
+            ITEM_UPDATE,
+            ITEM_DELETE)),
 
     /**
      * Example of a local application role wich is specific to this app and not
@@ -53,7 +65,11 @@ public enum RoleEnum {
     LOCAL_APP_ROLE(EnumSet.of(
             USER_READ,
             USER_WRITE,
-            USER_UPDATE));
+            USER_UPDATE,
+            ITEM_READ,
+            ITEM_WRITE,
+            ITEM_UPDATE,
+            ITEM_DELETE));
 
     /** Set of permissions associated with this role */
     private final Set<PermissionEnum> permissions;
