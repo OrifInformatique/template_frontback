@@ -185,6 +185,29 @@ public class AuthClient {
                                 .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
         }
 
+
+        /**
+         * Logs out the authenticated user by sending a logout request to the authentication provider.
+         * 
+         * @param token The access token
+         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout response
+         */
+        public Mono<ResponseEntity<Map<String, String>>> logout(String token) {
+                return webClient.post()
+                                .uri("/auth/logout") // the logout endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.statusCode().value())))))
+                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                                })
+                                .map(body -> ResponseEntity.ok(body));
+        }
+
         /**
          * Soft deletes a user by sending a delete request to the authentication provider.
          * 

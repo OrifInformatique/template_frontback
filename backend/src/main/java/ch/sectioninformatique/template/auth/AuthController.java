@@ -131,4 +131,23 @@ public class AuthController {
         URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
         return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
     }
+
+    /**
+     * Handles POST requests to "/logout"
+     * Sends the logout request to the authentication provider
+     * Passes the authorization token from the request header
+     * Returns the response from the authentication provider
+     * 
+     * @param token The authorization token from the request header
+     * @return ResponseEntity with logout response from authentication provider
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+        return authClient.logout(token)
+                .map(response -> ResponseEntity.status(response.getStatusCode())
+                                  .headers(response.getHeaders())
+                                  .body(response.getBody()))
+                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+                .block();
+    }
 }
