@@ -13,21 +13,26 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.transaction.annotation.Transactional;
 
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
+import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import reactor.core.publisher.Mono;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
@@ -36,22 +41,81 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Integration tests for the UserController REST endpoints.
+ *
+ * This class uses Spring Boot's test context to run against a real
+ * application context (with database and services), while using MockMvc
+ * to simulate HTTP requests and verify API responses.
+ *
+ * Tests verify:
+ * - User listing with proper authorization
+ * - Local user deletion (from database only)
+ * - Global user deletion (from database and external auth service)
+ * - Error handling for deletion failures
+ *
+ * It also integrates Spring REST Docs to automatically generate
+ * documentation snippets during test execution.
+ */
 @SpringBootTest(classes = AuthApplication.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @AutoConfigureRestDocs(outputDir = "target/generated-snippets")
 public class UserControllerTest {
 
+    /** MockMvc for simulating HTTP requests in tests */
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    /** Real service for user operations (not mocked) */
+    @Autowired
     private UserService userService;
 
+    /** Provider for creating JWT tokens */
+    @Autowired
+    private UserAuthenticationProvider userAuthenticationProvider;
+
+    /** Mock client for external auth service (only used for global delete operations) */
     @MockitoBean
     private AuthClient authClient;
 
+    /**
+     * Helper method to generate a valid JWT token for a test user by login.
+     * Retrieves the user from the database using UserService and creates a real JWT token
+     * using UserAuthenticationProvider.
+     * 
+     * @param login The login email of the user to generate a token for
+     * @return A valid JWT token for the specified user
+     */
+    private String getValidTokenForUser(String login) {
+        // Get the user DTO from database (seeded by TestUserSeeder)
+        UserDto userDto = userService.findByLogin(login);
+        
+        if (userDto == null) {
+            throw new RuntimeException("User " + login + " not found. Ensure TestUserSeeder has run.");
+        }
+        
+        // Create and return a real JWT token
+        return userAuthenticationProvider.createToken(userDto);
+    }
+
+    /**
+     * Helper method for performing and documenting HTTP requests in tests.
+     * This reduces repetition by centralizing the request execution and REST Docs
+     * generation.
+     *
+     * @param requestTypeString HTTP method (GET, DELETE, etc.)
+     * @param endpoint          API endpoint to call
+     * @param token             Optional JWT token for authentication
+     * @param contentType       Content type for the request
+     * @param expectedStatus    Expected HTTP status code (e.g. 200)
+     * @param docsFileName      Name for the generated REST Docs snippet
+     * @param script            Optional lambda to perform additional assertions
+     * 
+     * @throws Exception
+     */
     private void performRequest(
             String requestTypeString,
             String endpoint,
@@ -71,7 +135,7 @@ public class UserControllerTest {
         }
 
         if (token != null) {
-            request.header(HttpHeaders.AUTHORIZATION, token);
+            request.header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
         }
 
         request.contentType(contentType);
@@ -87,72 +151,147 @@ public class UserControllerTest {
                 preprocessResponse(prettyPrint())));
     }
 
+    /**
+     * Test: GET /users/all
+     *
+     * Verify users with user:read authority can retrieve all users from the system.
+     */
     @Test
-    @WithMockUser(authorities = { "user:read" })
-    public void allUsers_withAuthority_shouldReturnOk() throws Exception {
-        List<User> users = new ArrayList<>();
-        when(userService.allUsers()).thenReturn(users);
+    @Transactional
+    public void allUsers_withReadAuthority_shouldReturn200AndUserList() throws Exception {
+        String validToken = getValidTokenForUser("test.user@test.com");
 
         performRequest(
                 "GET",
                 "/users/all",
-                "Bearer fake",
+                validToken,
                 MediaType.APPLICATION_JSON,
                 200,
                 "all-users",
-                null);
+                response -> {
+                    try {
+                        // Verify response is an array
+                        response.andExpect(jsonPath("$").isArray());
+                        // Verify at least the test users exist
+                        response.andExpect(jsonPath("$[?(@.login == 'test.user@test.com')]").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
+    /**
+     * Test: DELETE /users/{id}/false
+     *
+     * Verify local user deletion removes user from database without calling external auth service.
+     */
     @Test
-    @WithMockUser(authorities = { "user:delete" })
-    public void deleteLocalUser_shouldReturnOk() throws Exception {
-        when(userService.deleteUser(5L)).thenReturn(UserDto.builder().id(5L).login("del@test.com").build());
+    @Transactional
+    public void deleteLocalUser_withoutGlobalFlag_shouldReturn200AndDeleteFromDatabase() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        // Get a different test user to delete (not the admin performing the deletion)
+        UserDto userToDelete = userService.findByLogin("test.user@test.com");
+        assertNotNull(userToDelete, "Test user should exist");
 
-        performRequest(
-                "DELETE",
-                "/users/5/false",
-                "Bearer token",
-                MediaType.APPLICATION_JSON,
-                200,
-                "delete-local",
-                null);
+        // For reactive Mono responses, we need to handle async results
+        var mvcResult = mockMvc.perform(delete("/users/{userId}/{global}", userToDelete.getId(), false)
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andDo(document("users/delete-local",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())))
+                .andReturn();
+
+        // Get the async result (the Mono's resolved ResponseEntity)
+        @SuppressWarnings("unchecked")
+        ResponseEntity<Map<String, String>> asyncResult = 
+                (ResponseEntity<Map<String, String>>) mvcResult.getAsyncResult();
+        
+        // Verify the message in the async result body
+        assertNotNull(asyncResult.getBody());
+        assertEquals("Local User deleted successfully", asyncResult.getBody().get("message"));
     }
 
+    /**
+     * Test: DELETE /users/{id}/true
+     *
+     * Verify global user deletion calls external auth service and removes from database.
+     */
     @Test
-    @WithMockUser(authorities = { "user:delete" })
-    public void deleteGlobalUser_shouldReturnOk() throws Exception {
-        Map<String, String> body = Map.of("deletedUserLogin", "del@test.com", "message", "deleted");
-        when(authClient.deleteGlobalUser(eq("Bearer token"), eq(7L)))
-                .thenReturn(Mono.just(ResponseEntity.ok(body)));
-        when(userService.deleteUserByLogin("del@test.com"))
-            .thenReturn(UserDto.builder().login("del@test.com").build());
+    @Transactional
+    public void deleteGlobalUser_withGlobalFlag_shouldCallAuthServiceAndDeleteFromDatabase() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        // Get a test admin2 user to delete
+        UserDto admin2User = userService.findByLogin("test.admin2@test.com");
+        assertNotNull(admin2User, "Test admin2 user should exist");
 
-        performRequest(
-                "DELETE",
-                "/users/7/true",
-                "Bearer token",
-                MediaType.APPLICATION_JSON,
-                200,
-                "delete-global",
-                null);
+        // Mock the external auth service response
+        Map<String, String> authServiceResponse = Map.of(
+                "deletedUserLogin", "test.admin2@test.com",
+                "message", "User deleted from auth service");
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId())))
+                .thenReturn(Mono.just(ResponseEntity.ok(authServiceResponse)));
+
+        // For reactive Mono responses, we need to handle async results
+        var mvcResult = mockMvc.perform(delete("/users/{userId}/{global}", admin2User.getId(), true)
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andDo(document("users/delete-global",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())))
+                .andReturn();
+
+        // Get the async result (the Mono's resolved ResponseEntity)
+        @SuppressWarnings("unchecked")
+        ResponseEntity<Map<String, String>> asyncResult = 
+                (ResponseEntity<Map<String, String>>) mvcResult.getAsyncResult();
+        
+        // Verify the message in the async result body
+        assertNotNull(asyncResult.getBody());
+        assertEquals("User deleted from auth service", asyncResult.getBody().get("message"));
+        
+        // Verify the auth client was called
+        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()));
     }
 
+    /**
+     * Test: DELETE /users/{id}/true
+     *
+     * Verify error handling when global user deletion fails in external auth service.
+     */
     @Test
-    @WithMockUser(authorities = { "user:delete" })
-    public void deleteGlobalUser_whenClientError_shouldPropagateError() throws Exception {
-        // Note: Reactive error handling with MockMvc has limitations
-        // The Mono.error doesn't always propagate to HTTP status properly in servlet context
-        // This test verifies the mock is called correctly
-        when(authClient.deleteGlobalUser(eq("Bearer token"), eq(8L)))
-                .thenReturn(Mono.error(new UserDeletionException("error")));
+    @Transactional
+    public void deleteGlobalUser_whenAuthServiceFails_shouldPropagateError() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        // Get a test manager user
+        UserDto managerUser = userService.findByLogin("test.manager@test.com");
+        assertNotNull(managerUser, "Test manager user should exist");
 
-        performRequest(
-                "DELETE",
-                "/users/8/true",
-                "Bearer token",
-                MediaType.APPLICATION_JSON,
-                200, // MockMvc with reactive Mono errors may not propagate status correctly
-                "delete-global-error",
-                null);
+        // Mock the external auth service to return an error
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId())))
+                .thenReturn(Mono.error(new UserDeletionException("Failed to delete user from auth service")));
+
+        // For reactive Mono error responses, the exception is in the async result
+        var mvcResult = mockMvc.perform(delete("/users/{userId}/{global}", managerUser.getId(), true)
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()) // Initial status before async processing
+                .andExpect(request().asyncStarted())
+                .andDo(document("users/delete-global-error",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())))
+                .andReturn();
+
+        // The async result should be the UserDeletionException
+        Object asyncResult = mvcResult.getAsyncResult();
+        assertTrue(asyncResult instanceof UserDeletionException, 
+                "Expected UserDeletionException but got: " + asyncResult.getClass());
+        
+        UserDeletionException exception = (UserDeletionException) asyncResult;
+        assertTrue(exception.getMessage().contains("Failed to delete user"));
     }
 }
