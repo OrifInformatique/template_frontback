@@ -1,17 +1,19 @@
 package ch.sectioninformatique.template.item;
 
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import ch.sectioninformatique.template.user.UserRepository;
-import ch.sectioninformatique.template.user.User;
-
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import ch.sectioninformatique.template.item.removed.ItemNotFoundException;
+import ch.sectioninformatique.template.item.removed.UnauthorizedItemException;
+import ch.sectioninformatique.template.user.User;
+import ch.sectioninformatique.template.user.UserRepository;
 
 /**
  * Service class for managing items in the system.

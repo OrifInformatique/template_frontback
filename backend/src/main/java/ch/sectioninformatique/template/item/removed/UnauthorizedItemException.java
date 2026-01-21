@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.item;
+package ch.sectioninformatique.template.item.removed;
 
 /**
  * Exception thrown when a user attempts to perform an operation on an item

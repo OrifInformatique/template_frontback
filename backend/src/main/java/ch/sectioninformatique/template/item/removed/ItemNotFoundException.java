@@ -1,4 +1,4 @@
-package ch.sectioninformatique.template.item;
+package ch.sectioninformatique.template.item.removed;
 
 /**
  * Exception thrown when an item with the specified ID cannot be found in the system.
