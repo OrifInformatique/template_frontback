@@ -10,6 +10,32 @@ import org.springframework.http.HttpStatus;
 public class SecurityExceptions {
 
     /**
+     * Thrown when an authentication token is invalid or expired.
+     */
+    public static class InvalidTokenException extends AppException {
+        public InvalidTokenException() {
+            super("Invalid or expired token", HttpStatus.UNAUTHORIZED);
+        }
+
+        public InvalidTokenException(String message) {
+            super(message, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    /**
+     * Thrown when a refresh token is invalid or expired.
+     */
+    public static class InvalidRefreshTokenException extends AppException {
+        public InvalidRefreshTokenException() {
+            super("Invalid or expired refresh token", HttpStatus.UNAUTHORIZED);
+        }
+
+        public InvalidRefreshTokenException(String message) {
+            super(message, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    /**
      * Thrown when JWT token verification fails.
      */
     public static class JwtVerificationException extends AppException {

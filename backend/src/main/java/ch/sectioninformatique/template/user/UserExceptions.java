@@ -36,19 +36,6 @@ public class UserExceptions {
     }
 
     /**
-     * Thrown when a login already exists.
-     */
-    public static class LoginAlreadyExistsException extends AppException {
-        public LoginAlreadyExistsException() {
-            super("Login already exists", HttpStatus.BAD_REQUEST);
-        }
-
-        public LoginAlreadyExistsException(String login) {
-            super("Login already exists: " + login, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
      * Thrown when a user already has a specific role.
      */
     public static class UserAlreadyHasRoleException extends AppException {
@@ -168,19 +155,6 @@ public class UserExceptions {
     public static class UserSeedingException extends AppException {
         public UserSeedingException(String message) {
             super("User seeding failed: " + message, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Thrown when trying to access a user that requires specific permissions.
-     */
-    public static class InsufficientUserPermissionsException extends AppException {
-        public InsufficientUserPermissionsException() {
-            super("Insufficient permissions to access user data", HttpStatus.FORBIDDEN);
-        }
-
-        public InsufficientUserPermissionsException(String message) {
-            super(message, HttpStatus.FORBIDDEN);
         }
     }
 

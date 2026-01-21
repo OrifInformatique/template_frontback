@@ -28,42 +28,28 @@ public class AuthExceptions {
     }
 
     /**
-     * Thrown when an authentication token is invalid or expired.
+     * Thrown when a user is not found during authentication.
      */
-    public static class InvalidTokenException extends AppException {
-        public InvalidTokenException() {
-            super("Invalid or expired token", HttpStatus.UNAUTHORIZED);
+    public static class UserNotFoundException extends AppException {
+        public UserNotFoundException() {
+            super("User not found", HttpStatus.NOT_FOUND);
+        }
+
+        public UserNotFoundException(String message) {
+            super(message, HttpStatus.NOT_FOUND);
         }
     }
 
     /**
-     * Thrown when a refresh token is invalid or expired.
+     * Thrown when a user already exists during registration.
      */
-    public static class InvalidRefreshTokenException extends AppException {
-        public InvalidRefreshTokenException() {
-            super("Invalid or expired refresh token", HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    /**
-     * Thrown when a user is not authenticated.
-     */
-    public static class UnauthenticatedException extends AppException {
-        public UnauthenticatedException() {
-            super("Authentication required", HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    /**
-     * Thrown when a user is not authorized to access a resource.
-     */
-    public static class UnauthorizedException extends AppException {
-        public UnauthorizedException() {
-            super("Access denied", HttpStatus.FORBIDDEN);
+    public static class UserAlreadyExistsException extends AppException {
+        public UserAlreadyExistsException() {
+            super("User already exists", HttpStatus.CONFLICT);
         }
 
-        public UnauthorizedException(String message) {
-            super(message, HttpStatus.FORBIDDEN);
+        public UserAlreadyExistsException(String message) {
+            super(message, HttpStatus.CONFLICT);
         }
     }
 
