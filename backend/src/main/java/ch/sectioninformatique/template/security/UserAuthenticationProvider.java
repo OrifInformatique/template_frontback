@@ -17,6 +17,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenTypeException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -168,7 +169,7 @@ public class UserAuthenticationProvider {
         String type = decoded.getClaim("typ").asString();
 
         if (type != null && !"access".equals(type)) {
-            throw new RuntimeException("Invalid token type for this endpoint");
+            throw new InvalidTokenTypeException();
         }
 
         UserDto currentUser = UserDto.builder()

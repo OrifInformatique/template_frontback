@@ -4,7 +4,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
-import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
+import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
+import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
+import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
+import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
@@ -14,8 +20,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -53,10 +59,7 @@ public class AuthClient {
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppException(
-                                                                                error.message(),
-                                                                                HttpStatus.resolve(response
-                                                                                                .statusCode().value()))));
+                                                                .flatMap(error -> Mono.error(new InvalidCredentialsException()));
                                         }
 
                                         // Extract response body
@@ -96,10 +99,10 @@ public class AuthClient {
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppException(
-                                                                                error.message(),
-                                                                                HttpStatus.resolve(response
-                                                                                                .statusCode().value()))));
+                                                                .flatMap(error -> Mono.error(
+                                                                                response.statusCode().isSameCodeAs(HttpStatus.CONFLICT)
+                                                                                                ? new UserAlreadyExistsException()
+                                                                                                : new RegistrationFailedException(error.message())));
                                         }
 
                                         // Extract response body
@@ -137,9 +140,7 @@ public class AuthClient {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode().value()))));
+                                                                                new InvalidRefreshTokenException(error.message())));
                                         }
 
                                         Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
@@ -178,10 +179,7 @@ public class AuthClient {
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode().value())))))
+                                                                .flatMap(error -> Mono.error(new PasswordUpdateFailedException(error.message()))))
                                 .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
         }
 
@@ -200,10 +198,7 @@ public class AuthClient {
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode().value())))))
+                                                                .flatMap(error -> Mono.error(new UserDeletionException(error.message()))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
                                 .map(body -> ResponseEntity.ok(body));
@@ -224,10 +219,7 @@ public class AuthClient {
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode().value())))))
+                                                                .flatMap(error -> Mono.error(new UserDeletionException(error.message()))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
                                 .map(body -> ResponseEntity.ok(body));
@@ -245,6 +237,9 @@ public class AuthClient {
                 return webClient.get()
                                 .uri("/oauth2/authorization/azure") // the OAuth2 authorization endpoint path in authentication provider
                                 .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new OAuth2AuthenticationException(error.message()))))
                                 .toEntity(String.class); // expect the response as a ResponseEntity<String>
         }
 }

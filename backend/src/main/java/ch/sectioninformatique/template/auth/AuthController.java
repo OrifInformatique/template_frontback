@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
+import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.validation.Valid;
@@ -73,7 +75,7 @@ public class AuthController {
                     // Return HTTP 200 OK with the response body
                     return Mono.just(response);
                 })
-                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)))
+                .onErrorResume(ex -> Mono.error(new RegistrationFailedException(ex.getMessage())))
                 .block();
     }
 
@@ -92,7 +94,7 @@ public class AuthController {
             .map(response -> ResponseEntity.status(response.getStatusCode())
                               .headers(response.getHeaders())
                               .body(response.getBody()))
-            .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+            .onErrorResume(ex -> Mono.error(new InvalidRefreshTokenException(ex.getMessage())))
             .block();
     }
 
@@ -112,7 +114,7 @@ public class AuthController {
         return authClient.updatePassword(token, updatePasswordDto)
                 .map(responseEntity -> responseEntity.getBody())
                 .map(messageResponse -> ResponseEntity.ok(messageResponse))
-                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+            .onErrorResume(ex -> Mono.error(new PasswordUpdateFailedException(ex.getMessage())))
                 .block();
     }
 

@@ -5,15 +5,19 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.user.UserExceptions.DefaultRoleNotFoundException;
+import ch.sectioninformatique.template.user.UserExceptions.DuplicateUserException;
+import ch.sectioninformatique.template.user.UserExceptions.RoleNotFoundException;
+import ch.sectioninformatique.template.user.UserExceptions.UserAlreadyHasRoleException;
+import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundByLoginException;
+import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,16 +66,16 @@ public class UserService {
      */
     public UserDto promoteToLocalAppRole(@NonNull Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(UserNotFoundException::new);
 
         for (Role role : user.getAppSpecificRoles()) {
             if (role.getName().equals(RoleEnum.LOCAL_APP_ROLE)) {
-                throw new AppException("The user is already a test admin", HttpStatus.CONFLICT);
+                throw new UserAlreadyHasRoleException(RoleEnum.LOCAL_APP_ROLE.name());
             }
         }
 
         Role testAdminRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
-                .orElseThrow(() -> new AppException("LOCAL_APP_ROLE role not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new RoleNotFoundException(RoleEnum.LOCAL_APP_ROLE.name()));
 
         user.getAppSpecificRoles().add(testAdminRole);
         userRepository.save(user);
@@ -122,7 +126,7 @@ public class UserService {
      */
     public UserDto me(UserDto currentUser) {
         User user = userRepository.findByLogin(currentUser.getLogin())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundByLoginException(currentUser.getLogin()));
         UserDto userMapped = userMapper.toUserDto(user);
         return userMapped;
     }
@@ -143,14 +147,14 @@ public class UserService {
         Optional<User> optionalUser = userRepository.findByLogin(registerDto.login());
 
         if (optionalUser.isPresent()) {
-            throw new AppException("Login already exists", HttpStatus.BAD_REQUEST);
+            throw new DuplicateUserException(registerDto.login());
         }
 
         User user = userMapper.signUpToUser(registerDto);
 
         // Add default USER role
         Role userRole = roleRepository.findByName(RoleEnum.USER)
-                .orElseThrow(() -> new AppException("Default role not found", HttpStatus.INTERNAL_SERVER_ERROR));
+            .orElseThrow(DefaultRoleNotFoundException::new);
         user.setMainRole(userRole);
 
         User savedUser = userRepository.save(user);
@@ -204,7 +208,7 @@ public class UserService {
 
         if (!localMainRole.contains(currentUser.getMainRole())) {
             Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
-                    .orElseThrow(() -> new RuntimeException("role not found"));
+                    .orElseThrow(() -> new RoleNotFoundException(currentUser.getMainRole()));
 
             localUser.setMainRole(newMainRole);
             userRepository.save(localUser);
@@ -250,7 +254,7 @@ public class UserService {
     public UserDto deleteUser(@NonNull Long userId) {
         // Get the user to delete
         User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(UserNotFoundException::new);
 
         // Delete the user
         userRepository.deleteById(userId);
@@ -270,7 +274,7 @@ public class UserService {
     public UserDto deleteUserPermanent(@NonNull Long userId) {
         // Get the user to delete
         User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(UserNotFoundException::new);
 
         // Delete the user
         userRepository.deletePermanentlyById(userId);
@@ -290,7 +294,7 @@ public class UserService {
     public UserDto deleteUserByLogin(String login) {
         // Get the user to delete
         User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new UserNotFoundByLoginException(login));
 
         // Delete the user
         userRepository.deleteById(userToDelete.getId());
@@ -310,7 +314,7 @@ public class UserService {
     public UserDto deleteUserPermanentByLogin(String login) {
         // Get the user to delete
         User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new UserNotFoundByLoginException(login));
 
         // Delete the user
         userRepository.deletePermanentlyById(userToDelete.getId());
@@ -337,7 +341,7 @@ public class UserService {
         User user = userOptional
                 .orElseThrow(() -> {
                     log.error("User not found with login: {}", login);
-                    return new AppException("Unknown user", HttpStatus.NOT_FOUND);
+                    return new UserNotFoundByLoginException(login);
                 });
 
         log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",

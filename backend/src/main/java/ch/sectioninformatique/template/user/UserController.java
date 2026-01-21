@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -163,7 +163,7 @@ public class UserController {
                                     .body(Map.of("message", "Failed to delete user: missing response data")));
                         }
                     })
-                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+                    .onErrorResume(ex -> Mono.error(new UserDeletionException(ex.getMessage())));
         } else {
             // Delete user locally only
             userService.deleteUser(userId);
@@ -210,7 +210,7 @@ public class UserController {
                                     .body(Map.of("message", "Failed to delete user: missing response data")));
                         }
                     })
-                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+                    .onErrorResume(ex -> Mono.error(new UserDeletionException(ex.getMessage())));
         } else {
             userService.deleteUserPermanent(userId);
             return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
