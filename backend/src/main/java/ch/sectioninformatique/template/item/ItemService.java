@@ -10,8 +10,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import ch.sectioninformatique.template.item.removed.ItemNotFoundException;
-import ch.sectioninformatique.template.item.removed.UnauthorizedItemException;
+import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
+import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
 
