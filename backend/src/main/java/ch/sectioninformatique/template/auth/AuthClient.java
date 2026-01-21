@@ -188,24 +188,44 @@ public class AuthClient {
 
         /**
          * Logs out the authenticated user by sending a logout request to the authentication provider.
+         * Extracts and retransmits the Set-Cookie header containing the expired refresh token.
          * 
          * @param token The access token
-         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout response
+         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout response with Set-Cookie header
          */
         public Mono<ResponseEntity<Map<String, String>>> logout(String token) {
                 return webClient.post()
                                 .uri("/auth/logout") // the logout endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode().value())))))
-                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
-                                })
-                                .map(body -> ResponseEntity.ok(body));
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new AppException(
+                                                                                error.message(),
+                                                                                HttpStatus.resolve(response
+                                                                                                .statusCode().value()))));
+                                        }
+
+                                        // Extract response body
+                                        Mono<Map<String, String>> bodyMono = response.bodyToMono(
+                                                        new ParameterizedTypeReference<Map<String, String>>() {
+                                                        });
+
+                                        return bodyMono.map(body -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                // Extract refresh_token cookie (expired) directly in the lambda
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .stream()
+                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                                .findFirst()
+                                                                .ifPresent(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+                                                return builder.body(body);
+                                        });
+                                });
         }
 
         /**
