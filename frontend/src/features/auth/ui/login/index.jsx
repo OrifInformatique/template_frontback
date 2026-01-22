@@ -23,7 +23,7 @@ const Login = () => {
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
             <div className="flex flex-col gap-4 w-full sm:w-[350px] h-fit p-8 border border-black sm:rounded-lg">
                 <LoginTestIndicator/>
-                <h1>{t("login")}</h1>
+                <h1>{t("sign_in")}</h1>
 
                 <div className="mx-auto">
                     <Link to="/oauth2/authorization/azure">
@@ -55,7 +55,7 @@ const Login = () => {
 
                             <Button
                                 variant="primary"
-                                label={t("login_local_account")}
+                                label={t("sign_in_local_account")}
                                 className="w-full"
                             />
                         </form>
@@ -67,7 +67,7 @@ const Login = () => {
                 ) : (
                     <Button
                         variant="primary"
-                        label={t("login_with_local_account")}
+                        label={t("sign_in_with_local_account")}
                         onClick={() => setShowLocalAccountLoginForm(true)}
                     />
                 )}

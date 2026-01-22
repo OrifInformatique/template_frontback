@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import { Button,
          InputEmail,
@@ -7,6 +8,7 @@ import { Button,
 
 const ResetPassword = () =>
 {
+    const { t } = useTranslation("auth");
     // TODO :  Control the InputEmail to display it in the explicative text of step 2 and fill the InputText when coming back from step 2 to step 1.
 
     const [formStep, setFormStep] = useState(1);
@@ -36,7 +38,7 @@ const ResetPassword = () =>
     return (
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
             <div className="flex flex-col gap-4 w-full sm:w-[350px] h-fit p-8 border border-black sm:rounded-lg">
-                <h1>Restauration du mot de passe</h1>
+                <h1>{t("reset_password")}</h1>
 
                 {formStep === 1 &&
                     <form
@@ -46,7 +48,7 @@ const ResetPassword = () =>
                         <InputEmail
                             id="email"
                             name="email"
-                            label="Email"
+                            label={t("email")}
                             placeholder="example@orif.ch"
                             required={true}
                         />
@@ -54,14 +56,14 @@ const ResetPassword = () =>
                         <div className="flex gap-2 w-full">
                             <Button
                                 variant="tertiary"
-                                label="Annuler"
+                                label={t("cancel")}
                                 type="button"
                                 className="basis-1/2"
                             />
 
                             <Button
                                 variant="primary"
-                                label="Valider"
+                                label={t("confirm")}
                                 className="basis-1/2"
                             />
                         </div>
@@ -76,20 +78,20 @@ const ResetPassword = () =>
                             <InputPassword
                                 id="new-password"
                                 name="new-password"
-                                label="Nouveau mot de passe"
+                                label={t("new_password")}
                                 required={true}
                             />
 
                             <InputPassword
                                 id="new-password-confirmation"
                                 name="new-password-confirmation"
-                                label="Confirmation du nouveau mot de passe"
+                                label={t("confirm_new_password")}
                                 required={true}
                             />
 
                             <Button
                                 variant="primary"
-                                label="Valider"
+                                label={t("confirm")}
                                 className="w-full"
                             />
                     </form>
