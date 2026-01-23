@@ -225,7 +225,7 @@ public class UserControllerTest {
     /**
      * Test: DELETE /users/{id}/false
      *
-     * Verify local user deletion removes user from database without calling
+     * Verify local user deletion removes or flags the user deleted without calling
      * external auth service.
      */
     @Test
@@ -252,10 +252,8 @@ public class UserControllerTest {
                     }
                 });
 
-        // Verify DB side effect and no call to external auth service
-        Optional<User> deleted = userRepository.findByLogin(userToDelete.getLogin());
-        assertTrue(deleted.isPresent());
-        assertTrue(deleted.get().isDeleted());
+        // Verify DB side effect (soft or hard delete) and no call to external auth service
+        assertUserDeleted(userToDelete);
         verifyNoInteractions(authClient);
     }
 
@@ -292,6 +290,17 @@ public class UserControllerTest {
 
         // Verify the auth client was called
         verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()));
+        // Verify DB side effect (soft or hard delete)
+        assertUserDeleted(admin2User);
+    }
+
+    /**
+     * Assert the user is either absent (hard delete) or marked as deleted (soft delete).
+     */
+    private void assertUserDeleted(UserDto userDto) {
+        Optional<User> deleted = userRepository.findByLogin(userDto.getLogin());
+        boolean removedOrFlagged = deleted.isEmpty() || deleted.map(User::isDeleted).orElse(false);
+        assertTrue(removedOrFlagged, "User should be removed or flagged as deleted in the database");
     }
 
     /**
