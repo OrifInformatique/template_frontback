@@ -245,6 +245,28 @@ include::auth/login-invalid/http-response.adoc[]
 
 It returns an error indicating the login or password is incorrect.
 
+==== 2.1.2 Error 401 - Wrong Password
+This is an example output for the `POST /auth/login` endpoint when the password is incorrect.
+
+.request
+include::auth/login-wrong-password/http-request.adoc[]
+
+.response
+include::auth/login-wrong-password/http-response.adoc[]
+
+It returns an error indicating the password is incorrect.
+
+==== 2.1.3 Error 404 - User Not Found
+This is an example output for the `POST /auth/login` endpoint when the user does not exist.
+
+.request
+include::auth/login-user-not-found/http-request.adoc[]
+
+.response
+include::auth/login-user-not-found/http-response.adoc[]
+
+It returns an error indicating the user was not found.
+
 === 2.2 Register
 This is an example output for the `POST /auth/register` endpoint.
 
@@ -267,6 +289,28 @@ include::auth/register-conflict/http-response.adoc[]
 
 It returns a message indicating that the user already exists.
 
+===== 2.2.1.1 User Already Exists (Alternative)
+This is another example output for the `POST /auth/register` endpoint when attempting to register an existing user.
+
+.request
+include::auth/register-user-already-exists/http-request.adoc[]
+
+.response
+include::auth/register-user-already-exists/http-response.adoc[]
+
+It returns a message indicating that the user already exists.
+
+==== 2.2.2 Error 500 - Registration Failed
+This is an example output for the `POST /auth/register` endpoint when registration fails.
+
+.request
+include::auth/register-failed/http-request.adoc[]
+
+.response
+include::auth/register-failed/http-response.adoc[]
+
+It returns a message indicating that the registration process failed.
+
 === 2.3 Refresh
 This is an example output for the `POST /auth/refresh` endpoint.
 
@@ -288,6 +332,39 @@ include::auth/refresh-invalid/http-request.adoc[]
 include::auth/refresh-invalid/http-response.adoc[]
 
 It returns a message indicating the refresh token cannot be used.
+
+==== 2.3.2 Error 401 - Expired Refresh Token
+This is an example output for the `POST /auth/refresh` endpoint when the refresh token has expired.
+
+.request
+include::auth/refresh-expired-token/http-request.adoc[]
+
+.response
+include::auth/refresh-expired-token/http-response.adoc[]
+
+It returns a message indicating the refresh token has expired.
+
+==== 2.3.3 Error 401 - Malformed Refresh Token
+This is an example output for the `POST /auth/refresh` endpoint when the refresh token is malformed.
+
+.request
+include::auth/refresh-malformed-refresh-token/http-request.adoc[]
+
+.response
+include::auth/refresh-malformed-refresh-token/http-response.adoc[]
+
+It returns a message indicating the refresh token format is invalid.
+
+==== 2.3.4 Error 401 - JWT Verification Failed
+This is an example output for the `POST /auth/refresh` endpoint when JWT verification fails.
+
+.request
+include::auth/refresh-jwt-verification-failed/http-request.adoc[]
+
+.response
+include::auth/refresh-jwt-verification-failed/http-response.adoc[]
+
+It returns a message indicating the JWT verification has failed.
 
 === 2.4 Logout
 Those are example outputs for the `POST /auth/logout` endpoint.
@@ -338,7 +415,18 @@ include::auth/update-password-success/http-response.adoc[]
 
 It confirms the password update.
 
-==== 2.6.1 Error 401 - Unauthorised
+==== 2.6.1 Error 400 - Update Password Failed
+This is an example output when the password update fails due to incorrect old password.
+
+.request
+include::auth/update-password-failed/http-request.adoc[]
+
+.response
+include::auth/update-password-failed/http-response.adoc[]
+
+It returns a message indicating that the old password is incorrect.
+
+==== 2.6.2 Error 401 - Unauthorised
 This is an example output when the endpoint is called without valid authentication.
 
 .request
@@ -348,6 +436,17 @@ include::auth/update-password/http-request.adoc[]
 include::auth/update-password/http-response.adoc[]
 
 It returns a message indicating authentication is required.
+
+==== 2.6.3 Error 401 - Malformed Token
+This is an example output when the endpoint is called with a malformed authentication token.
+
+.request
+include::auth/update-password-malformed-token/http-request.adoc[]
+
+.response
+include::auth/update-password-malformed-token/http-response.adoc[]
+
+It returns a message indicating the token format is incorrect.
 
 == 3 User Endpoints
 
@@ -361,6 +460,28 @@ include::users/all-users/http-request.adoc[]
 include::users/all-users/http-response.adoc[]
 
 It returns the list of users with their roles and permissions.
+
+==== 3.1.1 Success (Alternative)
+This is an alternative example output for the `GET /users/all` endpoint.
+
+.request
+include::users/users-all-success/http-request.adoc[]
+
+.response
+include::users/users-all-success/http-response.adoc[]
+
+It returns the complete list of users.
+
+==== 3.1.2 Error 401 - Unauthorised
+This is an example output when the endpoint is called without valid authentication.
+
+.request
+include::users/users-all-unauthorized/http-request.adoc[]
+
+.response
+include::users/users-all-unauthorized/http-response.adoc[]
+
+It returns a message indicating authentication is required.
 
 === 3.2 Delete User (Global)
 This is an example output for the `DELETE /users/{userId}/true` endpoint when globally deleting a user.
@@ -394,3 +515,69 @@ include::users/delete-local/http-request.adoc[]
 include::users/delete-local/http-response.adoc[]
 
 It confirms the local deletion request.
+
+==== 3.3.1 Error 403 - Forbidden
+This is an example output for the `DELETE /users/{userId}` endpoint when the user lacks permission to delete.
+
+.request
+include::users/delete-forbidden/http-request.adoc[]
+
+.response
+include::users/delete-forbidden/http-response.adoc[]
+
+It returns a message indicating access is forbidden.
+
+==== 3.3.2 Error 404 - User Not Found
+This is an example output for the `DELETE /users/{userId}` endpoint when the user to delete is not found.
+
+.request
+include::users/delete-user-not-found/http-request.adoc[]
+
+.response
+include::users/delete-user-not-found/http-response.adoc[]
+
+It returns a message indicating the user was not found.
+
+==== 3.3.3 Error 500 - User Deletion Failed
+This is an example output for the `DELETE /users/{userId}` endpoint when the deletion process fails.
+
+.request
+include::users/delete-user-deletion-failed/http-request.adoc[]
+
+.response
+include::users/delete-user-deletion-failed/http-response.adoc[]
+
+It returns a message indicating the deletion could not be completed.
+
+=== 3.4 Promote User Role
+This is an example output for the `PUT /users/{userId}/promote-role` endpoint.
+
+.request
+include::users/promote-role-success/http-request.adoc[]
+
+.response
+include::users/promote-role-success/http-response.adoc[]
+
+It confirms the user's role promotion.
+
+==== 3.4.1 Success (Alternative)
+This is an alternative example output for successful role promotion.
+
+.request
+include::users/promote-role-success-temp/http-request.adoc[]
+
+.response
+include::users/promote-role-success-temp/http-response.adoc[]
+
+It confirms the role was successfully promoted.
+
+==== 3.4.2 Error 400 - Role Already Exists
+This is an example output when attempting to promote a user to a role they already have.
+
+.request
+include::users/promote-role-already-exists/http-request.adoc[]
+
+.response
+include::users/promote-role-already-exists/http-response.adoc[]
+
+It returns a message indicating the user already has the requested role.
