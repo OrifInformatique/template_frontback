@@ -82,7 +82,7 @@ public class UserController {
      * - Returns a list of all users
      * - Is typically used by administrators
      *
-     * @return ResponseEntity containing a list of all users
+     * @return ResponseEntity containing a list of all users who are not soft-deleted
      */
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('user:read')")
@@ -98,7 +98,7 @@ public class UserController {
      * - Returns a list of all users
      * - Is typically used by administrators
      *
-     * @return ResponseEntity containing a list of all deleted users
+     * @return ResponseEntity containing a list of all users including soft-deleted ones
      */
     @GetMapping("/all-with-deleted")
     @PreAuthorize("hasAuthority('user:read')")
