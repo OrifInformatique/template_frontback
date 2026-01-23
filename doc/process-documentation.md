@@ -2,20 +2,24 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [1. Backend](#1-backend)
-  - [1.1 General Information](#11-general-information)
-  - [1.2 Root Files](#12-root-files)
-  - [1.3 Root Folders](#13-root-folders)
-  - [1.4 Source Structure (`src`)](#14-source-structure-src)
-    - [1.4.1 `main`](#141-main)
-    - [1.4.2 `test`](#142-test)
-  - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
-  - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
-  - [1.7 Users Module (`main/java/users`)](#17-users-module-mainjavausers)
-  - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
-  - [1.9 Error and Exception Managment (`main/java/app`)](#19-error-and-exception-managment-mainjavaapp)
-- [Related Documentation](#related-documentation)
+- [Application Documentation](#application-documentation)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [1. Backend](#1-backend)
+    - [1.1 General Information](#11-general-information)
+    - [1.2 Root Files](#12-root-files)
+    - [1.3 Root Folders](#13-root-folders)
+    - [1.4 Source Structure (`src`)](#14-source-structure-src)
+      - [1.4.1 `main`](#141-main)
+      - [1.4.2 `test`](#142-test)
+    - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
+    - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
+    - [1.7 User Module (`main/java/user`)](#17-user-module-mainjavauser)
+    - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
+    - [1.9 Error and Exception Managment (`main/java/app`)](#19-error-and-exception-managment-mainjavaapp)
+    - [1.10 Item Module (`main/java/item`)](#110-item-module-mainjavaitem)
+    - [1.11 Test Module (`main/java/test`)](#111-test-module-mainjavatest)
+  - [Related Documentation](#related-documentation)
 
 ---
 
@@ -41,7 +45,7 @@ _Illustrates interactions between the frontend and backend modules, as well as t
 **Tools & Dependencies:**
 
 - Java / OpenJDK 21
-- Spring Boot 3.3.5
+- Spring Boot 3.5.8
 - Maven 3.9
 - MariaDB 11.4
 - Docker Desktop
@@ -96,14 +100,15 @@ Contains test classes for unit and integration tests.
 
 ### 1.5 Main Java Modules (`main/java`)
 
-| Module                     | Responsibility                                                                                                                                                                   |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app`                      | Global error and exception handling used throughout the application.                                                                                                             |
-| `auth`                     | Handles authorization processes such as login and registration. (Some functionalities moved to the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.) |
-| `item`                     | Manages stock and inventory functionalities (not implemented yet).                                                                                                               |
-| `security`                 | Security-related classes: JWT filters, password encoding, and authentication management.                                                                                         |
-| `users`                    | Manages user profiles, roles, and permissions.                                                                                                                                   |
-| `TemplateApplication.java` | Main Spring Boot entry point containing the `main()` method. Run the project from this class.                                                                                    |
+| Module                    | Responsibility                                                                                                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app`                     | Global error and exception handling used throughout the application.                                                                                                             |
+| `auth`                    | Handles authorization processes such as login and registration. (Some functionalities moved to the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.) |
+| `item`                    | Manages stock and inventory functionalities (not implemented yet).                                                                                                               |
+| `security`                | Security-related classes: JWT filters, password encoding, and authentication management.                                                                                         |
+| `user`                    | Manages user profiles, roles, and permissions.                                                                                                                                  |
+| `test`                    | Test-related endpoints and utilities for development and testing.                                                                                                                |
+| `AuthApplication.java`    | Main Spring Boot entry point containing the `main()` method. Run the project from this class.                                                                                   |
 
 ---
 
@@ -113,23 +118,19 @@ Contains test classes for unit and integration tests.
 sequenceDiagram
     participant Client
     participant AuthController
-    participant UserService
-    participant UserRepository
-    participant UserMapper
-    participant UserAuthenticationProvider
+    participant AuthClient
+    participant spring-auth
 
     Client->>AuthController: /auth/login with credentials
-    AuthController->>UserService: userService.login(credentialsDto)
-    UserService->>UserRepository: userRepository.findByLogin(credentialsDto.login())
-    UserRepository->>UserService: User
-    UserService->>UserMapper: userMapper.toUserDto(user)
-    UserMapper->>AuthController: UserDto
-    AuthController->>UserAuthenticationProvider: userAuthenticationProvider.createToken(userDto)
-    UserAuthenticationProvider->>AuthController: Token
-    AuthController->>Client: Response with UserDto and access token
+    AuthController->>AuthClient: authClient.login(credentialsDto)
+    AuthClient->>spring-auth: POST /auth/login with credentials
+    spring-auth->>spring-auth: Validate credentials & create token
+    spring-auth-->>AuthClient: Response with UserDto and token
+    AuthClient-->>AuthController: UserDto wrapped in ResponseEntity
+    AuthController-->>Client: Response with UserDto and access token
 ```
 
-_Sequence Diagram showing an example of the authentication flow._
+_Sequence Diagram showing the actual authentication flow with spring-auth delegation._
 ```mermaid
 sequenceDiagram
     participant Client
@@ -153,19 +154,23 @@ sequenceDiagram
 ```
 _Sequence Diagram showing an example of the refresh token workflow._
 
-| File                    | Description                                                                                                     |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `AuthController.java`   | Authentication endpoints (moved to `spring-auth` in the newest branches).                                       |
-| `CredentialsDto.java`   | Data Transfer Object (DTO) for login credentials.                                                               |
-| `OAuth2Controller.java` | Handles OAuth2 and Azure login operations (success scenario only; now in `spring-auth` in the newest branches). |
-| `PasswordConfig.java`   | Manages password encryption (moved to `spring-auth` in the newest branches).                                    |
-| `SignUpDto.java`        | DTO for registration functionalities.                                                                           |
+| File                     | Description                                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `AuthClient.java`        | HTTP client for communicating with the `spring-auth` service.                                                    |
+| `AuthController.java`    | Authentication endpoints (moved to `spring-auth` in the newest branches).                                       |
+| `CredentialsDto.java`    | Data Transfer Object (DTO) for login credentials.                                                               |
+| `MessageResponseDto.java` | DTO for message-based API responses.                                                                             |
+| `PasswordUpdateDto.java` | DTO for password update operations.                                                                              |
+| `RefreshRequestDto.java` | DTO for refresh token requests.                                                                                  |
+| `RegisterDto.java`       | DTO for registration functionalities.                                                                           |
+| `TokenResponseDto.java`  | DTO for token-based API responses.                                                                              |
+| `AuthExceptions.java`    | Container class for auth-specific custom exceptions.                                                            |
 
 > **Reference:** For full authentication implementation, see the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.
 
 ---
 
-### 1.7 Users Module (`main/java/users`)
+### 1.7 User Module (`main/java/user`)
 
 ```mermaid
 classDiagram
@@ -174,19 +179,17 @@ classDiagram
         +String firstName
         +String lastName
         +String login
-        +String password
         +Date createdAt
         +Date updatedAt
-        +Set<Role> roles
-        +Collection<GrantedAuthority> getAuthorities()
-        +String getPassword()
+        +boolean deleted
+        +Role mainRole
+        +Set~Role~ appSpecificRoles
+        +Collection~GrantedAuthority~ getAuthorities()
         +String getUsername()
         +boolean isAccountNonExpired()
         +boolean isAccountNonLocked()
         +boolean isCredentialsNonExpired()
         +boolean isEnabled()
-        +Role getRole()
-        +void addRole(Role role)
     }
 
     class Role {
@@ -195,8 +198,7 @@ classDiagram
         +String description
         +Date createdAt
         +Date updatedAt
-        +Set<User> users
-        +Set<SimpleGrantedAuthority> getGrantedAuthorities()
+        +Set~User~ users
     }
 
     class UserDto {
@@ -206,11 +208,12 @@ classDiagram
         +String lastName
         +String login
         +String token
-        +String role = "ROLE_USER"
-        +List<String> permissions = new ArrayList<>()
+        +String mainRole
+        +List~String~ appSpecificRoles
+        +List~String~ permissions
     }
 
-    class SignUpDto {
+    class RegisterDto {
         <<DTO>>
         +String firstName
         +String lastName
@@ -221,16 +224,17 @@ classDiagram
     class UserMapper {
         <<interface>>
         +UserDto toUserDto(User user)
-        +User signUpToUser(SignUpDto signUpDto)
-        +List<String> authoritiesToPermissions(Collection<GrantedAuthority> authorities)
+        +User registerDtoToUser(RegisterDto registerDto)
+        +List~String~ authoritiesToPermissions(Collection~GrantedAuthority~ authorities)
     }
 
     %% Relationships
-    User --> "0..*" Role : roles
+    User --> "1" Role : mainRole
+    User --> "0..*" Role : appSpecificRoles
     Role --> "0..*" User : users
-    UserMapper ..> User : uses
-    UserMapper ..> UserDto : creates
-    UserMapper ..> SignUpDto : uses
+    UserMapper ..> User : converts from
+    UserMapper ..> UserDto : converts to
+    UserMapper ..> RegisterDto : uses
     User ..|> UserDetails
 ```
 
@@ -269,15 +273,18 @@ sequenceDiagram
 
 _Sequence Diagram showing an example of the user management flow._
 
-| File                  | Description                                                                        |
-| --------------------- | ---------------------------------------------------------------------------------- |
-| `User.java`           | Entity class representing a user in the system.                                    |
-| `UserController.java` | Contains REST endpoints for user management (CRUD, profile, etc.).                 |
-| `UserDto.java`        | DTO for communication between backend and frontend.                                |
-| `UserMapper.java`     | Handles conversion between `User` entities and `UserDto` objects.                  |
-| `UserRepository.java` | Interface for database operations related to users.                                |
-| `UserSeeder.java`     | Seeds the database with test users for development.                                |
-| `UserService.java`    | Business logic for user functionalities (creation, update, role assignment, etc.). |
+| File                           | Description                                                                        |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| `User.java`                    | Entity class representing a user in the system.                                    |
+| `UserController.java`          | Contains REST endpoints for user management (CRUD, profile, etc.).                 |
+| `UserDto.java`                 | DTO for communication between backend and frontend.                                |
+| `UserMapper.java`              | Handles conversion between `User` entities and `UserDto` objects.                  |
+| `UserRepository.java`          | Interface for database operations related to users.                                |
+| `UserRepositoryImpl.java`       | Custom implementation of user repository operations.                               |
+| `UserRepositoryPermanentDelete.java` | Interface for permanent deletion of users.                                 |
+| `UserSeeder.java`              | Seeds the database with test users for development.                                |
+| `UserService.java`             | Business logic for user functionalities (creation, update, role assignment, etc.). |
+| `UserExceptions.java`          | Container class for user-specific custom exceptions.                              |
 
 ---
 
@@ -292,26 +299,24 @@ sequenceDiagram
     participant UserController
     participant UserAuthenticationEntryPoint
 
-    Client->>JwtAuthFilter: HTTP request with JWT token
+    Client->>JwtAuthFilter: HTTP request with JWT token in Authorization header
     note right of JwtAuthFilter: Filter intercepts request
     JwtAuthFilter->>UserAuthenticationProvider: validateToken(token)
-    note right of UserAuthenticationProvider: Check token & optionally fetch user
-    UserAuthenticationProvider->>UserService: Lookup user in DB
-    alt User exists
-        UserService-->>UserAuthenticationProvider: Return user info
-    else User not found
-        UserService-->>UserAuthenticationProvider: Create new Azure user
-    end
-    UserAuthenticationProvider-->>JwtAuthFilter: Return Authentication object
-    alt Authentication fails
-        JwtAuthFilter->>UserAuthenticationEntryPoint: 401 Unauthorized
-        UserAuthenticationEntryPoint-->>Client: Return 401 response
-    else Authentication succeeds
+    note right of UserAuthenticationProvider: Decode and verify JWT signature
+    UserAuthenticationProvider->>UserService: Optionally lookup user details in DB
+    UserService-->>UserAuthenticationProvider: User information
+    UserAuthenticationProvider-->>JwtAuthFilter: Return Authentication object with authorities
+    alt Authentication succeeds
+        JwtAuthFilter-->>JwtAuthFilter: Set SecurityContext with Authentication
         JwtAuthFilter-->>UserController: Forward request
-        note right of UserController: Controller handles action
+        note right of UserController: Controller handles authorized request
         UserController->>UserService: Perform business logic
         UserService-->>UserController: Return result
         UserController-->>Client: Return HTTP response
+    else Authentication fails
+        JwtAuthFilter->>UserAuthenticationEntryPoint: JWT validation failed
+        UserAuthenticationEntryPoint-->>Client: Return 401 Unauthorized with error JSON 
+        note right of Client: Request rejected
     end
 ```
 
@@ -326,8 +331,10 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | `RoleRepository.java`               | Interface for database operations related to roles.                |
 | `RoleSeeder.java`                   | Seeds the database with predefined roles.                          |
 | `SecurityConfig.java`               | Security configuration defining the filter chain and access rules. |
+| `SecurityExceptions.java`           | Container class for security-specific custom exceptions.           |
 | `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response.        |
 | `UserAuthenticationProvider.java`   | Authentication provider for validating user credentials.           |
+| `WebClientConfig.java`              | Configuration for HTTP client interactions.                        |
 | `WebConfig.java`                    | Web configuration for general web-related settings.                |
 
 ---
@@ -336,9 +343,33 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 | File                                   | Description                                                |
 | -------------------------------------- | ---------------------------------------------------------- |
-| `errors/ErrorDto.java`                 | Record serving as Data Transfer object for Errors.         |
-| `exceptions/AppException.java`         | Custome exception class for application specifique errors. |
-| `exceptions/RestExceptionHandler.java` | Global exception handler for REST API endpoints.           |
+| `errors/ErrorDto.java`                 | Record serving as Data Transfer Object for errors.         |
+| `exceptions/AppException.java`         | Custom exception class for application-specific errors.    |
+| `exceptions/GlobalExceptionHandler.java` | Global exception handler for REST API endpoints.           |
+
+---
+
+### 1.10 Item Module (`main/java/item`)
+
+| File                        | Description                                                                |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `Item.java`                 | Entity class representing a stock item.                                    |
+| `ItemBuilder.java`          | Builder pattern implementation for creating Item objects.                  |
+| `ItemController.java`       | Contains REST endpoints for item management.                               |
+| `ItemRepository.java`       | Interface for database operations related to items.                        |
+| `ItemSeeder.java`           | Seeds the database with test items for development.                        |
+| `ItemService.java`          | Business logic for item functionalities.                                   |
+| `ItemExceptionHandler.java` | Exception handler specific to item-related operations.                     |
+| `ItemNotFoundException.java` | Custom exception thrown when an item is not found.                         |
+| `UnauthorizedItemException.java` | Custom exception for unauthorized item access attempts.                |
+
+---
+
+### 1.11 Test Module (`main/java/test`)
+
+| File                  | Description                                                |
+| --------------------- | ---------------------------------------------------------- |
+| `TestController.java` | Endpoints and utilities for development and testing purposes. |
 
 ---
 
@@ -351,4 +382,4 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 ---
 
 **Author:** Ken D. Cacciabue
-**Last Updated:** 04.11.2025
+**Last Updated:** 23.01.2026
