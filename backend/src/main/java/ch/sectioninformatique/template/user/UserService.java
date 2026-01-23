@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
+import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
@@ -56,6 +57,9 @@ public class UserService {
 
     /** Repository for role data access */
     private final RoleRepository roleRepository;
+
+    /** Client for authentication operations */
+    private final AuthClient authClient;
 
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
@@ -433,5 +437,59 @@ public class UserService {
         } catch (Exception e) {
             throw new UserRetrievalException(e.getMessage());
         }
+    }
+
+    /**
+     * Deletes a user globally (via AuthClient) and locally.
+     * This method:
+     * - Calls the AuthClient to delete user from the global auth service
+     * - Validates the response contains the deleted user login
+     * - Deletes the user locally by login
+     * - Returns the deletion message
+     *
+     * @param token  The authorization token
+     * @param userId The ID of the user to delete
+     * @return Message from the global deletion response
+     * @throws UserDeletionException if the deletion fails or response is invalid
+     */
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
+        return authClient.deleteGlobalUser(token, userId)
+                .flatMap(response -> {
+                    java.util.Map<String, String> body = response.getBody();
+                    if (body != null && body.containsKey("deletedUserLogin")) {
+                        deleteUserByLogin(body.get("deletedUserLogin"));
+                        return reactor.core.publisher.Mono.just(body.get("message"));
+                    } else {
+                        return reactor.core.publisher.Mono.error(
+                                new UserDeletionException("Failed to delete user: missing response data"));
+                    }
+                });
+    }
+
+    /**
+     * Permanently deletes a user globally (via AuthClient) and locally.
+     * This method:
+     * - Calls the AuthClient to permanently delete user from the global auth service
+     * - Validates the response contains the deleted user login
+     * - Permanently deletes the user locally by login
+     * - Returns the deletion message
+     *
+     * @param token  The authorization token
+     * @param userId The ID of the user to permanently delete
+     * @return Message from the global deletion response
+     * @throws UserDeletionException if the deletion fails or response is invalid
+     */
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
+        return authClient.deleteGlobalUserPermanent(token, userId)
+                .flatMap(response -> {
+                    java.util.Map<String, String> body = response.getBody();
+                    if (body != null && body.containsKey("deletedUserLogin")) {
+                        deleteUserPermanentByLogin(body.get("deletedUserLogin"));
+                        return reactor.core.publisher.Mono.just(body.get("message"));
+                    } else {
+                        return reactor.core.publisher.Mono.error(
+                                new UserDeletionException("Failed to delete user: missing response data"));
+                    }
+                });
     }
 }
