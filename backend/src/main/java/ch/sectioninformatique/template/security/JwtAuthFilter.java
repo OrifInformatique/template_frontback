@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ch.sectioninformatique.template.security.SecurityExceptions.AuthenticationRequiredException;
 
 import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;
@@ -86,25 +87,48 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(
                             userAuthenticationProvider.validateToken(authElements[1]));
 
+                } catch (SecurityExceptions.JwtTokenExpiredException | 
+                         SecurityExceptions.InvalidJwtSignatureException | 
+                         SecurityExceptions.MalformedJwtException | 
+                         SecurityExceptions.InvalidTokenTypeException | 
+                         SecurityExceptions.JwtVerificationException e) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("JWT validation failed: {}", e.getMessage());
+                    sendErrorResponse(response, e.getMessage());
+                    return;
                 } catch (JWTVerificationException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("Invalid JWT token: {}", e.getMessage());
-
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json;charset=UTF-8");
-
-                    Map<String, String> errorBody = Map.of("message", e.getMessage());
-                    mapper.writeValue(response.getWriter(), errorBody); // serializes JSON safely
-                    response.getWriter().flush();
+                    sendErrorResponse(response, e.getMessage());
                     return;
                 } catch (RuntimeException e) {
                     // Preserve behavior for other runtime exceptions
                     SecurityContextHolder.clearContext();
                     throw e;
                 }
+            } else if (header != null && !header.isEmpty()) {
+                // Header is present but malformed
+                log.debug("Malformed Authorization header");
+                sendErrorResponse(response, "Malformed Authorization header");
+                return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Sends a JSON error response to the client.
+     * 
+     * @param response The HTTP response object
+     * @param message The error message to send
+     * @throws IOException If there's an I/O error writing the response
+     */
+    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        Map<String, String> errorBody = Map.of("message", message);
+        mapper.writeValue(response.getWriter(), errorBody);
+        response.getWriter().flush();
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
+import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -43,11 +44,13 @@ public class AuthController {
      * Accepts login credentials (login and password) as a request body, validated
      * for correctness
      * Calls the authentication client to perform login with provided credentials
-     * Returns a reactive Mono<ResponseEntity<UserDto>>containing the login response (e.g., token or
+     * Returns a ResponseEntity<UserDto> containing the login response (e.g., token or
      * status message)
      * 
-     * @param credentialsDto
-     * @return Mono<ResponseEntity<UserDto>> with login response
+     * Exceptions from authentication failures are handled by GlobalExceptionHandler
+     * 
+     * @param credentialsDto The credentials to authenticate with
+     * @return ResponseEntity<UserDto> with login response
      */
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody @Valid CredentialsDto credentialsDto) {
