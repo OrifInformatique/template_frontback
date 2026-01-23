@@ -22,6 +22,10 @@ import ch.sectioninformatique.template.user.UserExceptions.UserCreationException
 import ch.sectioninformatique.template.user.UserExceptions.UserPromotionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserUpdateException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
+import ch.sectioninformatique.template.user.UserExceptions.UserValidationException;
+import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletionException;
+import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
+import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -158,6 +162,13 @@ public class UserService {
      */
     public User register(RegisterDto registerDto) {
         try {
+            // Basic validation before persisting
+            if (registerDto.login() == null || registerDto.login().isBlank()
+                    || registerDto.firstName() == null || registerDto.firstName().isBlank()
+                    || registerDto.lastName() == null || registerDto.lastName().isBlank()) {
+                throw new UserValidationException("Missing mandatory user fields");
+            }
+
             Optional<User> optionalUser = userRepository.findByLogin(registerDto.login());
 
             if (optionalUser.isPresent()) {
@@ -173,7 +184,7 @@ public class UserService {
 
             User savedUser = userRepository.save(user);
             return savedUser;
-        } catch (DuplicateUserException | DefaultRoleNotFoundException e) {
+        } catch (UserValidationException | DuplicateUserException | DefaultRoleNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new UserCreationException(e.getMessage());
@@ -323,7 +334,7 @@ public class UserService {
         } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new UserDeletionException(e.getMessage());
+            throw new PermanentUserDeletionException(e.getMessage());
         }
     }
 
@@ -377,7 +388,7 @@ public class UserService {
         } catch (UserNotFoundByLoginException e) {
             throw e;
         } catch (Exception e) {
-            throw new UserDeletionException(e.getMessage());
+            throw new PermanentUserDeletionException(e.getMessage());
         }
     }
 
@@ -394,24 +405,33 @@ public class UserService {
      */
     public UserDto findByLogin(String login) {
         log.debug("Searching for user with login: {}", login);
+        try {
+            Optional<User> userOptional = userRepository.findByLogin(login);
+            log.debug("User found in database: {}", userOptional.isPresent());
 
-        Optional<User> userOptional = userRepository.findByLogin(login);
-        log.debug("User found in database: {}", userOptional.isPresent());
+            User user = userOptional
+                    .orElseThrow(() -> {
+                        log.error("User not found with login: {}", login);
+                        return new UserNotFoundByLoginException(login);
+                    });
 
-        User user = userOptional
-                .orElseThrow(() -> {
-                    log.error("User not found with login: {}", login);
-                    return new UserNotFoundByLoginException(login);
-                });
+            if (user.isDeleted()) {
+                throw new InactiveUserException("User is inactive or deleted");
+            }
 
-        log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
-                user.getId(), user.getFirstName(), user.getLastName(),
-                user.getMainRole());
+            log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
+                    user.getId(), user.getFirstName(), user.getLastName(),
+                    user.getMainRole());
 
-        UserDto userDto = userMapper.toUserDto(user);
-        log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
-                userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
+            UserDto userDto = userMapper.toUserDto(user);
+            log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
+                    userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
 
-        return userDto;
+            return userDto;
+        } catch (UserNotFoundByLoginException | InactiveUserException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserRetrievalException(e.getMessage());
+        }
     }
 }

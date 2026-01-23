@@ -9,6 +9,8 @@ import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationE
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import ch.sectioninformatique.template.user.UserDto;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -59,9 +62,14 @@ public class AuthClient {
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new InvalidCredentialsException()));
+                                                                .flatMap(error -> {
+                                                                        HttpStatusCode status = response.statusCode();
+                                                                        if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
+                                                                                return Mono.error(new UserNotFoundException());
+                                                                        }
+                                                                        return Mono.error(new InvalidCredentialsException());
+                                                                });
                                         }
-
                                         // Extract response body
                                         Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
 
@@ -99,10 +107,12 @@ public class AuthClient {
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                response.statusCode().isSameCodeAs(HttpStatus.CONFLICT)
-                                                                                                ? new UserAlreadyExistsException()
-                                                                                                : new RegistrationFailedException(error.message())));
+                                                                .flatMap(error -> {
+                                                                        if (response.statusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
+                                                                                return Mono.error(new LoginAlreadyExistsException(error.message()));
+                                                                        }
+                                                                        return Mono.error(new RegistrationFailedException(error.message()));
+                                                                });
                                         }
 
                                         // Extract response body
@@ -170,17 +180,16 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
                         PasswordUpdateDto passwordUpdateDto) {
-
                 return webClient.put()
                                 .uri("/auth/update-password") // the password update endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .bodyValue(passwordUpdateDto)
                                 .retrieve()
-                                .onStatus(status -> status.value() >= 400,
+                                .onStatus(HttpStatusCode::isError,
                                                 response -> response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(new PasswordUpdateFailedException(error.message()))))
-                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
+                                .toEntity(MessageResponseDto.class);
         }
 
         /**

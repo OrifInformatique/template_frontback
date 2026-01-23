@@ -14,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.sectioninformatique.template.security.SecurityExceptions.AuthenticationRequiredException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 
 import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;
@@ -99,6 +100,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 } catch (JWTVerificationException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("Invalid JWT token: {}", e.getMessage());
+                    sendErrorResponse(response, e.getMessage());
+                    return;
+                } catch (InvalidTokenException e) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("Invalid token: {}", e.getMessage());
                     sendErrorResponse(response, e.getMessage());
                     return;
                 } catch (RuntimeException e) {

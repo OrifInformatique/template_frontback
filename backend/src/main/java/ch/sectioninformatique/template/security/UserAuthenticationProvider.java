@@ -22,6 +22,7 @@ import com.auth0.jwt.exceptions.InvalidClaimException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenTypeException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
 import ch.sectioninformatique.template.security.SecurityExceptions.JwtTokenExpiredException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidJwtSignatureException;
@@ -220,7 +221,7 @@ public class UserAuthenticationProvider {
             throw e;
         } catch (Exception e) {
             log.error("Unexpected error during token validation: {}", e.getMessage(), e);
-            throw new JwtVerificationException(e.getMessage());
+            throw new InvalidTokenException(e.getMessage());
         }
     }
 
