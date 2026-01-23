@@ -28,7 +28,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -283,7 +286,7 @@ public class AuthControllerTest {
      */
     @Test
     @Transactional
-    public void register_withExistingUser_shouldReturn400BadRequest() throws Exception {
+    public void register_withExistingUser_shouldReturn409Conflict() throws Exception {
 
         when(authClient.register(any(RegisterDto.class)))
                 .thenReturn(Mono.error(new UserAlreadyExistsException()));
@@ -294,11 +297,11 @@ public class AuthControllerTest {
                 "{\"firstName\":\"Test\",\"lastName\":\"Existing\",\"login\":\"exists@test.com\",\"password\":\"testPassword\"}",
                 null,
                 MediaType.APPLICATION_JSON,
-                400,
+                409,
                 "register-conflict",
                 response -> {
                     try {
-                        response.andExpect(status().isBadRequest());
+                        response.andExpect(status().isConflict());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -446,6 +449,332 @@ public class AuthControllerTest {
                 MediaType.APPLICATION_JSON,
                 401,
                 "oauth2-login",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/update-password
+     * Exception: PasswordUpdateFailedException (400 Bad Request)
+     *
+     * Documents:
+     * - Exception: PasswordUpdateFailedException
+     * - HTTP Status: 400 BAD_REQUEST
+     * - When thrown: When password update operation fails (e.g., invalid old password, policy violation)
+     * - Use case: User attempts to update password but the old password is incorrect or new password doesn't meet requirements
+     * - Response: JSON error message
+     */
+    @Test
+    @Transactional
+    public void updatePassword_withFailure_shouldReturn400PasswordUpdateFailed() throws Exception {
+        when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
+                .thenReturn(Mono.error(new PasswordUpdateFailedException("Old password is incorrect")));
+
+        String validToken = getValidTokenForTestUser();
+
+        performRequest(
+                "PUT",
+                "/auth/update-password",
+                "{\"oldPassword\":\"WrongOldPassword\",\"newPassword\":\"NewPassword123@\"}",
+                validToken,
+                MediaType.APPLICATION_JSON,
+                400,
+                "update-password-failed",
+                response -> {
+                    try {
+                        response.andExpect(status().isBadRequest());
+                        // Verify error message in response
+                        response.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/register
+     * Exception: RegistrationFailedException (400 Bad Request)
+     *
+     * Documents:
+     * - Exception: RegistrationFailedException
+     * - HTTP Status: 400 BAD_REQUEST
+     * - When thrown: When registration fails due to invalid input or server-side errors
+     * - Use case: User provides invalid registration data or registration service encounters an error
+     * - Response: JSON error message with details about what failed
+     */
+    @Test
+    @Transactional
+    public void register_withValidationError_shouldReturn400RegistrationFailed() throws Exception {
+        when(authClient.register(any(RegisterDto.class)))
+                .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException("Invalid email format")));
+
+        performRequest(
+                "POST",
+                "/auth/register",
+                "{\"firstName\":\"Test\",\"lastName\":\"User\",\"login\":\"invalid-email\",\"password\":\"testPassword\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                400,
+                "register-failed",
+                response -> {
+                    try {
+                        response.andExpect(status().isBadRequest());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/refresh
+     * Exception: InvalidTokenException (401 Unauthorized) - with custom message
+     *
+     * Documents:
+     * - Exception: InvalidTokenException
+     * - HTTP Status: 401 UNAUTHORIZED
+     * - When thrown: When access token or refresh token is invalid, malformed, or expired
+     * - Use case: Token cannot be verified or has been revoked
+     * - Related exceptions: InvalidRefreshTokenException (specifically for refresh tokens)
+     * - Response: JSON error message
+     */
+    @Test
+    @Transactional
+    public void refresh_withExpiredToken_shouldReturn401InvalidToken() throws Exception {
+        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+                .thenReturn(Mono.error(new InvalidTokenException("Token has expired")));
+
+        performRequest(
+                "POST",
+                "/auth/refresh",
+                "{\"refreshToken\":\"expiredToken\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "refresh-expired-token",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/refresh
+     * Exception: InvalidRefreshTokenException (401 Unauthorized)
+     *
+     * Documents:
+     * - Exception: InvalidRefreshTokenException
+     * - HTTP Status: 401 UNAUTHORIZED
+     * - When thrown: When refresh token is invalid, malformed, expired, or revoked
+     * - Use case: User's refresh token session has ended or token was tampered with
+     * - Difference from InvalidTokenException: This is specifically for refresh tokens,
+     *   whereas InvalidTokenException is for access tokens
+     * - Resolution: User must log in again to get a new refresh token
+     * - Response: JSON error message
+     */
+    @Test
+    @Transactional
+    public void refresh_withMalformedRefreshToken_shouldReturn401InvalidRefreshToken() throws Exception {
+        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+                .thenReturn(Mono.error(new InvalidRefreshTokenException("Malformed refresh token")));
+
+        performRequest(
+                "POST",
+                "/auth/refresh",
+                "{\"refreshToken\":\"malformed\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "refresh-malformed-refresh-token",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/login
+     * Exception: InvalidCredentialsException (401 Unauthorized)
+     *
+     * Documents:
+     * - Exception: InvalidCredentialsException
+     * - HTTP Status: 401 UNAUTHORIZED
+     * - When thrown: When provided login/password combination is invalid
+     * - Use case: User enters wrong password or login doesn't exist
+     * - Response: Generic error message (no specific info about which is wrong for security)
+     * - Related context: SecurityExceptions.AuthenticationRequiredException is thrown
+     *   when authentication is required but not provided at all
+     */
+    @Test
+    @Transactional
+    public void login_withWrongPassword_shouldReturn401InvalidCredentials() throws Exception {
+        when(authClient.login(any(CredentialsDto.class)))
+                .thenReturn(Mono.error(new InvalidCredentialsException()));
+
+        performRequest(
+                "POST",
+                "/auth/login",
+                "{\"login\":\"test.user@test.com\", \"password\":\"WrongPassword\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "login-wrong-password",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/update-password
+     * Exception: SecurityExceptions.InvalidTokenException (401 Unauthorized)
+     *
+     * Documents:
+     * - Exception: InvalidTokenException (from SecurityExceptions)
+     * - HTTP Status: 401 UNAUTHORIZED
+     * - When thrown: When the access token in Authorization header is invalid, malformed, or expired
+     * - Use case: User's session has expired or token was tampered with
+     * - Related exceptions:
+     *   - InvalidRefreshTokenException: For refresh token failures
+     *   - JwtVerificationException: Specific JWT verification failure
+     *   - JwtTokenExpiredException: Token has expired (more specific)
+     *   - MalformedJwtException: Token format is invalid
+     *   - InvalidJwtSignatureException: Token signature doesn't match
+     * - Response: JSON error message from the global exception handler
+     */
+    @Test
+    @Transactional
+    public void updatePassword_withMalformedToken_shouldReturn401InvalidToken() throws Exception {
+        performRequest(
+                "PUT",
+                "/auth/update-password",
+                "{\"oldPassword\":\"OldPassword123@\",\"newPassword\":\"NewPassword123@\"}",
+                "malformed.token.here",
+                MediaType.APPLICATION_JSON,
+                401,
+                "update-password-malformed-token",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/login
+     * Exception: AuthExceptions.UserNotFoundException (404 Not Found)
+     *
+     * Documents:
+     * - Exception: UserNotFoundException (from AuthExceptions - auth-specific)
+     * - HTTP Status: 404 NOT_FOUND
+     * - When thrown: When user with the provided login doesn't exist in the authentication service
+     * - Note: Similar to UserExceptions.UserNotFoundException, but thrown during auth operations
+     * - Related exception: UserExceptions.UserNotFoundException - for general user operations
+     * - Use case: Login with non-existent user email
+     * - Response: JSON error message indicating user was not found
+     */
+    @Test
+    @Transactional
+    public void login_withNonExistentUser_shouldReturn404UserNotFound() throws Exception {
+        when(authClient.login(any(CredentialsDto.class)))
+                .thenReturn(Mono.error(new AuthExceptions.UserNotFoundException("User with login 'nonexistent@test.com' not found")));
+
+        performRequest(
+                "POST",
+                "/auth/login",
+                "{\"login\":\"nonexistent@test.com\", \"password\":\"SomePassword123@\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                404,
+                "login-user-not-found",
+                response -> {
+                    try {
+                        response.andExpect(status().isNotFound());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/register
+     * Exception: UserAlreadyExistsException (409 Conflict)
+     *
+     * Documents:
+     * - Exception: UserAlreadyExistsException
+     * - HTTP Status: 409 CONFLICT
+     * - When thrown: When user with the provided login already exists in the system
+     * - Use case: User attempts to register with an email that's already in use
+     * - Response: JSON error message about conflict/duplicate
+     */
+    @Test
+    @Transactional
+    public void register_withDuplicateLogin_shouldReturn409Conflict() throws Exception {
+        when(authClient.register(any(RegisterDto.class)))
+                .thenReturn(Mono.error(new UserAlreadyExistsException("User with this email already registered")));
+
+        performRequest(
+                "POST",
+                "/auth/register",
+                "{\"firstName\":\"Test\",\"lastName\":\"Duplicate\",\"login\":\"duplicate@test.com\",\"password\":\"testPassword\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                409,
+                "register-user-already-exists",
+                response -> {
+                    try {
+                        response.andExpect(status().isConflict());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/refresh
+     * Exception: SecurityExceptions.JwtVerificationException (401 Unauthorized)
+     *
+     * Documents:
+     * - Exception: JwtVerificationException
+     * - HTTP Status: 401 UNAUTHORIZED
+     * - When thrown: When JWT token verification fails (e.g., signature mismatch, claims invalid)
+     * - Use case: Token claims are invalid or signature doesn't match server's key
+     * - Related JWT exceptions:
+     *   - JwtTokenExpiredException: Token has expired
+     *   - InvalidJwtSignatureException: Signature is invalid
+     *   - MalformedJwtException: Token format is invalid
+     * - Response: JSON error message with verification details
+     */
+    @Test
+    @Transactional
+    public void refresh_withInvalidJwtSignature_shouldReturn401JwtVerificationFailed() throws Exception {
+        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+                .thenReturn(Mono.error(new JwtVerificationException("JWT signature mismatch")));
+
+        performRequest(
+                "POST",
+                "/auth/refresh",
+                "{\"refreshToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalidSignature\"}",
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "refresh-jwt-verification-failed",
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
