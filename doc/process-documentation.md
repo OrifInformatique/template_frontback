@@ -2,20 +2,22 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [1. Backend](#1-backend)
-  - [1.1 General Information](#11-general-information)
-  - [1.2 Root Files](#12-root-files)
-  - [1.3 Root Folders](#13-root-folders)
-  - [1.4 Source Structure (`src`)](#14-source-structure-src)
-    - [1.4.1 `main`](#141-main)
-    - [1.4.2 `test`](#142-test)
-  - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
-  - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
-  - [1.7 Users Module (`main/java/users`)](#17-users-module-mainjavausers)
-  - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
-  - [1.9 Error and Exception Managment (`main/java/app`)](#19-error-and-exception-managment-mainjavaapp)
-- [Related Documentation](#related-documentation)
+- [Application Documentation](#application-documentation)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [1. Backend](#1-backend)
+    - [1.1 General Information](#11-general-information)
+    - [1.2 Root Files](#12-root-files)
+    - [1.3 Root Folders](#13-root-folders)
+    - [1.4 Source Structure (`src`)](#14-source-structure-src)
+      - [1.4.1 `main`](#141-main)
+      - [1.4.2 `test`](#142-test)
+    - [1.5 Main Java Modules (`main/java`)](#15-main-java-modules-mainjava)
+    - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
+    - [1.7 Users Module (`main/java/users`)](#17-users-module-mainjavausers)
+    - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
+    - [1.9 Error and Exception Managment (`main/java/app`)](#19-error-and-exception-managment-mainjavaapp)
+  - [Related Documentation](#related-documentation)
 
 ---
 
@@ -206,6 +208,7 @@ classDiagram
         +String lastName
         +String login
         +String token
+        +boolean deleted
         +String role = "ROLE_USER"
         +List<String> permissions = new ArrayList<>()
     }
