@@ -31,7 +31,7 @@ This backend powers a **multi-user test system**, providing:
 
 - Secure authentication and authorization (delegated to spring-auth)
 - User and role management
-- (Future) Stock and inventory tracking
+- Stock and inventory tracking
 
 ![Frontend and Backend Architecture](frontend_backend_auth_architecture.png)  
 _Illustrates interactions between the frontend and backend modules, as well as the `spring-auth` app._
@@ -94,7 +94,8 @@ Contains test classes for unit and integration tests.
 - **`java`** – Test classes corresponding to the application’s source code
 - **`resources`** – Test-specific configuration or data
 
-> _Testing frameworks, execution instructions, and coverage details will be added once the Java modules are finalized._
+> _Tests live under `src/test/java/ch/sectioninformatique/template` (unit/integration).
+> REST Docs snippets are generated during test execution._
 
 ---
 
@@ -103,8 +104,8 @@ Contains test classes for unit and integration tests.
 | Module                    | Responsibility                                                                                                                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app`                     | Global error and exception handling used throughout the application.                                                                                                             |
-| `auth`                    | Handles authorization processes such as login and registration. (Some functionalities moved to the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) repository.) |
-| `item`                    | Manages stock and inventory functionalities (not implemented yet).                                                                                                               |
+| `auth`                    | Handles authorization processes such as login and registration; controllers delegate to the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) service via `AuthClient`. |
+| `item`                    | Manages stock and inventory functionalities (CRUD with security guards).                                                                                                       |
 | `security`                | Security-related classes: JWT filters, password encoding, and authentication management.                                                                                         |
 | `user`                    | Manages user profiles, roles, and permissions.                                                                                                                                  |
 | `test`                    | Test-related endpoints and utilities for development and testing.                                                                                                                |
@@ -157,7 +158,7 @@ _Sequence Diagram showing an example of the refresh token workflow._
 | File                     | Description                                                                                                     |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | `AuthClient.java`        | HTTP client for communicating with the `spring-auth` service.                                                    |
-| `AuthController.java`    | Authentication endpoints (moved to `spring-auth` in the newest branches).                                       |
+| `AuthController.java`    | Authentication endpoints delegating to `spring-auth` via `AuthClient`.                                           |
 | `CredentialsDto.java`    | Data Transfer Object (DTO) for login credentials.                                                               |
 | `MessageResponseDto.java` | DTO for message-based API responses.                                                                             |
 | `PasswordUpdateDto.java` | DTO for password update operations.                                                                              |
@@ -355,7 +356,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | --------------------------- | -------------------------------------------------------------------------- |
 | `Item.java`                 | Entity class representing a stock item.                                    |
 | `ItemBuilder.java`          | Builder pattern implementation for creating Item objects.                  |
-| `ItemController.java`       | Contains REST endpoints for item management.                               |
+| `ItemController.java`       | REST endpoints for item CRUD operations guarded by Spring Security.        |
 | `ItemRepository.java`       | Interface for database operations related to items.                        |
 | `ItemSeeder.java`           | Seeds the database with test items for development.                        |
 | `ItemService.java`          | Business logic for item functionalities.                                   |
