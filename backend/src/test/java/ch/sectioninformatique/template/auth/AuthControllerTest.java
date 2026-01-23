@@ -280,9 +280,9 @@ public class AuthControllerTest {
     /**
      * Test: POST /auth/register
      *
-     * Verify registration with existing user returns 400 Bad Request.
-     * Note: The controller wraps all registration errors with RegistrationFailedException (400),
-     * even though the underlying error is UserAlreadyExistsException (409).
+    * Verify registration with existing user returns 409 Conflict (current controller behavior).
+    * If the controller later wraps to RegistrationFailedException (400), this test should
+    * be realigned to that behavior.
      */
     @Test
     @Transactional
