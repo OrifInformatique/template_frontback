@@ -8,8 +8,6 @@
 === 1.1 Get Hello
 This is an example output for the `GET /tests/` endpoint.
 
-Test
-
 .request
 include::tests/get-hello/http-request.adoc[]
 
@@ -223,7 +221,9 @@ include::tests/all/401/expired-token/http-response.adoc[]
 
 It returns a message indicating the token problem.
 
-=== 1.5 Login
+== 2 Auth Endpoints
+
+=== 2.1 Login
 This is an example output for the `POST /auth/login` endpoint.
 
 .request
@@ -234,8 +234,19 @@ include::auth/login/http-response.adoc[]
 
 It returns the profil of the newly logged user.
 
-=== 1.6 Register
-This is an example output for the `GET /auth/register` endpoint.
+==== 2.1.1 Error 401 - Invalid Credentials
+This is an example output for the `POST /auth/login` endpoint when invalid credentials are provided.
+
+.request
+include::auth/login-invalid/http-request.adoc[]
+
+.response
+include::auth/login-invalid/http-response.adoc[]
+
+It returns an error indicating the login or password is incorrect.
+
+=== 2.2 Register
+This is an example output for the `POST /auth/register` endpoint.
 
 .request
 include::auth/register/http-request.adoc[]
@@ -245,7 +256,18 @@ include::auth/register/http-response.adoc[]
 
 It returns the profil of the newly registered user.
 
-=== 1.7 Refresh
+==== 2.2.1 Error 400 - User Already Exists
+This is an example output for the `POST /auth/register` endpoint when the user already exists.
+
+.request
+include::auth/register-conflict/http-request.adoc[]
+
+.response
+include::auth/register-conflict/http-response.adoc[]
+
+It returns a message indicating that the user already exists.
+
+=== 2.3 Refresh
 This is an example output for the `POST /auth/refresh` endpoint.
 
 .request
@@ -255,3 +277,120 @@ include::auth/refresh/http-request.adoc[]
 include::auth/refresh/http-response.adoc[]
 
 It returns a new access token.
+
+==== 2.3.1 Error 401 - Invalid Refresh Token
+This is an example output for the `POST /auth/refresh` endpoint when the refresh token is invalid or expired.
+
+.request
+include::auth/refresh-invalid/http-request.adoc[]
+
+.response
+include::auth/refresh-invalid/http-response.adoc[]
+
+It returns a message indicating the refresh token cannot be used.
+
+=== 2.4 Logout
+Those are example outputs for the `POST /auth/logout` endpoint.
+
+==== 2.4.1 Error 401 - Missing Token
+This is an example output when no authorisation token is provided.
+
+.request
+include::auth/logout-unauthorized/http-request.adoc[]
+
+.response
+include::auth/logout-unauthorized/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+==== 2.4.2 Error 401 - Malformed Token
+This is an example output when a malformed token is provided.
+
+.request
+include::auth/logout-unauthorized-service/http-request.adoc[]
+
+.response
+include::auth/logout-unauthorized-service/http-response.adoc[]
+
+It returns a message indicating the token format is incorrect.
+
+=== 2.5 OAuth2 Login
+This is an example output for the `GET /auth/oauth2/login` endpoint when called without valid authentication.
+
+.request
+include::auth/oauth2-login/http-request.adoc[]
+
+.response
+include::auth/oauth2-login/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 2.6 Update Password
+Those are example outputs for the `PUT /auth/update-password` endpoint.
+
+This is an example output when the password is successfully updated.
+
+.request
+include::auth/update-password-success/http-request.adoc[]
+
+.response
+include::auth/update-password-success/http-response.adoc[]
+
+It confirms the password update.
+
+==== 2.6.1 Error 401 - Unauthorised
+This is an example output when the endpoint is called without valid authentication.
+
+.request
+include::auth/update-password/http-request.adoc[]
+
+.response
+include::auth/update-password/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+== 3 User Endpoints
+
+=== 3.1 All Users
+This is an example output for the `GET /users/all` endpoint.
+
+.request
+include::users/all-users/http-request.adoc[]
+
+.response
+include::users/all-users/http-response.adoc[]
+
+It returns the list of users with their roles and permissions.
+
+=== 3.2 Delete User (Global)
+This is an example output for the `DELETE /users/{userId}/true` endpoint when globally deleting a user.
+
+.request
+include::users/delete-global/http-request.adoc[]
+
+.response
+include::users/delete-global/http-response.adoc[]
+
+It confirms the global deletion request.
+
+==== 3.2.1 Error from external service
+This is an example output for the `DELETE /users/{userId}/true` endpoint when the global deletion fails because of an external service error.
+
+.request
+include::users/delete-global-error/http-request.adoc[]
+
+.response
+include::users/delete-global-error/http-response.adoc[]
+
+It shows the response returned when the deletion cannot be processed.
+
+=== 3.3 Delete User (Local)
+This is an example output for the `DELETE /users/{userId}/false` endpoint when performing a local (soft) delete.
+
+.request
+include::users/delete-local/http-request.adoc[]
+
+.response
+include::users/delete-local/http-response.adoc[]
+
+It confirms the local deletion request.
