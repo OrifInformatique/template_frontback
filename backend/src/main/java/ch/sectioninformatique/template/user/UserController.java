@@ -48,7 +48,9 @@ public class UserController {
     @Autowired
     private final AuthClient authClient;
 
-    /** Client for making user-related HTTP requests to the authentication service */
+    /**
+     * Client for making user-related HTTP requests to the authentication service
+     */
     @Autowired
     private final UserClient userClient;
 
@@ -243,26 +245,47 @@ public class UserController {
     }
 
     /**
-     * Promotes a user to manager role in both the authentication service and locally.
+     * Promotes a user to manager role in both the authentication service and
+     * locally.
      * This endpoint:
      * - Requires the 'user:update' authority
      * - First promotes the user in the global auth service
-     * - Then promotes the user to local app role if the global promotion succeeds
      * - Returns the response from the auth service
      * 
-     * @param token The authorization token (Bearer token) for authentication
+     * @param token  The authorization token (Bearer token) for authentication
      * @param userId The ID of the user to promote to manager role
      * @return Mono containing ResponseEntity with the promotion result
      */
-    @PutMapping(path = "/{userId}/promote-manager", produces = "application/json")
+    @PutMapping(path = "/{userId}/promote-manager")
     @PreAuthorize("hasAuthority('user:update')")
     public Mono<ResponseEntity<String>> promoteToManager(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to promote user to manager globally
         return userClient.promoteToManager(token, userId)
                 .flatMap(response -> {
-                    // If global promotion succeeds, promote user locally as well
-                    userService.promoteToLocalAppRole(userId);
+                    return Mono.just(response);
+                });
+    }
+
+    /**
+     * Revokes manager role from a user in both the authentication service and
+     * locally.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Revokes the manager role in the global auth service
+     * - Returns the response from the auth service
+     * 
+     * @param token  The authorization token (Bearer token) for authentication
+     * @param userId The ID of the user whose manager role will be revoked
+     * @return Mono containing ResponseEntity with the revocation result
+     */
+    @PutMapping(path = "/{userId}/revoke-manager")
+    @PreAuthorize("hasAuthority('user:update')")
+    public Mono<ResponseEntity<String>> revokeManager(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        // Call auth service to revoke manager role from user globally
+        return userClient.revokeManager(token, userId)
+                .flatMap(response -> {
                     return Mono.just(response);
                 });
     }
