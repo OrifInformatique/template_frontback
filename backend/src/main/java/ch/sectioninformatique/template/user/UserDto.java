@@ -43,6 +43,12 @@ public class UserDto {
     private String token;
 
     /**
+     * Indicates whether the user is deleted.
+     */
+    @Builder.Default
+    private boolean deleted = false;
+
+    /**
      * User's role in the system.
      * Defaults to "USER" if not specified.
      */
