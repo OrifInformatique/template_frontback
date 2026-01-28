@@ -59,12 +59,8 @@ public class UserController {
     @PutMapping("/{userId}/promote-local-app-role")
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToLocalAppRole(@PathVariable Long userId) {
-        try {
             userService.promoteToLocalAppRole(userId);
             return ResponseEntity.ok().body("User promoted to local app role successfully.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
     }
 
     /**
