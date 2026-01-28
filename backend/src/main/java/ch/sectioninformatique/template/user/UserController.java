@@ -68,30 +68,6 @@ public class UserController {
     }
 
     /**
-     * Promotes a user to a global admin role via spring-auth.
-     * This endpoint:
-     * - Requires the 'user:update' authority
-     * - Relays the promotion request to spring-auth
-     * - Returns success/error message from spring-auth
-     *
-     * @param token The authorization token from the request header
-     * @param userId The ID of the user to promote
-     * @return ResponseEntity with success message or error details
-     */
-    @PutMapping("/{userId}/promote-admin")
-    @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<?>> promoteToAdmin(@RequestHeader("Authorization") String token,
-            @PathVariable Long userId) {
-        try {
-            return userService.promoteToAdmin(userId, token)
-                    .map(response -> ResponseEntity.ok().body((Object) response))
-                    .onErrorResume(ex -> Mono.just(ResponseEntity.badRequest().body(ex.getMessage())));
-        } catch (Exception e) {
-            return Mono.just(ResponseEntity.badRequest().body(e.getMessage()));
-        }
-    }
-
-    /**
      * Retrieves all users in the system excluding soft-deleted ones.
      * This endpoint:
      * - Requires the 'user:read' authority
