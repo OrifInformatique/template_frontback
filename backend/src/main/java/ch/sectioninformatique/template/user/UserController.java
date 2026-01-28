@@ -336,4 +336,28 @@ public class UserController {
                 });
     }
 
+    /**
+     * Downgrades an admin user to manager role in both the authentication service and
+     * locally.
+     * This endpoint removes admin privileges while maintaining manager-level access.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Downgrades the admin to manager in the global auth service
+     * - Returns the response from the auth service
+     * 
+     * @param token  The authorization token (Bearer token) for authentication
+     * @param userId The ID of the admin user to be downgraded to manager role
+     * @return Mono containing ResponseEntity with the downgrade result
+     */
+    @PutMapping(path = "/{userId}/downgrade-admin")
+    @PreAuthorize("hasAuthority('user:update')")
+    public Mono<ResponseEntity<String>> downgradeAdmin(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        // Call auth service to downgrade admin to manager globally
+        return userClient.downgradeAdmin(token, userId)
+                .flatMap(response -> {
+                    return Mono.just(response);
+                });
+    }
+
 }

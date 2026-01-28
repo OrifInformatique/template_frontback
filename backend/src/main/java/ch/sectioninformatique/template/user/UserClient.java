@@ -159,4 +159,35 @@ public class UserClient {
                 // Convert the response to a ResponseEntity
                 .toEntity(String.class);
     }
+
+    /**
+     * Downgrades an admin user to manager role by sending a PUT request to the authentication service.
+     * This removes admin privileges while maintaining manager-level access.
+     * This method makes an asynchronous HTTP call and handles potential errors by converting
+     * error responses into AppException instances.
+     * 
+     * @param token the authorization token (Bearer token) to authenticate the request
+     * @param userId the ID of the admin user to be downgraded to manager role
+     * @return a Mono containing the ResponseEntity with the operation result
+     * @throws AppException if the authentication service returns an error status (4xx or 5xx)
+     */
+    public Mono<ResponseEntity<String>> downgradeAdmin(String token, Long userId) {
+        return webClient.put()
+                // Construct the URI with the user ID to target the specific user
+                .uri("/users/" + userId + "/downgrade-admin")
+                // Add the authorization token to the request headers
+                .header(HttpHeaders.AUTHORIZATION, token)
+                // Execute the HTTP request
+                .retrieve()
+                // Handle error responses (4xx and 5xx status codes)
+                .onStatus(status -> status.value() >= 400,
+                        response -> response.bodyToMono(ErrorDto.class)
+                                // Convert error response body to ErrorDto and wrap in AppException
+                                .flatMap(error -> Mono.error(
+                                        new AppException(error.message(),
+                                                HttpStatus.resolve(
+                                                        response.statusCode().value())))))
+                // Convert the response to a ResponseEntity
+                .toEntity(String.class);
+    }
 }
