@@ -290,4 +290,50 @@ public class UserController {
                 });
     }
 
+    /**
+     * Promotes a user to admin role in both the authentication service and
+     * locally.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Promotes the user to admin in the global auth service
+     * - Returns the response from the auth service
+     * 
+     * @param token  The authorization token (Bearer token) for authentication
+     * @param userId The ID of the user to promote to admin role
+     * @return Mono containing ResponseEntity with the promotion result
+     */
+    @PutMapping(path = "/{userId}/promote-admin")
+    @PreAuthorize("hasAuthority('user:update')")
+    public Mono<ResponseEntity<String>> promoteToAdmin(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        // Call auth service to promote user to admin globally
+        return userClient.promoteToAdmin(token, userId)
+                .flatMap(response -> {
+                    return Mono.just(response);
+                });
+    }
+
+    /**
+     * Revokes admin role from a user in both the authentication service and
+     * locally.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Revokes the admin role in the global auth service
+     * - Returns the response from the auth service
+     * 
+     * @param token  The authorization token (Bearer token) for authentication
+     * @param userId The ID of the user whose admin role will be revoked
+     * @return Mono containing ResponseEntity with the revocation result
+     */
+    @PutMapping(path = "/{userId}/revoke-admin")
+    @PreAuthorize("hasAuthority('user:update')")
+    public Mono<ResponseEntity<String>> revokeAdmin(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        // Call auth service to revoke admin role from user globally
+        return userClient.revokeAdmin(token, userId)
+                .flatMap(response -> {
+                    return Mono.just(response);
+                });
+    }
+
 }
