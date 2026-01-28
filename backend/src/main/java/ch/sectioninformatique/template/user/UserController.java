@@ -44,10 +44,6 @@ public class UserController {
     /** Service for handling user-related operations */
     private final UserService userService;
 
-    /** Client to send authentication requests to the spring-auth application */
-    @Autowired
-    private final AuthClient authClient;
-
     /**
      * Client for making user-related HTTP requests to the authentication service
      */
@@ -165,7 +161,7 @@ public class UserController {
         if (global) {
             // Call authClient to delete user from global auth service
             // then delete locally if successful
-            return authClient.deleteGlobalUser(token, userId)
+            return userClient.deleteGlobalUser(token, userId)
                     .flatMap(response -> {
 
                         // Extract body from ResponseEntity to get deleted user info
@@ -215,7 +211,7 @@ public class UserController {
         // Determine permanent deletion scope based on global flag
         if (global) {
             // Call authClient to permanently delete user from the global auth service
-            return authClient.deleteGlobalUserPermanent(token, userId)
+            return userClient.deleteGlobalUserPermanent(token, userId)
                     .flatMap(response -> {
 
                         // Extract body from ResponseEntity to get deleted user info

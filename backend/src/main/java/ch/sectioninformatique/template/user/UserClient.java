@@ -22,9 +22,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 /**
- * Service client for handling user-related HTTP requests to the authentication service.
- * This class uses Spring WebClient to communicate with the authentication microservice
- * and perform user management operations such as promoting users to manager role.
+ * Service client for handling user-related HTTP requests to the authentication
+ * service.
+ * This class uses Spring WebClient to communicate with the authentication
+ * microservice
+ * and perform user management operations such as promoting users to manager
+ * role.
  */
 @Service
 public class UserClient {
@@ -34,21 +37,77 @@ public class UserClient {
     /**
      * Constructor to initialize the WebClient with the authentication service URL.
      * 
-     * @param authUrl the base URL of the authentication service, injected from application properties
+     * @param authUrl the base URL of the authentication service, injected from
+     *                application properties
      */
     public UserClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
         this.webClient = WebClient.create(authUrl);
     }
 
     /**
-     * Promotes a user to manager role by sending a PUT request to the authentication service.
-     * This method makes an asynchronous HTTP call and handles potential errors by converting
+     * Soft deletes a user by sending a delete request to the authentication
+     * provider.
+     * 
+     * @param token  The access token
+     * @param userId The ID of the user to delete
+     * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
+     *         response (e.g., token or status message)
+     */
+    public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
+        return webClient.delete()
+                .uri("/users/" + userId) // soft delete user endpoint path in authentication provider
+                .header(HttpHeaders.AUTHORIZATION, token)
+                .retrieve()
+                .onStatus(status -> status.value() >= 400,
+                        response -> response.bodyToMono(ErrorDto.class)
+                                .flatMap(error -> Mono.error(
+                                        new AppException(error.message(),
+                                                HttpStatus.resolve(
+                                                        response.statusCode().value())))))
+                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                })
+                .map(body -> ResponseEntity.ok(body));
+    }
+
+    /**
+     * Permanently deletes a user by sending a delete request to the authentication
+     * provider.
+     * 
+     * @param token  The access token
+     * @param userId The ID of the user to delete permanently
+     * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
+     *         deletion response (e.g., token or status message)
+     */
+    public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
+        return webClient.delete()
+                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in authentication
+                                                        // provider
+                .header(HttpHeaders.AUTHORIZATION, token)
+                .retrieve()
+                .onStatus(status -> status.value() >= 400,
+                        response -> response.bodyToMono(ErrorDto.class)
+                                .flatMap(error -> Mono.error(
+                                        new AppException(error.message(),
+                                                HttpStatus.resolve(
+                                                        response.statusCode().value())))))
+                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                })
+                .map(body -> ResponseEntity.ok(body));
+    }
+
+    /**
+     * Promotes a user to manager role by sending a PUT request to the
+     * authentication service.
+     * This method makes an asynchronous HTTP call and handles potential errors by
+     * converting
      * error responses into AppException instances.
      * 
-     * @param token the authorization token (Bearer token) to authenticate the request
+     * @param token  the authorization token (Bearer token) to authenticate the
+     *               request
      * @param userId the ID of the user to be promoted to manager role
      * @return a Mono containing the ResponseEntity with the operation result
-     * @throws AppException if the authentication service returns an error status (4xx or 5xx)
+     * @throws AppException if the authentication service returns an error status
+     *                      (4xx or 5xx)
      */
     public Mono<ResponseEntity<String>> promoteToManager(String token, Long userId) {
         return webClient.put()
@@ -71,14 +130,18 @@ public class UserClient {
     }
 
     /**
-     * Revokes manager role from a user by sending a PUT request to the authentication service.
-     * This method makes an asynchronous HTTP call and handles potential errors by converting
+     * Revokes manager role from a user by sending a PUT request to the
+     * authentication service.
+     * This method makes an asynchronous HTTP call and handles potential errors by
+     * converting
      * error responses into AppException instances.
      * 
-     * @param token the authorization token (Bearer token) to authenticate the request
+     * @param token  the authorization token (Bearer token) to authenticate the
+     *               request
      * @param userId the ID of the user whose manager role will be revoked
      * @return a Mono containing the ResponseEntity with the operation result
-     * @throws AppException if the authentication service returns an error status (4xx or 5xx)
+     * @throws AppException if the authentication service returns an error status
+     *                      (4xx or 5xx)
      */
     public Mono<ResponseEntity<String>> revokeManager(String token, Long userId) {
         return webClient.put()
@@ -101,14 +164,18 @@ public class UserClient {
     }
 
     /**
-     * Promotes a user to admin role by sending a PUT request to the authentication service.
-     * This method makes an asynchronous HTTP call and handles potential errors by converting
+     * Promotes a user to admin role by sending a PUT request to the authentication
+     * service.
+     * This method makes an asynchronous HTTP call and handles potential errors by
+     * converting
      * error responses into AppException instances.
      * 
-     * @param token the authorization token (Bearer token) to authenticate the request
+     * @param token  the authorization token (Bearer token) to authenticate the
+     *               request
      * @param userId the ID of the user to be promoted to admin role
      * @return a Mono containing the ResponseEntity with the operation result
-     * @throws AppException if the authentication service returns an error status (4xx or 5xx)
+     * @throws AppException if the authentication service returns an error status
+     *                      (4xx or 5xx)
      */
     public Mono<ResponseEntity<String>> promoteToAdmin(String token, Long userId) {
         return webClient.put()
@@ -131,14 +198,18 @@ public class UserClient {
     }
 
     /**
-     * Revokes admin role from a user by sending a PUT request to the authentication service.
-     * This method makes an asynchronous HTTP call and handles potential errors by converting
+     * Revokes admin role from a user by sending a PUT request to the authentication
+     * service.
+     * This method makes an asynchronous HTTP call and handles potential errors by
+     * converting
      * error responses into AppException instances.
      * 
-     * @param token the authorization token (Bearer token) to authenticate the request
+     * @param token  the authorization token (Bearer token) to authenticate the
+     *               request
      * @param userId the ID of the user whose admin role will be revoked
      * @return a Mono containing the ResponseEntity with the operation result
-     * @throws AppException if the authentication service returns an error status (4xx or 5xx)
+     * @throws AppException if the authentication service returns an error status
+     *                      (4xx or 5xx)
      */
     public Mono<ResponseEntity<String>> revokeAdmin(String token, Long userId) {
         return webClient.put()
@@ -161,15 +232,19 @@ public class UserClient {
     }
 
     /**
-     * Downgrades an admin user to manager role by sending a PUT request to the authentication service.
+     * Downgrades an admin user to manager role by sending a PUT request to the
+     * authentication service.
      * This removes admin privileges while maintaining manager-level access.
-     * This method makes an asynchronous HTTP call and handles potential errors by converting
+     * This method makes an asynchronous HTTP call and handles potential errors by
+     * converting
      * error responses into AppException instances.
      * 
-     * @param token the authorization token (Bearer token) to authenticate the request
+     * @param token  the authorization token (Bearer token) to authenticate the
+     *               request
      * @param userId the ID of the admin user to be downgraded to manager role
      * @return a Mono containing the ResponseEntity with the operation result
-     * @throws AppException if the authentication service returns an error status (4xx or 5xx)
+     * @throws AppException if the authentication service returns an error status
+     *                      (4xx or 5xx)
      */
     public Mono<ResponseEntity<String>> downgradeAdmin(String token, Long userId) {
         return webClient.put()
