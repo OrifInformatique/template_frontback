@@ -255,3 +255,31 @@ include::auth/refresh/http-request.adoc[]
 include::auth/refresh/http-response.adoc[]
 
 It returns a new access token.
+
+=== 1.8 Logout
+This is an example of the `POST /auth/logout` endpoint.
+
+==== 1.8.1 Error 401 - Unauthorised
+Those are examples output for the `POST /auth/logout` endpoint in case of error 401 Unauthorised.
+
+===== 1.8.1.1 Missing Token
+This is an example output for the `POST /auth/logout` endpoint when a request with a missing token is sent.
+
+.request
+include::auth/logout-unauthorized/http-request.adoc[]
+
+.response
+include::auth/logout-unauthorized/http-response.adoc[]
+
+It returns a message indicating the lack of authorisation.
+
+===== 1.8.1.2 Invalid Token
+This is an example output for the `POST /auth/logout` endpoint when a request with an invalid token is sent.
+
+.request
+include::auth/logout-unauthorized-service/http-request.adoc[]
+
+.response
+include::auth/logout-unauthorized-service/http-response.adoc[]
+
+It returns a message indicating the token problem.
