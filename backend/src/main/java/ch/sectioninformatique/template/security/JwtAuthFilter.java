@@ -13,7 +13,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ch.sectioninformatique.template.security.SecurityExceptions.AuthenticationRequiredException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 
 import org.springframework.stereotype.Component;

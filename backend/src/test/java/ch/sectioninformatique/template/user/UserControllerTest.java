@@ -1,7 +1,5 @@
 package ch.sectioninformatique.template.user;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -21,23 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
-import ch.sectioninformatique.template.user.UserDto;
-import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
-import ch.sectioninformatique.template.user.UserExceptions.UserAlreadyHasRoleException;
-import ch.sectioninformatique.template.user.UserExceptions.UserPromotionException;
-import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
-import ch.sectioninformatique.template.user.UserRepository;
 import reactor.core.publisher.Mono;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;

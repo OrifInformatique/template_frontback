@@ -4,11 +4,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
+import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
-import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
