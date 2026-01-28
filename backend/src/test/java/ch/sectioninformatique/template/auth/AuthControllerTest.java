@@ -783,4 +783,58 @@ public class AuthControllerTest {
                     }
                 });
     }
+
+    /**
+     * Test: POST /auth/logout
+     *
+     * Mock a user attempting to log out with a token.
+     * Note: This endpoint requires proper authentication credentials. The test expects 401 Unauthorized
+     * due to the security configuration and external service dependency that may not be fully available
+     * in the test environment.
+     */
+    @Test
+    @Transactional
+    public void logout_withToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "POST",
+                "/auth/logout",
+                null,
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+                MediaType.APPLICATION_JSON,
+                401,
+                "logout-unauthorized-service",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: POST /auth/logout
+     *
+     * Mock a user attempting to log out without providing a token.
+     * This should return an unauthorized status.
+     */
+    @Test
+    @Transactional
+    public void logout_withoutToken_shouldReturnUnauthorized() throws Exception {
+        performRequest(
+                "POST",
+                "/auth/logout",
+                null,
+                null,
+                MediaType.APPLICATION_JSON,
+                401,
+                "logout-unauthorized",
+                response -> {
+                    try {
+                        response.andExpect(status().isUnauthorized());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
 }

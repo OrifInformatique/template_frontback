@@ -72,12 +72,12 @@ public class UserController {
      * - Returns a list of all users
      * - Is typically used by administrators
      *
-     * @return ResponseEntity containing a list of all users
+     * @return ResponseEntity containing a list of all users who are not soft-deleted
      */
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('user:read')")
-    public ResponseEntity<List<User>> allUsers() {
-        List<User> users = userService.allUsers();
+    public ResponseEntity<List<UserDto>> allUsers() {
+        List<UserDto> users = userService.allUsers();
         return ResponseEntity.ok(users);
     }
 
@@ -88,12 +88,12 @@ public class UserController {
      * - Returns a list of all users
      * - Is typically used by administrators
      *
-     * @return ResponseEntity containing a list of all deleted users
+     * @return ResponseEntity containing a list of all users including soft-deleted ones
      */
     @GetMapping("/all-with-deleted")
     @PreAuthorize("hasAuthority('user:read')")
-    public ResponseEntity<List<User>> allWithDeletedUsers() {
-        List<User> users = userService.allWithDeletedUsers();
+    public ResponseEntity<List<UserDto>> allWithDeletedUsers() {
+        List<UserDto> users = userService.allWithDeletedUsers();
         return ResponseEntity.ok(users);
     }
 
@@ -108,8 +108,8 @@ public class UserController {
      */
     @GetMapping("/deleted")
     @PreAuthorize("hasAuthority('user:read')")
-    public ResponseEntity<List<User>> deletedUsers() {
-        List<User> users = userService.deletedUsers();
+    public ResponseEntity<List<UserDto>> deletedUsers() {
+        List<UserDto> users = userService.deletedUsers();
         return ResponseEntity.ok(users);
     }
 

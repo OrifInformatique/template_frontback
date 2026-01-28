@@ -130,8 +130,36 @@ sequenceDiagram
     AuthClient-->>AuthController: UserDto wrapped in ResponseEntity
     AuthController-->>Client: Response with UserDto and access token
 ```
-
 _Sequence Diagram showing the actual authentication flow with spring-auth delegation._
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AuthController
+    participant AuthClient
+    participant spring-auth
+    participant UserService
+
+    Note over AuthController,spring-auth: Login Flow
+    Client->>AuthController: POST /auth/login with credentials
+    AuthController->>AuthClient: login(credentialsDto)
+    AuthClient->>spring-auth: POST /auth/login
+    spring-auth-->>AuthClient: UserDto + refresh_token cookie
+    AuthClient-->>AuthController: ResponseEntity<UserDto>
+    AuthController->>Client: UserDto + refresh_token cookie
+
+    Note over AuthController,spring-auth: Registration Flow
+    Client->>AuthController: POST /auth/register with RegisterDto
+    AuthController->>AuthClient: register(registerDto)
+    AuthClient->>spring-auth: POST /auth/register
+    spring-auth-->>AuthClient: Success response
+    AuthClient-->>AuthController: ResponseEntity
+    AuthController->>UserService: register(registerDto)
+    UserService->>UserService: Save user locally
+    AuthController->>Client: Success response
+```
+_Sequence Diagram showing the authentication and registration flows through AuthClient to spring-auth._
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -191,6 +219,7 @@ classDiagram
         +boolean isAccountNonLocked()
         +boolean isCredentialsNonExpired()
         +boolean isEnabled()
+        +List~String~ getAppSpecificRolesString()
     }
 
     class Role {
@@ -200,6 +229,7 @@ classDiagram
         +Date createdAt
         +Date updatedAt
         +Set~User~ users
+        +Set~SimpleGrantedAuthority~ getGrantedAuthorities()
     }
 
     class UserDto {
@@ -226,6 +256,7 @@ classDiagram
         <<interface>>
         +UserDto toUserDto(User user)
         +User registerDtoToUser(RegisterDto registerDto)
+        +User signUpToUser(RegisterDto registerDto)
         +List~String~ authoritiesToPermissions(Collection~GrantedAuthority~ authorities)
     }
 
@@ -239,37 +270,43 @@ classDiagram
     User ..|> UserDetails
 ```
 
-_Class Diagram showing the `User`, `Role`, `UserDto`, and `SignUpDto` structure._
+_Class Diagram showing the `User`, `Role`, `UserDto`, and `RegisterDto` structure._
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant SecurityLayer
+    participant JwtAuthFilter
     participant UserController
     participant UserService
     participant UserRepository
     participant UserMapper
 
-    Client->>SecurityLayer: /users/me
-    SecurityLayer->>UserController: Authorized UserDto extracted from token
+    Note over Client,UserController: Get Current User
+    Client->>JwtAuthFilter: GET /users/me with JWT token
+    JwtAuthFilter->>UserController: Authorized UserDto from SecurityContext
     UserController->>Client: UserDto in response
 
-    Client->>SecurityLayer: /users/all
-    SecurityLayer->>UserController: Authorized UserDto extracted from token
-    UserController->>UserService: UserService.allUsers()
-    UserService->>UserRepository: UserRepository.findAll()
-    UserRepository->>UserController: List of Users
-    UserController->>Client: Response containing the list of users
+    Note over Client,UserController: Get All Users
+    Client->>JwtAuthFilter: GET /users/all with JWT token
+    JwtAuthFilter->>UserController: Authorized (requires user:read)
+    UserController->>UserService: allUsers()
+    UserService->>UserRepository: findAll()
+    UserRepository-->>UserService: List<User>
+    UserService-->>UserController: List<User>
+    UserController->>Client: List of Users
 
-    Client->>SecurityLayer: /users/{userId}/promote-admin
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    UserController->>UserService: UserService.promoteToAdmin(userId)
-    UserService->>UserRepository: UserRepository.findById(userId)
-    UserRepository->>UserService: Found User
-    UserService->>UserRepository: UserRepository.save(user) with updated role
-    UserService->>UserMapper: UserMapper.toUserDto(user)
-    UserMapper->>UserController: UserDto
-    UserController->>Client: Response "User promoted to admin successfully"
+    Note over Client,UserController: Promote User to Local App Role
+    Client->>JwtAuthFilter: PUT /users/{userId}/promote-local-app-role
+    JwtAuthFilter->>UserController: Authorized (requires user:update)
+    UserController->>UserService: promoteToLocalAppRole(userId)
+    UserService->>UserRepository: findById(userId)
+    UserRepository-->>UserService: User
+    UserService->>UserService: Add LOCAL_APP_ROLE to appSpecificRoles
+    UserService->>UserRepository: save(user)
+    UserService->>UserMapper: toUserDto(user)
+    UserMapper-->>UserService: UserDto
+    UserService-->>UserController: UserDto
+    UserController->>Client: "User promoted to local app role successfully"
 ```
 
 _Sequence Diagram showing an example of the user management flow._
@@ -296,9 +333,8 @@ sequenceDiagram
     participant Client
     participant JwtAuthFilter
     participant UserAuthenticationProvider
-    participant UserService
     participant UserController
-    participant UserAuthenticationEntryPoint
+    participant UserService
 
     Client->>JwtAuthFilter: HTTP request with JWT token in Authorization header
     note right of JwtAuthFilter: Filter intercepts request
