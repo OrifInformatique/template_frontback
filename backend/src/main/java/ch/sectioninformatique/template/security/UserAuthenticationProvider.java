@@ -15,8 +15,16 @@ import org.springframework.stereotype.Component;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenTypeException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtTokenExpiredException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidJwtSignatureException;
+import ch.sectioninformatique.template.security.SecurityExceptions.MalformedJwtException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -155,40 +163,64 @@ public class UserAuthenticationProvider {
      * @param token The JWT token to validate
      * @return Authentication object containing the user's information and
      *         authorities
+     * @throws JwtTokenExpiredException if the token has expired
+     * @throws InvalidJwtSignatureException if the token signature is invalid
+     * @throws JwtVerificationException if token verification fails
+     * @throws MalformedJwtException if the token is malformed
+     * @throws InvalidTokenTypeException if the token type is invalid
      */
     public Authentication validateToken(String token) {
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
-        JWTVerifier verifier = JWT.require(algorithm)
-                .build();
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .build();
 
-        DecodedJWT decoded = verifier.verify(token);
-        log.debug("Token verified for subject: {}", decoded.getSubject());
+            DecodedJWT decoded = verifier.verify(token);
+            log.debug("Token verified for subject: {}", decoded.getSubject());
 
-        String type = decoded.getClaim("typ").asString();
+            String type = decoded.getClaim("typ").asString();
 
-        if (type != null && !"access".equals(type)) {
-            throw new RuntimeException("Invalid token type for this endpoint");
+            if (type != null && !"access".equals(type)) {
+                throw new InvalidTokenTypeException();
+            }
+
+            UserDto currentUser = UserDto.builder()
+                    .login(decoded.getSubject())
+                    .firstName(decoded.getClaim("firstName").asString())
+                    .lastName(decoded.getClaim("lastName").asString())
+                    .mainRole(decoded.getClaim("mainRole").asString())
+                    .appSpecificRoles(decoded.getClaim("appSpecificRoles").asList(String.class))
+                    .permissions(decoded.getClaim("permissions").asList(String.class))
+                    .build();
+
+            User localUser = userService.getOrCreateAuthenticatedUser(currentUser);
+
+            userService.updateMainRole(localUser, currentUser);
+
+            List<String> allRoles = userService.getRolesList(localUser);
+
+            List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles);
+
+            return new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
+        } catch (TokenExpiredException e) {
+            log.warn("JWT token has expired");
+            throw new JwtTokenExpiredException();
+        } catch (SignatureVerificationException e) {
+            log.warn("Invalid JWT signature: {}", e.getMessage());
+            throw new InvalidJwtSignatureException();
+        } catch (com.auth0.jwt.exceptions.JWTVerificationException e) {
+            log.warn("JWT verification failed: {}", e.getMessage());
+            throw new JwtVerificationException(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.warn("Malformed JWT token: {}", e.getMessage());
+            throw new MalformedJwtException(e.getMessage());
+        } catch (InvalidTokenTypeException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error during token validation: {}", e.getMessage(), e);
+            throw new InvalidTokenException(e.getMessage());
         }
-
-        UserDto currentUser = UserDto.builder()
-                .login(decoded.getSubject())
-                .firstName(decoded.getClaim("firstName").asString())
-                .lastName(decoded.getClaim("lastName").asString())
-                .mainRole(decoded.getClaim("mainRole").asString())
-                .appSpecificRoles(decoded.getClaim("appSpecificRoles").asList(String.class))
-                .permissions(decoded.getClaim("permissions").asList(String.class))
-                .build();
-
-        User localUser = userService.getOrCreateAuthenticatedUser(currentUser);
-
-        userService.updateMainRole(localUser, currentUser);
-
-        List<String> allRoles = userService.getRolesList(localUser);
-
-        List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles);
-
-        return new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
     }
 
 }

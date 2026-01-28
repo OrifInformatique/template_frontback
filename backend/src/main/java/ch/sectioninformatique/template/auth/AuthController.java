@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
+
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import jakarta.validation.Valid;
@@ -49,7 +49,9 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-        return authClient.login(credentialsDto).block();
+        return authClient.login(credentialsDto)
+                .onErrorResume(ex -> Mono.error(ex))
+                .block();
     }
 
     /**
@@ -73,7 +75,6 @@ public class AuthController {
                     // Return HTTP 200 OK with the response body
                     return Mono.just(response);
                 })
-                .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)))
                 .block();
     }
 
@@ -92,7 +93,6 @@ public class AuthController {
             .map(response -> ResponseEntity.status(response.getStatusCode())
                               .headers(response.getHeaders())
                               .body(response.getBody()))
-            .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
             .block();
     }
 
@@ -112,7 +112,6 @@ public class AuthController {
         return authClient.updatePassword(token, updatePasswordDto)
                 .map(responseEntity -> responseEntity.getBody())
                 .map(messageResponse -> ResponseEntity.ok(messageResponse))
-                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
                 .block();
     }
 

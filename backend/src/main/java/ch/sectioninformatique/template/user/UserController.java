@@ -3,8 +3,6 @@ package ch.sectioninformatique.template.user;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
-import ch.sectioninformatique.template.auth.AuthClient;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -29,10 +25,6 @@ public class UserController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
-
-    /** Client to send authentication requests to the spring-auth application */
-    @Autowired
-    private final AuthClient authClient;
 
     /**
      * Retrieves the currently authenticated user's informations.
@@ -67,12 +59,8 @@ public class UserController {
     @PutMapping("/{userId}/promote-local-app-role")
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToLocalAppRole(@PathVariable Long userId) {
-        try {
-            userService.promoteToLocalAppRole(userId);
-            return ResponseEntity.ok().body("User promoted to local app role successfully.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        userService.promoteToLocalAppRole(userId);
+        return ResponseEntity.ok().body("User promoted to local app role successfully.");
     }
 
     /**
@@ -142,30 +130,9 @@ public class UserController {
             @PathVariable boolean global) {
 
         if (global) {
-            // Call authClient to delete user from global auth service
-            // then delete locally if successful
-            return authClient.deleteGlobalUser(token, userId)
-                    .flatMap(response -> {
-
-                        // Extract body from ResponseEntity
-                        Map<String, String> body = response.getBody();
-                        if (body != null && body.containsKey("deletedUserLogin")) {
-
-                            // Delete user locally
-                            userService.deleteUserByLogin(body.get("deletedUserLogin"));
-
-                            // Include both message in response
-                            return Mono.just((ResponseEntity<?>) ResponseEntity.ok(Map.of(
-                                    "message", body.get("message"))));
-
-                        } else {
-                            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .body(Map.of("message", "Failed to delete user: missing response data")));
-                        }
-                    })
-                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+            return userService.deleteGlobalAndLocal(token, userId)
+                    .map(message -> ResponseEntity.ok(Map.of("message", message)));
         } else {
-            // Delete user locally only
             userService.deleteUser(userId);
             return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
         }
@@ -190,27 +157,8 @@ public class UserController {
             @PathVariable Long userId,
             @PathVariable boolean global) {
         if (global) {
-            // Call authClient to delete user from the global auth service
-            return authClient.deleteGlobalUserPermanent(token, userId)
-                    .flatMap(response -> {
-
-                        // Extract body from ResponseEntity
-                        Map<String, String> body = response.getBody();
-                        if (body != null && body.containsKey("deletedUserLogin")) {
-
-                            // Delete user locally
-                            userService.deleteUserPermanentByLogin(body.get("deletedUserLogin"));
-
-                            // Include both message in response
-                            return Mono.just((ResponseEntity<?>) ResponseEntity.ok(Map.of(
-                                    "message", body.get("message"))));
-
-                        } else {
-                            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .body(Map.of("message", "Failed to delete user: missing response data")));
-                        }
-                    })
-                    .onErrorResume(ex -> Mono.error(new AppException(ex.getMessage(), HttpStatus.BAD_REQUEST)));
+            return userService.deleteGlobalAndLocalPermanent(token, userId)
+                    .map(message -> ResponseEntity.ok(Map.of("message", message)));
         } else {
             userService.deleteUserPermanent(userId);
             return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));

@@ -5,15 +5,28 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.user.UserExceptions.DefaultRoleNotFoundException;
+import ch.sectioninformatique.template.user.UserExceptions.DuplicateUserException;
+import ch.sectioninformatique.template.user.UserExceptions.RoleNotFoundException;
+import ch.sectioninformatique.template.user.UserExceptions.UserAlreadyHasRoleException;
+import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundByLoginException;
+import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
+import ch.sectioninformatique.template.user.UserExceptions.UserCreationException;
+import ch.sectioninformatique.template.user.UserExceptions.UserPromotionException;
+import ch.sectioninformatique.template.user.UserExceptions.UserUpdateException;
+import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
+import ch.sectioninformatique.template.user.UserExceptions.UserValidationException;
+import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletionException;
+import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
+import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +58,9 @@ public class UserService {
     /** Repository for role data access */
     private final RoleRepository roleRepository;
 
+    /** Client for authentication operations */
+    private final AuthClient authClient;
+
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
 
@@ -57,25 +73,33 @@ public class UserService {
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
-     * @throws RuntimeException if the user is not found, already has the role, or
-     *                          the role is not found
+     * @throws UserNotFoundException if the user is not found
+     * @throws UserAlreadyHasRoleException if the user already has the role
+     * @throws RoleNotFoundException if the role is not found
+     * @throws UserPromotionException if the promotion operation fails
      */
     public UserDto promoteToLocalAppRole(@NonNull Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(UserNotFoundException::new);
 
-        for (Role role : user.getAppSpecificRoles()) {
-            if (role.getName().equals(RoleEnum.LOCAL_APP_ROLE)) {
-                throw new AppException("The user is already a test admin", HttpStatus.CONFLICT);
+            for (Role role : user.getAppSpecificRoles()) {
+                if (role.getName().equals(RoleEnum.LOCAL_APP_ROLE)) {
+                    throw new UserAlreadyHasRoleException(RoleEnum.LOCAL_APP_ROLE.name());
+                }
             }
+
+            Role testAdminRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
+                    .orElseThrow(() -> new RoleNotFoundException(RoleEnum.LOCAL_APP_ROLE.name()));
+
+            user.getAppSpecificRoles().add(testAdminRole);
+            userRepository.save(user);
+            return userMapper.toUserDto(user);
+        } catch (UserNotFoundException | UserAlreadyHasRoleException | RoleNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserPromotionException(e.getMessage());
         }
-
-        Role testAdminRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
-                .orElseThrow(() -> new AppException("LOCAL_APP_ROLE role not found", HttpStatus.NOT_FOUND));
-
-        user.getAppSpecificRoles().add(testAdminRole);
-        userRepository.save(user);
-        return userMapper.toUserDto(user);
     }
 
     /**
@@ -134,7 +158,7 @@ public class UserService {
      */
     public UserDto me(UserDto currentUser) {
         User user = userRepository.findByLogin(currentUser.getLogin())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundByLoginException(currentUser.getLogin()));
         UserDto userMapped = userMapper.toUserDto(user);
         return userMapped;
     }
@@ -148,25 +172,39 @@ public class UserService {
      *
      * @param registerDto The user registration data
      * @return User containing the created user's information
-     * @throws AppException if the login already exists or the default role is not
-     *                      found
+     * @throws DuplicateUserException if the login already exists
+     * @throws DefaultRoleNotFoundException if the default role is not found
+     * @throws UserCreationException if user creation fails
      */
     public User register(RegisterDto registerDto) {
-        Optional<User> optionalUser = userRepository.findByLogin(registerDto.login());
+        try {
+            // Basic validation before persisting
+            if (registerDto.login() == null || registerDto.login().isBlank()
+                    || registerDto.firstName() == null || registerDto.firstName().isBlank()
+                    || registerDto.lastName() == null || registerDto.lastName().isBlank()) {
+                throw new UserValidationException("Missing mandatory user fields");
+            }
 
-        if (optionalUser.isPresent()) {
-            throw new AppException("Login already exists", HttpStatus.BAD_REQUEST);
+            Optional<User> optionalUser = userRepository.findByLogin(registerDto.login());
+
+            if (optionalUser.isPresent()) {
+                throw new DuplicateUserException(registerDto.login());
+            }
+
+            User user = userMapper.signUpToUser(registerDto);
+
+            // Add default USER role
+            Role userRole = roleRepository.findByName(RoleEnum.USER)
+                .orElseThrow(DefaultRoleNotFoundException::new);
+            user.setMainRole(userRole);
+
+            User savedUser = userRepository.save(user);
+            return savedUser;
+        } catch (UserValidationException | DuplicateUserException | DefaultRoleNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserCreationException(e.getMessage());
         }
-
-        User user = userMapper.signUpToUser(registerDto);
-
-        // Add default USER role
-        Role userRole = roleRepository.findByName(RoleEnum.USER)
-                .orElseThrow(() -> new AppException("Default role not found", HttpStatus.INTERNAL_SERVER_ERROR));
-        user.setMainRole(userRole);
-
-        User savedUser = userRepository.save(user);
-        return savedUser;
     }
 
     /**
@@ -178,26 +216,33 @@ public class UserService {
      *
      * @param userDto The user registration data
      * @return Found or created user
+     * @throws UserCreationException if user creation fails
      */
     public User getOrCreateAuthenticatedUser(UserDto userDto) {
-        List<User> users = userRepository.findAll();
+        try {
+            List<User> users = userRepository.findAll();
 
-        User localUser = null;
+            User localUser = null;
 
-        for (User user : users) {
-            if (user.getUsername().contains(userDto.getLogin())) {
-                localUser = user;
+            for (User user : users) {
+                if (user.getUsername().contains(userDto.getLogin())) {
+                    localUser = user;
+                }
             }
+
+            if (localUser == null) {
+                RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
+                        userDto.getLogin(), null);
+
+                localUser = this.register(newUser);
+            }
+
+            return localUser;
+        } catch (DuplicateUserException | DefaultRoleNotFoundException | UserCreationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserCreationException(e.getMessage());
         }
-
-        if (localUser == null) {
-            RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                    userDto.getLogin(), null);
-
-            localUser = this.register(newUser);
-        }
-
-        return localUser;
     }
 
     /**
@@ -209,19 +254,25 @@ public class UserService {
      *
      * @param localUser   The local user's data
      * @param currentUser The the transmitted user's data
+     * @throws RoleNotFoundException if the new role is not found
+     * @throws UserUpdateException if the role update fails
      */
     public void updateMainRole(User localUser, UserDto currentUser) {
+        try {
+            String localMainRole = localUser.getMainRole().getName().name();
 
-        String localMainRole = localUser.getMainRole().getName().name();
+            if (!localMainRole.contains(currentUser.getMainRole())) {
+                Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
+                        .orElseThrow(() -> new RoleNotFoundException(currentUser.getMainRole()));
 
-        if (!localMainRole.contains(currentUser.getMainRole())) {
-            Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
-                    .orElseThrow(() -> new RuntimeException("role not found"));
-
-            localUser.setMainRole(newMainRole);
-            userRepository.save(localUser);
+                localUser.setMainRole(newMainRole);
+                userRepository.save(localUser);
+            }
+        } catch (RoleNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserUpdateException(e.getMessage());
         }
-
     }
 
     /**
@@ -257,16 +308,23 @@ public class UserService {
      *
      * @param userId The ID of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws AppException if the user is not found
+     * @throws UserNotFoundException if the user is not found
+     * @throws UserDeletionException if the deletion fails
      */
     public UserDto deleteUser(@NonNull Long userId) {
-        // Get the user to delete
-        User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        try {
+            // Get the user to delete
+            User userToDelete = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-        // Delete the user
-        userRepository.deleteById(userId);
-        return userMapper.toUserDto(userToDelete);
+            // Delete the user
+            userRepository.deleteById(userId);
+            return userMapper.toUserDto(userToDelete);
+        } catch (UserNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserDeletionException(e.getMessage());
+        }
     }
 
     /**
@@ -277,16 +335,23 @@ public class UserService {
      *
      * @param userId The ID of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws AppException if the user is not found
+     * @throws UserNotFoundException if the user is not found
+     * @throws UserDeletionException if the permanent deletion fails
      */
     public UserDto deleteUserPermanent(@NonNull Long userId) {
-        // Get the user to delete
-        User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        try {
+            // Get the user to delete
+            User userToDelete = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-        // Delete the user
-        userRepository.deletePermanentlyById(userId);
-        return userMapper.toUserDto(userToDelete);
+            // Delete the user
+            userRepository.deletePermanentlyById(userId);
+            return userMapper.toUserDto(userToDelete);
+        } catch (UserNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PermanentUserDeletionException(e.getMessage());
+        }
     }
 
     /**
@@ -297,16 +362,23 @@ public class UserService {
      *
      * @param login The login of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws AppException if the user is not found
+     * @throws UserNotFoundByLoginException if the user is not found
+     * @throws UserDeletionException if the deletion fails
      */
     public UserDto deleteUserByLogin(String login) {
-        // Get the user to delete
-        User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        try {
+            // Get the user to delete
+            User userToDelete = userRepository.findByLogin(login)
+                .orElseThrow(() -> new UserNotFoundByLoginException(login));
 
-        // Delete the user
-        userRepository.deleteById(userToDelete.getId());
-        return userMapper.toUserDto(userToDelete);
+            // Delete the user
+            userRepository.deleteById(userToDelete.getId());
+            return userMapper.toUserDto(userToDelete);
+        } catch (UserNotFoundByLoginException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserDeletionException(e.getMessage());
+        }
     }
 
     /**
@@ -317,16 +389,23 @@ public class UserService {
      *
      * @param login The login of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws AppException if the user is not found
+     * @throws UserNotFoundByLoginException if the user is not found
+     * @throws UserDeletionException if the permanent deletion fails
      */
     public UserDto deleteUserPermanentByLogin(String login) {
-        // Get the user to delete
-        User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        try {
+            // Get the user to delete
+            User userToDelete = userRepository.findByLogin(login)
+                .orElseThrow(() -> new UserNotFoundByLoginException(login));
 
-        // Delete the user
-        userRepository.deletePermanentlyById(userToDelete.getId());
-        return userMapper.toUserDto(userToDelete);
+            // Delete the user
+            userRepository.deletePermanentlyById(userToDelete.getId());
+            return userMapper.toUserDto(userToDelete);
+        } catch (UserNotFoundByLoginException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PermanentUserDeletionException(e.getMessage());
+        }
     }
 
     /**
@@ -342,24 +421,87 @@ public class UserService {
      */
     public UserDto findByLogin(String login) {
         log.debug("Searching for user with login: {}", login);
+        try {
+            Optional<User> userOptional = userRepository.findByLogin(login);
+            log.debug("User found in database: {}", userOptional.isPresent());
 
-        Optional<User> userOptional = userRepository.findByLogin(login);
-        log.debug("User found in database: {}", userOptional.isPresent());
+            User user = userOptional
+                    .orElseThrow(() -> {
+                        log.error("User not found with login: {}", login);
+                        return new UserNotFoundByLoginException(login);
+                    });
 
-        User user = userOptional
-                .orElseThrow(() -> {
-                    log.error("User not found with login: {}", login);
-                    return new AppException("Unknown user", HttpStatus.NOT_FOUND);
+            if (user.isDeleted()) {
+                throw new InactiveUserException("User is inactive or deleted");
+            }
+
+            log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
+                    user.getId(), user.getFirstName(), user.getLastName(),
+                    user.getMainRole());
+
+            UserDto userDto = userMapper.toUserDto(user);
+            log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
+                    userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
+
+            return userDto;
+        } catch (UserNotFoundByLoginException | InactiveUserException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserRetrievalException(e.getMessage());
+        }
+    }
+
+    /**
+     * Deletes a user globally (via AuthClient) and locally.
+     * This method:
+     * - Calls the AuthClient to delete user from the global auth service
+     * - Validates the response contains the deleted user login
+     * - Deletes the user locally by login
+     * - Returns the deletion message
+     *
+     * @param token  The authorization token
+     * @param userId The ID of the user to delete
+     * @return Message from the global deletion response
+     * @throws UserDeletionException if the deletion fails or response is invalid
+     */
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
+        return authClient.deleteGlobalUser(token, userId)
+                .flatMap(response -> {
+                    java.util.Map<String, String> body = response.getBody();
+                    if (body != null && body.containsKey("deletedUserLogin")) {
+                        deleteUserByLogin(body.get("deletedUserLogin"));
+                        return reactor.core.publisher.Mono.just(body.get("message"));
+                    } else {
+                        return reactor.core.publisher.Mono.error(
+                                new UserDeletionException("Failed to delete user: missing response data"));
+                    }
                 });
+    }
 
-        log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
-                user.getId(), user.getFirstName(), user.getLastName(),
-                user.getMainRole());
-
-        UserDto userDto = userMapper.toUserDto(user);
-        log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
-                userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
-
-        return userDto;
+    /**
+     * Permanently deletes a user globally (via AuthClient) and locally.
+     * This method:
+     * - Calls the AuthClient to permanently delete user from the global auth service
+     * - Validates the response contains the deleted user login
+     * - Permanently deletes the user locally by login
+     * - Returns the deletion message
+     *
+     * @param token  The authorization token
+     * @param userId The ID of the user to permanently delete
+     * @return Message from the global deletion response
+     * @throws UserDeletionException if the deletion fails or response is invalid
+     */
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
+        return authClient.deleteGlobalUserPermanent(token, userId)
+                .flatMap(response -> {
+                    java.util.Map<String, String> body = response.getBody();
+                    if (body != null && body.containsKey("deletedUserLogin")) {
+                        deleteUserPermanentByLogin(body.get("deletedUserLogin"));
+                        return reactor.core.publisher.Mono.just(body.get("message"));
+                    } else {
+                        return reactor.core.publisher.Mono.error(
+                                new UserDeletionException("Failed to delete user: missing response data"));
+                    }
+                });
     }
 }
