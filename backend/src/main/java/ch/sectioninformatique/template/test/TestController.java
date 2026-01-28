@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
-import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -111,8 +110,8 @@ public class TestController {
      */
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('user:read')")
-    public ResponseEntity<List<User>> allUsers() {
-        List<User> users = userService.allUsers();
+    public ResponseEntity<List<UserDto>> allUsers() {
+        List<UserDto> users = userService.allUsers();
         return ResponseEntity.ok(users);
     }
 
