@@ -1,5 +1,5 @@
 import useAuthStore from '../../authStore';
-import api from './httpClient';
+import api from './apiClient';
 
 export const useLogin = () => {
     const setAccessToken = useAuthStore((state) => state.setAccessToken);

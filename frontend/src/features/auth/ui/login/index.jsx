@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-import { useLogin } from '../api/authService';
-import api from '../api/httpClient';
+import { useLogin } from '../api/loginService';
+import api from '../api/apiClient';
 import useAuthStore from '../../authStore';
 import {
     Button,

@@ -1,4 +1,4 @@
-import api from './httpClient';
+import api from './apiClient';
 
 /**
  * Call API to log out the current user.
