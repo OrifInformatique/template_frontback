@@ -65,9 +65,11 @@ public class AuthClient {
                                                                 .flatMap(error -> {
                                                                         HttpStatusCode status = response.statusCode();
                                                                         if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
-                                                                                return Mono.error(new UserNotFoundException());
+                                                                                return Mono.error(
+                                                                                                new UserNotFoundException());
                                                                         }
-                                                                        return Mono.error(new InvalidCredentialsException());
+                                                                        return Mono.error(
+                                                                                        new InvalidCredentialsException());
                                                                 });
                                         }
                                         // Extract response body
@@ -92,7 +94,8 @@ public class AuthClient {
         }
 
         /**
-         * Performs user registration by sending user details to the authentication provider.
+         * Performs user registration by sending user details to the authentication
+         * provider.
          * 
          * @param user The SignUpDto containing user registration data
          * @return A Mono<ResponseEntity<UserDto>> containing the registration response
@@ -108,10 +111,15 @@ public class AuthClient {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> {
-                                                                        if (response.statusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
-                                                                                return Mono.error(new LoginAlreadyExistsException(error.message()));
+                                                                        if (response.statusCode().isSameCodeAs(
+                                                                                        HttpStatus.CONFLICT)) {
+                                                                                return Mono.error(
+                                                                                                new LoginAlreadyExistsException(
+                                                                                                                error.message()));
                                                                         }
-                                                                        return Mono.error(new RegistrationFailedException(error.message()));
+                                                                        return Mono.error(
+                                                                                        new RegistrationFailedException(
+                                                                                                        error.message()));
                                                                 });
                                         }
 
@@ -136,10 +144,12 @@ public class AuthClient {
         }
 
         /**
-         * Call the authentication provider to refresh the access token using a refresh token
+         * Call the authentication provider to refresh the access token using a refresh
+         * token
          * 
          * @param request The RefreshRequestDto containing the refresh token
-         * @return A Mono<ResponseEntity<TokenResponseDto>> containing the new access token
+         * @return A Mono<ResponseEntity<TokenResponseDto>> containing the new access
+         *         token
          */
         public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(RefreshRequestDto request) {
                 return webClient.post()
@@ -150,7 +160,8 @@ public class AuthClient {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
-                                                                                new InvalidRefreshTokenException(error.message())));
+                                                                                new InvalidRefreshTokenException(
+                                                                                                error.message())));
                                         }
 
                                         Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
@@ -170,7 +181,8 @@ public class AuthClient {
         }
 
         /**
-         * Updates user's password by sending the new password to the authentication provider.
+         * Updates user's password by sending the new password to the authentication
+         * provider.
          * 
          * @param token             The access token
          * @param passwordUpdateDto The PasswordUpdateDto containing the old and new
@@ -181,24 +193,29 @@ public class AuthClient {
         public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
                         PasswordUpdateDto passwordUpdateDto) {
                 return webClient.put()
-                                .uri("/auth/update-password") // the password update endpoint path in authentication provider
+                                .uri("/auth/update-password") // the password update endpoint path in authentication
+                                                              // provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .bodyValue(passwordUpdateDto)
                                 .retrieve()
                                 .onStatus(HttpStatusCode::isError,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new PasswordUpdateFailedException(error.message()))))
+                                                                .flatMap(error -> Mono.error(
+                                                                                new PasswordUpdateFailedException(
+                                                                                                error.message()))))
                                 .toEntity(MessageResponseDto.class);
         }
 
-
         /**
-         * Logs out the authenticated user by sending a logout request to the authentication provider.
-         * Extracts and retransmits the Set-Cookie header containing the expired refresh token.
+         * Logs out the authenticated user by sending a logout request to the
+         * authentication provider.
+         * Extracts and retransmits the Set-Cookie header containing the expired refresh
+         * token.
          * 
          * @param token The access token
-         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout response with Set-Cookie header
+         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout
+         *         response with Set-Cookie header
          */
         public Mono<ResponseEntity<Map<String, String>>> logout(String token) {
                 return webClient.post()
@@ -210,7 +227,8 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(new AppException(
                                                                                 error.message(),
                                                                                 HttpStatus.resolve(response
-                                                                                                .statusCode().value()))));
+                                                                                                .statusCode()
+                                                                                                .value()))));
                                         }
 
                                         // Extract response body
@@ -236,7 +254,8 @@ public class AuthClient {
         }
 
         /**
-         * Soft deletes a user by sending a delete request to the authentication provider.
+         * Soft deletes a user by sending a delete request to the authentication
+         * provider.
          * 
          * @param token  The access token
          * @param userId The ID of the user to delete
@@ -250,14 +269,16 @@ public class AuthClient {
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserDeletionException(error.message()))))
+                                                                .flatMap(error -> Mono.error(new UserDeletionException(
+                                                                                error.message()))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
                                 .map(body -> ResponseEntity.ok(body));
         }
 
         /**
-         * Permanently deletes a user by sending a delete request to the authentication provider.
+         * Permanently deletes a user by sending a delete request to the authentication
+         * provider.
          * 
          * @param token  The access token
          * @param userId The ID of the user to delete permanently
@@ -266,15 +287,198 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
                 return webClient.delete()
-                                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in authentication provider
+                                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in
+                                                                        // authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserDeletionException(error.message()))))
+                                                                .flatMap(error -> Mono.error(new UserDeletionException(
+                                                                                error.message()))))
                                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                                 })
                                 .map(body -> ResponseEntity.ok(body));
+        }
+
+        /**
+         * Promotes a user to manager role by sending a PUT request to the
+         * authentication service.
+         * This method makes an asynchronous HTTP call and handles potential errors by
+         * converting
+         * error responses into AppException instances.
+         * 
+         * @param token  the authorization token (Bearer token) to authenticate the
+         *               request
+         * @param userId the ID of the user to be promoted to manager role
+         * @return a Mono containing the ResponseEntity with the operation result
+         * @throws AppException if the authentication service returns an error status
+         *                      (4xx or 5xx)
+         */
+        public Mono<ResponseEntity<String>> promoteToManager(String token, Long userId) {
+                return webClient.put()
+                                // Construct the URI with the user ID to target the specific user
+                                .uri("/users/" + userId + "/promote-manager")
+                                // Add the authorization token to the request headers
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                // Execute the HTTP request
+                                .retrieve()
+                                // Handle error responses (4xx and 5xx status codes)
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                // Convert error response body to ErrorDto and wrap in
+                                                                // AppException
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.statusCode()
+                                                                                                                                .value())))))
+                                // Convert the response to a ResponseEntity
+                                .toEntity(String.class);
+        }
+
+        /**
+         * Revokes manager role from a user by sending a PUT request to the
+         * authentication service.
+         * This method makes an asynchronous HTTP call and handles potential errors by
+         * converting
+         * error responses into AppException instances.
+         * 
+         * @param token  the authorization token (Bearer token) to authenticate the
+         *               request
+         * @param userId the ID of the user whose manager role will be revoked
+         * @return a Mono containing the ResponseEntity with the operation result
+         * @throws AppException if the authentication service returns an error status
+         *                      (4xx or 5xx)
+         */
+        public Mono<ResponseEntity<String>> revokeManager(String token, Long userId) {
+                return webClient.put()
+                                // Construct the URI with the user ID to target the specific user
+                                .uri("/users/" + userId + "/revoke-manager")
+                                // Add the authorization token to the request headers
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                // Execute the HTTP request
+                                .retrieve()
+                                // Handle error responses (4xx and 5xx status codes)
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                // Convert error response body to ErrorDto and wrap in
+                                                                // AppException
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.statusCode()
+                                                                                                                                .value())))))
+                                // Convert the response to a ResponseEntity
+                                .toEntity(String.class);
+        }
+
+        /**
+         * Promotes a user to admin role by sending a PUT request to the authentication
+         * service.
+         * This method makes an asynchronous HTTP call and handles potential errors by
+         * converting
+         * error responses into AppException instances.
+         * 
+         * @param token  the authorization token (Bearer token) to authenticate the
+         *               request
+         * @param userId the ID of the user to be promoted to admin role
+         * @return a Mono containing the ResponseEntity with the operation result
+         * @throws AppException if the authentication service returns an error status
+         *                      (4xx or 5xx)
+         */
+        public Mono<ResponseEntity<String>> promoteToAdmin(String token, Long userId) {
+                return webClient.put()
+                                // Construct the URI with the user ID to target the specific user
+                                .uri("/users/" + userId + "/promote-admin")
+                                // Add the authorization token to the request headers
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                // Execute the HTTP request
+                                .retrieve()
+                                // Handle error responses (4xx and 5xx status codes)
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                // Convert error response body to ErrorDto and wrap in
+                                                                // AppException
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.statusCode()
+                                                                                                                                .value())))))
+                                // Convert the response to a ResponseEntity
+                                .toEntity(String.class);
+        }
+
+        /**
+         * Revokes admin role from a user by sending a PUT request to the authentication
+         * service.
+         * This method makes an asynchronous HTTP call and handles potential errors by
+         * converting
+         * error responses into AppException instances.
+         * 
+         * @param token  the authorization token (Bearer token) to authenticate the
+         *               request
+         * @param userId the ID of the user whose admin role will be revoked
+         * @return a Mono containing the ResponseEntity with the operation result
+         * @throws AppException if the authentication service returns an error status
+         *                      (4xx or 5xx)
+         */
+        public Mono<ResponseEntity<String>> revokeAdmin(String token, Long userId) {
+                return webClient.put()
+                                // Construct the URI with the user ID to target the specific user
+                                .uri("/users/" + userId + "/revoke-admin")
+                                // Add the authorization token to the request headers
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                // Execute the HTTP request
+                                .retrieve()
+                                // Handle error responses (4xx and 5xx status codes)
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                // Convert error response body to ErrorDto and wrap in
+                                                                // AppException
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.statusCode()
+                                                                                                                                .value())))))
+                                // Convert the response to a ResponseEntity
+                                .toEntity(String.class);
+        }
+
+        /**
+         * Downgrades an admin user to manager role by sending a PUT request to the
+         * authentication service.
+         * This removes admin privileges while maintaining manager-level access.
+         * This method makes an asynchronous HTTP call and handles potential errors by
+         * converting
+         * error responses into AppException instances.
+         * 
+         * @param token  the authorization token (Bearer token) to authenticate the
+         *               request
+         * @param userId the ID of the admin user to be downgraded to manager role
+         * @return a Mono containing the ResponseEntity with the operation result
+         * @throws AppException if the authentication service returns an error status
+         *                      (4xx or 5xx)
+         */
+        public Mono<ResponseEntity<String>> downgradeAdmin(String token, Long userId) {
+                return webClient.put()
+                                // Construct the URI with the user ID to target the specific user
+                                .uri("/users/" + userId + "/downgrade-admin")
+                                // Add the authorization token to the request headers
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                // Execute the HTTP request
+                                .retrieve()
+                                // Handle error responses (4xx and 5xx status codes)
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                // Convert error response body to ErrorDto and wrap in
+                                                                // AppException
+                                                                .flatMap(error -> Mono.error(
+                                                                                new AppException(error.message(),
+                                                                                                HttpStatus.resolve(
+                                                                                                                response.statusCode()
+                                                                                                                                .value())))))
+                                // Convert the response to a ResponseEntity
+                                .toEntity(String.class);
         }
 
         /**
@@ -287,11 +491,14 @@ public class AuthClient {
         public Mono<ResponseEntity<String>> loginOAUth2() {
 
                 return webClient.get()
-                                .uri("/oauth2/authorization/azure") // the OAuth2 authorization endpoint path in authentication provider
+                                .uri("/oauth2/authorization/azure") // the OAuth2 authorization endpoint path in
+                                                                    // authentication provider
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new OAuth2AuthenticationException(error.message()))))
+                                                                .flatMap(error -> Mono.error(
+                                                                                new OAuth2AuthenticationException(
+                                                                                                error.message()))))
                                 .toEntity(String.class); // expect the response as a ResponseEntity<String>
         }
 }

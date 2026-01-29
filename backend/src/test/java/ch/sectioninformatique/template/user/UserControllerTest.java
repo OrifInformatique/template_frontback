@@ -67,9 +67,6 @@ public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private UserClient userClient; // mock the user client
-
     /** Provider for creating JWT tokens */
     @Autowired
     private UserAuthenticationProvider userAuthenticationProvider;
@@ -792,7 +789,7 @@ public class UserControllerTest {
                 "message", "User deleted successfully",
                 "deletedUserLogin", "test.user@test.com");
 
-        when(userClient.deleteGlobalUser(anyString(), anyLong()))
+        when(authClient.deleteGlobalUser(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
@@ -898,7 +895,7 @@ public class UserControllerTest {
                 "message", "User deleted permanently",
                 "deletedUserLogin", "test.user@test.com");
 
-        when(userClient.deleteGlobalUserPermanent(anyString(), anyLong()))
+        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
@@ -951,7 +948,7 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void promoteToManager_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(userClient.promoteToManager(anyString(), anyLong()))
+        when(authClient.promoteToManager(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok("User promoted to manager successfully")));
 
         performRequest(
@@ -1004,7 +1001,7 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void revokeManager_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(userClient.revokeManager(anyString(), anyLong()))
+        when(authClient.revokeManager(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Manager role revoked successfully")));
 
         performRequest(
@@ -1057,7 +1054,7 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void promoteToAdmin_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(userClient.promoteToAdmin(anyString(), anyLong()))
+        when(authClient.promoteToAdmin(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role assigned successfully")));
 
         performRequest(
@@ -1110,7 +1107,7 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void revokeAdmin_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(userClient.revokeAdmin(anyString(), anyLong()))
+        when(authClient.revokeAdmin(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role revoked successfully")));
 
         performRequest(
@@ -1163,7 +1160,7 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void downgradeAdmin_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(userClient.downgradeAdmin(anyString(), anyLong()))
+        when(authClient.downgradeAdmin(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role downgraded successfully")));
 
         performRequest(

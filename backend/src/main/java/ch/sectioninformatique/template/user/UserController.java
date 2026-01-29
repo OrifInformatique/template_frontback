@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.auth.AuthClient;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -41,7 +42,7 @@ public class UserController {
      * Client for making user-related HTTP requests to the authentication service
      */
     @Autowired
-    private final UserClient userClient;
+    private final AuthClient authClient;
 
     /**
      * Retrieves the currently authenticated user's informations.
@@ -202,7 +203,7 @@ public class UserController {
     public Mono<ResponseEntity<String>> promoteToManager(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to promote user to manager globally
-        return userClient.promoteToManager(token, userId)
+        return authClient.promoteToManager(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -225,7 +226,7 @@ public class UserController {
     public Mono<ResponseEntity<String>> revokeManager(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to revoke manager role from user globally
-        return userClient.revokeManager(token, userId)
+        return authClient.revokeManager(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -248,7 +249,7 @@ public class UserController {
     public Mono<ResponseEntity<String>> promoteToAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to promote user to admin globally
-        return userClient.promoteToAdmin(token, userId)
+        return authClient.promoteToAdmin(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -271,7 +272,7 @@ public class UserController {
     public Mono<ResponseEntity<String>> revokeAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to revoke admin role from user globally
-        return userClient.revokeAdmin(token, userId)
+        return authClient.revokeAdmin(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -295,7 +296,7 @@ public class UserController {
     public Mono<ResponseEntity<String>> downgradeAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to downgrade admin to manager globally
-        return userClient.downgradeAdmin(token, userId)
+        return authClient.downgradeAdmin(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
