@@ -1,8 +1,11 @@
 package ch.sectioninformatique.template.item;
+import org.springframework.http.HttpStatus;
+
+import ch.sectioninformatique.template.app.exceptions.AppException;;
 
 public class ItemExceptions {
 
-    public static class ItemNotFoundException extends RuntimeException {
+    public static class ItemNotFoundException extends AppException {
   
         /**
         * Constructs a new ItemNotFoundException with a message indicating
@@ -11,12 +14,12 @@ public class ItemExceptions {
         * @param id The ID of the item that was not found
         */
         public ItemNotFoundException(Long id) {
-            super("Could not find item " + id);
+            super("Could not find item " + id,HttpStatus.NOT_FOUND);
         }
     }
 
 
-    public static class UnauthorizedItemException extends RuntimeException {
+    public static class UnauthorizedItemException extends AppException {
     
         /**
         * Constructs a new UnauthorizedItemException with a message indicating
@@ -25,7 +28,7 @@ public class ItemExceptions {
         * @param message The operation that was attempted (e.g., "update", "delete")
         */
         public UnauthorizedItemException(String message) {
-            super("You can only " + message + " your own items");
+            super("You can only " + message + " your own items",HttpStatus.UNAUTHORIZED);
         }
     }
 
