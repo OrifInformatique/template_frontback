@@ -5,33 +5,31 @@ export const useLogin = () => {
     const setAccessToken = useAuthStore((state) => state.setAccessToken);
     const setUser = useAuthStore((state) => state.setUser);
 
-    const login = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const identifier = formData.get('identifier');
-        const password = formData.get('password');
+    const login = async (event) => {
+        if (event?.preventDefault) event.preventDefault();
+
+        const formData = new FormData(event?.target);
+        const identifier = formData.get('identifier')?.trim();
+        const password = formData.get('password') ?? '';
+
+        if (!identifier || !password) {
+            console.warn('Login aborted: missing credentials');
+            return;
+        }
 
         try {
             const response = await api.post('/auth/login', {
                 login: identifier,
-                password: password,
+                password,
             });
 
             const data = response?.data || {};
-            const token = data.token || data.accessToken || null;
-
-            const rawUser = data.user || (data.id ? data : null);
-            let user = null;
-            if (rawUser) {
-                const { token, refreshToken, accessToken: a, ...rest } = rawUser;
-                user = rest;
-            }
+            const token = data.accessToken || data.token || null;
+            const user = data.user || (data.id ? data : null);
 
             if (token) setAccessToken(token);
             if (user) setUser(user);
-            if (token) {
-                localStorage.setItem('loginType', 'local');
-            }
+            if (token) localStorage.setItem('loginType', 'local');
 
             console.log('Logged in — token set:', !!token, 'user set:', !!user);
         } catch (error) {
@@ -41,5 +39,3 @@ export const useLogin = () => {
 
     return { login };
 };
-
-export default useAuthStore;
