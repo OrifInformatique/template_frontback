@@ -1,24 +1,18 @@
 package ch.sectioninformatique.template.user;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
-import ch.sectioninformatique.template.auth.CredentialsDto;
-import ch.sectioninformatique.template.user.UserDto;
-import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 /**
