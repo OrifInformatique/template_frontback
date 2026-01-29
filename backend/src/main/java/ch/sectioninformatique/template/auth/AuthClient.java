@@ -138,14 +138,13 @@ public class AuthClient {
         /**
          * Call the authentication provider to refresh the access token using a refresh token
          * 
-         * @param request The RefreshRequestDto containing the refresh token
+         * @param refreshToken The refresh token cookie value
          * @return A Mono<ResponseEntity<TokenResponseDto>> containing the new access token
          */
-        public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(RefreshRequestDto request) {
+        public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(String refreshToken) {
                 return webClient.post()
                                 .uri("/auth/refresh") // the refresh token endpoint path in authentication provider
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(request)
+                                .cookie("refresh_token", refreshToken)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)

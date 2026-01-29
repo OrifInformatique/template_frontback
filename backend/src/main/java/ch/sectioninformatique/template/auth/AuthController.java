@@ -4,6 +4,7 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -80,16 +81,16 @@ public class AuthController {
 
     /**
      * Handles POST requests to "/refresh"
-     * Accepts refresh token in request body
+     * Accepts refresh token from cookie
      * 
      * On successful refresh send the new access token 
      * 
-     * @param token
+     * @param refreshToken The refresh token from the cookie
      * @return ResponseEntity<TokenResponseDto> with new token
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponseDto> refreshLogin(@RequestBody @Valid RefreshRequestDto token) {
-        return authClient.refreshLogin(token)
+    public ResponseEntity<TokenResponseDto> refreshLogin(@CookieValue("refresh_token") String refreshToken) {
+        return authClient.refreshLogin(refreshToken)
             .map(response -> ResponseEntity.status(response.getStatusCode())
                               .headers(response.getHeaders())
                               .body(response.getBody()))
