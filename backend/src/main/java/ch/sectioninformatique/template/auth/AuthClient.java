@@ -5,6 +5,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
+import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
+import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
+import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
+import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
@@ -14,8 +22,9 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -53,12 +62,14 @@ public class AuthClient {
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppException(
-                                                                                error.message(),
-                                                                                HttpStatus.resolve(response
-                                                                                                .statusCode().value()))));
+                                                                .flatMap(error -> {
+                                                                        HttpStatusCode status = response.statusCode();
+                                                                        if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
+                                                                                return Mono.error(new UserNotFoundException());
+                                                                        }
+                                                                        return Mono.error(new InvalidCredentialsException());
+                                                                });
                                         }
-
                                         // Extract response body
                                         Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
 
@@ -96,10 +107,12 @@ public class AuthClient {
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppException(
-                                                                                error.message(),
-                                                                                HttpStatus.resolve(response
-                                                                                                .statusCode().value()))));
+                                                                .flatMap(error -> {
+                                                                        if (response.statusCode().isSameCodeAs(HttpStatus.CONFLICT)) {
+                                                                                return Mono.error(new LoginAlreadyExistsException(error.message()));
+                                                                        }
+                                                                        return Mono.error(new RegistrationFailedException(error.message()));
+                                                                });
                                         }
 
                                         // Extract response body
@@ -137,9 +150,7 @@ public class AuthClient {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode().value()))));
+                                                                                new InvalidRefreshTokenException(error.message())));
                                         }
 
                                         Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
@@ -169,20 +180,101 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
                         PasswordUpdateDto passwordUpdateDto) {
-
                 return webClient.put()
                                 .uri("/auth/update-password") // the password update endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .bodyValue(passwordUpdateDto)
                                 .retrieve()
+                                .onStatus(HttpStatusCode::isError,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new PasswordUpdateFailedException(error.message()))))
+                                .toEntity(MessageResponseDto.class);
+        }
+
+
+        /**
+         * Logs out the authenticated user by sending a logout request to the authentication provider.
+         * Extracts and retransmits the Set-Cookie header containing the expired refresh token.
+         * 
+         * @param token The access token
+         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout response with Set-Cookie header
+         */
+        public Mono<ResponseEntity<Map<String, String>>> logout(String token) {
+                return webClient.post()
+                                .uri("/auth/logout") // the logout endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .exchangeToMono(response -> {
+                                        if (response.statusCode().isError()) {
+                                                return response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new AppException(
+                                                                                error.message(),
+                                                                                HttpStatus.resolve(response
+                                                                                                .statusCode().value()))));
+                                        }
+
+                                        // Extract response body
+                                        Mono<Map<String, String>> bodyMono = response.bodyToMono(
+                                                        new ParameterizedTypeReference<Map<String, String>>() {
+                                                        });
+
+                                        return bodyMono.map(body -> {
+                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                                // Extract refresh_token cookie (expired) directly in the lambda
+                                                response.headers().asHttpHeaders()
+                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                                                Collections.emptyList())
+                                                                .stream()
+                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                                .findFirst()
+                                                                .ifPresent(cookie -> builder.header(
+                                                                                HttpHeaders.SET_COOKIE, cookie));
+                                                return builder.body(body);
+                                        });
+                                });
+        }
+
+        /**
+         * Soft deletes a user by sending a delete request to the authentication provider.
+         * 
+         * @param token  The access token
+         * @param userId The ID of the user to delete
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
+         *         response (e.g., token or status message)
+         */
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
+                return webClient.delete()
+                                .uri("/users/" + userId) // soft delete user endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode().value())))))
-                                .toEntity(MessageResponseDto.class); // expect the response as a ResponseEntity<String>
+                                                                .flatMap(error -> Mono.error(new UserDeletionException(error.message()))))
+                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                                })
+                                .map(body -> ResponseEntity.ok(body));
+        }
+
+        /**
+         * Permanently deletes a user by sending a delete request to the authentication provider.
+         * 
+         * @param token  The access token
+         * @param userId The ID of the user to delete permanently
+         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
+         *         deletion response (e.g., token or status message)
+         */
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
+                return webClient.delete()
+                                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new UserDeletionException(error.message()))))
+                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
+                                })
+                                .map(body -> ResponseEntity.ok(body));
         }
 
         /**
@@ -197,6 +289,9 @@ public class AuthClient {
                 return webClient.get()
                                 .uri("/oauth2/authorization/azure") // the OAuth2 authorization endpoint path in authentication provider
                                 .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new OAuth2AuthenticationException(error.message()))))
                                 .toEntity(String.class); // expect the response as a ResponseEntity<String>
         }
 }
