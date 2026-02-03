@@ -7,6 +7,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
+import jakarta.servlet.http.Cookie;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import reactor.core.publisher.Mono;
 
@@ -23,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
@@ -76,7 +78,8 @@ public class AuthControllerTest {
 
     /**
      * Helper method to generate a valid JWT token for the test user.
-     * Retrieves the test user from the database using UserService and creates a real JWT token
+     * Retrieves the test user from the database using UserService and creates a
+     * real JWT token
      * using UserAuthenticationProvider.
      * 
      * @return A valid JWT token for the test user
@@ -84,11 +87,11 @@ public class AuthControllerTest {
     private String getValidTokenForTestUser() {
         // Get the test user DTO from database (seeded by TestUserSeeder)
         UserDto userDto = userService.findByLogin("test.user@test.com");
-        
+
         if (userDto == null) {
             throw new RuntimeException("Test user not found. Ensure TestUserSeeder has run.");
         }
-        
+
         // Create and return a real JWT token
         return userAuthenticationProvider.createToken(userDto);
     }
@@ -161,9 +164,72 @@ public class AuthControllerTest {
     }
 
     /**
+     * Helper method for performing and documenting HTTP requests with a cookie.
+     * This keeps tests consistent with performRequest while allowing cookie-based
+     * auth.
+     */
+    private void performRequest(
+            String requestTypeString,
+            String endpoint,
+            String content,
+            String token,
+            MediaType contentType,
+            int expectedStatus,
+            String docsFileName,
+            Cookie cookie,
+            Consumer<ResultActions> script) throws Exception {
+
+        var requestType = get(endpoint);
+
+        if (requestTypeString.equals("GET")) {
+            requestType = get(endpoint);
+        } else if (requestTypeString.equals("POST")) {
+            requestType = post(endpoint);
+        } else if (requestTypeString.equals("PUT")) {
+            requestType = put(endpoint);
+        } else if (requestTypeString.equals("DELETE")) {
+            requestType = delete(endpoint);
+        } else {
+            throw new IllegalArgumentException("Unsupported request type: " + requestTypeString);
+        }
+
+        // Set content only if it's not null
+        if (content != null) {
+            requestType.content(content);
+        }
+
+        // Set Authorization header only if token is provided
+        if (token != null) {
+            requestType.header("Authorization", "Bearer " + token);
+        }
+
+        if (cookie != null) {
+            requestType.cookie(cookie);
+        }
+
+        // Set content type
+        requestType.contentType(contentType);
+
+        // Perform request
+        var request = mockMvc.perform(requestType)
+                .andExpect(status().is(expectedStatus));
+
+        // Execute any additional assertions provided in the lambda
+        if (script != null) {
+            script.accept(request);
+        }
+
+        // Generate a REST Docs snippet for the request/response pair
+        request.andDo(document("auth/" + docsFileName, preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint())));
+
+    }
+
+    /**
      * Test: POST /auth/login
      *
-     * Verify successful login with valid credentials returns user data and sets refresh token cookie.
+     * Verify successful login with valid credentials returns user data and sets
+     * refresh token cookie.
      */
     @Test
     @Transactional
@@ -235,7 +301,8 @@ public class AuthControllerTest {
     /**
      * Test: POST /auth/register
      *
-     * Verify successful registration calls auth client and saves user to local database.
+     * Verify successful registration calls auth client and saves user to local
+     * database.
      */
     @Test
     @Transactional
@@ -277,9 +344,11 @@ public class AuthControllerTest {
     /**
      * Test: POST /auth/register
      *
-    * Verify registration with existing user returns 409 Conflict (current controller behavior).
-    * If the controller later wraps to RegistrationFailedException (400), this test should
-    * be realigned to that behavior.
+     * Verify registration with existing user returns 409 Conflict (current
+     * controller behavior).
+     * If the controller later wraps to RegistrationFailedException (400), this test
+     * should
+     * be realigned to that behavior.
      */
     @Test
     @Transactional
@@ -321,17 +390,19 @@ public class AuthControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
 
-        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+        when(authClient.refreshLogin(anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(tokenResponse)));
 
+        Cookie refreshCookie = new Cookie("refresh_token", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...");
         performRequest(
                 "POST",
                 "/auth/refresh",
-                "{\"refreshToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\"}",
+                null,
                 null,
                 MediaType.APPLICATION_JSON,
                 200,
                 "refresh",
+                refreshCookie,
                 response -> {
                     try {
                         response.andExpect(status().isOk());
@@ -350,17 +421,19 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void refresh_withInvalidToken_shouldReturn401() throws Exception {
-        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+        when(authClient.refreshLogin(anyString()))
                 .thenReturn(Mono.error(new InvalidRefreshTokenException()));
 
+        Cookie refreshCookie = new Cookie("refresh_token", "invalidToken");
         performRequest(
                 "POST",
                 "/auth/refresh",
-                "{\"refreshToken\":\"invalidToken\"}",
+                null,
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
                 "refresh-invalid",
+                refreshCookie,
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
@@ -432,7 +505,8 @@ public class AuthControllerTest {
      * Test: GET /auth/oauth2/login
      *
      * OAuth2 login endpoint that redirects to Azure OAuth2 authorization.
-     * Note: Returns 401 in test environment because the Spring Security filter chain
+     * Note: Returns 401 in test environment because the Spring Security filter
+     * chain
      * is not fully configured for OAuth2 flows in MockMvc tests. In production,
      * this endpoint would return 302 redirect to Azure authorization URL.
      */
@@ -462,8 +536,10 @@ public class AuthControllerTest {
      * Documents:
      * - Exception: PasswordUpdateFailedException
      * - HTTP Status: 400 BAD_REQUEST
-     * - When thrown: When password update operation fails (e.g., invalid old password, policy violation)
-     * - Use case: User attempts to update password but the old password is incorrect or new password doesn't meet requirements
+     * - When thrown: When password update operation fails (e.g., invalid old
+     * password, policy violation)
+     * - Use case: User attempts to update password but the old password is
+     * incorrect or new password doesn't meet requirements
      * - Response: JSON error message
      */
     @Test
@@ -500,8 +576,10 @@ public class AuthControllerTest {
      * Documents:
      * - Exception: RegistrationFailedException
      * - HTTP Status: 400 BAD_REQUEST
-     * - When thrown: When registration fails due to invalid input or server-side errors
-     * - Use case: User provides invalid registration data or registration service encounters an error
+     * - When thrown: When registration fails due to invalid input or server-side
+     * errors
+     * - Use case: User provides invalid registration data or registration service
+     * encounters an error
      * - Response: JSON error message with details about what failed
      */
     @Test
@@ -534,25 +612,29 @@ public class AuthControllerTest {
      * Documents:
      * - Exception: InvalidTokenException
      * - HTTP Status: 401 UNAUTHORIZED
-     * - When thrown: When access token or refresh token is invalid, malformed, or expired
+     * - When thrown: When access token or refresh token is invalid, malformed, or
+     * expired
      * - Use case: Token cannot be verified or has been revoked
-     * - Related exceptions: InvalidRefreshTokenException (specifically for refresh tokens)
+     * - Related exceptions: InvalidRefreshTokenException (specifically for refresh
+     * tokens)
      * - Response: JSON error message
      */
     @Test
     @Transactional
     public void refresh_withExpiredToken_shouldReturn401InvalidToken() throws Exception {
-        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+        when(authClient.refreshLogin(anyString()))
                 .thenReturn(Mono.error(new InvalidTokenException("Token has expired")));
 
+        Cookie refreshCookie = new Cookie("refresh_token", "expiredToken");
         performRequest(
                 "POST",
                 "/auth/refresh",
-                "{\"refreshToken\":\"expiredToken\"}",
+                null,
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
                 "refresh-expired-token",
+                refreshCookie,
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
@@ -571,25 +653,28 @@ public class AuthControllerTest {
      * - HTTP Status: 401 UNAUTHORIZED
      * - When thrown: When refresh token is invalid, malformed, expired, or revoked
      * - Use case: User's refresh token session has ended or token was tampered with
-     * - Difference from InvalidTokenException: This is specifically for refresh tokens,
-     *   whereas InvalidTokenException is for access tokens
+     * - Difference from InvalidTokenException: This is specifically for refresh
+     * tokens,
+     * whereas InvalidTokenException is for access tokens
      * - Resolution: User must log in again to get a new refresh token
      * - Response: JSON error message
      */
     @Test
     @Transactional
     public void refresh_withMalformedRefreshToken_shouldReturn401InvalidRefreshToken() throws Exception {
-        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+        when(authClient.refreshLogin(anyString()))
                 .thenReturn(Mono.error(new InvalidRefreshTokenException("Malformed refresh token")));
 
+        Cookie refreshCookie = new Cookie("refresh_token", "malformed");
         performRequest(
                 "POST",
                 "/auth/refresh",
-                "{\"refreshToken\":\"malformed\"}",
+                null,
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
                 "refresh-malformed-refresh-token",
+                refreshCookie,
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
@@ -608,9 +693,11 @@ public class AuthControllerTest {
      * - HTTP Status: 401 UNAUTHORIZED
      * - When thrown: When provided login/password combination is invalid
      * - Use case: User enters wrong password or login doesn't exist
-     * - Response: Generic error message (no specific info about which is wrong for security)
-     * - Related context: SecurityExceptions.AuthenticationRequiredException is thrown
-     *   when authentication is required but not provided at all
+     * - Response: Generic error message (no specific info about which is wrong for
+     * security)
+     * - Related context: SecurityExceptions.AuthenticationRequiredException is
+     * thrown
+     * when authentication is required but not provided at all
      */
     @Test
     @Transactional
@@ -643,14 +730,15 @@ public class AuthControllerTest {
      * Documents:
      * - Exception: InvalidTokenException (from SecurityExceptions)
      * - HTTP Status: 401 UNAUTHORIZED
-     * - When thrown: When the access token in Authorization header is invalid, malformed, or expired
+     * - When thrown: When the access token in Authorization header is invalid,
+     * malformed, or expired
      * - Use case: User's session has expired or token was tampered with
      * - Related exceptions:
-     *   - InvalidRefreshTokenException: For refresh token failures
-     *   - JwtVerificationException: Specific JWT verification failure
-     *   - JwtTokenExpiredException: Token has expired (more specific)
-     *   - MalformedJwtException: Token format is invalid
-     *   - InvalidJwtSignatureException: Token signature doesn't match
+     * - InvalidRefreshTokenException: For refresh token failures
+     * - JwtVerificationException: Specific JWT verification failure
+     * - JwtTokenExpiredException: Token has expired (more specific)
+     * - MalformedJwtException: Token format is invalid
+     * - InvalidJwtSignatureException: Token signature doesn't match
      * - Response: JSON error message from the global exception handler
      */
     @Test
@@ -680,9 +768,12 @@ public class AuthControllerTest {
      * Documents:
      * - Exception: UserNotFoundException (from AuthExceptions - auth-specific)
      * - HTTP Status: 404 NOT_FOUND
-     * - When thrown: When user with the provided login doesn't exist in the authentication service
-     * - Note: Similar to UserExceptions.UserNotFoundException, but thrown during auth operations
-     * - Related exception: UserExceptions.UserNotFoundException - for general user operations
+     * - When thrown: When user with the provided login doesn't exist in the
+     * authentication service
+     * - Note: Similar to UserExceptions.UserNotFoundException, but thrown during
+     * auth operations
+     * - Related exception: UserExceptions.UserNotFoundException - for general user
+     * operations
      * - Use case: Login with non-existent user email
      * - Response: JSON error message indicating user was not found
      */
@@ -690,7 +781,8 @@ public class AuthControllerTest {
     @Transactional
     public void login_withNonExistentUser_shouldReturn404UserNotFound() throws Exception {
         when(authClient.login(any(CredentialsDto.class)))
-                .thenReturn(Mono.error(new AuthExceptions.UserNotFoundException("User with login 'nonexistent@test.com' not found")));
+                .thenReturn(Mono.error(
+                        new AuthExceptions.UserNotFoundException("User with login 'nonexistent@test.com' not found")));
 
         performRequest(
                 "POST",
@@ -750,28 +842,31 @@ public class AuthControllerTest {
      * Documents:
      * - Exception: JwtVerificationException
      * - HTTP Status: 401 UNAUTHORIZED
-     * - When thrown: When JWT token verification fails (e.g., signature mismatch, claims invalid)
+     * - When thrown: When JWT token verification fails (e.g., signature mismatch,
+     * claims invalid)
      * - Use case: Token claims are invalid or signature doesn't match server's key
      * - Related JWT exceptions:
-     *   - JwtTokenExpiredException: Token has expired
-     *   - InvalidJwtSignatureException: Signature is invalid
-     *   - MalformedJwtException: Token format is invalid
+     * - JwtTokenExpiredException: Token has expired
+     * - InvalidJwtSignatureException: Signature is invalid
+     * - MalformedJwtException: Token format is invalid
      * - Response: JSON error message with verification details
      */
     @Test
     @Transactional
     public void refresh_withInvalidJwtSignature_shouldReturn401JwtVerificationFailed() throws Exception {
-        when(authClient.refreshLogin(any(RefreshRequestDto.class)))
+        when(authClient.refreshLogin(anyString()))
                 .thenReturn(Mono.error(new JwtVerificationException("JWT signature mismatch")));
 
+        Cookie refreshCookie = new Cookie("refresh_token", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalidSignature");
         performRequest(
                 "POST",
                 "/auth/refresh",
-                "{\"refreshToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalidSignature\"}",
+                null,
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
                 "refresh-jwt-verification-failed",
+                refreshCookie,
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
@@ -785,8 +880,10 @@ public class AuthControllerTest {
      * Test: POST /auth/logout
      *
      * Mock a user attempting to log out with a token.
-     * Note: This endpoint requires proper authentication credentials. The test expects 401 Unauthorized
-     * due to the security configuration and external service dependency that may not be fully available
+     * Note: This endpoint requires proper authentication credentials. The test
+     * expects 401 Unauthorized
+     * due to the security configuration and external service dependency that may
+     * not be fully available
      * in the test environment.
      */
     @Test

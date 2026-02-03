@@ -4,6 +4,8 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -41,7 +43,8 @@ public class AuthController {
      * Accepts login credentials (login and password) as a request body, validated
      * for correctness
      * Calls the authentication client to perform login with provided credentials
-     * Returns a reactive Mono<ResponseEntity<UserDto>>containing the login response (e.g., token or
+     * Returns a reactive Mono<ResponseEntity<UserDto>>containing the login response
+     * (e.g., token or
      * status message)
      * 
      * @param credentialsDto
@@ -57,7 +60,8 @@ public class AuthController {
     /**
      * Handles POST requests to "/register"
      * Accepts user registration data as a request body, validated for correctness
-     * Calls the authentication client to perform registration with provided user data
+     * Calls the authentication client to perform registration with provided user
+     * data
      * On successful registration, also registers the user locally in the system
      * Returns a reactive Mono<ResponseEntity<UserDto>> containing the registration
      * response or error message
@@ -80,16 +84,16 @@ public class AuthController {
 
     /**
      * Handles POST requests to "/refresh"
-     * Accepts refresh token in request body
+     * Accepts refresh token from cookie
      * 
-     * On successful refresh send the new access token 
+     * On successful refresh send the new access token
      * 
-     * @param token
+     * @param refreshToken The refresh token from the cookie
      * @return ResponseEntity<TokenResponseDto> with new token
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponseDto> refreshLogin(@RequestBody @Valid RefreshRequestDto token) {
-        return authClient.refreshLogin(token)
+    public ResponseEntity<TokenResponseDto> refreshLogin(@CookieValue("refresh_token") String refreshToken) {
+        return authClient.refreshLogin(refreshToken)
             .map(response -> ResponseEntity.status(response.getStatusCode())
                               .headers(response.getHeaders())
                               .body(response.getBody()))
@@ -102,8 +106,9 @@ public class AuthController {
      * Calls the authentication client to set the new password for the user
      * Returns a ResponseEntity<MessageResponseDto> containing the response message
      * 
-     * @param token The authorization token from the request header
-     * @param updatePasswordDto The PasswordUpdateDto containing the old and new passwords
+     * @param token             The authorization token from the request header
+     * @param updatePasswordDto The PasswordUpdateDto containing the old and new
+     *                          passwords
      * @return ResponseEntity<MessageResponseDto> with set password response
      */
     @PutMapping("/update-password")
@@ -141,11 +146,19 @@ public class AuthController {
      * @return ResponseEntity with logout response from authentication provider
      */
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token, HttpServletRequest request) {
+
+        var session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        SecurityContextHolder.clearContext();
+
         return authClient.logout(token)
                 .map(response -> ResponseEntity.status(response.getStatusCode())
-                                  .headers(response.getHeaders())
-                                  .body(response.getBody()))
+                        .headers(response.getHeaders())
+                        .body(response.getBody()))
                 .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
                 .block();
     }
