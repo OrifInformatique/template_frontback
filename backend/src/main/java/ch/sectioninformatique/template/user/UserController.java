@@ -22,8 +22,9 @@ import reactor.core.publisher.Mono;
 
 /**
  * REST controller for managing user operations.
+ * !! Authentication operations are handled in AuthController, this controller focuses on user management !!
+ * 
  * This controller handles various user-related endpoints including:
- * - User authentication and authorization
  * - User promotion to different roles
  * - Retrieval of user lists (active, deleted, or all)
  * - User deletion (soft and permanent, local and global)
@@ -62,23 +63,6 @@ public class UserController {
 
         UserDto currentUser = (UserDto) authentication.getPrincipal();
         return ResponseEntity.ok(currentUser);
-    }
-
-    /**
-     * Promotes a user to a local app role.
-     * This endpoint:
-     * - Requires the 'user:update' authority
-     * - Validates the user exists and has not already the role
-     * - Returns success/error message
-     *
-     * @param userId The ID of the user to promote
-     * @return ResponseEntity with success message or error details
-     */
-    @PutMapping("/{userId}/promote-local-app-role")
-    @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToLocalAppRole(@PathVariable Long userId) {
-            userService.promoteToLocalAppRole(userId);
-            return ResponseEntity.ok().body("User promoted to local app role successfully.");
     }
 
     /**
@@ -302,4 +286,20 @@ public class UserController {
                 });
     }
 
+    /**
+     * Promotes a user to a local app role.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Validates the user exists and has not already the role
+     * - Returns success/error message
+     *
+     * @param userId The ID of the user to promote
+     * @return ResponseEntity with success message or error details
+     */
+    @PutMapping("/{userId}/promote-local-app-role")
+    @PreAuthorize("hasAuthority('user:update')")
+    public ResponseEntity<?> promoteToLocalAppRole(@PathVariable Long userId) {
+            userService.promoteToLocalAppRole(userId);
+            return ResponseEntity.ok().body("User promoted to local app role successfully.");
+    }
 }
