@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -30,6 +32,11 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     /** Object mapper for JSON serialization of error responses */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private final MessageSource messageSource;
+
+    public UserAuthenticationEntryPoint(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
 
     /**
      * Handles unauthenticated requests by sending a JSON response with an error message.
@@ -55,14 +62,20 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         
-        String errorMessage = "Authentication failed";
+        String errorMessage = getMessage("security.auth.failed");
         if (authException != null) {
-            errorMessage = authException.getMessage();
-            if (errorMessage == null || errorMessage.isEmpty()) {
-                errorMessage = "Invalid or missing authentication token";
+            String authMessage = authException.getMessage();
+            if (authMessage != null && !authMessage.isEmpty()) {
+                errorMessage = authMessage;
+            } else {
+                errorMessage = getMessage("security.auth.missingOrInvalidToken");
             }
         }
         
         OBJECT_MAPPER.writeValue(response.getOutputStream(), new ErrorDto(errorMessage));
+    }
+
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
