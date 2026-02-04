@@ -12,6 +12,8 @@ import ch.sectioninformatique.template.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +68,9 @@ public class TestControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private MessageSource messageSource;
+
     @MockitoBean
     private AuthClient authClient;
 
@@ -115,6 +120,10 @@ public class TestControllerTest {
 
     }
 
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+    }
+
     /**
      * Test: GET /tests/
      *
@@ -160,7 +169,8 @@ public class TestControllerTest {
                 "get-hello/401/missing-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -218,7 +228,8 @@ public class TestControllerTest {
                 "get-hello/401/expired-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.jwt.expired")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -279,7 +290,8 @@ public class TestControllerTest {
                 "me/401/missing-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -337,7 +349,8 @@ public class TestControllerTest {
                 "me/401/expired-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.jwt.expired")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -371,7 +384,8 @@ public class TestControllerTest {
                 "promote-test",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("test.user.promoted")));
 
                         UserDto updatedUser = userService.findByLogin("test.user@test.com");
 
@@ -404,7 +418,8 @@ public class TestControllerTest {
                 "promote-test/401/missing-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -465,7 +480,8 @@ public class TestControllerTest {
                 "promote-test/401/expired-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.jwt.expired")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -495,7 +511,8 @@ public class TestControllerTest {
                 "promote-test/403/non-admin",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("error.accessDenied")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -528,7 +545,8 @@ public class TestControllerTest {
                 "promote-test/404/user-not-found",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("user.notFound")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -609,7 +627,8 @@ public class TestControllerTest {
                 "all/401/missing-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -640,7 +659,8 @@ public class TestControllerTest {
                 "all/401/expired-token",
                 request -> {
                     try {
-                        request.andExpect(jsonPath("$.message").exists());
+                        request.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.jwt.expired")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

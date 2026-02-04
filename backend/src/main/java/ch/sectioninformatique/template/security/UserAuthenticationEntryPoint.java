@@ -62,15 +62,7 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         
-        String errorMessage = getMessage("security.auth.failed");
-        if (authException != null) {
-            String authMessage = authException.getMessage();
-            if (authMessage != null && !authMessage.isEmpty()) {
-                errorMessage = authMessage;
-            } else {
-                errorMessage = getMessage("security.auth.missingOrInvalidToken");
-            }
-        }
+        String errorMessage = getMessage("security.auth.missingOrInvalidToken");
         
         OBJECT_MAPPER.writeValue(response.getOutputStream(), new ErrorDto(errorMessage));
     }
