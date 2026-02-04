@@ -48,7 +48,7 @@ const ResetPassword = () =>
                         <InputEmail
                             id="email"
                             name="email"
-                            label={t("email")}
+                            label={t("email", { ns: 'common' })}
                             placeholder="example@orif.ch"
                             required={true}
                         />
@@ -56,14 +56,14 @@ const ResetPassword = () =>
                         <div className="flex gap-2 w-full">
                             <Button
                                 variant="tertiary"
-                                label={t("cancel")}
+                                label={t("cancel", { ns: 'common' })}
                                 type="button"
                                 className="basis-1/2"
                             />
 
                             <Button
                                 variant="primary"
-                                label={t("confirm")}
+                                label={t("confirm", { ns: 'common' })}
                                 className="basis-1/2"
                             />
                         </div>
@@ -91,7 +91,7 @@ const ResetPassword = () =>
 
                             <Button
                                 variant="primary"
-                                label={t("confirm")}
+                                label={t("confirm", { ns: 'common' })}
                                 className="w-full"
                             />
                     </form>

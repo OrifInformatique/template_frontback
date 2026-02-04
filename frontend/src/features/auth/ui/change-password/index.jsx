@@ -47,13 +47,13 @@ const ChangePassword = () =>
                     <div className="flex gap-2 w-full">
                         <Button
                             variant="tertiary"
-                            label={t("cancel")}
+                            label={t("cancel", { ns: 'common' })}
                             className="basis-1/2"
                         />
 
                         <Button
                             variant="primary"
-                            label={t("confirm")}
+                            label={t("confirm", { ns: 'common' })}
                             className="basis-1/2"
                         />
                     </div>
