@@ -70,11 +70,11 @@ public class GlobalExceptionHandler {
     /**
      * Handles AppException - the custom application exception.
      * 
-     * Returns the exception's status and message as-is, allowing developers
-     * to customize responses directly when throwing exceptions.
+    * Resolves the exception's message as an i18n key (with optional args) and
+    * falls back to the raw message when no bundle entry exists.
      * 
-     * @param ex The AppException instance containing status and message
-     * @return ResponseEntity with the exception's status and message
+    * @param ex The AppException instance containing status, key, and args
+    * @return ResponseEntity with the exception's status and resolved message
      */
     @ExceptionHandler(AppException.class)
     public ResponseEntity<Object> handleAppException(AppException ex) {

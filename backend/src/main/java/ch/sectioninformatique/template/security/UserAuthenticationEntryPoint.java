@@ -44,9 +44,10 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
      * The response includes:
      * - HTTP 401 Unauthorized status code
      * - Content-Type: application/json header
-     * - JSON body containing either:
-     *   - The specific authentication exception message if available
-     *   - A default "Invalid or missing authentication token" message if no specific message is available
+    * - JSON body containing an error message resolved from i18n keys:
+    *   - Uses the authentication exception message if present
+    *   - Falls back to "Invalid or missing authentication token" when the exception has no message
+    *   - Uses a generic authentication failure message if no exception is provided
      *
      * @param request The HTTP request that triggered the authentication failure
      * @param response The HTTP response to be sent back to the client
@@ -62,7 +63,15 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         
-        String errorMessage = getMessage("security.auth.missingOrInvalidToken");
+        String errorMessage = getMessage("security.auth.failed");
+        if (authException != null) {
+            String authMessage = authException.getMessage();
+            if (authMessage != null && !authMessage.isEmpty()) {
+                errorMessage = authMessage;
+            } else {
+                errorMessage = getMessage("security.auth.missingOrInvalidToken");
+            }
+        }
         
         OBJECT_MAPPER.writeValue(response.getOutputStream(), new ErrorDto(errorMessage));
     }
