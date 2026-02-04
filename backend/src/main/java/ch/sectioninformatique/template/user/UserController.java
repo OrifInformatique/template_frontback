@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -38,6 +40,8 @@ public class UserController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
+
+    private final MessageSource messageSource;
 
     /**
      * Client for making user-related HTTP requests to the authentication service
@@ -137,7 +141,11 @@ public class UserController {
                     .map(message -> ResponseEntity.ok(Map.of("message", message)));
         } else {
             userService.deleteUser(userId);
-            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
+            String message = messageSource.getMessage(
+                    "user.deleted.local",
+                    null,
+                    LocaleContextHolder.getLocale());
+            return Mono.just(ResponseEntity.ok(Map.of("message", message)));
         }
     }
 
@@ -166,7 +174,11 @@ public class UserController {
         } else {
             // Permanently delete user from local database only
             userService.deleteUserPermanent(userId);
-            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
+            String message = messageSource.getMessage(
+                    "user.deleted.local",
+                    null,
+                    LocaleContextHolder.getLocale());
+            return Mono.just(ResponseEntity.ok(Map.of("message", message)));
         }
     }
 
@@ -300,6 +312,10 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToLocalAppRole(@PathVariable Long userId) {
             userService.promoteToLocalAppRole(userId);
-            return ResponseEntity.ok().body("User promoted to local app role successfully.");
+            String message = messageSource.getMessage(
+                "user.promoted.local",
+                null,
+                LocaleContextHolder.getLocale());
+            return ResponseEntity.ok().body(message);
     }
 }
