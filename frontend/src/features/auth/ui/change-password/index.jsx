@@ -7,7 +7,7 @@ import { Button,
 
 const ChangePassword = () =>
 {
-    const { t } = useTranslation("auth");
+    const { t } = useTranslation("auth", "common");
     const handleChangePasswordFormSubmit = (e) =>
     {
         e.preventDefault();

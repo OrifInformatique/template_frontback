@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Title from '../../common/ui/title'
 
 const Home = () => {
-  const { t } = useTranslation("home");
+  const { t } = useTranslation("home", "common");
   return (
   <>
     <Title>{t("home_title")}</Title>

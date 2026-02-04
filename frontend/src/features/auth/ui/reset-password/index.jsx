@@ -8,7 +8,7 @@ import { Button,
 
 const ResetPassword = () =>
 {
-    const { t } = useTranslation("auth");
+    const { t } = useTranslation("auth", "common");
     // TODO :  Control the InputEmail to display it in the explicative text of step 2 and fill the InputText when coming back from step 2 to step 1.
 
     const [formStep, setFormStep] = useState(1);

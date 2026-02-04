@@ -13,7 +13,7 @@ import Link from '../../../../common/ui/link';
 import LoginTestIndicator from '../../../../common/ui/tests/loginTestIndicator';
 
 const Login = () => {
-    const { t } = useTranslation("auth");
+    const { t } = useTranslation("auth", "common");
     const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =
         useState(false);
     const { login } = useLogin();
@@ -55,7 +55,7 @@ const Login = () => {
 
                             <Button
                                 variant="primary"
-                                label={t("sign_in_local_account")}
+                                label={t("sign_in")}
                                 className="w-full"
                             />
                         </form>
