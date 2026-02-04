@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import { useTranslation } from 'react-i18next';
 import { useLogin } from '../api/authService';
 import useAuthStore from '../../authStore';
 import {
@@ -9,9 +10,10 @@ import {
     InputPassword,
 } from '@orif-informatique/react-components-library';
 import Link from '../../../../common/ui/link';
-import LoginTestIndicator from './loginTestIndicator';
+import LoginTestIndicator from '../../../../common/ui/tests/loginTestIndicator';
 
 const Login = () => {
+    const { t } = useTranslation("auth", "common");
     const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =
         useState(false);
     const { login } = useLogin();
@@ -21,7 +23,7 @@ const Login = () => {
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
             <div className="flex flex-col gap-4 w-full sm:w-[350px] h-fit p-8 border border-black sm:rounded-lg">
                 <LoginTestIndicator/>
-                <h1>Connexion</h1>
+                <h1>{t("sign_in")}</h1>
 
                 <div className="mx-auto">
                     <Link to="/oauth2/authorization/azure">
@@ -40,32 +42,32 @@ const Login = () => {
                             <InputText
                                 id="identifier"
                                 name="identifier"
-                                label="Identifiant"
+                                label={t("username")}
                                 required={true}
                             />
 
                             <InputPassword
                                 id="password"
                                 name="password"
-                                label="Mot de passe"
+                                label={t("password")}
                                 required={true}
                             />
 
                             <Button
                                 variant="primary"
-                                label="Se connecter"
+                                label={t("sign_in")}
                                 className="w-full"
                             />
                         </form>
 
                         <Link to="/reset-password">
-                            J'ai oublié mon mot de passe
+                            {t("forgot_password")}
                         </Link>
                     </>
                 ) : (
                     <Button
                         variant="primary"
-                        label="Connexion avec un compte local"
+                        label={t("sign_in_with_local_account")}
                         onClick={() => setShowLocalAccountLoginForm(true)}
                     />
                 )}
