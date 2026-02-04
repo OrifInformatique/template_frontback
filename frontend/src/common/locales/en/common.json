@@ -1,3 +1,7 @@
 {
-    "app_title": "App Title"
+    "app_title": "App Title",
+
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "email": "Email"
 }
