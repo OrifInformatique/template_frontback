@@ -82,6 +82,10 @@ public class UserExceptions {
             super("user.delete.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
 
+        public UserDeletionException(String messageKey, boolean useKey) {
+            super(messageKey, HttpStatus.BAD_REQUEST);
+        }
+
         public UserDeletionException() {
             super("user.delete.failed", HttpStatus.BAD_REQUEST);
         }
@@ -137,6 +141,10 @@ public class UserExceptions {
     public static class UserValidationException extends AppException {
         public UserValidationException(String message) {
             super("user.validation.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
+        }
+
+        public UserValidationException(String messageKey, boolean useKey) {
+            super(messageKey, HttpStatus.BAD_REQUEST);
         }
     }
 
