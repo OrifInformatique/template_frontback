@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AppException.class)
     public ResponseEntity<Object> handleAppException(AppException ex) {
-        String message = getMessage(ex.getMessage(), null, ex.getMessage());
+        String message = getMessage(ex.getMessage(), ex.getMessageArgs(), ex.getMessage());
         return buildResponse(ex.getStatus(), message);
     }
 

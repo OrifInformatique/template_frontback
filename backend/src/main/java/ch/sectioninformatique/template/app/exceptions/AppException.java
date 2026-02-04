@@ -22,6 +22,11 @@ public class AppException extends RuntimeException {
     private final HttpStatus status;
 
     /**
+     * Optional arguments for resolving i18n messages.
+     */
+    private final Object[] messageArgs;
+
+    /**
      * Constructs a new AppException with the specified message and status.
      * This constructor:
      * - Initializes the exception with a descriptive message
@@ -32,8 +37,20 @@ public class AppException extends RuntimeException {
      * @param status The HTTP status code to be returned in the response
      */
     public AppException(String message, HttpStatus status) {
+        this(message, status, null);
+    }
+
+    /**
+     * Constructs a new AppException with the specified message, status, and args.
+     *
+     * @param message The message key or literal message
+     * @param status The HTTP status code to be returned in the response
+     * @param messageArgs Optional arguments for i18n message formatting
+     */
+    public AppException(String message, HttpStatus status, Object[] messageArgs) {
         super(message);
         this.status = status;
+        this.messageArgs = messageArgs;
     }
 
     /**
@@ -46,6 +63,15 @@ public class AppException extends RuntimeException {
      */
     public HttpStatus getStatus() {
         return status;
+    }
+
+    /**
+     * Returns optional arguments for i18n message formatting.
+     *
+     * @return Arguments for the message, or null if none
+     */
+    public Object[] getMessageArgs() {
+        return messageArgs;
     }
 }
 

@@ -14,7 +14,7 @@ public class SecurityExceptions {
      */
     public static class InvalidTokenException extends AppException {
         public InvalidTokenException() {
-            super("Invalid or expired token", HttpStatus.UNAUTHORIZED);
+            super("security.token.invalid", HttpStatus.UNAUTHORIZED);
         }
 
         public InvalidTokenException(String message) {
@@ -27,7 +27,7 @@ public class SecurityExceptions {
      */
     public static class InvalidRefreshTokenException extends AppException {
         public InvalidRefreshTokenException() {
-            super("Invalid or expired refresh token", HttpStatus.UNAUTHORIZED);
+            super("security.refresh.invalid", HttpStatus.UNAUTHORIZED);
         }
 
         public InvalidRefreshTokenException(String message) {
@@ -44,7 +44,7 @@ public class SecurityExceptions {
         }
 
         public JwtVerificationException() {
-            super("JWT token verification failed", HttpStatus.UNAUTHORIZED);
+            super("security.jwt.verificationFailed", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -53,7 +53,7 @@ public class SecurityExceptions {
      */
     public static class JwtTokenExpiredException extends AppException {
         public JwtTokenExpiredException() {
-            super("JWT token has expired", HttpStatus.UNAUTHORIZED);
+            super("security.jwt.expired", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -62,7 +62,7 @@ public class SecurityExceptions {
      */
     public static class InvalidJwtSignatureException extends AppException {
         public InvalidJwtSignatureException() {
-            super("Invalid JWT signature", HttpStatus.UNAUTHORIZED);
+            super("security.jwt.invalidSignature", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -71,7 +71,7 @@ public class SecurityExceptions {
      */
     public static class MalformedJwtException extends AppException {
         public MalformedJwtException() {
-            super("Malformed JWT token", HttpStatus.BAD_REQUEST);
+            super("security.jwt.malformed", HttpStatus.BAD_REQUEST);
         }
 
         public MalformedJwtException(String message) {
@@ -84,7 +84,7 @@ public class SecurityExceptions {
      */
     public static class InvalidTokenTypeException extends AppException {
         public InvalidTokenTypeException() {
-            super("Invalid token type for this endpoint", HttpStatus.UNAUTHORIZED);
+            super("security.jwt.invalidType", HttpStatus.UNAUTHORIZED);
         }
 
         public InvalidTokenTypeException(String message) {
@@ -97,7 +97,7 @@ public class SecurityExceptions {
      */
     public static class AuthenticationRequiredException extends AppException {
         public AuthenticationRequiredException() {
-            super("Authentication required", HttpStatus.UNAUTHORIZED);
+            super("security.auth.required", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -106,7 +106,7 @@ public class SecurityExceptions {
      */
     public static class MissingAuthorizationHeaderException extends AppException {
         public MissingAuthorizationHeaderException() {
-            super("Missing authorization header", HttpStatus.UNAUTHORIZED);
+            super("security.authHeader.missing", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -115,7 +115,7 @@ public class SecurityExceptions {
      */
     public static class InvalidAuthorizationHeaderException extends AppException {
         public InvalidAuthorizationHeaderException() {
-            super("Invalid authorization header format", HttpStatus.BAD_REQUEST);
+            super("security.authHeader.invalidFormat", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -124,7 +124,7 @@ public class SecurityExceptions {
      */
     public static class AccessDeniedException extends AppException {
         public AccessDeniedException() {
-            super("Access denied", HttpStatus.FORBIDDEN);
+            super("security.accessDenied", HttpStatus.FORBIDDEN);
         }
 
         public AccessDeniedException(String message) {
@@ -137,11 +137,11 @@ public class SecurityExceptions {
      */
     public static class InsufficientRoleException extends AppException {
         public InsufficientRoleException(String requiredRole) {
-            super("Insufficient role. Required: " + requiredRole, HttpStatus.FORBIDDEN);
+            super("security.role.insufficient", HttpStatus.FORBIDDEN, new Object[] { requiredRole });
         }
 
         public InsufficientRoleException() {
-            super("Insufficient role", HttpStatus.FORBIDDEN);
+            super("security.role.insufficient", HttpStatus.FORBIDDEN);
         }
     }
 
@@ -150,11 +150,11 @@ public class SecurityExceptions {
      */
     public static class InsufficientPermissionException extends AppException {
         public InsufficientPermissionException(String requiredPermission) {
-            super("Insufficient permission. Required: " + requiredPermission, HttpStatus.FORBIDDEN);
+            super("security.permission.insufficient", HttpStatus.FORBIDDEN, new Object[] { requiredPermission });
         }
 
         public InsufficientPermissionException() {
-            super("Insufficient permission", HttpStatus.FORBIDDEN);
+            super("security.permission.insufficient", HttpStatus.FORBIDDEN);
         }
     }
 
@@ -163,7 +163,7 @@ public class SecurityExceptions {
      */
     public static class InvalidSecurityContextException extends AppException {
         public InvalidSecurityContextException() {
-            super("Invalid security context", HttpStatus.UNAUTHORIZED);
+            super("security.context.invalid", HttpStatus.UNAUTHORIZED);
         }
 
         public InvalidSecurityContextException(String message) {
@@ -176,11 +176,11 @@ public class SecurityExceptions {
      */
     public static class TokenCreationException extends AppException {
         public TokenCreationException(String message) {
-            super("Failed to create token: " + message, HttpStatus.INTERNAL_SERVER_ERROR);
+            super("security.token.creationFailed", HttpStatus.INTERNAL_SERVER_ERROR, new Object[] { message });
         }
 
         public TokenCreationException() {
-            super("Failed to create token", HttpStatus.INTERNAL_SERVER_ERROR);
+            super("security.token.creationFailed", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -189,7 +189,7 @@ public class SecurityExceptions {
      */
     public static class SecurityConfigurationException extends AppException {
         public SecurityConfigurationException(String message) {
-            super("Security configuration error: " + message, HttpStatus.INTERNAL_SERVER_ERROR);
+            super("security.config.error", HttpStatus.INTERNAL_SERVER_ERROR, new Object[] { message });
         }
     }
 
@@ -198,7 +198,7 @@ public class SecurityExceptions {
      */
     public static class CorsViolationException extends AppException {
         public CorsViolationException() {
-            super("CORS policy violation", HttpStatus.FORBIDDEN);
+            super("security.cors.violation", HttpStatus.FORBIDDEN);
         }
 
         public CorsViolationException(String message) {
@@ -211,7 +211,7 @@ public class SecurityExceptions {
      */
     public static class InvalidSessionException extends AppException {
         public InvalidSessionException() {
-            super("Invalid or expired session", HttpStatus.UNAUTHORIZED);
+            super("security.session.invalid", HttpStatus.UNAUTHORIZED);
         }
 
         public InvalidSessionException(String message) {
@@ -224,7 +224,7 @@ public class SecurityExceptions {
      */
     public static class AuthenticationProviderException extends AppException {
         public AuthenticationProviderException(String message) {
-            super("Authentication provider error: " + message, HttpStatus.INTERNAL_SERVER_ERROR);
+            super("security.authProvider.error", HttpStatus.INTERNAL_SERVER_ERROR, new Object[] { message });
         }
     }
 }
