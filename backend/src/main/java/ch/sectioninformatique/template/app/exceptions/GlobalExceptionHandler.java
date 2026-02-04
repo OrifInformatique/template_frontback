@@ -1,5 +1,7 @@
 package ch.sectioninformatique.template.app.exceptions;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -31,6 +33,16 @@ import java.util.Map;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final MessageSource messageSource;
+
+    public GlobalExceptionHandler(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+
+    private String getMessage(String key, Object[] args, String defaultMessage) {
+        return messageSource.getMessage(key, args, defaultMessage, LocaleContextHolder.getLocale());
+    }
 
     /**
      * Builds a standardized error response entity.
@@ -66,7 +78,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AppException.class)
     public ResponseEntity<Object> handleAppException(AppException ex) {
-        return buildResponse(ex.getStatus(), ex.getMessage());
+        String message = getMessage(ex.getMessage(), null, ex.getMessage());
+        return buildResponse(ex.getStatus(), message);
     }
 
     // ========================================================================
@@ -85,7 +98,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
-        return buildResponse(HttpStatus.FORBIDDEN, "Access denied: You do not have permission to access this resource");
+        String message = getMessage(
+                "error.accessDenied",
+                null,
+                "Access denied: You do not have permission to access this resource");
+        return buildResponse(HttpStatus.FORBIDDEN, message);
     }
 
     /**
@@ -120,7 +137,7 @@ public class GlobalExceptionHandler {
         String combinedMessage = fieldErrors.entrySet().stream()
                 .map(entry -> entry.getKey() + ": " + entry.getValue())
                 .reduce((e1, e2) -> e1 + "; " + e2)
-                .orElse("Validation failed");
+            .orElse(getMessage("error.validation.failed", null, "Validation failed"));
 
         // Build response with both message and detailed fieldErrors
         Map<String, Object> response = new HashMap<>();
@@ -145,7 +162,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<Object> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException ex) {
-        return buildResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ex.getMessage());
+        String message = getMessage("error.mediaTypeNotSupported", null, "Unsupported media type");
+        return buildResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, message);
     }
 
     /**
@@ -162,7 +180,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Object> handleMissingParams(MissingServletRequestParameterException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getParameterName() + " parameter is missing");
+        String message = getMessage(
+                "error.missingParameter",
+                new Object[] { ex.getParameterName() },
+                ex.getParameterName() + " parameter is missing");
+        return buildResponse(HttpStatus.BAD_REQUEST, message);
     }
 
     /**
@@ -187,7 +209,10 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleMalformedJson(HttpMessageNotReadableException ex) {
-        String message = "Malformed or missing JSON request body";
+        String message = getMessage(
+            "error.json.malformed",
+            null,
+            "Malformed or missing JSON request body");
 
         // Extract more specific error information if available
         Throwable cause = ex.getCause();
@@ -196,13 +221,25 @@ public class GlobalExceptionHandler {
             // Provide more specific guidance based on the parsing error
             if (causeMessage != null) {
                 if (causeMessage.contains("Unexpected end-of-input")) {
-                    message = "JSON is incomplete - missing closing bracket or quote";
+                    message = getMessage(
+                            "error.json.incomplete",
+                            null,
+                            "JSON is incomplete - missing closing bracket or quote");
                 } else if (causeMessage.contains("Unexpected character")) {
-                    message = "JSON contains invalid character - check for unescaped quotes or missing commas";
+                    message = getMessage(
+                            "error.json.invalidCharacter",
+                            null,
+                            "JSON contains invalid character - check for unescaped quotes or missing commas");
                 } else if (causeMessage.contains("cannot deserialize")) {
-                    message = "Invalid value type for a field - check your data types match the schema";
+                    message = getMessage(
+                            "error.json.invalidType",
+                            null,
+                            "Invalid value type for a field - check your data types match the schema");
                 } else if (causeMessage.contains("No content to map")) {
-                    message = "Empty or missing request body";
+                    message = getMessage(
+                            "error.json.empty",
+                            null,
+                            "Empty or missing request body");
                 }
             }
         }
