@@ -124,7 +124,7 @@ public class SecurityExceptions {
      */
     public static class AccessDeniedException extends AppException {
         public AccessDeniedException() {
-            super("security.accessDenied", HttpStatus.FORBIDDEN);
+            super("error.accessDenied", HttpStatus.FORBIDDEN);
         }
 
         public AccessDeniedException(String message) {

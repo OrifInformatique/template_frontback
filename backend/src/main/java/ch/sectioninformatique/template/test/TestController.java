@@ -99,7 +99,7 @@ public class TestController {
 
             userService.promoteToLocalAppRole(userId);
             String message = messageSource.getMessage(
-                "test.user.promoted",
+                "user.promoted.local",
                 null,
                 LocaleContextHolder.getLocale());
             return ResponseEntity.ok(Map.of("message", message));

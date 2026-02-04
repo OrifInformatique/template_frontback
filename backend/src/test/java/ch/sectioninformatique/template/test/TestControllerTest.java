@@ -385,7 +385,7 @@ public class TestControllerTest {
                 request -> {
                     try {
                         request.andExpect(jsonPath("$.message")
-                                .value(getMessage("test.user.promoted")));
+                                .value(getMessage("user.promoted.local")));
 
                         UserDto updatedUser = userService.findByLogin("test.user@test.com");
 

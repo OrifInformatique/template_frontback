@@ -32,7 +32,7 @@ public class AuthExceptions {
      */
     public static class UserNotFoundException extends AppException {
         public UserNotFoundException() {
-            super("auth.userNotFound", HttpStatus.NOT_FOUND);
+            super("user.notFound", HttpStatus.NOT_FOUND);
         }
 
         public UserNotFoundException(String message) {

@@ -810,7 +810,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isNotFound());
-                        response.andExpect(jsonPath("$.message").value(getMessage("auth.userNotFound")));
+                        response.andExpect(jsonPath("$.message").value(getMessage("user.notFound")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
