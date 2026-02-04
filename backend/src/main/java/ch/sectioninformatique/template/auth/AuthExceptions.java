@@ -14,7 +14,7 @@ public class AuthExceptions {
      */
     public static class InvalidCredentialsException extends AppException {
         public InvalidCredentialsException() {
-            super("Invalid credentials", HttpStatus.UNAUTHORIZED);
+            super("auth.invalidCredentials", HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -32,7 +32,7 @@ public class AuthExceptions {
      */
     public static class UserNotFoundException extends AppException {
         public UserNotFoundException() {
-            super("User not found", HttpStatus.NOT_FOUND);
+            super("auth.userNotFound", HttpStatus.NOT_FOUND);
         }
 
         public UserNotFoundException(String message) {
@@ -45,7 +45,7 @@ public class AuthExceptions {
      */
     public static class UserAlreadyExistsException extends AppException {
         public UserAlreadyExistsException() {
-            super("User already exists", HttpStatus.CONFLICT);
+            super("auth.userAlreadyExists", HttpStatus.CONFLICT);
         }
 
         public UserAlreadyExistsException(String message) {
@@ -76,7 +76,7 @@ public class AuthExceptions {
      */
     public static class LoginAlreadyExistsException extends AppException {
         public LoginAlreadyExistsException() {
-            super("Login already exists", HttpStatus.BAD_REQUEST);
+            super("auth.loginAlreadyExists", HttpStatus.BAD_REQUEST);
         }
 
         public LoginAlreadyExistsException(String message) {
