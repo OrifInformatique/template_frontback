@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -75,6 +77,9 @@ public class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private MessageSource messageSource;
+
     /**
      * Mock client for external auth service (only used for global delete
      * operations)
@@ -101,6 +106,10 @@ public class UserControllerTest {
 
         // Create and return a real JWT token
         return userAuthenticationProvider.createToken(userDto);
+    }
+
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }
 
     /**
@@ -198,6 +207,8 @@ public class UserControllerTest {
             response -> {
                 try {
                     response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -221,6 +232,8 @@ public class UserControllerTest {
             response -> {
                 try {
                     response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -246,6 +259,8 @@ public class UserControllerTest {
             response -> {
                 try {
                     response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -298,6 +313,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -323,6 +340,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -352,7 +371,8 @@ public class UserControllerTest {
                 true,
                 response -> {
                     try {
-                        response.andExpect(jsonPath("$.message").value("Local User deleted successfully"));
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("user.deleted.local")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -437,7 +457,8 @@ public class UserControllerTest {
                 true,
                 response -> {
                     try {
-                        response.andExpect(jsonPath("$.message").value("Failed to delete user: Failed to delete user from auth service"));
+                        response.andExpect(jsonPath("$.message").value(
+                                getMessage("user.delete.failed", "Failed to delete user from auth service")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -557,7 +578,8 @@ public class UserControllerTest {
                 true,
                 response -> {
                     try {
-                        response.andExpect(jsonPath("$.message").value("Failed to delete user: Database constraint violation"));
+                        response.andExpect(jsonPath("$.message").value(
+                                getMessage("user.delete.failed", "Database constraint violation")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -590,7 +612,13 @@ public class UserControllerTest {
                 MediaType.APPLICATION_JSON,
                 404,
                 "delete-user-not-found",
-                null);
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message").value(getMessage("user.notFound")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
     
     /**
@@ -623,6 +651,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -646,6 +676,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -671,6 +703,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -694,6 +728,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -719,6 +755,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -745,6 +783,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -769,6 +809,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -802,6 +844,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -826,6 +870,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -852,6 +898,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -875,6 +923,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -908,6 +958,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -932,6 +984,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -961,6 +1015,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -985,6 +1041,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1014,6 +1072,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1038,6 +1098,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1067,6 +1129,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1091,6 +1155,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1120,6 +1186,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1144,6 +1212,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1173,6 +1243,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1197,6 +1269,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
