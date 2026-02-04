@@ -14,7 +14,7 @@ public class ItemExceptions {
         * @param id The ID of the item that was not found
         */
         public ItemNotFoundException(Long id) {
-            super("Could not find item " + id,HttpStatus.NOT_FOUND);
+            super("item.notFound",HttpStatus.NOT_FOUND);
         }
     }
 
@@ -28,7 +28,7 @@ public class ItemExceptions {
         * @param message The operation that was attempted (e.g., "update", "delete")
         */
         public UnauthorizedItemException(String message) {
-            super("You can only " + message + " your own items",HttpStatus.UNAUTHORIZED);
+            super("item.unauthorized",HttpStatus.UNAUTHORIZED);
         }
     }
 
