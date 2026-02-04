@@ -14,7 +14,7 @@ public class UserExceptions {
      */
     public static class UserNotFoundException extends AppException {
         public UserNotFoundException() {
-            super("User not found", HttpStatus.NOT_FOUND);
+            super("user.notFound", HttpStatus.NOT_FOUND);
         }
 
         public UserNotFoundException(String message) {
@@ -22,7 +22,7 @@ public class UserExceptions {
         }
 
         public UserNotFoundException(Long userId) {
-            super("User not found with ID: " + userId, HttpStatus.NOT_FOUND);
+            super("user.notFound.id", HttpStatus.NOT_FOUND, new Object[] { userId });
         }
     }
 
@@ -31,7 +31,7 @@ public class UserExceptions {
      */
     public static class UserNotFoundByLoginException extends AppException {
         public UserNotFoundByLoginException(String login) {
-            super("User not found with login: " + login, HttpStatus.NOT_FOUND);
+            super("user.notFound.login", HttpStatus.NOT_FOUND, new Object[] { login });
         }
     }
 
@@ -40,11 +40,11 @@ public class UserExceptions {
      */
     public static class UserAlreadyHasRoleException extends AppException {
         public UserAlreadyHasRoleException(String roleName) {
-            super("The user already has the " + roleName + " role", HttpStatus.CONFLICT);
+            super("user.role.alreadyHas", HttpStatus.CONFLICT, new Object[] { roleName });
         }
 
         public UserAlreadyHasRoleException() {
-            super("User already has the specified role", HttpStatus.CONFLICT);
+            super("user.role.alreadyHas", HttpStatus.CONFLICT);
         }
     }
 
@@ -53,11 +53,11 @@ public class UserExceptions {
      */
     public static class UserCreationException extends AppException {
         public UserCreationException(String message) {
-            super("Failed to create user: " + message, HttpStatus.BAD_REQUEST);
+            super("user.create.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
 
         public UserCreationException() {
-            super("Failed to create user", HttpStatus.BAD_REQUEST);
+            super("user.create.failed", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -66,11 +66,11 @@ public class UserExceptions {
      */
     public static class UserUpdateException extends AppException {
         public UserUpdateException(String message) {
-            super("Failed to update user: " + message, HttpStatus.BAD_REQUEST);
+            super("user.update.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
 
         public UserUpdateException() {
-            super("Failed to update user", HttpStatus.BAD_REQUEST);
+            super("user.update.failed", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -79,11 +79,11 @@ public class UserExceptions {
      */
     public static class UserDeletionException extends AppException {
         public UserDeletionException(String message) {
-            super("Failed to delete user: " + message, HttpStatus.BAD_REQUEST);
+            super("user.delete.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
 
         public UserDeletionException() {
-            super("Failed to delete user", HttpStatus.BAD_REQUEST);
+            super("user.delete.failed", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -92,11 +92,11 @@ public class UserExceptions {
      */
     public static class UserAlreadyDeletedException extends AppException {
         public UserAlreadyDeletedException() {
-            super("User is already deleted", HttpStatus.CONFLICT);
+            super("user.alreadyDeleted", HttpStatus.CONFLICT);
         }
 
         public UserAlreadyDeletedException(Long userId) {
-            super("User with ID " + userId + " is already deleted", HttpStatus.CONFLICT);
+            super("user.alreadyDeleted.id", HttpStatus.CONFLICT, new Object[] { userId });
         }
     }
 
@@ -105,7 +105,7 @@ public class UserExceptions {
      */
     public static class UserPromotionException extends AppException {
         public UserPromotionException(String message) {
-            super("Failed to promote user: " + message, HttpStatus.BAD_REQUEST);
+            super("user.promote.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
     }
 
@@ -114,11 +114,11 @@ public class UserExceptions {
      */
     public static class RoleNotFoundException extends AppException {
         public RoleNotFoundException(String roleName) {
-            super(roleName + " role not found", HttpStatus.NOT_FOUND);
+            super("user.role.notFound", HttpStatus.NOT_FOUND, new Object[] { roleName });
         }
 
         public RoleNotFoundException() {
-            super("Role not found", HttpStatus.NOT_FOUND);
+            super("user.role.notFound", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -127,7 +127,7 @@ public class UserExceptions {
      */
     public static class DefaultRoleNotFoundException extends AppException {
         public DefaultRoleNotFoundException() {
-            super("Default role not found", HttpStatus.INTERNAL_SERVER_ERROR);
+            super("user.role.defaultNotFound", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -136,7 +136,7 @@ public class UserExceptions {
      */
     public static class UserValidationException extends AppException {
         public UserValidationException(String message) {
-            super("User validation failed: " + message, HttpStatus.BAD_REQUEST);
+            super("user.validation.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
     }
 
@@ -145,7 +145,7 @@ public class UserExceptions {
      */
     public static class UserMappingException extends AppException {
         public UserMappingException(String message) {
-            super("Failed to map user: " + message, HttpStatus.INTERNAL_SERVER_ERROR);
+            super("user.mapping.failed", HttpStatus.INTERNAL_SERVER_ERROR, new Object[] { message });
         }
     }
 
@@ -154,7 +154,7 @@ public class UserExceptions {
      */
     public static class UserSeedingException extends AppException {
         public UserSeedingException(String message) {
-            super("User seeding failed: " + message, HttpStatus.INTERNAL_SERVER_ERROR);
+            super("user.seeding.failed", HttpStatus.INTERNAL_SERVER_ERROR, new Object[] { message });
         }
     }
 
@@ -163,7 +163,7 @@ public class UserExceptions {
      */
     public static class UserRetrievalException extends AppException {
         public UserRetrievalException(String message) {
-            super("Failed to retrieve user: " + message, HttpStatus.INTERNAL_SERVER_ERROR);
+            super("user.retrieve.failed", HttpStatus.INTERNAL_SERVER_ERROR, new Object[] { message });
         }
     }
 
@@ -172,7 +172,7 @@ public class UserExceptions {
      */
     public static class InactiveUserException extends AppException {
         public InactiveUserException() {
-            super("User account is inactive", HttpStatus.FORBIDDEN);
+            super("user.inactive", HttpStatus.FORBIDDEN);
         }
 
         public InactiveUserException(String message) {
@@ -185,7 +185,7 @@ public class UserExceptions {
      */
     public static class UserRoleUpdateException extends AppException {
         public UserRoleUpdateException(String message) {
-            super("Failed to update user role: " + message, HttpStatus.BAD_REQUEST);
+            super("user.role.update.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
     }
 
@@ -194,11 +194,11 @@ public class UserExceptions {
      */
     public static class DuplicateUserException extends AppException {
         public DuplicateUserException(String message) {
-            super("Duplicate user detected: " + message, HttpStatus.CONFLICT);
+            super("user.duplicate", HttpStatus.CONFLICT, new Object[] { message });
         }
 
         public DuplicateUserException() {
-            super("Duplicate user detected", HttpStatus.CONFLICT);
+            super("user.duplicate", HttpStatus.CONFLICT);
         }
     }
 
@@ -207,11 +207,11 @@ public class UserExceptions {
      */
     public static class PermanentUserDeletionException extends AppException {
         public PermanentUserDeletionException(String message) {
-            super("Failed to permanently delete user: " + message, HttpStatus.BAD_REQUEST);
+            super("user.delete.permanent.failed", HttpStatus.BAD_REQUEST, new Object[] { message });
         }
 
         public PermanentUserDeletionException() {
-            super("Failed to permanently delete user", HttpStatus.BAD_REQUEST);
+            super("user.delete.permanent.failed", HttpStatus.BAD_REQUEST);
         }
     }
 }
