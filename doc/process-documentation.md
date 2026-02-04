@@ -55,7 +55,6 @@ _Illustrates interactions between the frontend and backend modules, as well as t
 ---
 
 ### 1.2 Root Files
-
 | File                     | Description                                                      |
 | ------------------------ | ---------------------------------------------------------------- |
 | `pom.xml`                | Defines project dependencies, plugins, and build configurations. |
@@ -125,7 +124,6 @@ sequenceDiagram
     Client->>AuthController: /auth/login with credentials
     AuthController->>AuthClient: authClient.login(credentialsDto)
     AuthClient->>spring-auth: POST /auth/login with credentials
-    spring-auth->>spring-auth: Validate credentials & create token
     spring-auth-->>AuthClient: Response with UserDto and token
     AuthClient-->>AuthController: UserDto wrapped in ResponseEntity
     AuthController-->>Client: Response with UserDto and access token
@@ -139,8 +137,6 @@ sequenceDiagram
     participant AuthClient
     participant spring-auth
     participant UserService
-
-    Note over AuthController,spring-auth: Login Flow
     Client->>AuthController: POST /auth/login with credentials
     AuthController->>AuthClient: login(credentialsDto)
     AuthClient->>spring-auth: POST /auth/login
@@ -248,7 +244,6 @@ classDiagram
         <<DTO>>
         +String firstName
         +String lastName
-        +String login
         +char[] password
     }
 
@@ -267,13 +262,6 @@ classDiagram
     UserMapper ..> User : uses
     UserMapper ..> UserDto : creates
     UserMapper ..> RegisterDto : uses
-    %% Relationships
-    User --> "1" Role : mainRole
-    User --> "0..*" Role : appSpecificRoles
-    Role --> "0..*" User : users
-    UserMapper ..> User : uses
-    UserMapper ..> UserDto : creates
-    UserMapper ..> RegisterDto : uses
     User ..|> UserDetails
 ```
 
@@ -283,6 +271,7 @@ _Class Diagram showing the `User`, `Role`, `UserDto`, and `RegisterDto` structur
 sequenceDiagram
     participant Client
     participant JwtAuthFilter
+    participant SecurityLayer
     participant UserController
     participant UserService
     participant UserRepository
@@ -393,7 +382,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | `SecurityConfig.java`               | Security configuration defining the filter chain and access rules. |
 | `SecurityExceptions.java`           | Container class for security-specific custom exceptions.           |
 | `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response.        |
-| `UserAuthenticationProvider.java`   | Authentication provider for validating user credentials.           |
+| `UserAuthenticationProvider.java`   | Authentication provider for validating JWT access tokens.          |
 | `WebClientConfig.java`              | Configuration for WebClient used in inter-service communication.   |
 | `WebConfig.java`                    | Web configuration for general web-related settings.                |
 
@@ -419,9 +408,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | `ItemRepository.java`       | Interface for database operations related to items.                        |
 | `ItemSeeder.java`           | Seeds the database with test items for development.                        |
 | `ItemService.java`          | Business logic for item functionalities.                                   |
-| `ItemExceptionHandler.java` | Exception handler specific to item-related operations.                     |
-| `ItemNotFoundException.java` | Custom exception thrown when an item is not found.                         |
-| `UnauthorizedItemException.java` | Custom exception for unauthorized item access attempts.                |
+| `ItemExceptions.java`       | Container class for item-specific custom exceptions.                       |
 
 ---
 
