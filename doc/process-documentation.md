@@ -16,7 +16,7 @@
     - [1.6 Auth Module (`main/java/auth`)](#16-auth-module-mainjavaauth)
     - [1.7 User Module (`main/java/user`)](#17-user-module-mainjavauser)
     - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
-    - [1.9 Error and Exception Managment (`main/java/app`)](#19-error-and-exception-managment-mainjavaapp)
+    - [1.9 Error and Exception Management (`main/java/app`)](#19-error-and-exception-management-mainjavaapp)
     - [1.10 Item Module (`main/java/item`)](#110-item-module-mainjavaitem)
     - [1.11 Test Module (`main/java/test`)](#111-test-module-mainjavatest)
   - [Related Documentation](#related-documentation)
@@ -169,7 +169,7 @@ sequenceDiagram
 
     Client->>template_frontback: /auth/login with credentials
     template_frontback->>spring-auth: /auth/login with credentials
-    spring-auth->>database: store new refresh token
+    spring-auth->>database: store new refresh 
     spring-auth-->>template_frontback: response with refresh token cookie
     template_frontback->>Client: response with refresh token cookie
     Client->>template_frontback: /auth/refresh with refresh token in body
@@ -188,7 +188,7 @@ _Sequence Diagram showing an example of the refresh token workflow._
 | `AuthController.java`    | Authentication endpoints that relay requests to `spring-auth` via `AuthClient`.                                 |
 | `AuthClient.java`        | WebClient proxy for communicating with the external `spring-auth` application.                                  |
 | `CredentialsDto.java`    | Data Transfer Object (DTO) for login credentials.                                                               |
-| `RegisterDto.java`       | DTO for user registration.                                                                                       |
+| `RegisterDto.java`       | DTO for user registration.                                                                                      |
 | `RefreshRequestDto.java` | DTO for refresh token requests.                                                                                 |
 | `PasswordUpdateDto.java` | DTO for password update operations.                                                                             |
 | `TokenResponseDto.java`  | DTO for authentication token responses.                                                                         |
@@ -336,6 +336,7 @@ _Sequence Diagram showing an example of the user management flow._
 | File                           | Description                                                                        |
 | ------------------------------ | ---------------------------------------------------------------------------------- |
 | `User.java`                    | Entity class representing a user in the system. Supports soft-deletion and dual role management (main + app-specific). |
+| `UserClient.java`              | WebClient proxy for communicating user operations with the external `spring-auth` application. |
 | `UserController.java`          | Contains REST endpoints for user management (CRUD, profile, etc.).                 |
 | `UserDto.java`                 | DTO for communication between backend and frontend.                                |
 | `UserMapper.java`              | Handles conversion between `User` entities and `UserDto` objects.                  |
@@ -398,7 +399,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 ---
 
-### 1.9 Error and Exception Managment (`main/java/app`)
+### 1.9 Error and Exception Management (`main/java/app`)
 
 | File                                   | Description                                                |
 | -------------------------------------- | ---------------------------------------------------------- |

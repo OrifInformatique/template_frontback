@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button,
          InputPassword,
@@ -6,6 +7,7 @@ import { Button,
 
 const ChangePassword = () =>
 {
+    const { t } = useTranslation("auth", "common");
     const handleChangePasswordFormSubmit = (e) =>
     {
         e.preventDefault();
@@ -15,7 +17,7 @@ const ChangePassword = () =>
     return (
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
             <div className="flex flex-col gap-4 w-[300px] sm:w-[350px] h-fit p-4 sm:p-8 border border-black sm:rounded-lg">
-                <h1>Changement de mot de passe</h1>
+                <h1>{t("changing_password")}</h1>
 
                 <form
                     onSubmit={handleChangePasswordFormSubmit}
@@ -24,34 +26,34 @@ const ChangePassword = () =>
                     <InputPassword
                         id="current-password"
                         name="current-password"
-                        label="Mot de passe actuel"
+                        label={t("current_password")}
                         required={true}
                     />
 
                     <InputPassword
                         id="new-password"
                         name="new-password"
-                        label="Nouveau mot de passe"
+                        label={t("new_password")}
                         required={true}
                     />
 
                     <InputPassword
                         id="new-password-confirmation"
                         name="new-password-confirmation"
-                        label="Confirmation du nouveau mot de passe"
+                        label={t("confirm_new_password")}
                         required={true}
                     />
 
                     <div className="flex gap-2 w-full">
                         <Button
                             variant="tertiary"
-                            label="Annuler"
+                            label={t("cancel", { ns: 'common' })}
                             className="basis-1/2"
                         />
 
                         <Button
                             variant="primary"
-                            label="Valider"
+                            label={t("confirm", { ns: 'common' })}
                             className="basis-1/2"
                         />
                     </div>
