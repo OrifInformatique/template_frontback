@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
-import useAuthStore from '../../../../authStore';
+import useAuthStore from '../../../features/auth/authStore';
 import { PopUp } from '@orif-informatique/react-components-library';
-import usersMe from '../auth/api/usersMe';
+import usersMe from '../../../features/auth/ui/api/usersMe';
 
 const LoginTestIndicator = () => {
     const [apiResult, setApiResult] = useState(null);

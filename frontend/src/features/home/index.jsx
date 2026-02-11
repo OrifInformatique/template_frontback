@@ -1,11 +1,12 @@
 import React from 'react'
-
+import { useTranslation } from 'react-i18next'
 import Title from '../../common/ui/title'
 
 const Home = () => {
+  const { t } = useTranslation("home", "common");
   return (
   <>
-    <Title>Page d'accueil</Title>
+    <Title>{t("home_title")}</Title>
     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus dictum interdum felis eget varius. Integer ut imperdiet erat. Nulla vitae diam neque. Aliquam accumsan, lectus eu ornare lobortis, ligula sem convallis augue, sit amet tincidunt neque mauris vel metus. Sed ultricies nunc et ex egestas venenatis. Donec ac est eget sem convallis sollicitudin ut eu dui. Duis mattis, eros sit amet maximus interdum, nulla nunc dignissim neque, ut dignissim urna ligula at velit. Morbi magna enim, ullamcorper sit amet congue sit amet, auctor eget ligula. Nullam pellentesque tortor et nunc ornare, in imperdiet sapien tincidunt. Mauris ipsum augue, pellentesque nec imperdiet fermentum, ultricies at mauris. Aliquam sed diam non velit mattis laoreet. Curabitur euismod leo odio, ac dignissim odio consequat vel. Sed eget consequat dolor.</p>
     <p>Nullam enim sapien, ullamcorper ut porttitor in, condimentum eget enim. In hendrerit ligula dui. Phasellus felis nisl, fermentum in cursus id, rhoncus sed tortor. Donec sed orci eget lectus lobortis blandit. Etiam a mollis neque, sit amet iaculis nisi. Proin auctor velit sed mi bibendum tempor. Suspendisse aliquet non lectus non ultrices.</p>
     <p>Suspendisse eu ex ullamcorper, posuere ligula id, gravida erat. Duis vitae varius nulla. Nunc et fringilla ante, eu molestie ex. Ut hendrerit faucibus molestie. Fusce condimentum facilisis commodo. Nullam commodo feugiat nulla at aliquam. Vivamus tincidunt tempor bibendum.</p>
