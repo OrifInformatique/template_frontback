@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLogin } from '../api/loginService';
 import api from '../api/apiClient';
 import useAuthStore from '../../authStore';
+import useLayoutAuth from '../../../../common/hooks/useLayoutAuth';
 import {
     Button,
     Image,
@@ -23,6 +24,7 @@ const Login = () => {
     const { login } = useLogin();
     const accessToken = useAuthStore((state) => state.accessToken);
     const { setAccessToken, clearAuth } = useAuthStore();
+    const { handleLogout } = useLayoutAuth();
 
     useEffect(() => {
         const storedLoginType = localStorage.getItem('loginType');
@@ -98,9 +100,8 @@ const Login = () => {
         window.location.href = `${AUTH_API_URL}/oauth2/authorization/azure`;
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('loginType');
-        clearAuth();
+    const handleLogoutClick = async () => {
+        await handleLogout();
         setLoginType(null);
     };
 
@@ -118,7 +119,7 @@ const Login = () => {
                         <Button
                             variant="secondary"
                             label="Se déconnecter"
-                            onClick={handleLogout}
+                            onClick={handleLogoutClick}
                         />
                     </div>
                 ) : null}
