@@ -1,5 +1,6 @@
 import React from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { Header,
          Footer,
@@ -8,6 +9,7 @@ import { Header,
 import useLayoutAuth from "../hooks/useLayoutAuth";
 
 const MainLayout = () => {
+  const { t } = useTranslation("common");
   const navigate = useNavigate();
   const { effectiveUser, remountKey, handleLogout } = useLayoutAuth();
 
@@ -16,7 +18,7 @@ const MainLayout = () => {
     <>
       <Header
         key={`header-${remountKey}`}
-        title="App title"
+        title={t("app_title")}
         logoPath="/images/logo.svg"
         onLogin={() => navigate('/login')}
         onLogout={handleLogout}
