@@ -37,7 +37,7 @@ function normalizeData(data) {
   if (!Array.isArray(data) || data.length === 0) {
     return [
       {
-        label: "No data",
+        label: "No data or incorrect data",
         value: 100,
         color: "#E0E0E0",
         isEmpty: true,

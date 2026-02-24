@@ -21,7 +21,7 @@ export const Default = {};
 
 export const NoData = {
   args: {
-    data: [{ label: "No data", value: 100, color: "#E0E0E0", isEmpty: true }],
+    data: [{ label: "No data or incorrect data", value: 100, color: "#E0E0E0", isEmpty: true }],
   },
 };
 
