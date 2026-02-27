@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@orif-informatique/react-components-library';
 import { getItems } from './api/api';
 import List from './ui/list';
 
@@ -22,10 +21,12 @@ const Items = () => {
     const actions = [
         {
             label: t("edit", "Edit"),
+            permission: "user:update", // Optional permission required to see this action
             onClick: (item) => console.log("Edit", item),
         },
         {
             label: t("delete", "Delete"),
+            permission: "user:delete", // Optional permission required to see this action
             onClick: (item) => console.log("Delete", item),
         },
     ];
@@ -34,12 +35,14 @@ const Items = () => {
         <div>
             <List
                 items={items}
-                columns={["id", "name", "description", "date"]}
+                columns={["id", "name", "author", "description", "createdAt", "updatedAt"]}
                 columnLabels={{
                     id: "#",
                     name: t("name", "Name"),
+                    author: t("author", "Author"),
                     description: t("description", "Description"),
-                    date: t("date", "Date"),
+                    createdAt: t("createdAt", "Created At"),
+                    updatedAt: t("updatedAt", "Updated At"),
                 }}
                 actions={actions}
             />

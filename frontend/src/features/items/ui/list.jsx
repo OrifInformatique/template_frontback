@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@orif-informatique/react-components-library";
+import useAuthStore from "../../auth/authStore";
 
 /**
  * A generic list/table component that dynamically generates columns
@@ -17,6 +18,7 @@ import { Button } from "@orif-informatique/react-components-library";
  */
 const List = ({ items = [], actions = [], columns, columnLabels = {} }) => {
     const { t } = useTranslation("items");
+    const hasPermission = useAuthStore((state) => state.hasPermission);
 
     if (!items.length) {
         return <p className="text-gray-500 italic">{t("no_items", "No items to display.")}</p>;
@@ -24,6 +26,10 @@ const List = ({ items = [], actions = [], columns, columnLabels = {} }) => {
 
     // Derive columns from the first item's keys if not explicitly provided
     const cols = columns ?? Object.keys(items[0]);
+
+    // Only show the actions column if at least one action is visible to the user
+    const visibleActions = actions.filter((action) => !action.permission || hasPermission(action.permission));
+    const hasVisibleActions = visibleActions.length > 0;
 
     return (
         <div className="overflow-x-auto">
@@ -38,7 +44,7 @@ const List = ({ items = [], actions = [], columns, columnLabels = {} }) => {
                                 {columnLabels[col] ?? col}
                             </th>
                         ))}
-                        {actions.length > 0 && (
+                        {hasVisibleActions && (
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {t("actions", "Actions")}
                             </th>
@@ -49,15 +55,16 @@ const List = ({ items = [], actions = [], columns, columnLabels = {} }) => {
                     {items.map((item, index) => (
                         <tr key={item.id ?? index} className="hover:bg-gray-50">
                             {cols.map((col) => (
-                                <td key={col} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td key={col} className="px-6 py-4 text-sm text-gray-900">
                                     {String(item[col] ?? "")}
                                 </td>
                             ))}
-                            {actions.length > 0 && (
+                            {hasVisibleActions && (
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    {actions.map((action, actionIndex) => (
+                                    {visibleActions.map((action, actionIndex) => (
                                         <Button
                                             key={actionIndex}
+                                            label={action.label}
                                             onClick={() => action.onClick(item)}
                                         >
                                             {action.label}
