@@ -1,24 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+const STORAGE_KEY = 'auth-storage';
+
+const scrubTokens = (user) => {
+    if (!user) return null;
+    const { token, refreshToken, accessToken, ...safeUser } = user;
+    return safeUser;
+};
+
+const ensureArray = (value) => (Array.isArray(value) ? value : []);
+
+// One-time cleanup of older persisted shapes that might contain tokens
 try {
-    const key = 'auth-storage';
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.state) {
-            // remove top-level accessToken if present
-            if (parsed.state.accessToken) {
-                delete parsed.state.accessToken;
-            }
-            // remove token/refreshToken if accidentally stored inside user
-            if (parsed.state.user && parsed.state.user.token) {
-                delete parsed.state.user.token;
-            }
-            if (parsed.state.user && parsed.state.user.refreshToken) {
-                delete parsed.state.user.refreshToken;
-            }
-            localStorage.setItem(key, JSON.stringify(parsed));
+            if (parsed.state.accessToken) delete parsed.state.accessToken;
+            if (parsed.state.user) parsed.state.user = scrubTokens(parsed.state.user);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         }
     }
 } catch (e) {
@@ -27,39 +28,38 @@ try {
 const useAuthStore = create(
     persist(
         (set, get) => ({
+            // Ephemeral access token; never persisted
             accessToken: null,
             setAccessToken: (token) => set({ accessToken: token }),
             clearAccessToken: () => set({ accessToken: null }),
 
+            // User profile without tokens; persisted
             user: null,
-            setUser: (user) => {
-                if (!user) return set({ user: null });
-                const { token, refreshToken, accessToken, ...rest } = user || {};
-                return set({ user: rest });
-            },
+            setUser: (user) => set({ user: scrubTokens(user) }),
             clearUser: () => set({ user: null }),
 
+            // Role/permission helpers
             hasRole: (role) => {
                 const user = get().user;
                 if (!user) return false;
                 if (user.mainRole === role) return true;
-                const roles = user.roles || [];
-                return roles.includes(role);
+                return ensureArray(user.roles).includes(role);
             },
             hasPermission: (perm) => {
                 const user = get().user;
                 if (!user) return false;
-                const permissions = user.permissions || [];
-                return permissions.includes(perm);
+                return ensureArray(user.permissions).includes(perm);
             },
 
+            // Full reset
             clearAuth: () => set({ accessToken: null, user: null }),
         }),
         {
-            name: 'auth-storage',
+            name: STORAGE_KEY,
             getStorage: () => localStorage,
+            // Persist only the token-free user shape
             partialize: (state) => {
-                const u = state.user || null;
+                const u = scrubTokens(state.user);
                 if (!u) return { user: null };
                 return {
                     user: {
@@ -68,16 +68,16 @@ const useAuthStore = create(
                         lastName: u.lastName,
                         login: u.login,
                         mainRole: u.mainRole,
-                        roles: u.roles || [],
-                        permissions: u.permissions || [],
+                        roles: ensureArray(u.roles),
+                        permissions: ensureArray(u.permissions),
                     },
                 };
             },
+            // On hydration, drop any lingering tokens just in case
             onRehydrateStorage: () => (state) => {
                 if (state) {
-                    if (state.accessToken) delete state.accessToken;
-                    if (state.user && state.user.token) delete state.user.token;
-                    if (state.user && state.user.refreshToken) delete state.user.refreshToken;
+                    state.accessToken = null;
+                    state.user = scrubTokens(state.user);
                 }
             },
         }

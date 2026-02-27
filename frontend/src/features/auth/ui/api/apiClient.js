@@ -3,10 +3,12 @@ import useAuthStore from '../../authStore';
 
 const api = axios.create({
     withCredentials: true,
+    baseURL: process.env.BACKEND_API_URL || 'http://localhost:8081',
 });
 
 const refreshClient = axios.create({
     withCredentials: true,
+    baseURL: process.env.BACKEND_API_URL || 'http://localhost:8081',
 });
 
 const storeAccessToken = (token) => {
@@ -37,7 +39,12 @@ api.interceptors.response.use(
         const status = error.response?.status;
         const originalRequest = error.config;
 
-        if (status === 401 && originalRequest && !originalRequest._retry) {
+        // Refresh on 401 (expired token) or on 400 when the request was sent without Authorization.
+        const missingAuthHeader = !(originalRequest?.headers && originalRequest.headers.Authorization);
+        const shouldRefresh =
+            !!originalRequest && !originalRequest._retry && (status === 401 || (status === 400 && missingAuthHeader));
+
+        if (shouldRefresh) {
             originalRequest._retry = true;
 
             refreshPromise =

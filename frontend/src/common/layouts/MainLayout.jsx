@@ -6,24 +6,26 @@ import { Header,
          Footer,
          ScrollToTopButton
        } from "@orif-informatique/react-components-library";
-import useAuthStore from "../../features/auth/authStore";
+import useLayoutAuth from "../hooks/useLayoutAuth";
 
 const MainLayout = () => {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const { effectiveUser, remountKey, handleLogout } = useLayoutAuth();
 
 
   return (
     <>
       <Header
+        key={`header-${remountKey}`}
         title={t("app_title")}
         logoPath="/images/logo.svg"
         onLogin={() => navigate('/login')}
-        onLogout={() => { clearAuth(); navigate('/'); }}
+        onLogout={handleLogout}
+        user={effectiveUser ? { name: effectiveUser?.firstName || "", role: effectiveUser?.mainRole || "user" } : null}
       />
       <main className="p-5 sm:p-10 bg-background">
-        <Outlet />
+        <Outlet key={`outlet-${remountKey}`} />
       </main>
       <ScrollToTopButton onClick={() => {}} />
       <Footer />
