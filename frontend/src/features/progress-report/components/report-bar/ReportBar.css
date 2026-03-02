@@ -1,3 +1,14 @@
-.reportbar-style {
+.report-bar {
+  display: flex;
+  height: 100%;
+  min-height: 20px;
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 3px #8E8E93;
+}
 
+.report-bar__segment {
+  flex-shrink: 0;
+  transition: flex-basis 0.6s ease;
 }
