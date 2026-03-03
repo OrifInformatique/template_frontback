@@ -18,6 +18,7 @@ export default meta;
 // Equal distribution (25% each)
 export const Default = {};
 
+// No data or data incorrect
 export const NoData = {
   args: {
     data: [],

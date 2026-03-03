@@ -19,6 +19,7 @@ export default meta;
 // Variant with legend
 export const Default = {};
 
+// No data or data incorrect
 export const NoData = {
   args: {
     data: [{ label: "No data or incorrect data", value: 100, color: "#E0E0E0", isEmpty: true }],

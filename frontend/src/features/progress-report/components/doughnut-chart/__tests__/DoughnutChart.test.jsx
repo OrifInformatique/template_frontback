@@ -45,7 +45,7 @@ describe("DoughnutChart", () => {
     expect(mockDoughnut).toHaveBeenCalledTimes(1);
     const { data, options } = mockDoughnut.mock.calls[0][0];
 
-    expect(data.labels).toEqual(["No data"]);
+    expect(data.labels).toEqual(["No data or incorrect data"]);
     expect(data.datasets[0].data).toEqual([100]);
 
     // Legend must be hidden when empty (even if showLegend=true)
