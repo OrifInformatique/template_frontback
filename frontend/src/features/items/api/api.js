@@ -24,7 +24,7 @@ export const getItems = async (includeDeleted = false) =>
 
         return await response.json();
         */
-        return includeDeleted ? items : items.filter((item) => !item.deleted);
+        return includeDeleted ? items : items.filter((item) => !item.isDeleted);
     }
     catch(error)
     {

@@ -21,20 +21,27 @@ const Items = () => {
     }, [showDeleted]);
 
     // Example actions — adapt these to your needs
-    const actions = [
-        {
-            // label: t("edit", "Edit"),
-            icon: "edit",
-            permission: "user:update", // permission required to see this action
-            onClick: (item) => console.log("Edit", item),
-        },
-        {
-            // label: t("delete", "Delete"),
-            icon: "delete",
-            permission: "user:delete", // permission required to see this action
-            onClick: (item) => console.log("Delete", item),
-        },
-    ];
+    // const actions = [
+    //     {
+    //         // label: t("edit", "Edit"),
+    //         icon: "edit",
+    //         permission: "user:update", // permission required to see this action
+    //         onClick: (item) => console.log("Edit", item),
+    //     },
+    //     {
+    //         // label: t("delete", "Delete"),
+    //         icon: "delete",
+    //         permission: "user:delete", // permission required to see this action
+    //         onClick: (item) => console.log("Delete", item),
+    //     },
+    // ];
+
+
+    const actions = {
+        edit: { permission: "user:update", onClick: (item) => console.log("Edit", item) },
+        delete: { permission: "user:delete", onClick: (item) => console.log("Delete", item) },
+        restore: { permission: "user:delete", onClick: (item) => console.log("Restore", item) },
+    };
 
     return (
         <div>

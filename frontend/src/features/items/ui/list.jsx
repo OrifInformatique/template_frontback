@@ -18,7 +18,7 @@ import useAuthStore from "../../auth/authStore";
  * @param {boolean} [props.showDeleted] - Whether to show soft-deleted items.
  * @param {function} [props.onToggleShowDeleted] - Callback when the show-deleted checkbox changes.
  */
-const List = ({ items = [], actions = [], columns, columnLabels = {}, showDeleted = false, onToggleShowDeleted }) => {
+const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDeleted = false, onToggleShowDeleted }) => {
     const { t } = useTranslation("items");
     const hasPermission = useAuthStore((state) => state.hasPermission);
 
@@ -29,9 +29,11 @@ const List = ({ items = [], actions = [], columns, columnLabels = {}, showDelete
     // Derive columns from the first item's keys if not explicitly provided
     const cols = columns ?? Object.keys(items[0]);
 
-    // Only show the actions column if at least one action is visible to the user
-    const visibleActions = actions.filter((action) => !action.permission || hasPermission(action.permission));
-    const hasVisibleActions = visibleActions.length > 0;
+    // Check permissions for each action
+    const canEdit = actions.edit && (!actions.edit.permission || hasPermission(actions.edit.permission));
+    const canDelete = actions.delete && (!actions.delete.permission || hasPermission(actions.delete.permission));
+    const canRestore = actions.restore && (!actions.restore.permission || hasPermission(actions.restore.permission));
+    const hasVisibleActions = canEdit || canDelete || canRestore;
 
     return (
         <div className="overflow-x-auto">
@@ -74,17 +76,34 @@ const List = ({ items = [], actions = [], columns, columnLabels = {}, showDelete
                             {hasVisibleActions && (
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-middle">
                                     <div className="flex justify-end items-center gap-2">
-                                        {visibleActions.map((action, actionIndex) => (
+                                        {canEdit && !item.isDeleted && (
                                             <Button
-                                                key={actionIndex}
-                                                variant={action.variant || "primary"}
-                                                label={action.label}
-                                                icon={action.icon}
-                                                size={action.size || "small"}
-                                                hideTextOnMobile={action.hideTextOnMobile}
-                                                onClick={() => action.onClick(item)}
+                                                variant="secondary"
+                                                icon="edit"
+                                                onClick={() => actions.edit.onClick(item)}
                                             />
-                                        ))}
+                                        )}
+                                        {canDelete && !item.isDeleted && (
+                                            <Button
+                                                variant="secondary"
+                                                icon="delete"
+                                                onClick={() => actions.delete.onClick(item)}
+                                            />
+                                        )}
+                                        {canRestore && item.isDeleted && (
+                                            <Button
+                                                variant="success"
+                                                icon="restore"
+                                                onClick={() => actions.restore.onClick(item)}
+                                            />
+                                        )}
+                                        {canDelete && item.isDeleted && (
+                                            <Button
+                                                variant="danger"
+                                                icon="delete"
+                                                onClick={() => actions.delete.onClick(item)}
+                                            />
+                                        )}
                                     </div>
                                 </td>
                             )}

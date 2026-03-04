@@ -6,7 +6,7 @@
         "author": "Hatsune Miku",
         "createdAt": "2024-06-01T12:00:00Z",
         "updatedAt": "2024-06-01T12:00:00Z",
-        "deleted": false
+        "isDeleted": false
     },
     {
         "id": 2,
@@ -15,7 +15,7 @@
         "author": "Kasane Teto",
         "createdAt": "2024-06-02T12:00:00Z",
         "updatedAt": "2024-06-02T12:00:00Z",
-        "deleted": false
+        "isDeleted": false
     },
     {
         "id": 3,
@@ -24,6 +24,6 @@
         "author": "Akita Neru",
         "createdAt": "2024-06-03T12:00:00Z",
         "updatedAt": "2024-06-03T12:00:00Z",
-        "deleted": true
+        "isDeleted": true
     }
 ]
