@@ -1,5 +1,5 @@
 import items from "../mocks/items.json";
-import api from "../../auth/ui/api/httpClient";
+import api from "../../auth/ui/api/apiClient";
 
 /**
  * Gets all the items.
@@ -7,13 +7,13 @@ import api from "../../auth/ui/api/httpClient";
  * @returns {Array}
  *
  */
-export const getItems = async () =>
+export const getItems = async (includeDeleted = false) =>
 {
     try
     {
         // Uncomment below to use the real backend.
         /*
-        const response = await api.get(`/items`);
+        const response = await api.get(`/items?includeDeleted=${includeDeleted}`);
 
         if (!response.ok)
         {
@@ -24,7 +24,7 @@ export const getItems = async () =>
 
         return await response.json();
         */
-        return items;
+        return includeDeleted ? items : items.filter((item) => !item.deleted);
     }
     catch(error)
     {
@@ -32,3 +32,4 @@ export const getItems = async () =>
         return [];
     }
 };
+

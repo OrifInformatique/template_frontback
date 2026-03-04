@@ -15,8 +15,10 @@ import useAuthStore from "../../auth/authStore";
  * @param {Array<string>} [props.columns] - Optional subset/order of columns to display.
  *   If omitted, all keys from the first item are used.
  * @param {Object} [props.columnLabels] - Optional map of key -> display header label.
+ * @param {boolean} [props.showDeleted] - Whether to show soft-deleted items.
+ * @param {function} [props.onToggleShowDeleted] - Callback when the show-deleted checkbox changes.
  */
-const List = ({ items = [], actions = [], columns, columnLabels = {} }) => {
+const List = ({ items = [], actions = [], columns, columnLabels = {}, showDeleted = false, onToggleShowDeleted }) => {
     const { t } = useTranslation("items");
     const hasPermission = useAuthStore((state) => state.hasPermission);
 
@@ -33,6 +35,16 @@ const List = ({ items = [], actions = [], columns, columnLabels = {} }) => {
 
     return (
         <div className="overflow-x-auto">
+            {onToggleShowDeleted && (
+                <label className="flex items-center gap-2 mb-4">
+                    <input
+                        type="checkbox"
+                        checked={showDeleted}
+                        onChange={(e) => onToggleShowDeleted(e.target.checked)}
+                    />
+                    {t("show_deleted", "Show deleted items")}
+                </label>
+            )}
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
@@ -60,16 +72,20 @@ const List = ({ items = [], actions = [], columns, columnLabels = {} }) => {
                                 </td>
                             ))}
                             {hasVisibleActions && (
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    {visibleActions.map((action, actionIndex) => (
-                                        <Button
-                                            key={actionIndex}
-                                            label={action.label}
-                                            onClick={() => action.onClick(item)}
-                                        >
-                                            {action.label}
-                                        </Button>
-                                    ))}
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-middle">
+                                    <div className="flex justify-end items-center gap-2">
+                                        {visibleActions.map((action, actionIndex) => (
+                                            <Button
+                                                key={actionIndex}
+                                                variant={action.variant || "primary"}
+                                                label={action.label}
+                                                icon={action.icon}
+                                                size={action.size || "small"}
+                                                hideTextOnMobile={action.hideTextOnMobile}
+                                                onClick={() => action.onClick(item)}
+                                            />
+                                        ))}
+                                    </div>
                                 </td>
                             )}
                         </tr>
