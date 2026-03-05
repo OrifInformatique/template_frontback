@@ -22,29 +22,27 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
     const { t } = useTranslation("items");
     const hasPermission = useAuthStore((state) => state.hasPermission);
 
-    if (!items.length) {
-        return <p className="text-gray-500 italic">{t("no_items", "No items to display.")}</p>;
-    }
-
     // Derive columns from the first item's keys if not explicitly provided
-    const cols = columns ?? Object.keys(items[0]);
+    const cols = columns ?? (items.length ? Object.keys(items[0]) : []);
 
     // Check permissions for each action
     const canEdit = actions.edit && (!actions.edit.permission || hasPermission(actions.edit.permission));
     const canDelete = actions.delete && (!actions.delete.permission || hasPermission(actions.delete.permission));
     const canRestore = actions.restore && (!actions.restore.permission || hasPermission(actions.restore.permission));
-    const hasVisibleActions = canEdit || canDelete || canRestore;
+    const canHardDelete = actions.hardDelete && (!actions.hardDelete.permission || hasPermission(actions.hardDelete.permission));
+    const canViewDeleted = actions.viewDeleted && (!actions.viewDeleted.permission || hasPermission(actions.viewDeleted.permission));
+    const hasVisibleActions = canEdit || canDelete || canRestore || canHardDelete;
 
     return (
         <div className="overflow-x-auto">
-            {onToggleShowDeleted && (
-                <label className="flex items-center gap-2 mb-4">
+            {onToggleShowDeleted && canViewDeleted && (
+                <label className="flex items-center justify-end gap-2 mb-4 mr-4">
+                    {t("show_deleted", "Show deleted items")}
                     <input
                         type="checkbox"
                         checked={showDeleted}
                         onChange={(e) => onToggleShowDeleted(e.target.checked)}
                     />
-                    {t("show_deleted", "Show deleted items")}
                 </label>
             )}
             <table className="min-w-full divide-y divide-gray-200">
@@ -66,7 +64,17 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                    {items.map((item, index) => (
+                    {items.length === 0 ? (
+                        <tr>
+                            <td
+                                colSpan={cols.length + (hasVisibleActions ? 1 : 0)}
+                                className="px-6 py-4 text-sm text-gray-500 italic text-center"
+                            >
+                                {t("no_items", "No items to display.")}
+                            </td>
+                        </tr>
+                    ) : (
+                    items.map((item, index) => (
                         <tr key={item.id ?? index} className="hover:bg-gray-50">
                             {cols.map((col) => (
                                 <td key={col} className="px-6 py-4 text-sm text-gray-900">
@@ -92,23 +100,23 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
                                         )}
                                         {canRestore && item.isDeleted && (
                                             <Button
-                                                variant="success"
+                                                variant="secondary"
                                                 icon="restore"
                                                 onClick={() => actions.restore.onClick(item)}
                                             />
                                         )}
-                                        {canDelete && item.isDeleted && (
+                                        {canHardDelete && item.isDeleted && (
                                             <Button
                                                 variant="danger"
                                                 icon="delete"
-                                                onClick={() => actions.delete.onClick(item)}
+                                                onClick={() => actions.hardDelete.onClick(item)}
                                             />
                                         )}
                                     </div>
                                 </td>
                             )}
                         </tr>
-                    ))}
+                    )))}
                 </tbody>
             </table>
         </div>

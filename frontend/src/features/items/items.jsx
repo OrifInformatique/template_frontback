@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Icon } from "@orif-informatique/react-components-library";
 
-import { getItems } from './api/api';
+import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import List from './ui/list';
 
 const Items = () => {
@@ -11,36 +11,21 @@ const Items = () => {
     const [items, setItems] = useState([]);
     const [showDeleted, setShowDeleted] = useState(false);
 
-    useEffect(() => {
-        const fetchItems = async () => {
-            const data = await getItems(showDeleted);
-            setItems(data);
-        };
+    const fetchItems = async () => {
+        const data = await getItems(showDeleted);
+        setItems(data);
+    };
 
+    useEffect(() => {
         fetchItems();
     }, [showDeleted]);
 
-    // Example actions — adapt these to your needs
-    // const actions = [
-    //     {
-    //         // label: t("edit", "Edit"),
-    //         icon: "edit",
-    //         permission: "user:update", // permission required to see this action
-    //         onClick: (item) => console.log("Edit", item),
-    //     },
-    //     {
-    //         // label: t("delete", "Delete"),
-    //         icon: "delete",
-    //         permission: "user:delete", // permission required to see this action
-    //         onClick: (item) => console.log("Delete", item),
-    //     },
-    // ];
-
-
     const actions = {
-        edit: { permission: "user:update", onClick: (item) => console.log("Edit", item) },
-        delete: { permission: "user:delete", onClick: (item) => console.log("Delete", item) },
-        restore: { permission: "user:delete", onClick: (item) => console.log("Restore", item) },
+        edit: { permission: "user:update", onClick: (item) => modifyItem(item.id, { name: item.name + " (edited)" }).then(() => fetchItems()) },
+        delete: { permission: "user:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()) },
+        restore: { permission: "user:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()) },
+        hardDelete: { permission: "user:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()) },
+        viewDeleted: { permission: "user:read" },
     };
 
     return (
