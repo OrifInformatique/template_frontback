@@ -1,3 +1,10 @@
 {
-
+    "actions": "Actions",
+    "show_deleted": "Afficher les éléments supprimés",
+    "no_items": "Aucun élément à afficher.",
+    "id": "ID",
+    "name": "Nom",
+    "description": "Description",
+    "createdAt": "Créé le",
+    "updatedAt": "Mis à jour le"
 }

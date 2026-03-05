@@ -1,3 +1,10 @@
 {
-
+    "actions": "Actions",
+    "show_deleted": "Show deleted items",
+    "no_items": "No items to display.",
+    "id": "ID",
+    "name": "Name",
+    "description": "Description",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At"
 }

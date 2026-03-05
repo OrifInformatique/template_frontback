@@ -10,15 +10,19 @@ import useAuthStore from "../../auth/authStore";
  *
  * @param {Object} props
  * @param {Array<Object>} props.items - The array of objects to display.
- * @param {Array<Object>} [props.actions] - Optional action buttons per row.
- *   Each action is { label: string, onClick: (item) => void, variant?: string }.
+ * @param {Object} [props.actions] - Optional action config keyed by action name.
+ *   Each action is { permission?: string, onClick?: (item) => void }.
+ *   Supported keys: edit, delete, restore, hardDelete, viewDeleted.
  * @param {Array<string>} [props.columns] - Optional subset/order of columns to display.
  *   If omitted, all keys from the first item are used.
  * @param {Object} [props.columnLabels] - Optional map of key -> display header label.
  * @param {boolean} [props.showDeleted] - Whether to show soft-deleted items.
  * @param {function} [props.onToggleShowDeleted] - Callback when the show-deleted checkbox changes.
+ * @param {string} [props.actionsLabel] - Optional label for the actions column.
+ * @param {string} [props.showDeletedLabel] - Optional label for the show deleted checkbox.
+ * @param {string} [props.noItemsLabel] - Optional label for when there are no items.
  */
-const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDeleted = false, onToggleShowDeleted }) => {
+const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDeleted = false, onToggleShowDeleted, actionsLabel, showDeletedLabel, noItemsLabel }) => {
     const { t } = useTranslation("items");
     const hasPermission = useAuthStore((state) => state.hasPermission);
 
@@ -37,7 +41,7 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
         <div className="overflow-x-auto">
             {onToggleShowDeleted && canViewDeleted && (
                 <label className="flex items-center justify-end gap-2 mb-4 mr-4">
-                    {t("show_deleted", "Show deleted items")}
+                    {showDeletedLabel ?? t("show_deleted", "Show deleted items")}
                     <input
                         type="checkbox"
                         checked={showDeleted}
@@ -57,8 +61,8 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
                             </th>
                         ))}
                         {hasVisibleActions && (
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {t("actions", "Actions")}
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {actionsLabel ?? t("actions", "Actions")}
                             </th>
                         )}
                     </tr>
@@ -70,7 +74,7 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
                                 colSpan={cols.length + (hasVisibleActions ? 1 : 0)}
                                 className="px-6 py-4 text-sm text-gray-500 italic text-center"
                             >
-                                {t("no_items", "No items to display.")}
+                                {noItemsLabel ?? t("no_items", "No items to display.")}
                             </td>
                         </tr>
                     ) : (
