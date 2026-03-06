@@ -7,5 +7,7 @@
     "description": "Description",
     "createdAt": "Créé le",
     "updatedAt": "Mis à jour le",
-    "author": "Auteur"
+    "author": "Auteur",
+    "confirm_hard_delete": "Confirmer la suppression permanente",
+    "confirm_hard_delete_text": "Êtes-vous sûr de vouloir supprimer définitivement cet élément ? Cette action est irréversible."
 }
