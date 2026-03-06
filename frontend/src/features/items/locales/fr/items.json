@@ -6,5 +6,6 @@
     "name": "Nom",
     "description": "Description",
     "createdAt": "Créé le",
-    "updatedAt": "Mis à jour le"
+    "updatedAt": "Mis à jour le",
+    "author": "Auteur"
 }

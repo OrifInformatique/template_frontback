@@ -1,5 +1,8 @@
-import items from "../mocks/items.json";
+import itemsData from "../mocks/items.json";
 import api from "../../auth/ui/api/apiClient";
+
+// Mutable copy of the mock data so mutations don't affect the original import
+let items = [...itemsData];
 
 /**
  * Gets all the items.
@@ -13,16 +16,8 @@ export const getItems = async (includeDeleted = false) =>
     {
         // Uncomment below to use the real backend.
         /*
-        const response = await api.get(`/items?includeDeleted=${includeDeleted}`);
-
-        if (!response.ok)
-        {
-            const error = await response.text();
-            console.error(`${response.status} ${response.statusText} : ${error}`);
-            return [];
-        }
-
-        return await response.json();
+        const response = await api.get(`/items`, { params: { includeDeleted } });
+        return response.data;
         */
         return includeDeleted ? [...items] : items.filter((item) => !item.isDeleted);
     }
@@ -39,15 +34,7 @@ export const modifyItem = async (id, data) =>
         // Uncomment below to use the real backend.
         /*
         const response = await api.put(`/items/${id}`, data);
-
-        if (!response.ok)
-        {
-            const error = await response.text();
-            console.error(`${response.status} ${response.statusText} : ${error}`);
-            return null;
-        }
-
-        return await response.json();
+        return response.data;
         */
         const index = items.findIndex((item) => item.id === id);
         if (index !== -1)
@@ -70,15 +57,7 @@ export const deleteItem = async (id) =>
         // Uncomment below to use the real backend.
         /*
         const response = await api.delete(`/items/${id}`);
-
-        if (!response.ok)
-        {
-            const error = await response.text();
-            console.error(`${response.status} ${response.statusText} : ${error}`);
-            return null;
-        }
-
-        return await response.json();
+        return response.data;
         */
         const index = items.findIndex((item) => item.id === id);
         if (index !== -1)
@@ -101,15 +80,7 @@ export const restoreItem = async (id) =>
         // Uncomment below to use the real backend.
         /*
         const response = await api.post(`/items/${id}/restore`);
-
-        if (!response.ok)
-        {
-            const error = await response.text();
-            console.error(`${response.status} ${response.statusText} : ${error}`);
-            return null;
-        }
-
-        return await response.json();
+        return response.data;
         */
         const index = items.findIndex((item) => item.id === id);
         if (index !== -1)
@@ -132,15 +103,7 @@ export const hardDeleteItem = async (id) =>
         // Uncomment below to use the real backend.
         /*
         const response = await api.delete(`/items/${id}/hard`);
-
-        if (!response.ok)
-        {
-            const error = await response.text();
-            console.error(`${response.status} ${response.statusText} : ${error}`);
-            return null;
-        }
-
-        return await response.json();
+        return response.data;
         */
         const index = items.findIndex((item) => item.id === id);
         if (index !== -1)

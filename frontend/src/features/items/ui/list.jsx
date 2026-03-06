@@ -1,5 +1,4 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 
 import { Button } from "@orif-informatique/react-components-library";
 import useAuthStore from "../../auth/authStore";
@@ -23,7 +22,6 @@ import useAuthStore from "../../auth/authStore";
  * @param {string} [props.noItemsLabel] - Optional label for when there are no items.
  */
 const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDeleted = false, onToggleShowDeleted, actionsLabel, showDeletedLabel, noItemsLabel }) => {
-    const { t } = useTranslation("items");
     const hasPermission = useAuthStore((state) => state.hasPermission);
 
     // Derive columns from the first item's keys if not explicitly provided
@@ -41,7 +39,7 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
         <div className="overflow-x-auto">
             {onToggleShowDeleted && canViewDeleted && (
                 <label className="flex items-center justify-end gap-2 mb-4 mr-4">
-                    {showDeletedLabel ?? t("show_deleted", "Show deleted items")}
+                    {showDeletedLabel ?? "Show deleted items"}
                     <input
                         type="checkbox"
                         checked={showDeleted}
@@ -62,7 +60,7 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
                         ))}
                         {hasVisibleActions && (
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {actionsLabel ?? t("actions", "Actions")}
+                                {actionsLabel ?? "Actions"}
                             </th>
                         )}
                     </tr>
@@ -74,7 +72,7 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
                                 colSpan={cols.length + (hasVisibleActions ? 1 : 0)}
                                 className="px-6 py-4 text-sm text-gray-500 italic text-center"
                             >
-                                {noItemsLabel ?? t("no_items", "No items to display.")}
+                                {noItemsLabel ?? "No items to display."}
                             </td>
                         </tr>
                     ) : (
