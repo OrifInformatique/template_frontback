@@ -79,7 +79,7 @@ const List = ({ items = [], actions = {}, columns, columnLabels = {}, showDelete
                     items.map((item, index) => (
                         <tr key={item.id ?? index} className="hover:bg-gray-50">
                             {cols.map((col) => (
-                                <td key={col} className="px-6 py-4 text-sm text-gray-900">
+                                <td key={col} className={`px-6 py-4 text-sm text-gray-900 ${item.isDeleted ? "line-through text-gray-400" : ""}`}>
                                     {String(item[col] ?? "")}
                                 </td>
                             ))}
