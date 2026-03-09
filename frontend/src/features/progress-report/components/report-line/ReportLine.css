@@ -1,0 +1,38 @@
+/* ── Layout ─────────────────────────────────────────────────── */
+.report-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+/* ── Label ──────────────────────────────────────────────────── */
+.report-line__label {
+  flex: 1 1 0;        /* grows to fill remaining space          */
+  min-width: 0;       /* allows text to shrink below its content */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ── Bar wrapper ────────────────────────────────────────────── */
+.report-line__bar-wrapper {
+  flex: 0 0 200px;    /* fixed 200 px on large screens           */
+  height: 24px;       /* defines the height ReportBar inherits   */
+}
+
+/* ── Small screens (≤ 600 px) ──────────────────────────────── */
+@media (max-width: 600px) {
+  .report-line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .report-line__bar-wrapper {
+    flex: none;
+    width: 100%;
+    height: 20px;
+  }
+}
