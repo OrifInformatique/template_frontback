@@ -19,6 +19,8 @@
     - [1.9 Error and Exception Management (`main/java/app`)](#19-error-and-exception-management-mainjavaapp)
     - [1.10 Item Module (`main/java/item`)](#110-item-module-mainjavaitem)
     - [1.11 Test Module (`main/java/test`)](#111-test-module-mainjavatest)
+    - [1.12 Localization and Messages (`main/java/config` + `resources/messages`)](#112-localization-and-messages-mainjavaconfig--resourcesmessages)
+  - [2. Today's Branch Updates (2026-03-10)](#2-todays-branch-updates-2026-03-10)
   - [Related Documentation](#related-documentation)
 
 ---
@@ -104,6 +106,7 @@ Contains test classes for unit and integration tests.
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app`                     | Global error and exception handling used throughout the application.                                                                                                             |
 | `auth`                    | Handles authorization processes such as login and registration; controllers delegate to the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) service via `AuthClient`. |
+| `config`                  | Cross-cutting configuration including locale resolution, message source registration, and validation message integration.                                                      |
 | `item`                    | Manages stock and inventory functionalities (CRUD with security guards).                                                                                                       |
 | `security`                | Security-related classes: JWT filters, password encoding, and authentication management.                                                                                         |
 | `user`                    | Manages user profiles, roles, and permissions.                                                                                                                                  |
@@ -275,6 +278,7 @@ sequenceDiagram
     participant UserController
     participant UserService
     participant UserRepository
+    participant UserRepositoryImpl
     participant UserMapper
 
     Note over Client,UserController: Get Current User
@@ -318,6 +322,15 @@ sequenceDiagram
     UserService->>UserMapper: UserMapper.toUserDto(user)
     UserMapper->>UserController: UserDto
     UserController->>Client: Response "User promoted to local app role successfully"
+
+    Note over Client,UserRepositoryImpl: Permanent Local Deletion (hard delete)
+    Client->>UserController: DELETE /users/{userId}/false/permanent
+    UserController->>UserService: deleteUserPermanent(userId)
+    UserService->>UserRepositoryImpl: deletePermanentlyById(userId)
+    UserRepositoryImpl->>UserRepositoryImpl: delete users_app_specific_roles links first
+    UserRepositoryImpl->>UserRepositoryImpl: delete users row
+    UserService-->>UserController: Success
+    UserController-->>Client: Localized success message
 ```
 
 _Sequence Diagram showing an example of the user management flow._
@@ -345,6 +358,9 @@ sequenceDiagram
     participant Client
     participant JwtAuthFilter
     participant UserAuthenticationProvider
+    participant UserAuthenticationEntryPoint
+    participant CustomAccessDeniedHandler
+    participant MessageSource
     participant UserController
     participant UserService
 
@@ -355,17 +371,25 @@ sequenceDiagram
     UserAuthenticationProvider->>UserService: Optionally lookup user details in DB
     UserService-->>UserAuthenticationProvider: User information
     UserAuthenticationProvider-->>JwtAuthFilter: Return Authentication object with authorities
-    alt Authentication succeeds
+    alt Token invalid or missing
+        JwtAuthFilter->>UserAuthenticationEntryPoint: commence(authException)
+        UserAuthenticationEntryPoint->>MessageSource: Resolve auth message key
+        MessageSource-->>UserAuthenticationEntryPoint: Localized auth message
+        UserAuthenticationEntryPoint-->>Client: 401 Unauthorized JSON ErrorDto
+    else Token valid
         JwtAuthFilter-->>JwtAuthFilter: Set SecurityContext with Authentication
         JwtAuthFilter-->>UserController: Forward request
-        note right of UserController: Controller handles authorized request
-        UserController->>UserService: Perform business logic
-        UserService-->>UserController: Return result
-        UserController-->>Client: Return HTTP response
-    else Authentication fails
-        JwtAuthFilter->>UserAuthenticationEntryPoint: JWT validation failed
-        UserAuthenticationEntryPoint-->>Client: Return 401 Unauthorized with error JSON 
-        note right of Client: Request rejected
+        alt Missing authority on protected endpoint
+            UserController->>CustomAccessDeniedHandler: AccessDeniedException
+            CustomAccessDeniedHandler->>MessageSource: Resolve access denied key
+            MessageSource-->>CustomAccessDeniedHandler: Localized forbidden message
+            CustomAccessDeniedHandler-->>Client: 403 Forbidden JSON ErrorDto
+        else Authorized
+            note right of UserController: Controller handles authorized request
+            UserController->>UserService: Perform business logic
+            UserService-->>UserController: Return result
+            UserController-->>Client: Return HTTP response
+        end
     end
 ```
 
@@ -373,6 +397,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 | File                                | Description                                                        |
 | ----------------------------------- | ------------------------------------------------------------------ |
+| `CustomAccessDeniedHandler.java`    | Handles authenticated-but-forbidden requests (403) with localized error messages. |
 | `JwtAuthFilter.java`                | Authentication filter that processes tokens for incoming requests. |
 | `PermissionEnum.java`               | Enumeration defining available permissions.                        |
 | `Role.java`                         | Role entity class representing a user role.                        |
@@ -381,7 +406,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | `RoleSeeder.java`                   | Seeds the database with predefined roles.                          |
 | `SecurityConfig.java`               | Security configuration defining the filter chain and access rules. |
 | `SecurityExceptions.java`           | Container class for security-specific custom exceptions.           |
-| `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response.        |
+| `UserAuthenticationEntryPoint.java` | Handles unauthenticated access (401) with i18n-aware JSON error responses. |
 | `UserAuthenticationProvider.java`   | Authentication provider for validating JWT access tokens.          |
 | `WebClientConfig.java`              | Configuration for WebClient used in inter-service communication.   |
 | `WebConfig.java`                    | Web configuration for general web-related settings.                |
@@ -393,8 +418,10 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | File                                   | Description                                                |
 | -------------------------------------- | ---------------------------------------------------------- |
 | `errors/ErrorDto.java`                 | Record serving as Data Transfer Object for errors.         |
-| `exceptions/AppException.java`         | Custom exception class for application-specific errors.    |
-| `exceptions/GlobalExceptionHandler.java` | Global exception handler for REST API endpoints.           |
+| `exceptions/AppException.java`         | Base exception carrying HTTP status for all application/domain exceptions. |
+| `exceptions/AppMessageKeyException.java` | Generic exception for explicit message-key based errors with optional args. |
+| `exceptions/MessageKeyProvider.java`   | Contract for exceptions exposing i18n message keys and formatting arguments. |
+| `exceptions/GlobalExceptionHandler.java` | Global REST exception handler resolving message keys through `MessageSource`; includes validation `fieldErrors`. |
 
 ---
 
@@ -420,6 +447,53 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 ---
 
+### 1.12 Localization and Messages (`main/java/config` + `resources/messages`)
+
+| File / Path | Description |
+| ----------- | ----------- |
+| `config/LocaleConfig.java` | Registers `MessageSource`, locale resolver (default `fr-FR`), validator integration, and `lang` query-param locale switch interceptor. |
+| `resources/messages/app/messages_{en,fr}.properties` | App-level and generic API message keys (`error.*`, validation fallback, etc.). |
+| `resources/messages/auth/messages_{en,fr}.properties` | Authentication and registration related messages. |
+| `resources/messages/item/messages_{en,fr}.properties` | Item domain messages (not found, unauthorized operations). |
+| `resources/messages/security/messages_{en,fr}.properties` | Security/authentication/authorization error messages. |
+| `resources/messages/user/messages_{en,fr}.properties` | User domain messages (lookup, role operations, deletion). |
+
+> **Current structure note:** Message bundles are now organized per domain under `resources/messages/<domain>/` instead of a single flat `messages.properties` file.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller
+    participant Service
+    participant GlobalExceptionHandler
+    participant MessageSource
+    participant MessageBundle as messages/<domain>/messages_{lang}.properties
+
+    Client->>Controller: Request with lang=fr
+    Controller->>Service: Execute business action
+    Service-->>Controller: Throw AppException (MessageKeyProvider)
+    Controller-->>GlobalExceptionHandler: Exception bubbling
+    GlobalExceptionHandler->>MessageSource: getMessage(messageKey, args, locale)
+    MessageSource->>MessageBundle: Resolve key in domain bundle
+    MessageBundle-->>MessageSource: Localized text
+    MessageSource-->>GlobalExceptionHandler: Localized message
+    GlobalExceptionHandler-->>Client: Standardized JSON error (status, message, timestamp)
+```
+
+_Sequence Diagram showing how message keys become localized API errors._
+
+---
+
+## 2. Today's Branch Updates (2026-03-10)
+
+- Introduced message-key based localization flow for exceptions across modules (`app`, `auth`, `item`, `user`, `security`) using `MessageSource`.
+- Added `LocaleConfig` and domain-scoped message bundles in English/French (`messages/*/messages_en.properties`, `messages/*/messages_fr.properties`).
+- Updated security error responses (`401` and `403`) to resolve localized keys in `UserAuthenticationEntryPoint` and `CustomAccessDeniedHandler`.
+- Adjusted permanent local user deletion to clear `users_app_specific_roles` join-table rows before deleting user records in `UserRepositoryImpl`.
+- Updated tests and API docs artifacts: `UserControllerTest`, `AuthControllerTest`, and AsciiDoc index refinements (duplicate test doc cleanup).
+
+---
+
 ## Related Documentation
 
 - [Project README](../README.md)
@@ -429,4 +503,4 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 ---
 
 **Author:** Ken D. Cacciabue
-**Last Updated:** 23.01.2026
+**Last Updated:** 10.03.2026
