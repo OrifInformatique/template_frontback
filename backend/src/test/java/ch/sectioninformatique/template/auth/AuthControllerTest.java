@@ -557,9 +557,10 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void updatePassword_withFailure_shouldReturn400PasswordUpdateFailed() throws Exception {
-        String errorMessage = getMessage("auth.password.update.failed", "Old password is incorrect");
+        String errorDetail = "Old password is incorrect";
+        String errorMessage = getMessage("auth.password.update.failed", errorDetail);
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
-            .thenReturn(Mono.error(new PasswordUpdateFailedException(errorMessage)));
+            .thenReturn(Mono.error(new PasswordUpdateFailedException(errorDetail)));
 
         String validToken = getValidTokenForTestUser();
 
@@ -597,9 +598,10 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void register_withValidationError_shouldReturn400RegistrationFailed() throws Exception {
-        String errorMessage = getMessage("auth.register.failed", "Invalid email format");
+        String errorDetail = "Invalid email format";
+        String errorMessage = getMessage("auth.register.failed", errorDetail);
         when(authClient.register(any(RegisterDto.class)))
-            .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException(errorMessage)));
+            .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException(errorDetail)));
 
         performRequest(
                 "POST",

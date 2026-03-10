@@ -9,6 +9,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import org.springframework.context.NoSuchMessageException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -67,7 +68,11 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
         if (authException != null) {
             String authMessage = authException.getMessage();
             if (authMessage != null && !authMessage.isEmpty()) {
-                errorMessage = authMessage;
+                try {
+                    errorMessage = getMessage(authMessage);
+                } catch (NoSuchMessageException ignored) {
+                    errorMessage = getMessage("security.auth.missingOrInvalidToken");
+                }
             } else {
                 errorMessage = getMessage("security.auth.missingOrInvalidToken");
             }

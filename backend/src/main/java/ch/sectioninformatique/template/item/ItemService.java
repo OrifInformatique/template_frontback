@@ -5,17 +5,16 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
+import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 
 /**
  * Service class for managing items in the system.
@@ -82,7 +81,7 @@ public class ItemService {
         }
         
         User author = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new AppException("user.notFound", HttpStatus.NOT_FOUND));
+            .orElseThrow(UserNotFoundException::new);
         
         newItem.setAuthor(author);
         
@@ -120,7 +119,7 @@ public class ItemService {
         String currentUserEmail = getCurrentUserEmail();
         
         User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new AppException("user.notFound", HttpStatus.NOT_FOUND));
+            .orElseThrow(UserNotFoundException::new);
         
         Item item = itemRepository.findById(id)
             .orElseThrow(() -> new ItemNotFoundException(id));
@@ -152,7 +151,7 @@ public class ItemService {
         String currentUserEmail = getCurrentUserEmail();
         
         User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new AppException("user.notFound", HttpStatus.NOT_FOUND));
+            .orElseThrow(UserNotFoundException::new);
         logger.debug("Found user with ID: {}", currentUser.getId());
         
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

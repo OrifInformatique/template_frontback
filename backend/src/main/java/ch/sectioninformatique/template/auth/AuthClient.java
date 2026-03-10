@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
-import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
@@ -222,11 +222,11 @@ public class AuthClient {
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppException(
-                                                                                error.message(),
+                                                                .flatMap(error -> Mono.error(new AppMessageKeyException(
                                                                                 HttpStatus.resolve(response
                                                                                                 .statusCode()
-                                                                                                .value()))));
+                                                                                                .value()),
+                                                                                error.message())));
                                         }
 
                                         // Extract response body
@@ -326,10 +326,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -362,10 +363,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -398,10 +400,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -434,10 +437,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -471,10 +475,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
