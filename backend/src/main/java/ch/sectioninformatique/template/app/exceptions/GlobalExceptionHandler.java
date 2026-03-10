@@ -45,6 +45,7 @@ public class GlobalExceptionHandler {
     }
 
     private String msg(String key, Object... args) {
+        // Fall back to the key itself when no bundle entry is found.
         return messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());
     }
 
@@ -75,13 +76,13 @@ public class GlobalExceptionHandler {
     // ========================================================================
 
     /**
-    * Handles AppException - the custom application exception.
-    * 
-    * Resolves the exception's message via MessageKeyProvider when available,
-    * otherwise returns a generic unexpected error message.
-    * 
-    * @param ex The AppException instance
-    * @return ResponseEntity with the exception's status and resolved message
+     * Handles AppException - the custom application exception.
+     *
+     * Resolves the exception's message via MessageKeyProvider when available,
+     * otherwise returns a generic unexpected error message.
+     *
+     * @param ex The AppException instance
+     * @return ResponseEntity with the exception's status and resolved message
      */
     @ExceptionHandler(AppException.class)
     public ResponseEntity<Object> handleAppException(AppException ex) {

@@ -3,19 +3,12 @@ package ch.sectioninformatique.template.app.exceptions;
 import org.springframework.http.HttpStatus;
 
 /**
- * Custom exception class for application-specific errors.
- * This exception:
- * - Extends RuntimeException for unchecked exception behavior
- * - Includes an HTTP status code for REST API responses
+ * Base application exception carrying an HTTP status for API responses.
  */
 public class AppException extends RuntimeException {
 
     /**
-     * The HTTP status code associated with this exception.
-     * This field:
-     * - Is final to ensure immutability
-     * - Represents the appropriate HTTP response status
-     * - Is used to generate proper REST API responses
+     * HTTP status to return in the response.
      */
     private final HttpStatus status;
 
@@ -30,12 +23,7 @@ public class AppException extends RuntimeException {
     }
 
     /**
-     * Returns the HTTP status code associated with this exception.
-     * This method:
-     * - Provides access to the status code for response generation
-     * - Is used by exception handlers to set the response status
-     *
-     * @return The HTTP status code for this exception
+     * @return HTTP status to return for this exception
      */
     public HttpStatus getStatus() {
         return status;

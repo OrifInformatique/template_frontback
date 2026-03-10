@@ -164,6 +164,7 @@ public class UserExceptions {
 
         public UserDeletionException(String messageKey, boolean useKey) {
             super(HttpStatus.BAD_REQUEST);
+            // Allows callers to pass a direct i18n key from upstream services.
             this.messageKey = messageKey;
             this.messageArgs = NO_ARGS;
         }

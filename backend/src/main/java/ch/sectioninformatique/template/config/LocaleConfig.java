@@ -48,6 +48,7 @@ public class LocaleConfig implements WebMvcConfigurer {
             Set<String> basenames = new TreeSet<>();
 
             for (Resource resource : resources) {
+                // Normalize message bundle paths to basenames (strip locale suffixes).
                 String basename = resolveResourceBasename(resource);
                 if (basename != null) {
                     basenames.add(basename);
@@ -77,6 +78,7 @@ public class LocaleConfig implements WebMvcConfigurer {
         }
 
         String withoutExtension = relativePath.substring(0, relativePath.length() - PROPERTIES_EXTENSION.length());
+        // Collapse locale-specific bundles (e.g., messages_fr) into a single basename.
         String basenameWithoutLocale = LOCALE_SUFFIX_PATTERN.matcher(withoutExtension).replaceFirst("");
         return CLASSPATH_MESSAGES_PREFIX + basenameWithoutLocale;
     }

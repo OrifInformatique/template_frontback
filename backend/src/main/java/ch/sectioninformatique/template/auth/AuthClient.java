@@ -34,6 +34,7 @@ import org.springframework.http.ResponseEntity;
  * endpoints,
  * including login and registration functionalities.
  * It uses WebClient to perform HTTP requests and handle responses reactively.
+ * Error responses are propagated as message keys so the API can localize messages.
  */
 @Service
 public class AuthClient {

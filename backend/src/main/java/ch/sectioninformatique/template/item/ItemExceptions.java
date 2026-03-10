@@ -35,6 +35,7 @@ public class ItemExceptions {
         */
         public UnauthorizedItemException(String message) {
             super(HttpStatus.UNAUTHORIZED);
+            // The operation is encoded in the i18n bundle, so no args are passed here.
         }
 
         @Override

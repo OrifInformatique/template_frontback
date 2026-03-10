@@ -31,6 +31,7 @@ public class AuthExceptions {
 
         public RegistrationFailedException(String detail) {
             super(HttpStatus.BAD_REQUEST);
+            // Preserve the auth-service detail as a formatting arg for i18n.
             this.detail = detail;
         }
 

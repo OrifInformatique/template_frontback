@@ -20,6 +20,7 @@ public class AppMessageKeyException extends AppException implements MessageKeyPr
     public AppMessageKeyException(HttpStatus status, String messageKey, Object... messageArgs) {
         super(status);
         this.messageKey = messageKey;
+        // Normalize to a shared empty array to keep handler logic simple.
         this.messageArgs = messageArgs == null ? NO_ARGS : messageArgs;
     }
 

@@ -54,6 +54,7 @@ public class ItemService {
         logger.debug("Full authentication principal: {}", authentication.getPrincipal());
         
         String currentUserEmail = authentication.getPrincipal().toString();
+        // spring-auth principal string is expected to contain "login=<email>,..."
         // Extract only the login from the principal string
         currentUserEmail = currentUserEmail.substring(currentUserEmail.indexOf("login=") + 6);
         currentUserEmail = currentUserEmail.substring(0, currentUserEmail.indexOf(","));

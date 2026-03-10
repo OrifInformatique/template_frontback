@@ -42,6 +42,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         if (accessDeniedException != null && accessDeniedException.getMessage() != null) {
             String exceptionMessage = accessDeniedException.getMessage();
             if (!exceptionMessage.isEmpty()) {
+                // Allow the exception message to act as an i18n key when available.
                 try {
                     errorMessage = messageSource.getMessage(
                             exceptionMessage,

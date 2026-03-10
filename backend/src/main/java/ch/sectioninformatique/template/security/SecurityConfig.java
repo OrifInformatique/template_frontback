@@ -32,7 +32,7 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
  * The configuration ensures:
  * - Secure endpoints with appropriate authorization
  * - Cross-origin request handling
- * - Stateless session management
+ * - Session management aligned with OAuth2 login
  * - Custom authentication failure handling
  * - OAuth2 integration for external authentication
  */
@@ -98,6 +98,7 @@ public class SecurityConfig {
                 })
                 .sessionManagement(customizer -> {
                     log.debug("Setting session creation policy to ALWAYS");
+                    // OAuth2 login flow relies on a session to store auth requests.
                     customizer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
                 })
                 .cors(cors -> {

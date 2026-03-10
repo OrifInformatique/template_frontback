@@ -353,6 +353,7 @@ public class SecurityExceptions {
 
         public AuthenticationProviderException(String detail) {
             super(HttpStatus.INTERNAL_SERVER_ERROR);
+            // Keep the upstream provider detail for i18n formatting.
             this.detail = detail;
         }
 

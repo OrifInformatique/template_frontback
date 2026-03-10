@@ -68,6 +68,7 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
         if (authException != null) {
             String authMessage = authException.getMessage();
             if (authMessage != null && !authMessage.isEmpty()) {
+                // Treat the exception message as a potential i18n key first.
                 try {
                     errorMessage = getMessage(authMessage);
                 } catch (NoSuchMessageException ignored) {
