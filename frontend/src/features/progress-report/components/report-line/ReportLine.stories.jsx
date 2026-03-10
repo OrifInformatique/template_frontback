@@ -4,7 +4,7 @@ const meta = {
   component: ReportLine,
   tags: ["autodocs"],
   args: {
-    label: "A1 Clarifier et documenter les besoins des parties prenantes dans le cadre d'un projet ICT",
+    label: "A1 Clarifier et documenter les besoins des parties prenantes dans le cadre d’un projet ICT",
     data: [
       { label: "Autonome", value: 40 },
       { label: "Exercé", value: 30 },
@@ -22,21 +22,21 @@ export const Default = {};
 // Short label
 export const ShortLabel = {
   args: {
-    label: "A3 Rechercher des informations",
+    label: "B1 Installer un PC monoposte",
   },
 };
 
 // Label so long it must be truncated
 export const TruncatedLabel = {
   args: {
-    label: "B2 Concevoir, implémenter, tester, documenter et adapter des solutions ICT pour répondre aux besoins des parties prenantes dans le respect des processus et standards en vigueur",
+    label: "C3 Concevoir, implémenter, tester, documenter et adapter des solutions ICT pour répondre aux besoins des parties prenantes dans le respect des processus et standards en vigueur",
   },
 };
 
 // No data — shows the gray fallback bar
 export const NoData = {
   args: {
-    label: "C1 Compétence sans données",
+    label: "Pas de données",
     data: [],
   },
 };
@@ -44,7 +44,7 @@ export const NoData = {
 // Strong mastery
 export const MostlyAutonome = {
   args: {
-    label: "A1 Clarifier et documenter les besoins",
+    label: "A2 Définir un modèle de procédure pour un projet ICT",
     data: [
       { label: "Autonome", value: 70 },
       { label: "Exercé", value: 15 },
@@ -57,7 +57,7 @@ export const MostlyAutonome = {
 // Low mastery
 export const MostlyNonExplique = {
   args: {
-    label: "A1 Clarifier et documenter les besoins",
+    label: "A2 Définir un modèle de procédure pour un projet ICT",
     data: [
       { label: "Autonome", value: 5 },
       { label: "Exercé", value: 10 },
