@@ -376,7 +376,7 @@ public class UserControllerTest {
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
-                "delete-local",
+            "delete-local-success",
                 true,
                 response -> {
                     try {
@@ -773,36 +773,6 @@ public class UserControllerTest {
     }
 
     // ==================== DELETE /users/{userId}/{global} - Local ====================
-
-    /**
-     * Test: DELETE /users/{userId}/{global} - Local Success
-     *
-     * Test soft deleting a user locally with proper authorization.
-     */
-    @Test
-    @Transactional
-    public void deleteUser_locally_shouldReturnSuccess() throws Exception {
-        String adminToken = getValidTokenForUser("test.admin@test.com");
-        UserDto userToDelete = userService.findByLogin("test.user@test.com");
-        assertNotNull(userToDelete, "Test user should exist");
-        performRequest(
-                "DELETE",
-            "/users/" + userToDelete.getId() + "/false",
-                adminToken,
-                MediaType.APPLICATION_JSON,
-                200,
-                "delete-local-success",
-                true,
-                response -> {
-                    try {
-                        response.andExpect(status().isOk());
-                        response.andExpect(jsonPath("$.message")
-                            .value(getMessage("user.deleted.local")));
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
 
     /**
      * Test: DELETE /users/{userId}/{global} - Local 401 Unauthorized
