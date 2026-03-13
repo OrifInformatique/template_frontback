@@ -1,7 +1,10 @@
 package ch.sectioninformatique.template.item;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +17,7 @@ import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
-
+import jakarta.persistence.EntityManager;
 /**
  * Service class for managing items in the system.
  * This class handles all business logic related to items, including CRUD operations
@@ -30,6 +33,8 @@ public class ItemService {
     private ItemRepository itemRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     /**
      * Constructs a new ItemService with the required repositories.
@@ -102,8 +107,17 @@ public class ItemService {
      *
      * @return An Iterable containing all items
      */
-    public Iterable<Item> getItems() {
-        return itemRepository.findAll();
+    public Iterable<Item> getItems(boolean includeDeleted)
+    {
+        Session session = entityManager.unwrap(Session.class);
+        if(includeDeleted) {
+            session.disableFilter("delete");
+        } else {
+            session.enableFilter("delete").setParameter("deleted", false);
+        }
+        List<Item> items = new ArrayList<>();
+        itemRepository.findAll().forEach(items::add);
+        return items;
     }
 
     /**
@@ -134,6 +148,18 @@ public class ItemService {
         }
         
         itemRepository.deleteById(id);
+    }
+
+    public void deletePermanentById(Long id)
+    {
+        try {
+            itemRepository.deletePermanentlyById(id);
+
+        } catch (Exception e) {
+            throw new ItemNotFoundException(id);
+        }
+        
+
     }
 
     /**
