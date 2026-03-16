@@ -22,9 +22,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-/**
- * Internationalization and localization configuration.
- */
 @Configuration
 public class LocaleConfig implements WebMvcConfigurer {
 
@@ -38,13 +35,6 @@ public class LocaleConfig implements WebMvcConfigurer {
 
     private static final Pattern LOCALE_SUFFIX_PATTERN = Pattern.compile("_[a-z]{2}(?:_[A-Z]{2})?$");
 
-    /**
-     * Configures the MessageSource bean to load i18n message bundles from the classpath.
-     * This method scans for all properties files under the "messages" directory and its subdirectories,
-     * normalizes their paths to basenames, and sets up a ReloadableResourceBundleMessageSource with UTF-8 encoding and caching.
-     * 
-     * @return MessageSource configured for internationalization
-     */
     @Bean
     public MessageSource messageSource() {
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
@@ -54,14 +44,6 @@ public class LocaleConfig implements WebMvcConfigurer {
         return messageSource;
     }
 
-    /**
-     * Resolves message bundle basenames by scanning the classpath for properties files under the "messages" directory.
-     * This method normalizes file paths to basenames by stripping locale suffixes and file extensions,
-     * ensuring that all locale-specific bundles (e.g., messages_fr.properties) are treated as variants of a single basename (e.g., messages).
-     * If no message bundles are found, it falls back to a default basename.
-     * 
-     * @return An array of basenames for the MessageSource configuration
-     */
     private String[] resolveMessageBasenames() {
         try {
             Resource[] resources = new PathMatchingResourcePatternResolver().getResources(MESSAGE_RESOURCES_PATTERN);
@@ -85,14 +67,6 @@ public class LocaleConfig implements WebMvcConfigurer {
         }
     }
 
-    /**
-     * Resolves the basename for a given resource by stripping locale suffixes and file extensions.
-     * This ensures that all locale-specific bundles (e.g., messages_fr.properties) are treated as variants of a single basename (e.g., messages).
-     *
-     * @param resource The resource to resolve
-     * @return The resolved basename, or null if the resource is not a valid message bundle
-     * @throws IOException If an I/O error occurs while accessing the resource
-     */
     private String resolveResourceBasename(Resource resource) throws IOException {
         String resourceUrl = resource.getURL().toString().replace('\\', '/');
         int messagesIndex = resourceUrl.lastIndexOf(MESSAGE_SEGMENT);
@@ -111,15 +85,9 @@ public class LocaleConfig implements WebMvcConfigurer {
         return CLASSPATH_MESSAGES_PREFIX + basenameWithoutLocale;
     }
 
-    // ========================================================================
-    // Locale Resolution and Interceptor Configuration
-    // ========================================================================
-
     /**
-     * Configures the LocaleResolver to determine the locale based on the "Accept-Language" header by default,
-     * but allows overriding the locale via a request attribute set by the localeQueryParamInterceptor.
-     * 
-     * @return The configured LocaleResolver
+     * Resolves locale from the {@code ?lang=} request attribute (set by the interceptor),
+     * falling back to the {@code Accept-Language} header. Default locale is French.
      */
     @Bean
     public LocaleResolver localeResolver() {
@@ -144,14 +112,6 @@ public class LocaleConfig implements WebMvcConfigurer {
         return localeResolver;
     }
 
-    /**
-     * Configures the LocalValidatorFactoryBean to use the MessageSource for resolving validation messages.
-     * This allows validation annotations (e.g., @NotNull, @Size) to reference message keys defined in the i18n message bundles,
-     * enabling localized validation error messages based on the resolved locale.
-     * 
-     * @param messageSource The MessageSource to be used for validation messages
-     * @return The configured LocalValidatorFactoryBean
-     */
     @Bean
     public LocalValidatorFactoryBean validator(MessageSource messageSource) {
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
@@ -159,16 +119,10 @@ public class LocaleConfig implements WebMvcConfigurer {
         return validator;
     }
 
-    /**
-     * Defines a HandlerInterceptor that checks for a "lang" query parameter in incoming requests to override the locale.
-     * If the "lang" parameter is present and valid, it sets the locale for the current request and updates the LocaleContextHolder.
-     * After the request is processed, it resets the LocaleContextHolder to prevent locale leakage across requests.
-     * This allows clients to specify the desired locale on a per-request basis using a query parameter (e.g., ?lang=fr).
-     * @return The configured HandlerInterceptor for locale resolution
-     */
-    @Bean
-    public HandlerInterceptor localeQueryParamInterceptor() {
-        HandlerInterceptor interceptor = new HandlerInterceptor() {
+    /** Intercepts {@code ?lang=} query parameter to override locale for the duration of the request. */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new HandlerInterceptor() {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
                 String lang = request.getParameter("lang");
@@ -181,22 +135,9 @@ public class LocaleConfig implements WebMvcConfigurer {
             }
 
             @Override
-            public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-                    Exception ex) {
+            public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
                 LocaleContextHolder.resetLocaleContext();
             }
-        };
-        return interceptor;
-    }
-
-    /**
-     * Registers the localeQueryParamInterceptor to be applied to all incoming requests.
-     * This ensures that the interceptor will check for the "lang" query parameter on every request and override the locale accordingly.
-     * By adding this interceptor to the registry, we enable dynamic locale resolution based on client-specified query parameters, enhancing the internationalization capabilities of the application.
-     * @param registry The InterceptorRegistry to which the localeQueryParamInterceptor will be added
-     */
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(localeQueryParamInterceptor());
+        });
     }
 }
