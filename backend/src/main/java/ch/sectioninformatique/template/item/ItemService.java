@@ -14,6 +14,7 @@ import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
+import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 
 /**
  * Service class for managing items in the system.
@@ -53,6 +54,7 @@ public class ItemService {
         logger.debug("Full authentication principal: {}", authentication.getPrincipal());
         
         String currentUserEmail = authentication.getPrincipal().toString();
+        // spring-auth principal string is expected to contain "login=<email>,..."
         // Extract only the login from the principal string
         currentUserEmail = currentUserEmail.substring(currentUserEmail.indexOf("login=") + 6);
         currentUserEmail = currentUserEmail.substring(0, currentUserEmail.indexOf(","));
@@ -80,7 +82,7 @@ public class ItemService {
         }
         
         User author = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(UserNotFoundException::new);
         
         newItem.setAuthor(author);
         
@@ -118,7 +120,7 @@ public class ItemService {
         String currentUserEmail = getCurrentUserEmail();
         
         User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(UserNotFoundException::new);
         
         Item item = itemRepository.findById(id)
             .orElseThrow(() -> new ItemNotFoundException(id));
@@ -150,7 +152,7 @@ public class ItemService {
         String currentUserEmail = getCurrentUserEmail();
         
         User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(UserNotFoundException::new);
         logger.debug("Found user with ID: {}", currentUser.getId());
         
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

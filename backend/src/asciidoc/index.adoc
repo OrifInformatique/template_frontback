@@ -461,18 +461,29 @@ include::users/all-users/http-response.adoc[]
 
 It returns the list of users with their roles and permissions.
 
-==== 3.1.1 Success (Alternative)
-This is an alternative example output for the `GET /users/all` endpoint.
+==== 3.1.2 Success (Detailed)
+This is another example output for the `GET /users/all` endpoint.
 
 .request
-include::users/users-all-success/http-request.adoc[]
+include::users/all-users-success/http-request.adoc[]
 
 .response
-include::users/users-all-success/http-response.adoc[]
+include::users/all-users-success/http-response.adoc[]
 
-It returns the complete list of users.
+It returns the list of users.
 
-==== 3.1.2 Error 401 - Unauthorised
+==== 3.1.3 Success (All Users)
+This is another example output for the `GET /users/all` endpoint.
+
+.request
+include::users/all/http-request.adoc[]
+
+.response
+include::users/all/http-response.adoc[]
+
+It returns the list of users.
+
+==== 3.1.5 Error 401 - Unauthorised
 This is an example output when the endpoint is called without valid authentication.
 
 .request
@@ -480,6 +491,17 @@ include::users/users-all-unauthorized/http-request.adoc[]
 
 .response
 include::users/users-all-unauthorized/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+===== 3.1.5.1 Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/all-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/all-unauthorized-missing-token/http-response.adoc[]
 
 It returns a message indicating authentication is required.
 
@@ -494,7 +516,18 @@ include::users/delete-global/http-response.adoc[]
 
 It confirms the global deletion request.
 
-==== 3.2.1 Error from external service
+==== 3.2.1 Success (Alternative)
+This is another example output for the `DELETE /users/{userId}/true` endpoint.
+
+.request
+include::users/delete-global-success/http-request.adoc[]
+
+.response
+include::users/delete-global-success/http-response.adoc[]
+
+It confirms the global deletion request.
+
+==== 3.2.2 Error from external service
 This is an example output for the `DELETE /users/{userId}/true` endpoint when the global deletion fails because of an external service error.
 
 .request
@@ -505,18 +538,29 @@ include::users/delete-global-error/http-response.adoc[]
 
 It shows the response returned when the deletion cannot be processed.
 
+==== 3.2.4 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/delete-global-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/delete-global-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
 === 3.3 Delete User (Local)
 This is an example output for the `DELETE /users/{userId}/false` endpoint when performing a local (soft) delete.
 
 .request
-include::users/delete-local/http-request.adoc[]
+include::users/delete-local-success/http-request.adoc[]
 
 .response
-include::users/delete-local/http-response.adoc[]
+include::users/delete-local-success/http-response.adoc[]
 
 It confirms the local deletion request.
 
-==== 3.3.1 Error 403 - Forbidden
+==== 3.3.2 Error 403 - Forbidden
 This is an example output for the `DELETE /users/{userId}` endpoint when the user lacks permission to delete.
 
 .request
@@ -527,7 +571,7 @@ include::users/delete-forbidden/http-response.adoc[]
 
 It returns a message indicating access is forbidden.
 
-==== 3.3.2 Error 404 - User Not Found
+==== 3.3.3 Error 404 - User Not Found
 This is an example output for the `DELETE /users/{userId}` endpoint when the user to delete is not found.
 
 .request
@@ -538,7 +582,7 @@ include::users/delete-user-not-found/http-response.adoc[]
 
 It returns a message indicating the user was not found.
 
-==== 3.3.3 Error 500 - User Deletion Failed
+==== 3.3.4 Error 500 - User Deletion Failed
 This is an example output for the `DELETE /users/{userId}` endpoint when the deletion process fails.
 
 .request
@@ -548,6 +592,17 @@ include::users/delete-user-deletion-failed/http-request.adoc[]
 include::users/delete-user-deletion-failed/http-response.adoc[]
 
 It returns a message indicating the deletion could not be completed.
+
+==== 3.3.6 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/delete-local-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/delete-local-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
 
 === 3.4 Promote User Role
 This is an example output for the `PUT /users/{userId}/promote-role` endpoint.
@@ -581,3 +636,355 @@ include::users/promote-role-already-exists/http-request.adoc[]
 include::users/promote-role-already-exists/http-response.adoc[]
 
 It returns a message indicating the user already has the requested role.
+
+=== 3.5 Me
+This is an example output for the `GET /users/me` endpoint.
+
+.request
+include::users/me/http-request.adoc[]
+
+.response
+include::users/me/http-response.adoc[]
+
+It returns the currently authenticated user.
+
+==== 3.5.1 Success (Alternative)
+This is another example output for the `GET /users/me` endpoint.
+
+.request
+include::users/me-success/http-request.adoc[]
+
+.response
+include::users/me-success/http-response.adoc[]
+
+It returns the currently authenticated user.
+
+==== 3.5.3 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/me-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/me-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.6 All Users With Deleted
+This is an example output for the `GET /users/all-with-deleted` endpoint.
+
+.request
+include::users/all-with-deleted/http-request.adoc[]
+
+.response
+include::users/all-with-deleted/http-response.adoc[]
+
+It returns the list of users, including soft-deleted users.
+
+==== 3.6.1 Success (Alternative)
+This is another example output for the `GET /users/all-with-deleted` endpoint.
+
+.request
+include::users/all-with-deleted-success/http-request.adoc[]
+
+.response
+include::users/all-with-deleted-success/http-response.adoc[]
+
+It returns the list of users, including soft-deleted users.
+
+==== 3.6.4 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/all-with-deleted-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/all-with-deleted-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.7 Deleted Users
+This is an example output for the `GET /users/deleted` endpoint.
+
+.request
+include::users/deleted/http-request.adoc[]
+
+.response
+include::users/deleted/http-response.adoc[]
+
+It returns the list of soft-deleted users.
+
+==== 3.7.1 Success (Alternative)
+This is another example output for the `GET /users/deleted` endpoint.
+
+.request
+include::users/deleted-users-success/http-request.adoc[]
+
+.response
+include::users/deleted-users-success/http-response.adoc[]
+
+It returns the list of soft-deleted users.
+
+==== 3.7.4 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/deleted-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/deleted-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.8 Promote Local App Role
+This is an example output for the `PUT /users/{userId}/promote-local-app-role` endpoint.
+
+.request
+include::users/promote-local-app-role/http-request.adoc[]
+
+.response
+include::users/promote-local-app-role/http-response.adoc[]
+
+It confirms the user was promoted to the local app role.
+
+==== 3.8.1 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/promote-local-app-role-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/promote-local-app-role-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.9 Promote Manager
+This is an example output for the `PUT /users/{userId}/promote-manager` endpoint.
+
+.request
+include::users/promote-manager/http-request.adoc[]
+
+.response
+include::users/promote-manager/http-response.adoc[]
+
+It confirms the user was promoted to manager.
+
+==== 3.9.1 Success (Alternative)
+This is another example output for the `PUT /users/{userId}/promote-manager` endpoint.
+
+.request
+include::users/promote-manager-success/http-request.adoc[]
+
+.response
+include::users/promote-manager-success/http-response.adoc[]
+
+It confirms the user was promoted to manager.
+
+==== 3.9.3 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/promote-manager-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/promote-manager-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.10 Revoke Manager
+This is an example output for the `PUT /users/{userId}/revoke-manager` endpoint.
+
+.request
+include::users/revoke-manager/http-request.adoc[]
+
+.response
+include::users/revoke-manager/http-response.adoc[]
+
+It confirms the manager role was revoked.
+
+==== 3.10.1 Success (Alternative)
+This is another example output for the `PUT /users/{userId}/revoke-manager` endpoint.
+
+.request
+include::users/revoke-manager-success/http-request.adoc[]
+
+.response
+include::users/revoke-manager-success/http-response.adoc[]
+
+It confirms the manager role was revoked.
+
+==== 3.10.3 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/revoke-manager-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/revoke-manager-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.11 Promote Admin
+This is an example output for the `PUT /users/{userId}/promote-admin` endpoint.
+
+.request
+include::users/promote-admin/http-request.adoc[]
+
+.response
+include::users/promote-admin/http-response.adoc[]
+
+It confirms the user was promoted to admin.
+
+==== 3.11.1 Success (Alternative)
+This is another example output for the `PUT /users/{userId}/promote-admin` endpoint.
+
+.request
+include::users/promote-admin-success/http-request.adoc[]
+
+.response
+include::users/promote-admin-success/http-response.adoc[]
+
+It confirms the user was promoted to admin.
+
+==== 3.11.3 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/promote-admin-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/promote-admin-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.12 Revoke Admin
+This is an example output for the `PUT /users/{userId}/revoke-admin` endpoint.
+
+.request
+include::users/revoke-admin/http-request.adoc[]
+
+.response
+include::users/revoke-admin/http-response.adoc[]
+
+It confirms the admin role was revoked.
+
+==== 3.12.1 Success (Alternative)
+This is another example output for the `PUT /users/{userId}/revoke-admin` endpoint.
+
+.request
+include::users/revoke-admin-success/http-request.adoc[]
+
+.response
+include::users/revoke-admin-success/http-response.adoc[]
+
+It confirms the admin role was revoked.
+
+==== 3.12.3 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/revoke-admin-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/revoke-admin-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.13 Downgrade Admin
+This is an example output for the `PUT /users/{userId}/downgrade-admin` endpoint.
+
+.request
+include::users/downgrade-admin-success/http-request.adoc[]
+
+.response
+include::users/downgrade-admin-success/http-response.adoc[]
+
+It confirms the admin role was downgraded.
+
+==== 3.13.1 Success (Alternative)
+This is another example output for the `PUT /users/{userId}/downgrade-admin` endpoint.
+
+.request
+include::users/downgrade-admin/http-request.adoc[]
+
+.response
+include::users/downgrade-admin/http-response.adoc[]
+
+It confirms the admin role was downgraded.
+
+==== 3.13.2 Error 401 - Unauthorized
+This is an example output when the endpoint is called without valid authentication.
+
+.request
+include::users/downgrade-admin-unauthorized/http-request.adoc[]
+
+.response
+include::users/downgrade-admin-unauthorized/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.14 Delete User (Permanent Local)
+This is an example output for the `DELETE /users/{userId}/false/permanent` endpoint.
+
+.request
+include::users/delete-permanent-local/http-request.adoc[]
+
+.response
+include::users/delete-permanent-local/http-response.adoc[]
+
+It confirms the local permanent deletion request.
+
+==== 3.14.1 Success (Alternative)
+This is another example output for the `DELETE /users/{userId}/false/permanent` endpoint.
+
+.request
+include::users/delete-permanent-local-success/http-request.adoc[]
+
+.response
+include::users/delete-permanent-local-success/http-response.adoc[]
+
+It confirms the local permanent deletion request.
+
+==== 3.14.3 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/delete-permanent-local-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/delete-permanent-local-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.
+
+=== 3.15 Delete User (Permanent Global)
+This is an example output for the `DELETE /users/{userId}/true/permanent` endpoint.
+
+.request
+include::users/delete-permanent-global/http-request.adoc[]
+
+.response
+include::users/delete-permanent-global/http-response.adoc[]
+
+It confirms the global permanent deletion request.
+
+==== 3.15.1 Success (Alternative)
+This is another example output for the `DELETE /users/{userId}/true/permanent` endpoint.
+
+.request
+include::users/delete-permanent-global-success/http-request.adoc[]
+
+.response
+include::users/delete-permanent-global-success/http-response.adoc[]
+
+It confirms the global permanent deletion request.
+
+==== 3.15.3 Error 401 - Missing Token
+This is an example output when a request with a missing token is sent.
+
+.request
+include::users/delete-permanent-global-unauthorized-missing-token/http-request.adoc[]
+
+.response
+include::users/delete-permanent-global-unauthorized-missing-token/http-response.adoc[]
+
+It returns a message indicating authentication is required.

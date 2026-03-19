@@ -10,6 +10,8 @@ import ch.sectioninformatique.template.user.UserService;
 import jakarta.servlet.http.Cookie;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import reactor.core.publisher.Mono;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -72,6 +74,9 @@ public class AuthControllerTest {
     /** MockMvc for simulating HTTP requests in tests */
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private MessageSource messageSource;
 
     @MockitoBean
     private AuthClient authClient; // mock this instead of the controller
@@ -161,6 +166,10 @@ public class AuthControllerTest {
         request.andDo(document("auth/" + docsFileName, preprocessRequest(prettyPrint()),
                 preprocessResponse(prettyPrint())));
 
+    }
+
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }
 
     /**
@@ -292,6 +301,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.invalidCredentials")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -368,6 +378,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isConflict());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.userAlreadyExists")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -451,7 +462,8 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void updatePassword_withValidToken_shouldReturn200() throws Exception {
-        MessageResponseDto messageResponse = new MessageResponseDto("Password updated successfully");
+        String successMessage = getMessage("auth.password.updated");
+        MessageResponseDto messageResponse = new MessageResponseDto(successMessage);
 
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
                 .thenReturn(Mono.just(ResponseEntity.ok(messageResponse)));
@@ -469,7 +481,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
-                        response.andExpect(jsonPath("$.message").value("Password updated successfully"));
+                        response.andExpect(jsonPath("$.message").value(successMessage));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -545,8 +557,10 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void updatePassword_withFailure_shouldReturn400PasswordUpdateFailed() throws Exception {
+        String errorDetail = "Old password is incorrect";
+        String errorMessage = getMessage("auth.password.update.failed", errorDetail);
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
-                .thenReturn(Mono.error(new PasswordUpdateFailedException("Old password is incorrect")));
+            .thenReturn(Mono.error(new PasswordUpdateFailedException(errorDetail)));
 
         String validToken = getValidTokenForTestUser();
 
@@ -561,8 +575,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isBadRequest());
-                        // Verify error message in response
-                        response.andExpect(jsonPath("$.message").exists());
+                        response.andExpect(jsonPath("$.message").value(errorMessage));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -585,8 +598,10 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void register_withValidationError_shouldReturn400RegistrationFailed() throws Exception {
+        String errorDetail = "Invalid email format";
+        String errorMessage = getMessage("auth.register.failed", errorDetail);
         when(authClient.register(any(RegisterDto.class)))
-                .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException("Invalid email format")));
+            .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException(errorDetail)));
 
         performRequest(
                 "POST",
@@ -599,6 +614,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isBadRequest());
+                        response.andExpect(jsonPath("$.message").value(errorMessage));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -623,7 +639,7 @@ public class AuthControllerTest {
     @Transactional
     public void refresh_withExpiredToken_shouldReturn401InvalidToken() throws Exception {
         when(authClient.refreshLogin(anyString()))
-                .thenReturn(Mono.error(new InvalidTokenException("Token has expired")));
+                .thenReturn(Mono.error(new InvalidTokenException()));
 
         Cookie refreshCookie = new Cookie("refresh_token", "expiredToken");
         performRequest(
@@ -638,6 +654,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("security.token.invalid")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -663,7 +680,7 @@ public class AuthControllerTest {
     @Transactional
     public void refresh_withMalformedRefreshToken_shouldReturn401InvalidRefreshToken() throws Exception {
         when(authClient.refreshLogin(anyString()))
-                .thenReturn(Mono.error(new InvalidRefreshTokenException("Malformed refresh token")));
+                .thenReturn(Mono.error(new InvalidRefreshTokenException()));
 
         Cookie refreshCookie = new Cookie("refresh_token", "malformed");
         performRequest(
@@ -678,6 +695,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("security.refresh.invalid")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -716,7 +734,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
-                        response.andExpect(jsonPath("$.message").exists());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.invalidCredentials")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -781,8 +799,7 @@ public class AuthControllerTest {
     @Transactional
     public void login_withNonExistentUser_shouldReturn404UserNotFound() throws Exception {
         when(authClient.login(any(CredentialsDto.class)))
-                .thenReturn(Mono.error(
-                        new AuthExceptions.UserNotFoundException("User with login 'nonexistent@test.com' not found")));
+            .thenReturn(Mono.error(new AuthExceptions.UserNotFoundException()));
 
         performRequest(
                 "POST",
@@ -795,6 +812,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isNotFound());
+                        response.andExpect(jsonPath("$.message").value(getMessage("user.notFound")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -816,7 +834,7 @@ public class AuthControllerTest {
     @Transactional
     public void register_withDuplicateLogin_shouldReturn409Conflict() throws Exception {
         when(authClient.register(any(RegisterDto.class)))
-                .thenReturn(Mono.error(new UserAlreadyExistsException("User with this email already registered")));
+                .thenReturn(Mono.error(new UserAlreadyExistsException()));
 
         performRequest(
                 "POST",
@@ -829,6 +847,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isConflict());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.userAlreadyExists")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -855,7 +874,7 @@ public class AuthControllerTest {
     @Transactional
     public void refresh_withInvalidJwtSignature_shouldReturn401JwtVerificationFailed() throws Exception {
         when(authClient.refreshLogin(anyString()))
-                .thenReturn(Mono.error(new JwtVerificationException("JWT signature mismatch")));
+                .thenReturn(Mono.error(new JwtVerificationException()));
 
         Cookie refreshCookie = new Cookie("refresh_token", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalidSignature");
         performRequest(
@@ -870,6 +889,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("security.jwt.verificationFailed")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
