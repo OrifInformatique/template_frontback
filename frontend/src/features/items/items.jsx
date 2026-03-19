@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import List from './ui/list';
+import ItemForm from './itemForm';
+import { Button, PopUp } from '@orif-informatique/react-components-library';
 
 const Items = () => {
     const { t } = useTranslation('items');
@@ -10,6 +12,8 @@ const Items = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showDeleted, setShowDeleted] = useState(false);
+    const [formOpen, setFormOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
 
     const fetchItems = useCallback(async () => {
         setIsLoading(true);
@@ -30,7 +34,7 @@ const Items = () => {
 
     const actions = useMemo(() => ({
         // TODO: Replace hardcoded edit with a proper edit form/modal
-        edit: { permission: "user:update", onClick: (item) => modifyItem(item.id, { name: item.name + " (edited)" }).then(() => fetchItems()).catch((err) => console.error("Edit failed:", err)) },
+        edit: { permission: "user:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
         delete: { permission: "user:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
         restore: { permission: "user:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
         hardDelete: { permission: "user:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
@@ -39,8 +43,17 @@ const Items = () => {
 
     return (
         <div>
+            {formOpen ? (
+                <PopUp
+                    onClose={() => setFormOpen(false)}
+                    title={selectedItem ? t("edit_item", "Edit Item") : t("create_item", "Create Item")}
+                    children={<ItemForm item={selectedItem} onClose={() => { setFormOpen(false); fetchItems(); }} />}
+                />
+            ) : null}
+
             {isLoading && <p className="text-center text-gray-500 py-4">{t("loading", "Loading...")}</p>}
             {error && <p className="text-center text-red-500 py-4">{error}</p>}
+            <Button label={t("create_item", "Create Item")} variant="primary" className="mb-4" onClick={() => { setSelectedItem(null); setFormOpen(true); }} />
             <List
                 items={items}
                 columns={["id", "name", "author", "description", "createdAt", "updatedAt"]}

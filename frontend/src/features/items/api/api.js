@@ -119,3 +119,31 @@ export const hardDeleteItem = async (id) =>
         return null;
     }
 };
+
+export const createItem = async (data) =>
+{
+    try {
+        // Uncomment below to use the real backend.
+        /*
+        const response = await api.post(`/items`, data);
+        return response.data;
+        */
+        const newItem = {
+            id: items.length ? Math.max(...items.map((item) => item.id)) + 1 : 1,
+            name: data.name,
+            description: data.description,
+            author: data.author || "Unknown",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isDeleted: false,
+
+        };
+        items.push(newItem);
+        return newItem;
+    }
+    catch(error)
+    {
+        console.error(`Error while creating item: ${error.message}`);
+        return null;
+    }
+};
