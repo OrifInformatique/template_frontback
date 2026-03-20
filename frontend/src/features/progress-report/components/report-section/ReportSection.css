@@ -1,0 +1,120 @@
+/* ── Layout ────────────────────────────────────────────────── */
+.report-section {
+    display: grid;
+    grid-template-areas:
+        "title  title"
+        "donut  lines";
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: center;
+    gap: 8px 24px;
+    padding: 12px 0;
+    border-top: 1px solid #d0d0d0;
+}
+
+/* ── Section label ─────────────────────────────────────────── */
+.report-section__title {
+    grid-area: title;
+    font-weight: 600;
+    font-size: 1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ── DoughnutChart wrapper ─────────────────────────────────── */
+.report-section__doughnut-wrapper {
+    grid-area: donut;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 160px;
+}
+
+/* ── Lines wrapper ─────────────────────────────────────────── */
+.report-section__lines-wrapper {
+    grid-area: lines;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* ── Toggle button (hidden on large screens) ───────────────── */
+.report-section__toggle-btn {
+    display: none;
+}
+
+/* ── Small screens (≤ 600 px) ──────────────────────────────── */
+@media (max-width: 600px) {
+    .report-section {
+        grid-template-areas:
+            "title  title"
+            "donut  toggle"
+            "lines  lines";
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto auto;
+        align-items: start;
+        gap: 12px 16px;
+    }
+
+    /* ── Title ──────────────────────────────────────────────── */
+    .report-section__title {
+        white-space: normal;
+        text-overflow: clip;
+    }
+
+    /* ── DoughnutChart ──────────────────────────────────────── */
+    .report-section__doughnut-wrapper {
+        width: 130px;
+    }
+
+    /* ── Toggle button ──────────────────────────────────────── */
+    .report-section__toggle-btn {
+        grid-area: toggle;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-self: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border: 2px solid #1a56a0;
+        border-radius: 20px;
+        background: transparent;
+        color: #1a56a0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .report-section__toggle-btn:hover {
+        background: #1a56a0;
+        color: #fff;
+    }
+
+    /* ── Lines wrapper: hidden by default ───────────────────── */
+    .report-section__lines-wrapper {
+        grid-area: lines;
+        display: none;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    /* ── Lines wrapper: visible when open ──────────────────── */
+    .report-section__lines-wrapper--open {
+        display: grid;
+    }
+
+    /* ── Each report-line becomes a card ────────────────────── */
+    .report-section__lines-wrapper .report-line {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        background: #fff;
+    }
+}

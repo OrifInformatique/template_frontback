@@ -1,5 +1,5 @@
 {
-  "title": "A Suivi des projets ICT",
+  "label": "A Suivi des projets ICT",
 
   "doughnutChartData": [
     { "label": "Autonome", "value": 100 },

@@ -1,6 +1,7 @@
-import React from "react";
+import { useState } from "react";
 import DoughnutChart from "../doughnut-chart/DoughnutChart";
 import ReportLine from "../report-line/ReportLine";
+import "./ReportSection.css";
 
 /**
  * ReportSection component
@@ -34,6 +35,8 @@ export default function ReportSection({
   doughnutChartData = [],
   reportLines = [],
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="report-section">
       <div className="report-section__title" title={label}>
@@ -42,7 +45,16 @@ export default function ReportSection({
       <div className="report-section__doughnut-wrapper">
         <DoughnutChart data={doughnutChartData} />
       </div>
-      <div className="report-section__lines-wrapper">
+      <button
+        className="report-section__toggle-btn"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+      >
+        Détails {isOpen ? "▲" : "▼"}
+      </button>
+      <div
+        className={`report-section__lines-wrapper${isOpen ? " report-section__lines-wrapper--open" : ""}`}
+      >
         {reportLines.map((reportLine) => (
           <ReportLine
             key={reportLine.label}
