@@ -87,12 +87,12 @@ const meta = {
 
 export default meta;
 
-// Default: section standard avec 7 lignes et niveaux de maîtrise variés
+// Default: standard section with 7 lines and varied mastery levels
 export const Default = {};
 
-// ── Situations normales ──────────────────────────────────────
+// ── Normal situations ────────────────────────────────────────
 
-// Section avec seulement une ligne — cas minimal
+// Section with only one line — minimal case
 export const SingleLine = {
   args: {
     label: "B Sécurité des systèmes",
@@ -116,7 +116,7 @@ export const SingleLine = {
   },
 };
 
-// Tous les apprenants ont le niveau maximal de maîtrise (100% Autonome)
+// All learners have the maximum mastery level (100% Autonomous)
 export const AllAutonome = {
   args: {
     label: "C Développement applicatif",
@@ -158,7 +158,7 @@ export const AllAutonome = {
   },
 };
 
-// Aucune maîtrise — matière non encore enseignée (100% Non expliqué)
+// No mastery — subject not yet taught (100% Unexplained)
 export const AllNonExplique = {
   args: {
     label: "D Réseaux avancés",
@@ -200,7 +200,7 @@ export const AllNonExplique = {
   },
 };
 
-// Répartition parfaitement équilibrée entre les quatre niveaux
+// Perfectly balanced distribution across the four levels
 export const EqualSplit = {
   args: {
     label: "E Gestion de projet",
@@ -233,9 +233,9 @@ export const EqualSplit = {
   },
 };
 
-// ── Situations extrêmes ──────────────────────────────────────
+// ── Edge cases ───────────────────────────────────────────────
 
-// Aucune ligne — tableau reportLines vide
+// No lines — empty reportLines array
 export const NoLines = {
   args: {
     label: "F Section vide",
@@ -249,7 +249,7 @@ export const NoLines = {
   },
 };
 
-// Titre de section extrêmement long — teste la troncature et le retour à la ligne
+// Extremely long section title — tests truncation and line wrapping
 export const VeryLongLabel = {
   args: {
     label:
@@ -274,7 +274,7 @@ export const VeryLongLabel = {
   },
 };
 
-// Titre de section très court — teste l'alignement minimal
+// Very short section title — tests minimal alignment
 export const ShortLabel = {
   args: {
     label: "G",
@@ -298,7 +298,7 @@ export const ShortLabel = {
   },
 };
 
-// Beaucoup de lignes — teste le scroll, la densité et le rendu mobile en grille
+// Many lines — tests scrolling, density, and mobile grid rendering
 export const ManyLines = {
   args: {
     label: "H Maintenance et support informatique",
@@ -422,7 +422,7 @@ export const ManyLines = {
   },
 };
 
-// Lignes avec des labels extrêmement longs — teste la troncature dans les ReportLine
+// Lines with extremely long labels — tests truncation inside ReportLine
 export const VeryLongLineLabels = {
   args: {
     label: "I Compétences transversales",
@@ -457,7 +457,7 @@ export const VeryLongLineLabels = {
   },
 };
 
-// Mélange extrême — certaines lignes à 100% Autonome, d'autres à 100% Non expliqué
+// Extreme mix — some lines at 100% Autonomous, others at 100% Unexplained
 export const PolarizedLines = {
   args: {
     label: "J Programmation et bases de données",
