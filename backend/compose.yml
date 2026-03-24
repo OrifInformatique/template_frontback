@@ -17,8 +17,13 @@ services:
       # Pass environment variables to the container and the Spring Boot app
       SPRING_PROFILES_ACTIVE: "${ENVIRONMENT}"
       PORT: "${PORT}"
+
+      AZURE_TENANT_ID: "${AZURE_TENANT_ID}"
+      AZURE_CLIENT_ID: "${AZURE_CLIENT_ID}"
+      AZURE_CLIENT_SECRET: "${AZURE_CLIENT_SECRET}"
+
       # Prod database SPRING_DATASOURCE_URL has to be set in the production environment
-      DEV_SPRING_DATASOURCE_URL: "${DEV_SPRING_DATASOURCE_URL}"
+      DEV_SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/dev_db
       TEST_SPRING_DATASOURCE_URL: "${TEST_SPRING_DATASOURCE_URL}"
       SPRING_DATASOURCE_USERNAME: "${DB_USERNAME}"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
