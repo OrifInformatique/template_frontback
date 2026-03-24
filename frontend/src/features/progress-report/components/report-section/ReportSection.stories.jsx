@@ -435,7 +435,7 @@ export const VeryLongLineLabels = {
     reportLines: [
       {
         label:
-          "I1 Concevoir, implémenter, tester, documenter et adapter des solutions ICT complexes pour répondre aux besoins des parties prenantes dans le respect des processus et standards en vigueur dans l'entreprise",
+          "I1 Concevoir, implémenter, tester, documenter et adapter des solutions ICT complexes pour répondre aux besoins des parties prenantes dans le respect des processus et standards en vigueur dans l'entreprise. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         data: [
           { label: "Autonome", value: 20 },
           { label: "Exercé", value: 30 },

@@ -29,7 +29,7 @@ export const ShortLabel = {
 // Label so long it must be truncated
 export const TruncatedLabel = {
   args: {
-    label: "C3 Concevoir, implémenter, tester, documenter et adapter des solutions ICT pour répondre aux besoins des parties prenantes dans le respect des processus et standards en vigueur",
+    label: "C3 Concevoir, implémenter, tester, documenter et adapter des solutions ICT pour répondre aux besoins des parties prenantes dans le respect des processus et standards en vigueur. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
   },
 };
 

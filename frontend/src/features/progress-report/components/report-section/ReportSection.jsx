@@ -45,13 +45,15 @@ export default function ReportSection({
       <div className="report-section__doughnut-wrapper">
         <DoughnutChart data={doughnutChartData} />
       </div>
-      <button
-        className="report-section__toggle-btn"
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-expanded={isOpen}
-      >
-        Détails {isOpen ? "▲" : "▼"}
-      </button>
+      <div className="report-section__button-wrapper">
+        <button
+          className="report-section__toggle-btn"
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-expanded={isOpen}
+        >
+          Détails {isOpen ? "▲" : "▼"}
+        </button>
+      </div>
       <div
         className={`report-section__lines-wrapper${isOpen ? " report-section__lines-wrapper--open" : ""}`}
       >
