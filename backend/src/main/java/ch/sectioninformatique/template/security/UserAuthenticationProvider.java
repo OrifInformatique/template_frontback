@@ -1,10 +1,11 @@
 package ch.sectioninformatique.template.security;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.ArrayList;
+
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,11 +20,11 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenTypeException;
-import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
-import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
-import ch.sectioninformatique.template.security.SecurityExceptions.JwtTokenExpiredException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidJwtSignatureException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenTypeException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtTokenExpiredException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
 import ch.sectioninformatique.template.security.SecurityExceptions.MalformedJwtException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 @Component
+
 public class UserAuthenticationProvider {
 
     private final UserService userService;

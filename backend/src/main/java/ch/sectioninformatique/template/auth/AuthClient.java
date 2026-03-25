@@ -1,9 +1,12 @@
 package ch.sectioninformatique.template.auth;
 
+import ch.sectioninformatique.template.user.UserService;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
+import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
@@ -13,7 +16,9 @@ import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsExc
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
+
 import ch.sectioninformatique.template.user.UserDto;
+
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
@@ -22,6 +27,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -29,10 +36,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.UriBuilder;
+
+
 
 /**
  * Client service for authentication operations.
@@ -43,16 +56,34 @@ import org.springframework.web.util.UriBuilder;
  * Error responses are propagated as message keys so the API can localize messages.
  */
 @Service
-public class AuthClient {
+public class AuthClient extends DefaultOAuth2UserService {
+
+        @Autowired
+        private @Lazy UserService userService;
+
+        private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService;
 
         /** WebClient instance for making HTTP requests */
         private final WebClient webClient;
 
-        /** Constructor to initialize the WebClient */
-        public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
-                this.webClient = WebClient.create(authUrl);
+
+        public OAuth2User loadUser(OAuth2UserRequest userRequest)
+        {
+                OAuth2User oAuth2User = super.loadUser(userRequest);
+                userService.proceedOAuth2User(oAuth2User);
+                return oAuth2User;
         }
 
+
+        /** Constructor to initialize the WebClient */
+        public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl, OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService, UserService userService) {
+                this.webClient = WebClient.create(authUrl);
+                this.oauth2UserService = oauth2UserService;
+                this.userService = userService;
+        }
+
+
+        
         private Function<UriBuilder, URI> uriWithOptionalLang(String path) {
                 return uriBuilder -> {
                         UriBuilder builder = uriBuilder.path(path);

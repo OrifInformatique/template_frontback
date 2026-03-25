@@ -120,6 +120,10 @@ public class AuthController {
                 .block();
     }
 
+    @GetMapping("/oauth2/success")
+    public String success() {
+        return "Login réussi !";
+    }
     /**
      * Handles GET requests to "/oauth2/login"
      * Redirects the client to the OAuth2 authorization endpoint for Azure

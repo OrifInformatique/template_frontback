@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
@@ -45,6 +48,7 @@ import org.hibernate.Session;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+
 public class UserService {
 
     /** EntityManager for database operations */
@@ -53,13 +57,14 @@ public class UserService {
 
     /** Repository for user data access */
     @Autowired
-    private final UserRepository userRepository;
+    private @Lazy UserRepository userRepository;
 
     /** Repository for role data access */
     private final RoleRepository roleRepository;
 
     /** Client for authentication operations */
-    private final AuthClient authClient;
+    @Autowired
+    private @Lazy AuthClient authClient;
 
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
@@ -504,4 +509,21 @@ public class UserService {
                     }
                 });
     }
+
+    public User proceedOAuth2User(OAuth2User oAuth2User)
+    {
+        String email = oAuth2User.getAttribute("preferred_username");
+
+        
+        return userRepository.findByLogin(email).orElseGet(() -> {
+            User user = new User();
+            user.setFirstName(oAuth2User.getAttribute("given_name"));
+            user.setLastName(oAuth2User.getAttribute("family_name"));
+            user.setLogin(email);
+            return userRepository.save(user);
+        });
+
+
+    }
+   
 }
