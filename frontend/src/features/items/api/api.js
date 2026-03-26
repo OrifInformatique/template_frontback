@@ -136,7 +136,6 @@ export const createItem = async (data) =>
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             isDeleted: false,
-
         };
         items.push(newItem);
         return newItem;
