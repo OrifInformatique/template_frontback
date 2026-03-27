@@ -51,12 +51,12 @@ const Items = () => {
     };
 
     const actions = {
-        edit: { permission: "user:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
+        edit: { permission: "user:update", onClick: (item) => { setSelectedItem(items.find((i) => i.id === item.id) ?? item); setFormOpen(true); } },
         delete: { permission: "user:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
         restore: { permission: "user:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
         hardDelete: { permission: "user:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
         viewDeleted: { permission: "user:read" },
-        view: { permission: "user:read", onClick: (item) => { setSelectedItem(item); setItemOpen(true); } },
+        view: { permission: "user:read", onClick: (item) => { setSelectedItem(items.find((i) => i.id === item.id) ?? item); setItemOpen(true); } },
     };
 
     return (
@@ -81,7 +81,11 @@ const Items = () => {
             {error && <p className="text-center text-red-500 py-4">{error}</p>}
             <Button label={t("create_item", "Create Item")} variant="primary" className="mb-4" onClick={() => { setSelectedItem(null); setFormOpen(true); }} />
             <List
-                items={items}
+                items={items.map((item) => ({
+                    ...item,
+                    createdAt: new Date(item.createdAt).toLocaleString(),
+                    updatedAt: new Date(item.updatedAt).toLocaleString(),
+                }))}
                 columns={["id", "name", "author", "description", "createdAt", "updatedAt"]}
                 columnLabels={{
                     id: "#",
