@@ -1,5 +1,6 @@
 import itemsData from "../mocks/items.json";
 import api from "../../auth/ui/api/apiClient";
+import useAuthStore from "../../auth/authStore";
 
 // Mutable copy of the mock data so mutations don't affect the original import
 let items = [...itemsData];
@@ -128,11 +129,13 @@ export const createItem = async (data) =>
         const response = await api.post(`/items`, data);
         return response.data;
         */
+        const user = useAuthStore.getState().user;
+        const authorName = user ? `${user.firstName} ${user.lastName}` : "Unknown";
         const newItem = {
             id: items.length ? Math.max(...items.map((item) => item.id)) + 1 : 1,
             name: data.name,
             description: data.description,
-            author: data.author || "Unknown",
+            author: authorName,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             isDeleted: false,
