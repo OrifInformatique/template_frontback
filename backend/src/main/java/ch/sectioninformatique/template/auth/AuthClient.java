@@ -127,10 +127,11 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<UserDto>> containing the registration response
          *         (e.g., token or status message)
          */
-        public Mono<ResponseEntity<UserDto>> register(RegisterDto user) {
+        public Mono<ResponseEntity<UserDto>> register(RegisterDto user, String token) {
 
                 return webClient.post()
                                 .uri(uriWithOptionalLang("/auth/register")) // the registration endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(user)
                                 .exchangeToMono(response -> {
