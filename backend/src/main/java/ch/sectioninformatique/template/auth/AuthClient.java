@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
+import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
@@ -127,7 +128,7 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<UserDto>> containing the registration response
          *         (e.g., token or status message)
          */
-        public Mono<ResponseEntity<UserDto>> register(RegisterDto user, String token) {
+        public Mono<ResponseEntity<UserDto>> register(String token, RegisterDto user) {
 
                 return webClient.post()
                                 .uri(uriWithOptionalLang("/auth/register")) // the registration endpoint path in authentication provider
