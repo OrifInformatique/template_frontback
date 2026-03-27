@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getItems, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import List from './ui/list';
 import ItemForm from './itemForm';
+import ItemDetail from './itemDetail';
 import { Button, PopUp } from '@orif-informatique/react-components-library';
 
 const Items = () => {
@@ -55,6 +56,7 @@ const Items = () => {
         restore: { permission: "user:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
         hardDelete: { permission: "user:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
         viewDeleted: { permission: "user:read" },
+        view: { permission: "user:read", onClick: (item) => { setSelectedItem(item); setItemOpen(true); } },
     };
 
     return (

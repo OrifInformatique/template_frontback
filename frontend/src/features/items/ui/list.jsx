@@ -60,6 +60,10 @@ const List = ({
         actions.viewDeleted &&
         (!actions.viewDeleted.permission ||
             hasPermission(actions.viewDeleted.permission));
+    const canView =
+        actions.view &&
+        (!actions.view.permission ||
+            hasPermission(actions.view.permission));
     const hasVisibleActions =
         canEdit || canDelete || canRestore || canHardDelete;
 
@@ -113,7 +117,8 @@ const List = ({
                                 {cols.map((col) => (
                                     <td
                                         key={col}
-                                        className={`px-6 py-4 text-sm text-gray-900 ${item.isDeleted ? 'line-through text-gray-400' : ''}`}
+                                        className={`px-6 py-4 text-sm text-gray-900 ${item.isDeleted ? 'line-through text-gray-400' : ''} ${canView && !item.isDeleted ? 'cursor-pointer hover:underline' : ''}`}
+                                        onClick={canView && !item.isDeleted ? () => actions.view.onClick(item) : undefined}
                                     >
                                         {String(item[col] ?? '')}
                                     </td>
