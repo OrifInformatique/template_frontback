@@ -72,8 +72,10 @@ public class AuthController {
      */
     @PostMapping("/register")
     @PreAuthorize("hasAuthority('user:write')")
-    public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterDto user, @RequestHeader("Authorization") String token) {
-        return authClient.register(user, token)
+    public ResponseEntity<UserDto> register(@RequestHeader("Authorization") String token,
+                                            @RequestBody @Valid RegisterDto user) {
+                                                
+        return authClient.register(token, user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
                     userService.register(user);
