@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -377,15 +377,67 @@ public class AuthControllerTest {
                     try {
                         // Verify the auth client was called
                         verify(authClient).register(any(RegisterDto.class), anyString());
-                        MvcResult mvcResult = request.andReturn();
-                        String responseBody = mvcResult.getResponse().getContentAsString();
-                        System.out.println("REPONSE BODY : " + responseBody);
 
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
     }
+
+    @Transactional
+    @Test
+    public void register_withWrongPermission_shouldReturn403() throws Exception{
+        
+        Role userRole =roleRepository.findByName(RoleEnum.USER)
+            .orElseThrow(() -> new RuntimeException("Role USER not found"));
+        
+        User user = User.builder()
+            .firstName("user")
+            .lastName("test")
+            .login("user.test@test.com")
+            .mainRole(userRole)
+            .build();
+
+
+        UserDto newUser = UserDto.builder()
+                .firstName("NewTest")
+                .lastName("Register")
+                .login("newtest.register@test.com")
+                .mainRole("USER")
+                .permissions(new ArrayList<>())
+                .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
+                .build();
+
+        UserDto userDto = userMapper.toUserDto(user);
+        String token = userAuthenticationProvider.createToken(userDto);
+        userDto.setToken(token);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
+        when(authClient.register(any(RegisterDto.class), anyString()))
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(newUser)));
+
+        performRequest(
+        "POST",
+        "/auth/register",
+        "{\"firstName\":\"NewTest\",\"lastName\":\"Register\",\"login\":\"newtest.register@test.com\",\"password\":\"testPassword\"}",
+        userDto.getToken(),
+        MediaType.APPLICATION_JSON,
+        403,
+        "register-noPermission",
+        request ->{
+            try {
+                // Verify the auth client was called
+                verify(authClient, never()).register(any(RegisterDto.class), anyString());
+
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                });
+    }
+
+    
 
     /**
      * Test: POST /auth/register
