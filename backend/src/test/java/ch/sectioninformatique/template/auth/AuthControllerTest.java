@@ -25,6 +25,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -418,7 +419,7 @@ public class AuthControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
 
-        when(authClient.register(any(RegisterDto.class), anyString()))
+        when(authClient.register(anyString(), any(RegisterDto.class) ))
                 .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(newUser)));
 
         performRequest(
@@ -432,7 +433,7 @@ public class AuthControllerTest {
         request ->{
             try {
                 // Verify the auth client was called
-                verify(authClient, never()).register(any(RegisterDto.class), anyString());
+                verify(authClient, never()).register(anyString(), any(RegisterDto.class));
 
                 } catch (Exception e) {
                     throw new RuntimeException(e);
