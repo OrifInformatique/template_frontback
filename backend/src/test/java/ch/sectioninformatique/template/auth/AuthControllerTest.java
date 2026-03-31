@@ -362,7 +362,7 @@ public class AuthControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
 
-        when(authClient.register(any(RegisterDto.class), anyString()))
+        when(authClient.register(anyString(), any(RegisterDto.class)))
                 .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(newUser)));
 
         performRequest(
@@ -376,7 +376,7 @@ public class AuthControllerTest {
                 request -> {
                     try {
                         // Verify the auth client was called
-                        verify(authClient).register(any(RegisterDto.class), anyString());
+                        verify(authClient).register(anyString(), any(RegisterDto.class));
                         MvcResult mvcResult = request.andReturn();
                         String responseBody = mvcResult.getResponse().getContentAsString();
                         System.out.println("REPONSE BODY : " + responseBody);
@@ -414,7 +414,7 @@ public class AuthControllerTest {
         String adminToken = userAuthenticationProvider.createToken(adminDto);
         adminDto.setToken(adminToken);
 
-        when(authClient.register(any(RegisterDto.class), anyString()))
+        when(authClient.register(anyString(), any(RegisterDto.class)))
                 .thenReturn(Mono.error(new UserAlreadyExistsException()));
 
         performRequest(
@@ -667,7 +667,7 @@ public class AuthControllerTest {
 
         String errorDetail = "Invalid email format";
         String errorMessage = getMessage("auth.register.failed", errorDetail);
-        when(authClient.register(any(RegisterDto.class), anyString()))
+        when(authClient.register(anyString(), any(RegisterDto.class)))
             .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException(errorDetail)));
 
         performRequest(
@@ -915,7 +915,7 @@ public class AuthControllerTest {
         String token = userAuthenticationProvider.createToken(adminDto);
         adminDto.setToken(token);
 
-        when(authClient.register(any(RegisterDto.class), anyString()))
+        when(authClient.register(anyString(), any(RegisterDto.class)))
                 .thenReturn(Mono.error(new UserAlreadyExistsException()));
 
         performRequest(
