@@ -512,7 +512,7 @@ public class UserService {
 
     public User proceedOAuth2User(OAuth2User oAuth2User)
     {
-        String email = oAuth2User.getAttribute("preferred_username");
+        String email = oAuth2User.getAttribute("email");
 
         
         return userRepository.findByLogin(email).orElseGet(() -> {

@@ -4,7 +4,9 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import ch.sectioninformatique.template.user.UserDto;
@@ -121,8 +124,11 @@ public class AuthController {
     }
 
     @GetMapping("/oauth2/success")
-    public String success() {
-        return "Login réussi !";
+    @ResponseBody
+    public String success(@AuthenticationPrincipal OAuth2User oAuth2User) {
+        if (oAuth2User == null) return "Pas d'utilisateur connecté !";
+        
+        return "Bienvenue, " + oAuth2User.getAttribute("email") + " !";
     }
     /**
      * Handles GET requests to "/oauth2/login"
@@ -133,7 +139,7 @@ public class AuthController {
      * @return ResponseEntity with redirection to OAuth2 login URL
      */
     @GetMapping("/oauth2/login")
-    public ResponseEntity<Object> testCallOAuth2() {
+    public ResponseEntity<Object> testCallOAuth2Login() {
 
         // Redirect frontend to spring-auth OAuth2 login endpoint
         URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");

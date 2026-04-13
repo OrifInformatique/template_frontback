@@ -121,12 +121,12 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> {
                     log.debug("Configuring OAuth2 login");
                     oauth2
-                            .defaultSuccessUrl("/oauth2/success", true)
+                            .defaultSuccessUrl("/auth/oauth2/success", true)
                             .failureUrl("/oauth2/error")
                             .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService()))
                             .successHandler((request, response, authentication) -> {
                                 log.debug("OAuth2 authentication successful: {}", authentication);
-                                response.sendRedirect("/oauth2/success");
+                                response.sendRedirect("/auth/oauth2/success");
                             });
                 })
                 .authorizeHttpRequests(requests -> {
