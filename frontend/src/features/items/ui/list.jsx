@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { Button, PopUp } from '@orif-informatique/react-components-library';
-import useAuthStore from '../../auth/authStore';
 
 /**
  * A generic list/table component that dynamically generates columns
@@ -11,7 +10,8 @@ import useAuthStore from '../../auth/authStore';
  * @param {Array<Object>} props.items - The array of objects to display.
  * @param {Object} [props.actions] - Optional action config keyed by action name.
  *   Each action is { permission?: string, onClick?: (item) => void }.
- *   Supported keys: edit, delete, restore, hardDelete, viewDeleted.
+ *   Supported keys: edit, delete, restore, hardDelete, viewDeleted, view.
+ * @param {function} [props.hasPermission] - Permission check function (permission) => boolean.
  * @param {Array<string>} [props.columns] - Optional subset/order of columns to display.
  *   If omitted, all keys from the first item are used.
  * @param {Object} [props.columnLabels] - Optional map of key -> display header label.
@@ -33,37 +33,21 @@ const List = ({
     noItemsLabel,
     confirmHardDeleteLabel,
     confirmHardDeleteLabelText,
+    hasPermission = () => true,
 }) => {
     const [hardDeleteTarget, setHardDeleteTarget] = React.useState(null);
-    const hasPermission = useAuthStore((state) => state.hasPermission);
 
     // Derive columns from the first item's keys if not explicitly provided
     const cols = columns ?? (items.length ? Object.keys(items[0]) : []);
 
     // Check permissions for each action
-    const canEdit =
-        actions.edit &&
-        (!actions.edit.permission || hasPermission(actions.edit.permission));
-    const canDelete =
-        actions.delete &&
-        (!actions.delete.permission ||
-            hasPermission(actions.delete.permission));
-    const canRestore =
-        actions.restore &&
-        (!actions.restore.permission ||
-            hasPermission(actions.restore.permission));
-    const canHardDelete =
-        actions.hardDelete &&
-        (!actions.hardDelete.permission ||
-            hasPermission(actions.hardDelete.permission));
-    const canViewDeleted =
-        actions.viewDeleted &&
-        (!actions.viewDeleted.permission ||
-            hasPermission(actions.viewDeleted.permission));
-    const canView =
-        actions.view &&
-        (!actions.view.permission ||
-            hasPermission(actions.view.permission));
+    const can = (key) => actions[key] && (!actions[key].permission || hasPermission(actions[key].permission));
+    const canEdit = can('edit');
+    const canDelete = can('delete');
+    const canRestore = can('restore');
+    const canHardDelete = can('hardDelete');
+    const canViewDeleted = can('viewDeleted');
+    const canView = can('view');
     const hasVisibleActions =
         canEdit || canDelete || canRestore || canHardDelete;
 

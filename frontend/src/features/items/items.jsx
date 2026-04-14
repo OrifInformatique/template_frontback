@@ -6,9 +6,11 @@ import List from './ui/list';
 import ItemForm from './itemForm';
 import ItemDetail from './itemDetail';
 import { Button, PopUp } from '@orif-informatique/react-components-library';
+import useAuthStore from '../auth/authStore';
 
 const Items = () => {
     const { t } = useTranslation('items');
+    const hasPermission = useAuthStore((state) => state.hasPermission);
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -79,7 +81,7 @@ const Items = () => {
 
             {isLoading && <p className="text-center text-gray-500 py-4">{t("loading", "Loading...")}</p>}
             {error && <p className="text-center text-red-500 py-4">{error}</p>}
-            <Button label={t("create_item", "Create Item")} variant="primary" className="mb-4" onClick={() => { setSelectedItem(null); setFormOpen(true); }} />
+            {hasPermission("user:write") && <Button label={t("create_item", "Create Item")} variant="primary" className="mb-4" onClick={() => { setSelectedItem(null); setFormOpen(true); }} />}
             <List
                 items={items.map((item) => ({
                     ...item,
@@ -96,6 +98,7 @@ const Items = () => {
                     updatedAt: t("updatedAt", "Updated At"),
                 }}
                 actions={actions}
+                hasPermission={hasPermission}
                 actionsLabel={t("actions", "Actions")}
                 showDeletedLabel={t("show_deleted", "Show deleted items")}
                 noItemsLabel={t("no_items", "No items to display.")}
