@@ -10,7 +10,7 @@
 /* ── Label ──────────────────────────────────────────────────── */
 .report-line__label {
   flex: 1 1 0; /* grows to fill remaining space */
-  min-width: 100px; /* allows text to shrink below its content */
+  min-width: 100px; /* prevents label from shrinking below 100px */
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -29,7 +29,7 @@
     flex-direction: column;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 8px;
+    gap: 15px;
   }
 
   .report-line__label {

@@ -1,12 +1,11 @@
 .report-bar {
   display: flex;
   height: 100%;
-  min-height: 20px;
-  min-width: 120px;
-  border-radius: calc(var(--bar-height, 24px) * 0.35);
+  min-height: 16px;
+  min-width: 110px;
+  border-radius: calc(var(--bar-height, 20px) * 0.35);
   overflow: hidden;
-  box-shadow:
-    0 0 0 3px #8E8E93;
+  box-shadow: 0 0 0 3px #8e8e93;
 }
 
 .report-bar__segment {
