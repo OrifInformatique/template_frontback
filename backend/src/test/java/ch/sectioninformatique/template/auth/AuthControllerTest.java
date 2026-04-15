@@ -1,50 +1,58 @@
 package ch.sectioninformatique.template.auth;
 
 // Import statements for testing, Spring Boot, JSON handling, and REST Docs
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.servlet.ResultActions;
-import ch.sectioninformatique.template.AuthApplication;
-import ch.sectioninformatique.template.user.UserDto;
-import ch.sectioninformatique.template.user.UserService;
-import jakarta.servlet.http.Cookie;
-import ch.sectioninformatique.template.security.UserAuthenticationProvider;
-import reactor.core.publisher.Mono;
+import java.util.ArrayList;
+import java.util.function.Consumer;
 
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
-import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
-import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
-import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
-import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
-import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import java.util.ArrayList;
-import java.util.function.Consumer;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
-
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.transaction.annotation.Transactional;
+
+import ch.sectioninformatique.template.AuthApplication;
+import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
+import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
+import ch.sectioninformatique.template.security.Role;
+import ch.sectioninformatique.template.security.RoleEnum;
+import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
+import ch.sectioninformatique.template.security.UserAuthenticationProvider;
+import ch.sectioninformatique.template.user.User;
+import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserMapper;
+import ch.sectioninformatique.template.user.UserService;
+import jakarta.servlet.http.Cookie;
+import reactor.core.publisher.Mono;
 
 /**
  * Integration tests for the "TestController" REST endpoints.
@@ -65,6 +73,12 @@ public class AuthControllerTest {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private UserMapper userMapper;
+
     /** Provider for creating JWT tokens */
     @Autowired
     private UserAuthenticationProvider userAuthenticationProvider;
@@ -72,6 +86,9 @@ public class AuthControllerTest {
     /** MockMvc for simulating HTTP requests in tests */
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private MessageSource messageSource;
 
     @MockitoBean
     private AuthClient authClient; // mock this instead of the controller
@@ -161,6 +178,10 @@ public class AuthControllerTest {
         request.andDo(document("auth/" + docsFileName, preprocessRequest(prettyPrint()),
                 preprocessResponse(prettyPrint())));
 
+    }
+
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }
 
     /**
@@ -292,6 +313,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.invalidCredentials")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -308,6 +330,12 @@ public class AuthControllerTest {
     @Transactional
     public void register_withValidData_shouldReturn200AndSaveUserToDatabase() throws Exception {
         // Create a new user DTO that doesn't exist yet in the database
+
+        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
+			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
+
+        
+
         UserDto newUser = UserDto.builder()
                 .firstName("NewTest")
                 .lastName("Register")
@@ -317,29 +345,103 @@ public class AuthControllerTest {
                 .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
                 .build();
 
+        User adminUser = User.builder()
+            .firstName("admin")
+            .lastName("user")
+            .login("admin.user@test.com")
+            .mainRole(adminRole)
+            .build();
+
+        
+        UserDto adminDto = userMapper.toUserDto(adminUser);
+        String adminToken = userAuthenticationProvider.createToken(adminDto);
+        adminDto.setToken(adminToken);
+
+
+
+
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
 
-        when(authClient.register(any(RegisterDto.class)))
+        when(authClient.register(anyString(), any(RegisterDto.class)))
                 .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(newUser)));
 
         performRequest(
                 "POST",
                 "/auth/register",
                 "{\"firstName\":\"NewTest\",\"lastName\":\"Register\",\"login\":\"newtest.register@test.com\",\"password\":\"testPassword\"}",
-                null,
+                adminDto.getToken(),
                 MediaType.APPLICATION_JSON,
                 200,
                 "register",
                 request -> {
                     try {
                         // Verify the auth client was called
-                        verify(authClient).register(any(RegisterDto.class));
+                        verify(authClient).register(anyString(), any(RegisterDto.class));
+                        MvcResult mvcResult = request.andReturn();
+                        String responseBody = mvcResult.getResponse().getContentAsString();
+                        System.out.println("REPONSE BODY : " + responseBody);
+
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
     }
+
+    @Transactional
+    @Test
+    public void register_withWrongPermission_shouldReturn403() throws Exception{
+        
+        Role userRole =roleRepository.findByName(RoleEnum.USER)
+            .orElseThrow(() -> new RuntimeException("Role USER not found"));
+        
+        User user = User.builder()
+            .firstName("user")
+            .lastName("test")
+            .login("user.test@test.com")
+            .mainRole(userRole)
+            .build();
+
+
+        UserDto newUser = UserDto.builder()
+                .firstName("NewTest")
+                .lastName("Register")
+                .login("newtest.register@test.com")
+                .mainRole("USER")
+                .permissions(new ArrayList<>())
+                .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
+                .build();
+
+        UserDto userDto = userMapper.toUserDto(user);
+        String token = userAuthenticationProvider.createToken(userDto);
+        userDto.setToken(token);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "refresh_token=fakeToken123; HttpOnly; Path=/; Max-Age=3600");
+
+        when(authClient.register(anyString(), any(RegisterDto.class) ))
+                .thenReturn(Mono.just(ResponseEntity.ok().headers(headers).body(newUser)));
+
+        performRequest(
+        "POST",
+        "/auth/register",
+        "{\"firstName\":\"NewTest\",\"lastName\":\"Register\",\"login\":\"newtest.register@test.com\",\"password\":\"testPassword\"}",
+        userDto.getToken(),
+        MediaType.APPLICATION_JSON,
+        403,
+        "register-noPermission",
+        request ->{
+            try {
+                // Verify the auth client was called
+                verify(authClient, never()).register(anyString(), any(RegisterDto.class));
+
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                });
+    }
+
+    
 
     /**
      * Test: POST /auth/register
@@ -354,20 +456,35 @@ public class AuthControllerTest {
     @Transactional
     public void register_withExistingUser_shouldReturn409Conflict() throws Exception {
 
-        when(authClient.register(any(RegisterDto.class)))
+        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
+			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
+
+        User adminUser = User.builder()
+        .firstName("admin")
+        .lastName("User")
+        .login("admin.user@test.com")
+        .mainRole(adminRole)
+        .build();
+
+        UserDto adminDto = userMapper.toUserDto(adminUser);
+        String adminToken = userAuthenticationProvider.createToken(adminDto);
+        adminDto.setToken(adminToken);
+
+        when(authClient.register(anyString(), any(RegisterDto.class)))
                 .thenReturn(Mono.error(new UserAlreadyExistsException()));
 
         performRequest(
                 "POST",
                 "/auth/register",
                 "{\"firstName\":\"Test\",\"lastName\":\"Existing\",\"login\":\"exists@test.com\",\"password\":\"testPassword\"}",
-                null,
+                adminDto.getToken(),
                 MediaType.APPLICATION_JSON,
                 409,
                 "register-conflict",
                 response -> {
                     try {
                         response.andExpect(status().isConflict());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.userAlreadyExists")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -383,6 +500,8 @@ public class AuthControllerTest {
     @Transactional
     public void refresh_withValidToken_shouldReturn200AndNewAccessToken() throws Exception {
         // Create token response with real user token
+        
+
         UserDto testUser = userService.findByLogin("test.user@test.com");
         String newAccessToken = userAuthenticationProvider.createToken(testUser);
         TokenResponseDto tokenResponse = new TokenResponseDto(newAccessToken);
@@ -451,7 +570,8 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void updatePassword_withValidToken_shouldReturn200() throws Exception {
-        MessageResponseDto messageResponse = new MessageResponseDto("Password updated successfully");
+        String successMessage = getMessage("auth.password.updated");
+        MessageResponseDto messageResponse = new MessageResponseDto(successMessage);
 
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
                 .thenReturn(Mono.just(ResponseEntity.ok(messageResponse)));
@@ -469,7 +589,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
-                        response.andExpect(jsonPath("$.message").value("Password updated successfully"));
+                        response.andExpect(jsonPath("$.message").value(successMessage));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -545,8 +665,10 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void updatePassword_withFailure_shouldReturn400PasswordUpdateFailed() throws Exception {
+        String errorDetail = "Old password is incorrect";
+        String errorMessage = getMessage("auth.password.update.failed", errorDetail);
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
-                .thenReturn(Mono.error(new PasswordUpdateFailedException("Old password is incorrect")));
+            .thenReturn(Mono.error(new PasswordUpdateFailedException(errorDetail)));
 
         String validToken = getValidTokenForTestUser();
 
@@ -561,8 +683,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isBadRequest());
-                        // Verify error message in response
-                        response.andExpect(jsonPath("$.message").exists());
+                        response.andExpect(jsonPath("$.message").value(errorMessage));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -585,20 +706,38 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void register_withValidationError_shouldReturn400RegistrationFailed() throws Exception {
-        when(authClient.register(any(RegisterDto.class)))
-                .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException("Invalid email format")));
+
+        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
+			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
+
+        User newUser = User.builder()
+        .firstName("test")
+        .lastName("user")
+        .login("invalid-email")
+        .mainRole(adminRole)
+        .build();
+
+        UserDto userDto = userMapper.toUserDto(newUser);
+        String token = userAuthenticationProvider.createToken(userDto);
+        userDto.setToken(token);
+
+        String errorDetail = "Invalid email format";
+        String errorMessage = getMessage("auth.register.failed", errorDetail);
+        when(authClient.register(anyString(), any(RegisterDto.class)))
+            .thenReturn(Mono.error(new AuthExceptions.RegistrationFailedException(errorDetail)));
 
         performRequest(
                 "POST",
                 "/auth/register",
                 "{\"firstName\":\"Test\",\"lastName\":\"User\",\"login\":\"invalid-email\",\"password\":\"testPassword\"}",
-                null,
+                userDto.getToken(),
                 MediaType.APPLICATION_JSON,
                 400,
                 "register-failed",
                 response -> {
                     try {
                         response.andExpect(status().isBadRequest());
+                        response.andExpect(jsonPath("$.message").value(errorMessage));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -623,7 +762,7 @@ public class AuthControllerTest {
     @Transactional
     public void refresh_withExpiredToken_shouldReturn401InvalidToken() throws Exception {
         when(authClient.refreshLogin(anyString()))
-                .thenReturn(Mono.error(new InvalidTokenException("Token has expired")));
+                .thenReturn(Mono.error(new InvalidTokenException()));
 
         Cookie refreshCookie = new Cookie("refresh_token", "expiredToken");
         performRequest(
@@ -638,6 +777,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("security.token.invalid")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -663,7 +803,7 @@ public class AuthControllerTest {
     @Transactional
     public void refresh_withMalformedRefreshToken_shouldReturn401InvalidRefreshToken() throws Exception {
         when(authClient.refreshLogin(anyString()))
-                .thenReturn(Mono.error(new InvalidRefreshTokenException("Malformed refresh token")));
+                .thenReturn(Mono.error(new InvalidRefreshTokenException()));
 
         Cookie refreshCookie = new Cookie("refresh_token", "malformed");
         performRequest(
@@ -678,6 +818,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("security.refresh.invalid")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -716,7 +857,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
-                        response.andExpect(jsonPath("$.message").exists());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.invalidCredentials")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -781,8 +922,7 @@ public class AuthControllerTest {
     @Transactional
     public void login_withNonExistentUser_shouldReturn404UserNotFound() throws Exception {
         when(authClient.login(any(CredentialsDto.class)))
-                .thenReturn(Mono.error(
-                        new AuthExceptions.UserNotFoundException("User with login 'nonexistent@test.com' not found")));
+            .thenReturn(Mono.error(new AuthExceptions.UserNotFoundException()));
 
         performRequest(
                 "POST",
@@ -795,6 +935,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isNotFound());
+                        response.andExpect(jsonPath("$.message").value(getMessage("user.notFound")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -815,20 +956,36 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void register_withDuplicateLogin_shouldReturn409Conflict() throws Exception {
-        when(authClient.register(any(RegisterDto.class)))
-                .thenReturn(Mono.error(new UserAlreadyExistsException("User with this email already registered")));
+
+        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
+			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
+
+        User admin = User.builder()
+        .firstName("admin")
+        .lastName("user")
+        .login("admin.user@test.com")
+        .mainRole(adminRole)
+        .build();
+
+        UserDto adminDto = userMapper.toUserDto(admin);
+        String token = userAuthenticationProvider.createToken(adminDto);
+        adminDto.setToken(token);
+
+        when(authClient.register(anyString(), any(RegisterDto.class)))
+                .thenReturn(Mono.error(new UserAlreadyExistsException()));
 
         performRequest(
                 "POST",
                 "/auth/register",
                 "{\"firstName\":\"Test\",\"lastName\":\"Duplicate\",\"login\":\"duplicate@test.com\",\"password\":\"testPassword\"}",
-                null,
+                adminDto.getToken(),
                 MediaType.APPLICATION_JSON,
                 409,
                 "register-user-already-exists",
                 response -> {
                     try {
                         response.andExpect(status().isConflict());
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.userAlreadyExists")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -855,7 +1012,7 @@ public class AuthControllerTest {
     @Transactional
     public void refresh_withInvalidJwtSignature_shouldReturn401JwtVerificationFailed() throws Exception {
         when(authClient.refreshLogin(anyString()))
-                .thenReturn(Mono.error(new JwtVerificationException("JWT signature mismatch")));
+                .thenReturn(Mono.error(new JwtVerificationException()));
 
         Cookie refreshCookie = new Cookie("refresh_token", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalidSignature");
         performRequest(
@@ -870,6 +1027,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message").value(getMessage("security.jwt.verificationFailed")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

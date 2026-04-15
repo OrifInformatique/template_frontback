@@ -19,6 +19,11 @@ public class UserRepositoryImpl implements UserRepositoryPermanentDelete {
 
     @Override
     public void deletePermanentlyById(Long id) {
+        // Remove join-table rows first to avoid FK constraint failures on hard delete.
+        entityManager.createNativeQuery(
+            "DELETE FROM users_app_specific_roles WHERE users_app_specifique_id = :id")
+            .setParameter("id", id)
+            .executeUpdate();
         entityManager.createNativeQuery("DELETE FROM users WHERE id = :id")
                 .setParameter("id", id)
                 .executeUpdate();
