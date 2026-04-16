@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import DoughnutChart from "../doughnut-chart/DoughnutChart";
 import ReportLine from "../report-line/ReportLine";
