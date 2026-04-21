@@ -70,6 +70,7 @@ public class AuthController {
      * @return Mono<ResponseEntity<UserDto>> with registration response
      */
     @PostMapping("/register")
+
     public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterDto user) {
         return authClient.register(user)
                 .flatMap(response -> {

@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
+import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
+import ch.sectioninformatique.template.item.ItemRepository;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
@@ -63,6 +66,11 @@ public class UserService {
 
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
+
+    @Autowired
+    private final ItemRepository itemsRepository;
+
+
 
     /**
      * Promotes a user to a local app role.
@@ -341,6 +349,8 @@ public class UserService {
     public UserDto deleteUserPermanent(@NonNull Long userId) {
         try {
             // Get the user to delete
+
+            itemsRepository.setAuthorNullByAuthorId(userId);
             User userToDelete = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -504,4 +514,31 @@ public class UserService {
                     }
                 });
     }
+
+    public void updateUser(Long userId, UserDto newUser) {
+    User existingUser = userRepository.findById(userId)
+            .orElseThrow(UserNotFoundException::new);
+
+    Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
+            .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
+
+    existingUser.setFirstName(newUser.getFirstName());
+    existingUser.setLastName(newUser.getLastName());
+    existingUser.setLogin(newUser.getLogin());
+    existingUser.setMainRole(newMainRole);
+    existingUser.setUpdatedAt(new Date());
+
+    userRepository.save(existingUser);
+}
+
+public void restoreUser(Long userId) {
+    User userToRestore = userRepository.findById(userId)
+            .orElseThrow(UserNotFoundException::new);
+
+    userToRestore.setDeleted(false);
+    userToRestore.setUpdatedAt(new Date());
+
+    userRepository.save(userToRestore);
+}
+
 }

@@ -177,4 +177,9 @@ public class ItemService {
             })
             .orElseThrow(() -> new ItemNotFoundException(id));
     }
+
+
+    public void setAuthorNullByAuthorId(Long authorId) {
+        itemRepository.setAuthorNullByAuthorId(authorId);
+    }
 }
