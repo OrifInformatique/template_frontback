@@ -61,6 +61,10 @@ const List = ({
         actions.viewDeleted &&
         (!actions.viewDeleted.permission ||
             hasPermission(actions.viewDeleted.permission));
+    const canView =
+        actions.view &&
+        (!actions.view.permission ||
+            hasPermission(actions.view.permission));
     const hasVisibleActions =
         canEdit || canDelete || canRestore || canHardDelete;
 
