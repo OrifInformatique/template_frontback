@@ -11,6 +11,16 @@ export const getUsers = async () => {
         return [];
     }
 };
+export const deleteUserLocal = async (id) => {
+    try {
+        const response = await api.delete(`/users/${id}/false`);
+        return response.data;
+    }
+    catch(error) {
+        console.error(`Error while deleting user: ${error.message}`);
+        return null;
+    }
+};
 
 export const getRoles = async () => {
     try {
@@ -25,7 +35,7 @@ export const getRoles = async () => {
 
 export const deleteUserDistant = async (id) => {
     try {
-        const response = await api.delete(`/users/${id}/true/false`);
+        const response = await api.delete(`/users/${id}/true`);
         return response.data;
     }
     catch(error) {
@@ -34,11 +44,21 @@ export const deleteUserDistant = async (id) => {
     }
 };
 
+export const hardDeleteUserLocal = async (id) => {
+    try {
+        const response = await api.delete(`/users/${id}/false/permanent`);
+        return response.data;
+    }
+    catch(error) {
+        console.error(`Error while hard deleting user: ${error.message}`);
+        return null;
+    }
+};
 
 export const hardDeleteUserDistant = async (id) => {
     try {
         console.log("Hard");
-        const response = await api.delete(`/users/${id}/true/true`);
+        const response = await api.delete(`/users/${id}/false/permanent`);
         return response.data;
     }
     catch(error) {
