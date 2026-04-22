@@ -17,12 +17,14 @@ import ChangePassword from './features/auth/ui/change-password';
 import ResetPassword from './features/auth/ui/reset-password';
 import ApiAuthCall from './features/auth';
 
+
 // Utils
 import Redirect from './common/utils/Redirect'
 
 // Styles
 import '@orif-informatique/react-components-library/styles.css';
 import './index.pcss';
+
 
 const container = document.getElementById('root');
 const root = createRoot(container);
@@ -80,6 +82,7 @@ root.render(
                         path="/reset-password"
                         element={<ResetPassword />}
                     />
+
                 </Route>
             </Routes>
         </BrowserRouter>

@@ -34,11 +34,11 @@ const Items = () => {
 
     const actions = useMemo(() => ({
         // TODO: Replace hardcoded edit with a proper edit form/modal
-        edit: { permission: "user:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
-        delete: { permission: "user:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
-        restore: { permission: "user:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
-        hardDelete: { permission: "user:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
-        viewDeleted: { permission: "user:read" },
+        edit: { permission: "item:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
+        delete: { permission: "item:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
+        restore: { permission: "item:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
+        hardDelete: { permission: "item:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
+        viewDeleted: { permission: "item:read" },
     }), [fetchItems]);
 
     return (

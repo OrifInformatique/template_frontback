@@ -220,7 +220,7 @@ const List = ({
                 </tbody>
             </table>
         </div>
-    );
+    );                                                          
 };
 
 export default List;
