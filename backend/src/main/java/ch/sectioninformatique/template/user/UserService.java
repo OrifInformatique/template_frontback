@@ -190,7 +190,7 @@ public class UserService {
             if (registerDto.login() == null || registerDto.login().isBlank()
                     || registerDto.firstName() == null || registerDto.firstName().isBlank()
                     || registerDto.lastName() == null || registerDto.lastName().isBlank()) {
-                throw new UserValidationException("Missing mandatory user fields");
+                throw new UserValidationException("user.validation.missingFields", true);
             }
 
             Optional<User> optionalUser = userRepository.findByLogin(registerDto.login());
@@ -442,7 +442,7 @@ public class UserService {
                     });
 
             if (user.isDeleted()) {
-                throw new InactiveUserException("User is inactive or deleted");
+                throw new InactiveUserException("user.inactive.orDeleted");
             }
 
             log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
@@ -483,7 +483,7 @@ public class UserService {
                         return reactor.core.publisher.Mono.just(body.get("message"));
                     } else {
                         return reactor.core.publisher.Mono.error(
-                                new UserDeletionException("Failed to delete user: missing response data"));
+                            new UserDeletionException("user.delete.failed.missingResponse", true));
                     }
                 });
     }
@@ -510,7 +510,7 @@ public class UserService {
                         return reactor.core.publisher.Mono.just(body.get("message"));
                     } else {
                         return reactor.core.publisher.Mono.error(
-                                new UserDeletionException("Failed to delete user: missing response data"));
+                            new UserDeletionException("user.delete.failed.missingResponse", true));
                     }
                 });
     }
