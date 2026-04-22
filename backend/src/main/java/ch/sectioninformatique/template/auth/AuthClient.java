@@ -252,17 +252,18 @@ public class AuthClient {
         }
 
         /**
-         * Soft deletes a user by sending a delete request to the authentication
+         * Soft or hard deletes a user by sending a delete request to the authentication
          * provider.
          * 
          * @param token  The access token
          * @param userId The ID of the user to delete
+         * @param harDelete A flag for soft or hard delete
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
          *         response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId, boolean hardDelete) {
                 return webClient.delete()
-                                .uri("/users/" + userId) // soft delete user endpoint path in authentication provider
+                                .uri("/users/" + userId + "/" + hardDelete) // soft or hard delete user endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
@@ -273,31 +274,6 @@ public class AuthClient {
                                 })
                                 .map(body -> ResponseEntity.ok(body));
         }
-
-        /**
-         * Permanently deletes a user by sending a delete request to the authentication
-         * provider.
-         * 
-         * @param token  The access token
-         * @param userId The ID of the user to delete permanently
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
-         *         deletion response (e.g., token or status message)
-         */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
-                return webClient.delete()
-                                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in
-                                                                        // authentication provider
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserDeletionException(
-                                                                                error.message()))))
-                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
-                                })
-                                .map(body -> ResponseEntity.ok(body));
-        }
-
         /**
          * Promotes a user to manager role by sending a PUT request to the
          * authentication service.

@@ -115,8 +115,8 @@ public class UserController {
     }
 
     /**
-     * Handles soft DELETE requests to "/{userId}/{global}"
-     * Soft deletes a user either locally or from the global auth service, based
+     * Handles soft ans hard DELETE requests for local and global
+     * deletes a user either locally or from the global auth service, based
      * on the 'global' flag
      * If 'global' is false, deletes the user from the local database
      * If 'global' is true, deletes the user from the local database and calls the
@@ -125,51 +125,26 @@ public class UserController {
      * 
      * @param userId The ID of the user to delete
      * @param global Flag indicating whether to delete locally or globally
+     * @param permanent Flag indicating if it's an hard or soft delete
      * @return ResponseEntity with deletion result message
      */
-    @DeleteMapping("/{userId}/{global}")
+    @DeleteMapping("/{userId}/{global}/{permanent}")
     @PreAuthorize("hasAuthority('user:delete')")
     public Mono<ResponseEntity<?>> delete(@RequestHeader("Authorization") String token, @PathVariable Long userId,
-            @PathVariable boolean global) {
+            @PathVariable boolean global, @PathVariable boolean permanent) {
 
-        // Determine deletion scope based on global flag
-        if (global) {
-            return userService.deleteGlobalAndLocal(token, userId)
-                    .map(message -> ResponseEntity.ok(Map.of("message", message)));
-        } else {
-            userService.deleteUser(userId);
-            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
-        }
+                if(global){
+                    UserDto deletedUser = userService.deleteUser(userId, permanent);
+                    return authClient.deleteGlobalUser(token, userId, permanent)
+                    .flatMap(response ->{
+                        return Mono.just(response);
+                    });
+                    
+                }
+                UserDto deletedUser = userService.deleteUser(userId, permanent);
+                return Mono.just(ResponseEntity.ok().body(deletedUser));
     }
 
-    /**
-     * Handles permanent DELETE requests to "/{userId}/{global}/permanent"
-     * Permanently deletes a user either locally or from the global auth service,
-     * based on the 'global' flag
-     * If 'global' is false, permanently deletes the user from the local database
-     * If 'global' is true, permanently deletes the user from the local database and
-     * calls the authClient to permanently delete the user from the auth service
-     * Returns a ResponseEntity with success message or error details
-     * 
-     * @param userId The ID of the user to permanently delete
-     * @param global Flag indicating whether to delete locally or globally
-     * @return ResponseEntity with permanent deletion result message
-     */
-    @DeleteMapping("/{userId}/{global}/permanent")
-    @PreAuthorize("hasAuthority('user:delete')")
-    public Mono<ResponseEntity<?>> deletePermanent(@RequestHeader("Authorization") String token,
-            @PathVariable Long userId,
-            @PathVariable boolean global) {
-        // Determine permanent deletion scope based on global flag
-        if (global) {
-            return userService.deleteGlobalAndLocalPermanent(token, userId)
-                    .map(message -> ResponseEntity.ok(Map.of("message", message)));
-        } else {
-            // Permanently delete user from local database only
-            userService.deleteUserPermanent(userId);
-            return Mono.just(ResponseEntity.ok(Map.of("message", "Local User deleted successfully")));
-        }
-    }
 
     /**
      * Promotes a user to manager role in both the authentication service and

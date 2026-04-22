@@ -1,13 +1,13 @@
 package ch.sectioninformatique.template.user;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import jakarta.transaction.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Repository interface for User entity operations.
@@ -18,7 +18,7 @@ import java.util.Optional;
  * - Checking user existence
  * - Standard CRUD operations inherited from JpaRepository
  */
-public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryPermanentDelete {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * Finds a user by their login username.
@@ -63,4 +63,9 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
      * @return true if a user with the given login exists, false otherwise
      */
     boolean existsByLogin(String login);
+
+    @Modifying
+    @Transactional
+    @Query( value ="DELETE FROM users WHERE id = :id", nativeQuery = true)
+    void deletePermanentlyById(Long id);
 }

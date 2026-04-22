@@ -26,6 +26,7 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -381,7 +382,7 @@ public class UserControllerTest {
         Map<String, String> authServiceResponse = Map.of(
                 "deletedUserLogin", "test.admin2@test.com",
                 "message", "User deleted from auth service");
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), anyBoolean()))
                 .thenReturn(Mono.just(ResponseEntity.ok(authServiceResponse)));
 
         performRequest(
@@ -395,7 +396,7 @@ public class UserControllerTest {
                 null);
 
         // Verify the auth client was called
-        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()));
+        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), anyBoolean());
         // Verify DB side effect (soft or hard delete)
         assertUserDeleted(admin2User);
     }
@@ -424,7 +425,7 @@ public class UserControllerTest {
         assertNotNull(managerUser, "Test manager user should exist");
 
         // Mock the external auth service to return an error
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId()), anyBoolean()))
                 .thenReturn(Mono.error(new UserDeletionException("Failed to delete user from auth service")));
 
         performRequest(
@@ -544,7 +545,7 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Test manager user should exist");
 
         // Mock auth client to return error for global delete
-        when(authClient.deleteGlobalUser(any(String.class), any(Long.class)))
+        when(authClient.deleteGlobalUser(any(String.class), any(Long.class), any(Boolean.class)))
             .thenReturn(Mono.error(new UserDeletionException("Database constraint violation")));
 
         performRequest(
@@ -789,7 +790,7 @@ public class UserControllerTest {
                 "message", "User deleted successfully",
                 "deletedUserLogin", "test.user@test.com");
 
-        when(authClient.deleteGlobalUser(anyString(), anyLong()))
+        when(authClient.deleteGlobalUser(anyString(), anyLong(), anyBoolean()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
@@ -895,7 +896,7 @@ public class UserControllerTest {
                 "message", "User deleted permanently",
                 "deletedUserLogin", "test.user@test.com");
 
-        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong()))
+        when(authClient.deleteGlobalUser(anyString(), anyLong(), anyBoolean()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(

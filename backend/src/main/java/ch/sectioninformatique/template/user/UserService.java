@@ -31,6 +31,7 @@ import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletion
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -315,109 +316,30 @@ public class UserService {
      * - Deletes the user from the database
      *
      * @param userId The ID of the user to delete
+     * @param hardDelete If true, the user will be permanently deleted; if false, the user will be soft-deleted
      * @return UserDto containing the deleted user's information
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUser(@NonNull Long userId) {
-        try {
-            // Get the user to delete
+
+    @Transactional
+    public UserDto deleteUser(@NonNull Long userId, boolean hardDelete) {
             User userToDelete = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+            .orElseThrow(UserNotFoundException::new);
 
-            // Delete the user
-            userRepository.deleteById(userId);
-            return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new UserDeletionException(e.getMessage());
-        }
+             userToDelete.getAppSpecificRoles().clear();
+
+            if(hardDelete){
+                itemsRepository.setAuthorNullByAuthorId(userId);
+                userRepository.deletePermanentlyById(userId);
+                return userMapper.toUserDto(userToDelete);
+            }
+            else{
+                itemsRepository.setAuthorNullByAuthorId(userId);
+                userRepository.deleteById(userId);
+                return userMapper.toUserDto(userToDelete);
+            }
     }
-
-    /**
-     * Permanently deletes a user from the system.
-     * This method:
-     * - Verifies the user exists
-     * - Deletes the user from the database
-     *
-     * @param userId The ID of the user to delete
-     * @return UserDto containing the deleted user's information
-     * @throws UserNotFoundException if the user is not found
-     * @throws UserDeletionException if the permanent deletion fails
-     */
-    public UserDto deleteUserPermanent(@NonNull Long userId) {
-        try {
-            // Get the user to delete
-
-            itemsRepository.setAuthorNullByAuthorId(userId);
-            User userToDelete = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-            // Delete the user
-            userRepository.deletePermanentlyById(userId);
-            return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PermanentUserDeletionException(e.getMessage());
-        }
-    }
-
-    /**
-     * Deletes a user from the system by login.
-     * This method:
-     * - Verifies the user exists
-     * - Deletes the user from the database
-     *
-     * @param login The login of the user to delete
-     * @return UserDto containing the deleted user's information
-     * @throws UserNotFoundByLoginException if the user is not found
-     * @throws UserDeletionException if the deletion fails
-     */
-    public UserDto deleteUserByLogin(String login) {
-        try {
-            // Get the user to delete
-            User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new UserNotFoundByLoginException(login));
-
-            // Delete the user
-            userRepository.deleteById(userToDelete.getId());
-            return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundByLoginException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new UserDeletionException(e.getMessage());
-        }
-    }
-
-    /**
-     * Permanently deletes a user from the system by login.
-     * This method:
-     * - Verifies the user exists
-     * - Deletes the user from the database
-     *
-     * @param login The login of the user to delete
-     * @return UserDto containing the deleted user's information
-     * @throws UserNotFoundByLoginException if the user is not found
-     * @throws UserDeletionException if the permanent deletion fails
-     */
-    public UserDto deleteUserPermanentByLogin(String login) {
-        try {
-            // Get the user to delete
-            User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new UserNotFoundByLoginException(login));
-
-            // Delete the user
-            userRepository.deletePermanentlyById(userToDelete.getId());
-            return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundByLoginException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PermanentUserDeletionException(e.getMessage());
-        }
-    }
-
     /**
      * Finds a user by their login.
      * This method:
@@ -461,59 +383,6 @@ public class UserService {
         }
     }
 
-    /**
-     * Deletes a user globally (via AuthClient) and locally.
-     * This method:
-     * - Calls the AuthClient to delete user from the global auth service
-     * - Validates the response contains the deleted user login
-     * - Deletes the user locally by login
-     * - Returns the deletion message
-     *
-     * @param token  The authorization token
-     * @param userId The ID of the user to delete
-     * @return Message from the global deletion response
-     * @throws UserDeletionException if the deletion fails or response is invalid
-     */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
-        return authClient.deleteGlobalUser(token, userId)
-                .flatMap(response -> {
-                    java.util.Map<String, String> body = response.getBody();
-                    if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserByLogin(body.get("deletedUserLogin"));
-                        return reactor.core.publisher.Mono.just(body.get("message"));
-                    } else {
-                        return reactor.core.publisher.Mono.error(
-                                new UserDeletionException("Failed to delete user: missing response data"));
-                    }
-                });
-    }
-
-    /**
-     * Permanently deletes a user globally (via AuthClient) and locally.
-     * This method:
-     * - Calls the AuthClient to permanently delete user from the global auth service
-     * - Validates the response contains the deleted user login
-     * - Permanently deletes the user locally by login
-     * - Returns the deletion message
-     *
-     * @param token  The authorization token
-     * @param userId The ID of the user to permanently delete
-     * @return Message from the global deletion response
-     * @throws UserDeletionException if the deletion fails or response is invalid
-     */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
-        return authClient.deleteGlobalUserPermanent(token, userId)
-                .flatMap(response -> {
-                    java.util.Map<String, String> body = response.getBody();
-                    if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserPermanentByLogin(body.get("deletedUserLogin"));
-                        return reactor.core.publisher.Mono.just(body.get("message"));
-                    } else {
-                        return reactor.core.publisher.Mono.error(
-                                new UserDeletionException("Failed to delete user: missing response data"));
-                    }
-                });
-    }
 
     public void updateUser(Long userId, UserDto newUser) {
     User existingUser = userRepository.findById(userId)

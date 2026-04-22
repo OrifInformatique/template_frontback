@@ -133,7 +133,7 @@ public class User {
      */
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        Set<Role> roleList = this.appSpecificRoles;
+        Set<Role> roleList = new HashSet<>(this.appSpecificRoles);
         roleList.add(this.mainRole);
         for (Role role : roleList) {
             authorities.addAll(role.getName().getGrantedAuthorities());
