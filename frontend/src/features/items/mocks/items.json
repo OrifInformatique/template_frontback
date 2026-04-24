@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "name": "Leek",
+        "description": "A leek is a vegetable that is often used in cooking. It has a mild onion-like flavor and is commonly used in soups, stews, and other dishes. (It is also a popular item in the Vocaloid community, often associated with the character Hatsune Miku.)",
+        "author": "Hatsune Miku",
+        "createdAt": "2024-06-01T12:00:00Z",
+        "updatedAt": "2024-06-01T12:00:00Z",
+        "isDeleted": false
+    },
+    {
+        "id": 2,
+        "name": "Baguette",
+        "description": "A baguette is a long, thin loaf of French bread that is known for its crisp crust and soft interior. It is a staple in French cuisine and is often enjoyed with butter, cheese, or as part of a sandwich. (It is also a popular item in the Vocaloid community, often associated with the character Kasane Teto.)",
+        "author": "Kasane Teto",
+        "createdAt": "2024-06-02T12:00:00Z",
+        "updatedAt": "2024-06-02T12:00:00Z",
+        "isDeleted": false
+    },
+    {
+        "id": 3,
+        "name": "Handphone",
+        "description": "A handphone is a portable device that combines mobile telephone and computing functions into one unit. It is commonly used for communication, internet access, and various applications. (It is also a popular item in the Vocaloid community, often associated with the character Akita Neru.)",
+        "author": "Akita Neru",
+        "createdAt": "2024-06-03T12:00:00Z",
+        "updatedAt": "2024-06-03T12:00:00Z",
+        "isDeleted": true
+    }
+]
