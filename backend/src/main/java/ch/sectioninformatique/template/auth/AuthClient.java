@@ -138,7 +138,7 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<String>> containing the OAuth2 login response
          *         (e.g., token or status message)
          */
-        public Mono<ResponseEntity<String>> loginOAUth2() {
+        public Mono<ResponseEntity<String>> loginOAuth2() {
 
                 return webClient.get()
                                 .uri(uriWithOptionalLang("/oauth2/login/azure")) // the OAuth2 login endpoint in authentication provider
