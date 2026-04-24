@@ -329,6 +329,8 @@ public class UserService {
 
              userToDelete.getAppSpecificRoles().clear();
 
+             
+
             if(hardDelete){
                 itemsRepository.setAuthorNullByAuthorId(userId);
                 userRepository.deletePermanentlyById(userId);
