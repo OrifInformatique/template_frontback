@@ -1,8 +1,7 @@
 package ch.sectioninformatique.template.auth;
 
-import ch.sectioninformatique.template.user.UserService;
-
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
@@ -16,9 +15,7 @@ import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsExc
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
-
 import ch.sectioninformatique.template.user.UserDto;
-
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
@@ -27,8 +24,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.springframework.context.annotation.Lazy;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -36,16 +31,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.UriBuilder;
-
-
 
 /**
  * Client service for authentication operations.
@@ -56,34 +45,23 @@ import org.springframework.web.util.UriBuilder;
  * Error responses are propagated as message keys so the API can localize messages.
  */
 @Service
-public class AuthClient extends DefaultOAuth2UserService {
-
-        @Autowired
-        private @Lazy UserService userService;
-
-        private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService;
+@Validated
+@SuppressWarnings("null")
+public class AuthClient {
 
         /** WebClient instance for making HTTP requests */
         private final WebClient webClient;
 
-
-        public OAuth2User loadUser(OAuth2UserRequest userRequest)
-        {
-                OAuth2User oAuth2User = super.loadUser(userRequest);
-                userService.proceedOAuth2User(oAuth2User);
-                return oAuth2User;
-        }
-
-
         /** Constructor to initialize the WebClient */
-        public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl, OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService, UserService userService) {
+        public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
                 this.webClient = WebClient.create(authUrl);
-                this.oauth2UserService = oauth2UserService;
-                this.userService = userService;
         }
 
-
-        
+        /**
+         * Helper method to build URIs with an optional "lang" query parameter based on the current request context.
+         * @param path the path to append to the base URI for the authentication provider
+         * @return a Function that takes a UriBuilder and returns a URI with the optional "lang" parameter if it exists in the current request
+         */
         private Function<UriBuilder, URI> uriWithOptionalLang(String path) {
                 return uriBuilder -> {
                         UriBuilder builder = uriBuilder.path(path);
@@ -95,6 +73,10 @@ public class AuthClient extends DefaultOAuth2UserService {
                 };
         }
 
+        /**
+         * Retrieves the "lang" query parameter from the current HTTP request, if available.
+         * @return the "lang" parameter value or null if not present
+         */
         private String getCurrentLangParameter() {
                 RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
                 if (attributes instanceof ServletRequestAttributes servletAttributes) {
@@ -104,16 +86,16 @@ public class AuthClient extends DefaultOAuth2UserService {
         }
 
         /**
-         * Performs user login by sending credentials to the authentication provider.
+         * Performs classic user login by sending credentials to the authentication provider.
          * 
          * @param credentialsDto The CredentialsDto containing user login data
-         * @return A Mono<ResponseEntity<UserDto>> containing the authentication
-         *         response (e.g., token or status message)
+         * @return A Mono<ResponseEntity<UserDto>> containing the authentication response
+         *         (e.g., token or status message)
          */
         public Mono<ResponseEntity<UserDto>> login(@Valid CredentialsDto credentialsDto) {
 
                 return webClient.post()
-                                .uri(uriWithOptionalLang("/auth/login")) // login endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/auth/login")) // classic login endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(credentialsDto)
                                 .exchangeToMono(response -> {
@@ -122,23 +104,23 @@ public class AuthClient extends DefaultOAuth2UserService {
                                                                 .flatMap(error -> {
                                                                         HttpStatusCode status = response.statusCode();
                                                                         if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
-                                                                                return Mono.error(
-                                                                                                new UserNotFoundException());
+                                                                                return Mono.error(new UserNotFoundException());
                                                                         }
-                                                                        return Mono.error(
-                                                                                        new InvalidCredentialsException());
+                                                                        return Mono.error(new InvalidCredentialsException());
                                                                 });
                                         }
+
                                         // Extract response body
                                         Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
 
+                                        // Extract Set-Cookie header and include it in the response if present
                                         return bodyMono.map(userDto -> {
                                                 ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
 
                                                 // Extract refresh_token cookie directly in the lambda
                                                 response.headers().asHttpHeaders()
                                                                 .getOrDefault(HttpHeaders.SET_COOKIE,
-                                                                                Collections.emptyList())
+                                                                              Collections.emptyList())
                                                                 .stream()
                                                                 .filter(cookie -> cookie.startsWith("refresh_token="))
                                                                 .findFirst()
@@ -147,12 +129,30 @@ public class AuthClient extends DefaultOAuth2UserService {
                                                 return builder.body(userDto);
                                         });
                                 });
-
         }
 
         /**
-         * Performs user registration by sending user details to the authentication
-         * provider.
+         * Initiates OAuth2 login by calling the OAuth2 login endpoint of
+         * the authentication provider.
+         * 
+         * @return A Mono<ResponseEntity<String>> containing the OAuth2 login response
+         *         (e.g., token or status message)
+         */
+        public Mono<ResponseEntity<String>> loginOAUth2() {
+
+                return webClient.get()
+                                .uri(uriWithOptionalLang("/oauth2/login/azure")) // the OAuth2 login endpoint in authentication provider
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(
+                                                                                new OAuth2AuthenticationException(
+                                                                                                error.message()))))
+                                .toEntity(String.class); // expect the response as a ResponseEntity<String>
+        }
+
+        /**
+         * Performs user registration by sending user details to the authentication provider.
          * 
          * @param user The SignUpDto containing user registration data
          * @return A Mono<ResponseEntity<UserDto>> containing the registration response
@@ -540,26 +540,5 @@ public class AuthClient extends DefaultOAuth2UserService {
                                                                                                 error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
-        }
-
-        /**
-         * Initiates OAuth2 login by redirecting to the OAuth2 authorization endpoint of
-         * the authentication provider.
-         * 
-         * @return A Mono<ResponseEntity<String>> containing the OAuth2 login response
-         *         (e.g., token or status message)
-         */
-        public Mono<ResponseEntity<String>> loginOAUth2() {
-
-                return webClient.get()
-                                .uri(uriWithOptionalLang("/oauth2/authorization/azure")) // the OAuth2 authorization endpoint path in
-                                                                    // authentication provider
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new OAuth2AuthenticationException(
-                                                                                                error.message()))))
-                                .toEntity(String.class); // expect the response as a ResponseEntity<String>
         }
 }
