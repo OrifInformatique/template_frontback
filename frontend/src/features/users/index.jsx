@@ -38,7 +38,7 @@ function UserList() {
         const actions = useMemo(() => ({
             edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user); setFormOpen(true)}},
             delete: { permission: "user:delete", onClick: (user) => deleteUserLocal(user.id).then(() => deleteUserDistant(user.id).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err))) },
-            hardDelete: { permission: "user:delete", onClick: (user) => hardDeleteUserLocal(user.id).then(() => hardDeleteUserDistant().then(() => fetchUsers())).catch((err) => console.error("Hard delete failed:", err)) },
+            hardDelete: { permission: "user:delete", onClick: (user) => hardDeleteUserLocal(user.id).then(() => hardDeleteUserDistant(user.id).then(() => fetchUsers())).catch((err) => console.error("Hard delete failed:", err)) },
             viewDeleted: { permission: "user:read"},
             restore: { permission: "user:update", onClick: (user) => restoreUser(user.id).then(() => restoreDistantUser(user.id).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err))) }
         }), [showDeleted]);

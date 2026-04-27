@@ -12,6 +12,7 @@ export const getUsers = async () => {
     }
 };
 export const deleteUserLocal = async (id) => {
+    console.log("userID :" + id);
     try {
         const response = await api.delete(`/users/${id}/false`);
         return response.data;
@@ -34,6 +35,7 @@ export const getRoles = async () => {
 }
 
 export const deleteUserDistant = async (id) => {
+    console.log("userID :" + id);
     try {
         const response = await api.delete(`/users/${id}/true`);
         return response.data;
@@ -45,6 +47,7 @@ export const deleteUserDistant = async (id) => {
 };
 
 export const hardDeleteUserLocal = async (id) => {
+    console.log("userID :" + id);
     try {
         const response = await api.delete(`/users/${id}/false/permanent`);
         return response.data;
@@ -57,8 +60,8 @@ export const hardDeleteUserLocal = async (id) => {
 
 export const hardDeleteUserDistant = async (id) => {
     try {
-        console.log("Hard");
-        const response = await api.delete(`/users/${id}/false/permanent`);
+        console.log("userID :" + id);
+        const response = await api.delete(`/users/${id}/true/permanent`);
         return response.data;
     }
     catch(error) {

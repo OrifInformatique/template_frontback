@@ -5,6 +5,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
+import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
@@ -17,8 +18,10 @@ import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -27,6 +30,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.util.UriBuilder;
 
 /**
  * Client service for authentication operations.
@@ -34,6 +41,7 @@ import org.springframework.http.ResponseEntity;
  * endpoints,
  * including login and registration functionalities.
  * It uses WebClient to perform HTTP requests and handle responses reactively.
+ * Error responses are propagated as message keys so the API can localize messages.
  */
 @Service
 public class AuthClient {
@@ -46,6 +54,25 @@ public class AuthClient {
                 this.webClient = WebClient.create(authUrl);
         }
 
+        private Function<UriBuilder, URI> uriWithOptionalLang(String path) {
+                return uriBuilder -> {
+                        UriBuilder builder = uriBuilder.path(path);
+                        String lang = getCurrentLangParameter();
+                        if (lang != null && !lang.isBlank()) {
+                                builder.queryParam("lang", lang);
+                        }
+                        return builder.build();
+                };
+        }
+
+        private String getCurrentLangParameter() {
+                RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+                if (attributes instanceof ServletRequestAttributes servletAttributes) {
+                        return servletAttributes.getRequest().getParameter("lang");
+                }
+                return null;
+        }
+
         /**
          * Performs user login by sending credentials to the authentication provider.
          * 
@@ -56,7 +83,7 @@ public class AuthClient {
         public Mono<ResponseEntity<UserDto>> login(@Valid CredentialsDto credentialsDto) {
 
                 return webClient.post()
-                                .uri("/auth/login") // login endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/auth/login")) // login endpoint path in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(credentialsDto)
                                 .exchangeToMono(response -> {
@@ -101,10 +128,11 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<UserDto>> containing the registration response
          *         (e.g., token or status message)
          */
-        public Mono<ResponseEntity<UserDto>> register(RegisterDto user) {
+        public Mono<ResponseEntity<UserDto>> register(String token, RegisterDto user) {
 
                 return webClient.post()
-                                .uri("/auth/register") // the registration endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/auth/register")) // the registration endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(user)
                                 .exchangeToMono(response -> {
@@ -152,7 +180,7 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<TokenResponseDto>> refreshLogin(String refreshToken) {
                 return webClient.post()
-                                .uri("/auth/refresh") // the refresh token endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/auth/refresh")) // the refresh token endpoint path in authentication provider
                                 .cookie("refresh_token", refreshToken)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
@@ -191,7 +219,7 @@ public class AuthClient {
         public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
                         PasswordUpdateDto passwordUpdateDto) {
                 return webClient.put()
-                                .uri("/auth/update-password") // the password update endpoint path in authentication
+                                .uri(uriWithOptionalLang("/auth/update-password")) // the password update endpoint path in authentication
                                                               // provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
@@ -217,16 +245,16 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<Map<String, String>>> logout(String token) {
                 return webClient.post()
-                                .uri("/auth/logout") // the logout endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/auth/logout")) // the logout endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
                                                 return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppException(
-                                                                                error.message(),
+                                                                .flatMap(error -> Mono.error(new AppMessageKeyException(
                                                                                 HttpStatus.resolve(response
                                                                                                 .statusCode()
-                                                                                                .value()))));
+                                                                                                .value()),
+                                                                                error.message())));
                                         }
 
                                         // Extract response body
@@ -315,7 +343,7 @@ public class AuthClient {
         public Mono<ResponseEntity<String>> promoteToManager(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri("/users/" + userId + "/promote-manager")
+                                .uri(uriWithOptionalLang("/users/" + userId + "/promote-manager"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -326,10 +354,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -351,7 +380,7 @@ public class AuthClient {
         public Mono<ResponseEntity<String>> revokeManager(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri("/users/" + userId + "/revoke-manager")
+                                .uri(uriWithOptionalLang("/users/" + userId + "/revoke-manager"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -362,10 +391,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -387,7 +417,7 @@ public class AuthClient {
         public Mono<ResponseEntity<String>> promoteToAdmin(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri("/users/" + userId + "/promote-admin")
+                                .uri(uriWithOptionalLang("/users/" + userId + "/promote-admin"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -398,10 +428,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -423,7 +454,7 @@ public class AuthClient {
         public Mono<ResponseEntity<String>> revokeAdmin(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri("/users/" + userId + "/revoke-admin")
+                                .uri(uriWithOptionalLang("/users/" + userId + "/revoke-admin"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -434,10 +465,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -460,7 +492,7 @@ public class AuthClient {
         public Mono<ResponseEntity<String>> downgradeAdmin(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri("/users/" + userId + "/downgrade-admin")
+                                .uri(uriWithOptionalLang("/users/" + userId + "/downgrade-admin"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -471,10 +503,11 @@ public class AuthClient {
                                                                 // Convert error response body to ErrorDto and wrap in
                                                                 // AppException
                                                                 .flatMap(error -> Mono.error(
-                                                                                new AppException(error.message(),
+                                                                                new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
-                                                                                                                                .value())))))
+                                                                                                                                .value()),
+                                                                                                error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
         }
@@ -489,7 +522,7 @@ public class AuthClient {
         public Mono<ResponseEntity<String>> loginOAUth2() {
 
                 return webClient.get()
-                                .uri("/oauth2/authorization/azure") // the OAuth2 authorization endpoint path in
+                                .uri(uriWithOptionalLang("/oauth2/authorization/azure")) // the OAuth2 authorization endpoint path in
                                                                     // authentication provider
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,

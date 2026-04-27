@@ -11,7 +11,8 @@ import useAuthStore from '../../auth/authStore';
  * @param {Array<Object>} props.items - The array of objects to display.
  * @param {Object} [props.actions] - Optional action config keyed by action name.
  *   Each action is { permission?: string, onClick?: (item) => void }.
- *   Supported keys: edit, delete, restore, hardDelete, viewDeleted.
+ *   Supported keys: edit, delete, restore, hardDelete, viewDeleted, view.
+ * @param {function} [props.hasPermission] - Permission check function (permission) => boolean.
  * @param {Array<string>} [props.columns] - Optional subset/order of columns to display.
  *   If omitted, all keys from the first item are used.
  * @param {Object} [props.columnLabels] - Optional map of key -> display header label.
@@ -60,6 +61,10 @@ const List = ({
         actions.viewDeleted &&
         (!actions.viewDeleted.permission ||
             hasPermission(actions.viewDeleted.permission));
+    const canView =
+        actions.view &&
+        (!actions.view.permission ||
+            hasPermission(actions.view.permission));
     const hasVisibleActions =
         canEdit || canDelete || canRestore || canHardDelete;
 
@@ -113,7 +118,8 @@ const List = ({
                                 {cols.map((col) => (
                                     <td
                                         key={col}
-                                        className={`px-6 py-4 text-sm text-gray-900 ${item.isDeleted ? 'line-through text-gray-400' : ''}`}
+                                        className={`px-6 py-4 text-sm text-gray-900 ${item.isDeleted ? 'line-through text-gray-400' : ''} ${canView ? 'cursor-pointer hover:underline' : ''}`}
+                                        onClick={canView ? () => actions.view.onClick(item) : undefined}
                                     >
                                         {String(item[col] ?? '')}
                                     </td>
@@ -220,7 +226,7 @@ const List = ({
                 </tbody>
             </table>
         </div>
-    );                                                          
+    );
 };
 
 export default List;
