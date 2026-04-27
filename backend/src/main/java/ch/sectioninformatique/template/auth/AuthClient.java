@@ -290,7 +290,7 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
                 return webClient.delete()
-                                .uri("/users/" + userId + "/false") // soft delete user endpoint path in authentication provider
+                                .uri("/users/" + userId) // soft delete user endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
@@ -313,7 +313,7 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
                 return webClient.delete()
-                                .uri("/users/" + userId + "/true") // permanent delete user endpoint path in
+                                .uri("/users/" + userId + "/permanent") // permanent delete user endpoint path in
                                                                         // authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
