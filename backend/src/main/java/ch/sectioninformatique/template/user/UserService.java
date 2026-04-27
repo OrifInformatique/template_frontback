@@ -2,8 +2,10 @@ package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,7 +57,6 @@ public class UserService {
     private EntityManager entityManager;
 
     /** Repository for user data access */
-    @Autowired
     private final UserRepository userRepository;
 
     /** Repository for role data access */
@@ -67,7 +68,6 @@ public class UserService {
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
 
-    @Autowired
     private final ItemRepository itemsRepository;
 
 
@@ -522,10 +522,20 @@ public class UserService {
     Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
             .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
 
+    Set<Role> newAppSpecificRoles = new HashSet<>();
+    for (String role : newUser.getAppSpecificRoles()) {
+        Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
+        .orElseThrow(() -> new RoleNotFoundException(role));
+        newAppSpecificRoles.add(newRole);
+   }
+
     existingUser.setFirstName(newUser.getFirstName());
     existingUser.setLastName(newUser.getLastName());
     existingUser.setLogin(newUser.getLogin());
     existingUser.setMainRole(newMainRole);
+    
+    existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
+
     existingUser.setUpdatedAt(new Date());
 
     userRepository.save(existingUser);

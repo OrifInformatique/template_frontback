@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, InputText  } from '@orif-informatique/react-components-library';
+import { Button, InputText, MultiSelect  } from '@orif-informatique/react-components-library';
 
 import { createUser, updateAuthUser, updateUser, createAuthUser, getRoles } from "./api/api";
 
@@ -10,16 +10,25 @@ const [login, setLogin] = useState(user ? user.login : "");
 const [password, setPassword] = useState("");
 const [userRoles, setUserRoles] = useState(user ? user.mainRole : "");
 const [roles, setRoles] = useState([]);
+const [appSpefRole, setAppSpefRole] = useState([])
+const [userAppSpefRole, setUserAppSpefRole] = useState(user ? user.appSpecificRoles : [])
+const roleName = []
+const userRolesName = []
+
+appSpefRole.map(r => roleName.push(r.name))
+userAppSpefRole.map(r => userRolesName.push(r.name))
+
 
 
 useEffect(() => {
     const fetchRoles = async () => {
         const rolesData = await getRoles();
         setRoles(rolesData);
+        setAppSpefRole(rolesData)
     };
 
     fetchRoles();
-}, []);
+}, [user]);
 
 useEffect(() => {
     if (user) {
@@ -28,9 +37,11 @@ useEffect(() => {
         setLogin(user.login || "");
         setPassword(user.password || "");
         setUserRoles(user.mainRole || "");
+        setUserAppSpefRole(user.appSpecificRoles || [])
 
+        console.log("USER_APP_SPECIFIC_ROLES : " + user.appSpecificRoles)
 
-        console.log("User data loaded into form:", { firstName, lastName, login, password, userRoles });
+        console.log("User data loaded into form:", { firstName, lastName, login, password, userRoles, userAppSpefRole });
     }
 }, [user]);
 
@@ -50,6 +61,20 @@ return (
             ))}
         </select>
         </div> : null}
+    
+        <MultiSelect
+        name="Role spécifique"
+        options={roleName}
+        selectedValues={userAppSpefRole}
+        defaultValues={userAppSpefRole}
+        disabled={false}
+        onChangeFunction={setUserAppSpefRole}
+        error={null}
+        className={null}
+        emptyLabel='Aucun sélectionné'
+        singleLabel='sélectionné'
+        multipleLabel='sélectionnés'
+        />
 
 
 
@@ -63,7 +88,8 @@ return (
                     "firstName" : firstName, 
                     "lastName" : lastName, 
                     "login" : login,
-                    "mainRole" : userRoles
+                    "mainRole" : userRoles,
+                    "appSpecificRoles" : userAppSpefRole
             }),
                 
                 updateAuthUser(user.id,{

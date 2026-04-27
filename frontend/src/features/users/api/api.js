@@ -24,7 +24,7 @@ export const deleteUserLocal = async (id) => {
 
 export const getRoles = async () => {
     try {
-        const response = await api.get(`/roles`);
+        const response = await api.get(`/roles/all`);
         return response.data;
     }
     catch(error) {
@@ -132,3 +132,14 @@ export const restoreUser = async (id) => {
         return null;
     }
 };
+
+export const restoreDistantUser = async (id) => {
+    try{
+        const response = await  auth.put(`/users/${id}/restore`)
+        return response.data;
+    }
+    catch (error) {
+        console.error(`Error whil restoring user : ${error.message}`);
+        return null
+    }
+}
