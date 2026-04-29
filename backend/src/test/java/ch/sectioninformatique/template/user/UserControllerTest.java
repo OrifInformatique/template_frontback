@@ -4,27 +4,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.transaction.annotation.Transactional;
-
-import ch.sectioninformatique.template.AuthApplication;
-import ch.sectioninformatique.template.auth.AuthClient;
-import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
-import ch.sectioninformatique.template.security.UserAuthenticationProvider;
-import reactor.core.publisher.Mono;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -33,10 +15,20 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -44,6 +36,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.transaction.annotation.Transactional;
+
+import ch.sectioninformatique.template.AuthApplication;
+import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.security.UserAuthenticationProvider;
+import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
+import reactor.core.publisher.Mono;
 
 /**
  * Integration tests for the UserController REST endpoints.
@@ -345,7 +344,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getId() + "/false",
+                "/users/" + userToDelete.getId() + "/false/false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -353,7 +352,7 @@ public class UserControllerTest {
                 true,
                 response -> {
                     try {
-                        response.andExpect(jsonPath("$.message").value("Local User deleted successfully"));
+                        response.andExpect(jsonPath("$.id").exists());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -387,7 +386,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + admin2User.getId() + "/true",
+                "/users/" + admin2User.getId() + "/true/false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -430,7 +429,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + managerUser.getId() + "/true",
+                "/users/" + managerUser.getId() + "/true/false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -550,7 +549,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getId() + "/true",
+                "/users/" + userToDelete.getId() + "/true/false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -586,7 +585,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + nonExistentUserId + "/false",
+                "/users/" + nonExistentUserId + "/false/false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 404,
@@ -738,7 +737,7 @@ public class UserControllerTest {
     public void deleteUser_locally_shouldReturnSuccess() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false",
+                "/users/1/false/false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -762,7 +761,7 @@ public class UserControllerTest {
     public void deleteUser_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false",
+                "/users/1/false/false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -795,7 +794,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/1/true",
+                "/users/1/true/false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -819,7 +818,7 @@ public class UserControllerTest {
     public void deleteUser_globallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/2/true",
+                "/users/2/true/false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -845,7 +844,7 @@ public class UserControllerTest {
     public void deleteUserPermanent_locally_shouldReturnSuccess() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false/permanent",
+                "/users/1/false/true",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -868,7 +867,7 @@ public class UserControllerTest {
     public void deleteUserPermanent_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false/permanent",
+                "/users/1/false/true",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -901,7 +900,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/1/true/permanent",
+                "/users/1/true/true",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -925,7 +924,7 @@ public class UserControllerTest {
     public void deleteUserPermanent_globallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/2/true/permanent",
+                "/users/2/true/true",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1216,7 +1215,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + targetUser.getId() + "/false",
+                "/users/" + targetUser.getId() + "/false/false",
                 userToken,
                 MediaType.APPLICATION_JSON,
                 403,
