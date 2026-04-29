@@ -8,7 +8,6 @@ import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
-import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
@@ -23,6 +22,9 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -52,10 +54,17 @@ public class AuthClient {
         /** WebClient instance for making HTTP requests */
         private final WebClient webClient;
 
+        /** Url for spring-auth azure login endpoint */
+        @Value("${AZURE_LOGIN_URL}")
+        private String azureLoginUrl;
+
         /** Constructor to initialize the WebClient */
         public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
                 this.webClient = WebClient.create(authUrl);
         }
+
+        // Logger for debugging and monitoring the authentication flow.
+        private static final Logger log = LoggerFactory.getLogger(AuthClient.class);
 
         /**
          * Helper method to build URIs with an optional "lang" query parameter based on the current request context.
@@ -132,23 +141,22 @@ public class AuthClient {
         }
 
         /**
-         * Initiates OAuth2 login by calling the OAuth2 login endpoint of
-         * the authentication provider.
+         * Builds the URI for spring-auth OAuth2 login with Azure, including an optional redirectUrl query parameter.
          * 
-         * @return A Mono<ResponseEntity<String>> containing the OAuth2 login response
-         *         (e.g., token or status message)
+         * @param redirectUrl The URL to redirect to after successful authentication (optional).
+         * @return The built URI for spring-auth OAuth2 login with Azure.
          */
-        public Mono<ResponseEntity<String>> loginOAuth2() {
+        public URI buildAzureLoginUri(String redirectUrl) {
+                var builder = org.springframework.web.util.UriComponentsBuilder.fromUriString(azureLoginUrl);
 
-                return webClient.get()
-                                .uri(uriWithOptionalLang("/oauth2/login/azure")) // the OAuth2 login endpoint in authentication provider
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
-                                                                                new OAuth2AuthenticationException(
-                                                                                                error.message()))))
-                                .toEntity(String.class); // expect the response as a ResponseEntity<String>
+                String lang = getCurrentLangParameter();
+                if (lang != null && !lang.isBlank()) {
+                        builder.queryParam("lang", lang);
+                }
+                if (redirectUrl != null && !redirectUrl.isBlank()) {
+                        builder.queryParam("redirectUrl", redirectUrl);
+                }
+                return builder.build().toUri();
         }
 
         /**
