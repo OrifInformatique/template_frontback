@@ -121,20 +121,4 @@ public class TestController {
         List<UserDto> users = userService.allUsers();
         return ResponseEntity.ok(users);
     }
-
-    /**
-     * Handles GET requests to "/oauth2/login"
-     * Redirects the client to the OAuth2 authorization endpoint for Azure
-     * This initiates the OAuth2 login flow
-     * After successful login, the user will be redirected back to the application
-     * 
-     * @return ResponseEntity with redirection to OAuth2 login URL
-     */
-    @GetMapping("/oauth2/login")
-    public ResponseEntity<Object> testCallOAuth2() {
-
-        // Redirect frontend to spring-auth OAuth2 login endpoint
-        URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
-        return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
-    }
 }

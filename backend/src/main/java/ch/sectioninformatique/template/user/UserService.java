@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
@@ -509,21 +508,4 @@ public class UserService {
                     }
                 });
     }
-
-    public User proceedOAuth2User(OAuth2User oAuth2User)
-    {
-        String email = oAuth2User.getAttribute("email");
-
-        
-        return userRepository.findByLogin(email).orElseGet(() -> {
-            User user = new User();
-            user.setFirstName(oAuth2User.getAttribute("given_name"));
-            user.setLastName(oAuth2User.getAttribute("family_name"));
-            user.setLogin(email);
-            return userRepository.save(user);
-        });
-
-
-    }
-   
 }

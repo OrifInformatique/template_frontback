@@ -622,24 +622,20 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: GET /auth/oauth2/login
+     * Test: GET /auth/login/azure
      *
-     * OAuth2 login endpoint that redirects to Azure OAuth2 authorization.
-     * Note: Returns 401 in test environment because the Spring Security filter
-     * chain
-     * is not fully configured for OAuth2 flows in MockMvc tests. In production,
-     * this endpoint would return 302 redirect to Azure authorization URL.
+     * Azure login endpoint that redirects to spring-auth Azure login.
      */
     @Test
-    public void oauth2Login_inTestEnvironment_shouldReturn401() throws Exception {
+    public void azureLogin_inTestEnvironment_shouldReturn401() throws Exception {
         performRequest(
                 "GET",
-                "/auth/oauth2/login",
+                "/auth/login/azure",
                 null,
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
-                "oauth2-login",
+                "azure-login",
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());

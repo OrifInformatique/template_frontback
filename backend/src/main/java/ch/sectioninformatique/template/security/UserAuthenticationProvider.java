@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -38,9 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * This class is responsible for:
  * - Creating and validating JWT tokens
  * - Managing user authentication
- * - Handling OAuth2 integration
  * - Converting user roles and permissions into Spring Security authorities
- * - Managing Azure user creation for OAuth2 users
  */
 @Slf4j
 @RequiredArgsConstructor
