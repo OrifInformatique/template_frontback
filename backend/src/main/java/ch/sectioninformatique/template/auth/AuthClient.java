@@ -58,6 +58,10 @@ public class AuthClient {
         @Value("${AZURE_LOGIN_URL}")
         private String azureLoginUrl;
 
+        /** Url for spring-auth callback after oauth2 login success */
+        @Value("${AFTER_OAUTH2_LOGIN_URL}")
+        private String afterOauth2LoginUrl;
+
         /** Constructor to initialize the WebClient */
         public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
                 this.webClient = WebClient.create(authUrl);
@@ -146,16 +150,17 @@ public class AuthClient {
          * @param redirectUrl The URL to redirect to after successful authentication (optional).
          * @return The built URI for spring-auth OAuth2 login with Azure.
          */
-        public URI buildAzureLoginUri(String redirectUrl) {
+        public URI buildAzureLoginUri() {
                 var builder = org.springframework.web.util.UriComponentsBuilder.fromUriString(azureLoginUrl);
 
                 String lang = getCurrentLangParameter();
                 if (lang != null && !lang.isBlank()) {
                         builder.queryParam("lang", lang);
                 }
-                if (redirectUrl != null && !redirectUrl.isBlank()) {
-                        builder.queryParam("redirectUrl", redirectUrl);
-                }
+
+                // After successful login, spring-auth has to redirect to our callback endpoint
+                builder.queryParam("redirectUrl", afterOauth2LoginUrl);
+
                 return builder.build().toUri();
         }
 
