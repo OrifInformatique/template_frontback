@@ -96,6 +96,7 @@ return (
                     "firstName" : firstName,
                     "lastName" : lastName,
                     "login" : login,
+                    "mainRole" : userRoles,
                     "password" : password,
                 })
             ]).then(() => onClose()).catch((err) => console.error("Update failed:", err)) :
