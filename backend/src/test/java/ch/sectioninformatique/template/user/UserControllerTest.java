@@ -808,6 +808,41 @@ public class UserControllerTest {
                 });
     }
 
+    /** 
+     * Test: DELETE /users/{userId}/{global}/{permanent} - Global and permanent Success
+     * 
+     * Test hard deleting a user globally 
+    */ 
+
+    @Test
+    @Transactional
+    public void deleteUser_globallyAndPermanently_withMockedWebClient_shouldReturnSuccess() throws Exception {
+        Map<String, String> mockedResponse = Map.of(
+                "message", "Utilisateur supprimé définitivement",
+                "deletedUserLogin", "test.user@test.com");
+
+        when(authClient.deleteGlobalUser(anyString(), anyLong(), eq(true)))
+                .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
+
+            User adminUser = userRepository.findByLogin("test.admin@test.com").orElseThrow(() -> new RuntimeException("Admin user not found"));
+            String adminToken = getValidTokenForUser(adminUser.getLogin());
+
+        performRequest(
+                "DELETE",
+                "/users/1/true/true",
+                adminToken,
+                MediaType.APPLICATION_JSON,
+                200,
+                "delete-global-permanent-success",
+                response -> {
+                    try {
+                        response.andExpect(status().isOk());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
     /**
      * Test: DELETE /users/{userId}/{global} - Global 401 Unauthorized
      *
