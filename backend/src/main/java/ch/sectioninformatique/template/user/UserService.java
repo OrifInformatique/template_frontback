@@ -126,7 +126,7 @@ public class UserService {
      */
     public List<UserDto> allWithDeletedUsers() {
         List<User> users = new ArrayList<>();
-        userRepository.findAllIncludingDeleted().forEach(users::add);
+        userRepository.findAllWithDeleted().forEach(users::add);
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -345,7 +345,7 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
-            userRepository.deletePermanentlyById(userId);
+            userRepository.hardDeleteById(userId);
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundException e) {
             throw e;
@@ -399,7 +399,7 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundByLoginException(login));
 
             // Delete the user
-            userRepository.deletePermanentlyById(userToDelete.getId());
+            userRepository.hardDeleteById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundByLoginException e) {
             throw e;

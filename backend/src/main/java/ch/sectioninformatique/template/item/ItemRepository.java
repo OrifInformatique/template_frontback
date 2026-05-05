@@ -1,14 +1,9 @@
 package ch.sectioninformatique.template.item;
 
-import java.util.List;
-import java.util.Optional;
 
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import jakarta.transaction.Transactional;
+import ch.sectioninformatique.template.app.repository.SoftDeleteRepository;
 
 /**
  * Repository interface for managing Item entities in the database.
@@ -16,16 +11,6 @@ import jakarta.transaction.Transactional;
  * for the Item entity. It is automatically implemented by Spring Data JPA.
  */
 @Repository
-public interface ItemRepository extends CrudRepository<Item, Long>, ItemRepositoryPermanentDelete{
+public interface ItemRepository extends SoftDeleteRepository<Item, Long>{
 
-    Optional<Item> findById(Long id);
-
-    @Query("SELECT u FROM Item u")
-    List<Item> findAllIncludingDeleted();
-
-
-    @Modifying
-    @Transactional
-
-    boolean existsById(Long id);
 }

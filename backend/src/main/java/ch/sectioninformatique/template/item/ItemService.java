@@ -153,7 +153,7 @@ public class ItemService {
     public void deletePermanentById(Long id)
     {
         try {
-            itemRepository.deletePermanentlyById(id);
+            itemRepository.hardDeleteById(id);
 
         } catch (Exception e) {
             throw new ItemNotFoundException(id);
