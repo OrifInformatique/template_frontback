@@ -39,6 +39,7 @@ public class AuthController {
     @Autowired
     private final AuthClient authClient;
 
+
     /**
      * Handles POST requests to "/login"
      * Accepts login credentials (login and password) as a request body, validated
@@ -53,7 +54,19 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-        return authClient.login(credentialsDto)
+            return authClient.login(credentialsDto)
+            .flatMap(response ->{
+                // Handle successful login response
+                UserDto userDto = response.getBody();
+                if (userDto != null) {
+                    // Register the user locally in the system
+                    userService.handleUserLogin(userDto);
+                }
+                // Return HTTP 200 OK with the response body
+                return Mono.just(ResponseEntity.status(response.getStatusCode())
+                        .headers(response.getHeaders())
+                        .body(response.getBody()));
+            })
                 .onErrorResume(ex -> Mono.error(ex))
                 .block();
     }

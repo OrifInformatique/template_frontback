@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
 import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.CredentialsDto;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
@@ -405,6 +406,31 @@ public class UserService {
             throw e;
         } catch (Exception e) {
             throw new PermanentUserDeletionException(e.getMessage());
+        }
+    }
+
+    /**
+     * Called when the user logs in
+     * This method:
+     * - Searches the database for a user with the specified login
+     * - If user is not found, it creates a new user with the provided login and default values for other fields
+     * - If user is found but is marked as deleted, it throws an InactiveUserException
+     * 
+     * @param login The login of the user to find or create
+     */
+    public void handleUserLogin(UserDto userDto){
+        Optional<User> user = userRepository.findByLogin(userDto.getLogin());
+
+        if(user.isEmpty()){
+            User newUser = new User();
+            newUser.setLogin(userDto.getLogin());
+            newUser.setFirstName(userDto.getFirstName());
+            newUser.setLastName(userDto.getLastName());
+            newUser.setMainRole(roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole())).orElseThrow(RoleNotFoundException::new));
+            userRepository.save(newUser);
+        }
+        else if(user.get().isDeleted()){
+            throw new InactiveUserException("user.inactive.orDeleted");
         }
     }
 

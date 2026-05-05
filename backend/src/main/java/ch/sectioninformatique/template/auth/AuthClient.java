@@ -114,6 +114,7 @@ public class AuthClient {
                                                                 .findFirst()
                                                                 .ifPresent(cookie -> builder.header(
                                                                                 HttpHeaders.SET_COOKIE, cookie));
+
                                                 return builder.body(userDto);
                                         });
                                 });
@@ -170,6 +171,7 @@ public class AuthClient {
                                         });
                                 });
         }
+        
 
         /**
          * Call the authentication provider to refresh the access token using a refresh
