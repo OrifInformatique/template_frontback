@@ -1,7 +1,6 @@
 package ch.sectioninformatique.template.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -101,11 +100,4 @@ public class ItemController {
     public void deleteItem(@PathVariable Long id) {
         itemService.deleteItem(id);
     }
-
-    @PutMapping("/{authorId}/")
-    public ResponseEntity<?> putMethodName(@PathVariable Long authorId) {
-        itemService.setAuthorNullByAuthorId(authorId);
-        return ResponseEntity.ok().body("Author set to null for items with author ID: " + authorId);
-    }
-    
 }
