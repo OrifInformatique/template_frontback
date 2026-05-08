@@ -1,16 +1,5 @@
 package ch.sectioninformatique.template.user;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.lang.NonNull;
-
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
@@ -31,11 +20,24 @@ import ch.sectioninformatique.template.user.UserExceptions.UserValidationExcepti
 import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
+
 import jakarta.persistence.EntityManager;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.hibernate.Session;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.lang.NonNull;
 
 /**
  * Service class for managing user-related operations.
