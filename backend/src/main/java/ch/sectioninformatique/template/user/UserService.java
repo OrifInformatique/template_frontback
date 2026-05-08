@@ -51,6 +51,7 @@ import org.springframework.lang.NonNull;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@SuppressWarnings("null")
 public class UserService {
 
     /** EntityManager for database operations */
@@ -510,39 +511,52 @@ public class UserService {
                 });
     }
 
+    /**
+     * Updates a user's information.
+     * @param userId The ID of the user to update
+     * @param newUser The updated user information
+     */
     public void updateUser(Long userId, UserDto newUser) {
-    User existingUser = userRepository.findById(userId)
-            .orElseThrow(UserNotFoundException::new);
 
-    Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
-            .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
+        // Get the existing user
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-    Set<Role> newAppSpecificRoles = new HashSet<>();
-    for (String role : newUser.getAppSpecificRoles()) {
-        Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
-        .orElseThrow(() -> new RoleNotFoundException(role));
-        newAppSpecificRoles.add(newRole);
-   }
+        // Validate and set the new main role
+        Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
+                .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
 
-    existingUser.setFirstName(newUser.getFirstName());
-    existingUser.setLastName(newUser.getLastName());
-    existingUser.setLogin(newUser.getLogin());
-    existingUser.setMainRole(newMainRole);
-    
-    existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
+        // Validate and set the new app-specific roles
+        Set<Role> newAppSpecificRoles = new HashSet<>();
+        for (String role : newUser.getAppSpecificRoles()) {
+            Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
+                    .orElseThrow(() -> new RoleNotFoundException(role));
+            newAppSpecificRoles.add(newRole);
+        }
 
-    existingUser.setUpdatedAt(new Date());
+        // Prepare new user's informations in Entity
+        existingUser.setFirstName(newUser.getFirstName());
+        existingUser.setLastName(newUser.getLastName());
+        existingUser.setLogin(newUser.getLogin());
+        existingUser.setMainRole(newMainRole);
+        existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
 
-    userRepository.save(existingUser);
-}
+        // Save modified Entity
+        userRepository.save(existingUser);
+    }
 
-public void restoreUser(Long userId) {
-    User userToRestore = userRepository.findById(userId)
-            .orElseThrow(UserNotFoundException::new);
+    /**
+     * Restores a soft-deleted user.
+     * @param userId The ID of the user to restore
+     */
+    public void restoreUser(Long userId) {
+        User userToRestore = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-    userToRestore.setDeleted(false);
-    userToRestore.setUpdatedAt(new Date());
+        // Change deleted value in the Entity
+        userToRestore.setDeleted(false);
 
-    userRepository.save(userToRestore);
-}
+        // Save modified Entity
+        userRepository.save(userToRestore);
+    }
 }
