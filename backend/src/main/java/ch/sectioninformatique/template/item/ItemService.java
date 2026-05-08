@@ -179,13 +179,4 @@ public class ItemService {
             })
             .orElseThrow(() -> new ItemNotFoundException(id));
     }
-
-    /**
-     * This method sets the item's author to null for all items associated with the given author ID.
-     * This method is used when a user is deleted from the database.
-     * @param authorId
-     */
-    public void setAuthorNullByAuthorId(Long authorId) {
-        itemRepository.setAuthorNullByAuthorId(authorId);
-    }
 }
