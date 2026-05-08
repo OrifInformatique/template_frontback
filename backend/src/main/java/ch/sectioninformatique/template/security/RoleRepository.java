@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
  * - Support role management operations
  */
 @Repository
+@SuppressWarnings("null")
 public interface RoleRepository extends CrudRepository<Role, Long> {
     /**
      * Finds a role by its name.
