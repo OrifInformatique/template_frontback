@@ -69,9 +69,6 @@ public class UserService {
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
 
-
-
-
     /**
      * Promotes a user to a local app role.
      * This operation:
@@ -349,7 +346,6 @@ public class UserService {
     public UserDto deleteUserPermanent(@NonNull Long userId) {
         try {
             // Get the user to delete
-
             User userToDelete = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -549,5 +545,4 @@ public void restoreUser(Long userId) {
 
     userRepository.save(userToRestore);
 }
-
 }
