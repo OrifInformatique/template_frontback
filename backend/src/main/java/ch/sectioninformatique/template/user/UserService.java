@@ -14,7 +14,6 @@ import org.springframework.lang.NonNull;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
-import ch.sectioninformatique.template.item.ItemRepository;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
@@ -68,7 +67,6 @@ public class UserService {
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
 
-    private final ItemRepository itemsRepository;
 
 
 
@@ -350,7 +348,6 @@ public class UserService {
         try {
             // Get the user to delete
 
-            itemsRepository.setAuthorNullByAuthorId(userId);
             User userToDelete = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 

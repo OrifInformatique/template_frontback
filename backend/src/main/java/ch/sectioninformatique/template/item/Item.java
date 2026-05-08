@@ -3,6 +3,8 @@ package ch.sectioninformatique.template.item;
 import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import ch.sectioninformatique.template.user.User;
@@ -51,7 +53,8 @@ public class Item {
      * Uses eager fetching to ensure author information is always available.
      */
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "author_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "author_id", nullable = true)
     private User author;
 
     /**
