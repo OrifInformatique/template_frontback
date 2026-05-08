@@ -319,6 +319,17 @@ public class UserController {
             return ResponseEntity.ok().body(message);
     }
 
+    /**
+     * Updates a user's information.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Validates the user exists and updates their information
+     * - Returns success/error message
+     *
+     * @param id   The ID of the user to update
+     * @param user The updated user information
+     * @return ResponseEntity with success message or error details
+     */
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDto user ) {
@@ -327,6 +338,16 @@ public class UserController {
         return ResponseEntity.ok().body("User updated successfully.");
     }
 
+    /**
+     * Restores a soft-deleted user.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Validates the user exists and is deleted
+     * - Returns success/error message
+     *
+     * @param id The ID of the user to restore
+     * @return ResponseEntity with success message or error details
+     */
     @PutMapping("/{id}/restore")
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> restoreUser(@PathVariable Long id) {
@@ -334,6 +355,4 @@ public class UserController {
         userService.restoreUser(id);
         return ResponseEntity.ok().body("User restored successfully.");
     }
-
-
 }
