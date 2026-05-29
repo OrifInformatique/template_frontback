@@ -1,8 +1,10 @@
 package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -507,5 +509,38 @@ public class UserService {
                             new UserDeletionException("user.delete.failed.missingResponse", true));
                     }
                 });
+    }
+
+    public UserDto getOrCreateUser(UserDto userDto){
+        
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
+        
+        Role role = roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole()))
+        .orElseThrow(() -> new RoleNotFoundException());
+
+        Set<Role> appSpecificRoles = new HashSet<Role>();
+
+
+        if(optionalUser.isEmpty()){
+
+            for(String roleString : userDto.getAppSpecificRoles()){
+            Role roleFound = roleRepository.findByName(RoleEnum.valueOf(roleString))
+            .orElseThrow(() -> new RoleNotFoundException());
+            appSpecificRoles.add(roleFound);
+        }
+            
+            User newUser = User.builder()
+                .firstName(userDto.getFirstName())
+                .lastName(userDto.getLastName())
+                .login(userDto.getLogin())
+                .mainRole(role)
+                .appSpecificRoles(appSpecificRoles)
+                .build();
+
+            userRepository.save(newUser);
+            return userDto;
+        }
+
+        return userMapper.toUserDto(optionalUser.get());
     }
 }

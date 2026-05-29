@@ -3,10 +3,12 @@ package ch.sectioninformatique.template.auth;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
+import ch.sectioninformatique.template.auth.AuthExceptions.AuthCodeNotFoundException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
@@ -14,6 +16,7 @@ import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsExc
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
+import io.micrometer.core.ipc.http.HttpSender.Response;
 import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
@@ -553,5 +556,41 @@ public class AuthClient {
                                                                                                 error.message()))))
                                 // Convert the response to a ResponseEntity
                                 .toEntity(String.class);
+        }
+
+        public Mono<ResponseEntity<UserDto>> getTokenWithAuthCode(AuthCodeDto dto){
+                return webClient.post()
+                .uri(uriWithOptionalLang("/oauth2/token"))
+                .bodyValue(dto)
+                .exchangeToMono(response ->{
+                        if(response.statusCode().isError()){
+                                return response.bodyToMono(ErrorDto.class)
+                                .flatMap(error ->{
+                                        HttpStatusCode status = response.statusCode();
+                                        if(status.isSameCodeAs(HttpStatus.NOT_FOUND)){
+                                                return Mono.error(new AuthCodeNotFoundException());
+                                        }
+                                        return Mono.error(new RuntimeException(error.message()));
+
+                                });
+                        }
+
+                        //Extract the body
+                        Mono<UserDto> bodyMono = response.bodyToMono(UserDto.class);
+                        return bodyMono.map(userDto ->{
+                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+
+                                // Extract refresh_token cookie directly in the lambda
+                                response.headers().asHttpHeaders()
+                                        .getOrDefault(HttpHeaders.SET_COOKIE,
+                                                        Collections.emptyList())
+                                        .stream()
+                                        .filter(cookie -> cookie.startsWith("refresh_token="))
+                                        .findFirst()
+                                        .ifPresent(cookie -> builder.header(
+                                                        HttpHeaders.SET_COOKIE, cookie));
+                                return builder.body(userDto);
+                        });
+                });
         }
 }
