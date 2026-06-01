@@ -522,12 +522,7 @@ public class UserService {
 
 
         if(optionalUser.isEmpty()){
-
-            for(String roleString : userDto.getAppSpecificRoles()){
-            Role roleFound = roleRepository.findByName(RoleEnum.valueOf(roleString))
-            .orElseThrow(() -> new RoleNotFoundException());
-            appSpecificRoles.add(roleFound);
-        }
+            appSpecificRoles.add(role);
             
             User newUser = User.builder()
                 .firstName(userDto.getFirstName())
