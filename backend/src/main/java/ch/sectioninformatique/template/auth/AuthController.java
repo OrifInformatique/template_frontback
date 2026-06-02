@@ -209,7 +209,10 @@ public class AuthController {
             .map(ResponseEntity :: getBody)
             .block();
 
+        log.error("JWT : {}",user.getToken());
+
         UserDto newUser = userService.getOrCreateUser(user);
+        newUser.setToken(user.getToken());
         return ResponseEntity.ok(newUser);
 
         
