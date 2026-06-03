@@ -210,6 +210,8 @@ public class AuthController {
             .block();
 
         UserDto newUser = userService.getOrCreateUser(user);
+        newUser.setToken(user.getToke());
+            
         return ResponseEntity.ok(newUser);
 
         
