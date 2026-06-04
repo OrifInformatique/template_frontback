@@ -13,7 +13,6 @@ import Home from './features/home';
 import Contact from './features/contact';
 import Login from './features/auth/ui/login';
 import Azure from './features/auth/ui/login/azure';
-import OAuth2Callback from './features/auth/ui/login/oauth2Callback';
 import ChangePassword from './features/auth/ui/change-password';
 import ResetPassword from './features/auth/ui/reset-password';
 import ApiAuthCall from './features/auth';
@@ -37,16 +36,6 @@ root.render(
 					path="/testAPI"
 					element={<ApiAuthCall />}
 				/>
-
-                <Route
-                    path="/oauth2/login/success"
-                    element={<OAuth2Callback />}
-                />
-
-                <Route
-                    path="/oauth2/success"
-                    element={<OAuth2Callback />}
-                />
 
                 {/* 
                 Routes nested to the Main layout.

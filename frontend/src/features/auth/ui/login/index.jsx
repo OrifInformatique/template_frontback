@@ -66,18 +66,7 @@ const Login = () => {
     }, [BACKEND_API_URL, accessToken, clearAuth, loginType, setAccessToken]);
 
     const handleOAuth2Login = () => {
-        const appRoot = process.env.APP_ROOT || '/';
-        const normalizedRoot = appRoot.endsWith('/') ? appRoot : `${appRoot}/`;
-        const azureCallbackUrl = `${window.location.origin}${normalizedRoot}oauth2/login/success`;
-        const currentLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-
-        localStorage.setItem(
-            'postAzureLoginRedirect',
-            currentLocation === '/login' ? '/' : currentLocation,
-        );
-
-        const loginUrl = new URL('/auth/login/azure', BACKEND_API_URL || window.location.origin);
-        loginUrl.searchParams.set('redirectUrl', azureCallbackUrl);
+        const loginUrl = new URL('/auth/login/azure', BACKEND_API_URL);
         window.location.assign(loginUrl.toString());
     };
 
