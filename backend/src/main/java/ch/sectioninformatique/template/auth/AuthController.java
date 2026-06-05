@@ -249,6 +249,12 @@ public class AuthController {
             .status(HttpStatus.FOUND)
             .location(URI.create(redirectUrl))
             .build();
+        newUser.setToken(user.getToken());
+            
+        return ResponseEntity.ok(newUser);
+
+        
+    
 
         // Redirect to the frontend application or return a response indicating successful login
     }

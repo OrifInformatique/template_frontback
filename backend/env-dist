@@ -25,7 +25,7 @@ DB_PASSWORD=pwd
 # You can also use a local instance of spring-auth for development purpose.
 # If you are using docker desktop (Window or iOS) : http://host.docker.internal:{YOUR PORT NUMBER}
 # If you are on Linux, use the docker-compose service name : http://spring-auth-dev:8080
-SPRING_AUTH_URL=http://host.docker.internal::8080
+SPRING_AUTH_URL=http://host.docker.internal:8080
 
 # URL to call for Azure login, which should point to the spring-auth Azure login endpoint.
 AZURE_LOGIN_URL=http://localhost:8080/oauth2/login/azure
