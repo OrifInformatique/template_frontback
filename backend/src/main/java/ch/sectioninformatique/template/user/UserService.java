@@ -519,7 +519,8 @@ public class UserService {
         .orElseThrow(() -> new RoleNotFoundException());
 
         Set<Role> appSpecificRoles = new HashSet<Role>();
-
+        
+        appSpecificRoles.add(role);
 
         if(optionalUser.isEmpty()){
             appSpecificRoles.add(role);
@@ -533,7 +534,7 @@ public class UserService {
                 .build();
 
             userRepository.save(newUser);
-            return userDto;
+            return userMapper.toUserDto(newUser);
         }
 
         return userMapper.toUserDto(optionalUser.get());

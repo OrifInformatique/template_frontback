@@ -120,7 +120,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/login/azure").permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/auth-code").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/auth/after-oauth2-login").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/auth/tokens").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .anyRequest().authenticated();
                     log.debug("HTTP request authorization rules configured");

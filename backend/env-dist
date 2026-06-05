@@ -36,3 +36,5 @@ AFTER_OAUTH2_LOGIN_URL=http://localhost:8081/oauth2/login/success
 
 # JWT Token Configuration
 SECURITY_JWT_TOKEN_SECRET_KEY=your-secret-access-key-here-change-in-production
+SECURITY_JWT_TOKEN_ACCESS_TOKEN_LIFETIME=5m
+SECURITY_JWT_TOKEN_REFRESH_TOKEN_LIFETIME=30d
