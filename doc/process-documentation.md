@@ -154,6 +154,7 @@ sequenceDiagram
     AuthClient->>spring-auth: POST /oauth2/token with the AuthCode
     spring-auth-->>AuthClient: Response with a userDto, token and refresh token
     AuthClient-->>AuthController: Response with spring-auth's response. Create a new user with userDto and store the new user in session
+    AuthController-->>Frontend: Redirect to the frontend
     Frontend->>AuthController: GET /auth/tokens get the userDto and token
     AuthController-->>Frontend: Response with the stored userDto and token and delete the dto and token from the session
 ```
