@@ -242,21 +242,15 @@ public class AuthController {
         log.debug("JWT : {}",user.getToken());
 
         UserDto newUser = userService.getOrCreateUser(user);
+       
+        newUser.setToken(user.getToken());
         session.setAttribute("newUser", newUser);
         newUser.setToken(user.getToken());
 
         return ResponseEntity
             .status(HttpStatus.FOUND)
             .location(URI.create(redirectUrl))
-            .build();
-        newUser.setToken(user.getToken());
-            
-        return ResponseEntity.ok(newUser);
-
-        
-    
-
-        // Redirect to the frontend application or return a response indicating successful login
+            .build(); 
     }
 
     @GetMapping("/tokens")
@@ -264,30 +258,35 @@ public class AuthController {
             HttpSession session = request.getSession();
 
             if(session != null){
-                UserDto userDto = (UserDto) session.getAttribute("newUser");
-                String cookies = (String) session.getAttribute("refresh_token");
-                log.debug("refresh_token : {}", cookies);
-                log.debug("UserDto : {}", userDto);
+                try{
+                    UserDto userDto = (UserDto) session.getAttribute("newUser");
+                    String cookies = (String) session.getAttribute("refresh_token");
+                    log.debug("refresh_token : {}", cookies);
+                    log.debug("UserDto : {}", userDto);
 
-                String refreshToken = cookies
-                    .substring("refresh_token=".length())
-                    .split(";")[0];
+                    String refreshToken = cookies
+                        .substring("refresh_token=".length())
+                        .split(";")[0];
 
-                ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/auth/refresh")
-                    .maxAge(refreshTokenLifeTime)
-                    .sameSite("None")
-                    .build();
+                    ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+                        .httpOnly(true)
+                        .secure(true)
+                        .path("/auth/refresh")
+                        .maxAge(refreshTokenLifeTime)
+                        .sameSite("None")
+                        .build();
 
-                return ResponseEntity
-                    .status(200)
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(userDto);
-                    
-            } 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                    return ResponseEntity
+                        .status(200)
+                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                        .body(userDto);
+                        
+                }
+                catch (NullPointerException e){
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                }
+            }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
     
     
