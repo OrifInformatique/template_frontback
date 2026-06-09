@@ -133,6 +133,32 @@ sequenceDiagram
 ```
 _Sequence Diagram showing the actual authentication flow with spring-auth delegation._
 
+
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant AuthController
+    participant AuthClient
+    participant spring-auth
+    participant Azure
+ 
+    Frontend->>AuthController: /auth/login/azure with the redirect url
+    AuthController->>AuthClient: Create URI with spring-auth URL
+    AuthClient-->>AuthController: Return the URI
+    AuthController->>spring-auth: Redirect to /oauth2/login/azure
+    spring-auth->>Azure: Connects the user
+    Azure-->spring-auth: Response with a connected user
+    spring-auth-->>AuthController: Redirect to the backend with AuthCode
+    AuthController->>AuthClient: AuthClient.getTokenWithAuthCode(AuthCode)
+    AuthClient->>spring-auth: POST /oauth2/token with the AuthCode
+    spring-auth-->>AuthClient: Response with a userDto, token and refresh token
+    AuthClient-->>AuthController: Response with spring-auth's response. Create a new user with userDto and store the new user in session
+    Frontend->>AuthController: GET /auth/tokens get the userDto and token
+    AuthController-->>Frontend: Response with the stored userDto and token and delete the dto and token from the session
+```
+_Sequence Diagram showing login with Azure_
+
 ```mermaid
 sequenceDiagram
     participant Client
