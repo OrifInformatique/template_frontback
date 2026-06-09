@@ -1,10 +1,8 @@
 package ch.sectioninformatique.template.auth;
 
-import java.net.HttpCookie;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
-import io.micrometer.core.ipc.http.HttpSender.Response;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -249,12 +246,6 @@ public class AuthController {
             .status(HttpStatus.FOUND)
             .location(URI.create(redirectUrl))
             .build();
-        newUser.setToken(user.getToken());
-            
-        return ResponseEntity.ok(newUser);
-
-        
-    
 
         // Redirect to the frontend application or return a response indicating successful login
     }

@@ -78,7 +78,7 @@ public class UserController {
      *
      * @return ResponseEntity containing a list of all users who are not soft-deleted
      */
-    @GetMapping("/all")
+    @GetMapping("/")
     @PreAuthorize("hasAuthority('user:read')")
     public ResponseEntity<List<UserDto>> allUsers() {
         List<UserDto> users = userService.allUsers();
