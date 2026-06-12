@@ -12,20 +12,25 @@ import jakarta.transaction.Transactional;
 
 /**
  * Repository interface for managing Item entities in the database.
- * This interface extends Spring's CrudRepository to provide basic CRUD operations
+ * This interface extends Spring's CrudRepository to provide basic CRUD
+ * operations
  * for the Item entity. It is automatically implemented by Spring Data JPA.
  */
 @Repository
-public interface ItemRepository extends CrudRepository<Item, Long>, ItemRepositoryPermanentDelete{
+public interface ItemRepository extends CrudRepository<Item, Long> {
 
     Optional<Item> findById(Long id);
 
     @Query("SELECT u FROM Item u")
     List<Item> findAllIncludingDeleted();
 
-
     @Modifying
     @Transactional
 
     boolean existsById(Long id);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM u Item WHERE u.id = :id")
+    void deletePermanentlyById(Long id);
 }
