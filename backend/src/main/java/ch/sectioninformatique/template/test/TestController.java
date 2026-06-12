@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +40,7 @@ public class TestController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
+    private final MessageSource messageSource;
 
     @Autowired
     private Environment environment;
@@ -95,7 +98,11 @@ public class TestController {
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
 
             userService.promoteToLocalAppRole(userId);
-            return ResponseEntity.ok(Map.of("message", "User promoted to local app role successfully."));
+            String message = messageSource.getMessage(
+                "user.promoted.local",
+                null,
+                LocaleContextHolder.getLocale());
+            return ResponseEntity.ok(Map.of("message", message));
 
     }
 

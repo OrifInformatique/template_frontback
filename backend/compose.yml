@@ -17,6 +17,7 @@ services:
       # Pass environment variables to the container and the Spring Boot app
       SPRING_PROFILES_ACTIVE: "${ENVIRONMENT}"
       PORT: "${PORT}"
+
       # Prod database SPRING_DATASOURCE_URL has to be set in the production environment
       DEV_SPRING_DATASOURCE_URL: "${DEV_SPRING_DATASOURCE_URL}"
       TEST_SPRING_DATASOURCE_URL: "${TEST_SPRING_DATASOURCE_URL}"

@@ -4,6 +4,7 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,8 +71,11 @@ public class AuthController {
      * @return Mono<ResponseEntity<UserDto>> with registration response
      */
     @PostMapping("/register")
-    public ResponseEntity<UserDto> register(@RequestBody @Valid RegisterDto user) {
-        return authClient.register(user)
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<UserDto> register(@RequestHeader("Authorization") String token,
+                                            @RequestBody @Valid RegisterDto user) {
+                                                
+        return authClient.register(token, user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
                     userService.register(user);

@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -47,6 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * - Manages user authentication state
      */
     private final UserAuthenticationProvider userAuthenticationProvider;
+    private final MessageSource messageSource;
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -87,24 +90,40 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(
                             userAuthenticationProvider.validateToken(authElements[1]));
 
-                } catch (SecurityExceptions.JwtTokenExpiredException | 
-                         SecurityExceptions.InvalidJwtSignatureException | 
-                         SecurityExceptions.MalformedJwtException | 
-                         SecurityExceptions.InvalidTokenTypeException | 
-                         SecurityExceptions.JwtVerificationException e) {
+                } catch (SecurityExceptions.JwtTokenExpiredException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("JWT validation failed: {}", e.getMessage());
-                    sendErrorResponse(response, e.getMessage());
+                    sendErrorResponse(response, getMessage("security.jwt.expired"));
+                    return;
+                } catch (SecurityExceptions.InvalidJwtSignatureException e) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("JWT validation failed: {}", e.getMessage());
+                    sendErrorResponse(response, getMessage("security.jwt.invalidSignature"));
+                    return;
+                } catch (SecurityExceptions.MalformedJwtException e) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("JWT validation failed: {}", e.getMessage());
+                    sendErrorResponse(response, getMessage("security.jwt.malformed"));
+                    return;
+                } catch (SecurityExceptions.InvalidTokenTypeException e) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("JWT validation failed: {}", e.getMessage());
+                    sendErrorResponse(response, getMessage("security.jwt.invalidType"));
+                    return;
+                } catch (SecurityExceptions.JwtVerificationException e) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("JWT validation failed: {}", e.getMessage());
+                    sendErrorResponse(response, getMessage("security.jwt.verificationFailed"));
                     return;
                 } catch (JWTVerificationException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("Invalid JWT token: {}", e.getMessage());
-                    sendErrorResponse(response, e.getMessage());
+                    sendErrorResponse(response, getMessage("security.jwt.invalid"));
                     return;
                 } catch (InvalidTokenException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("Invalid token: {}", e.getMessage());
-                    sendErrorResponse(response, e.getMessage());
+                    sendErrorResponse(response, getMessage("security.token.invalid"));
                     return;
                 } catch (RuntimeException e) {
                     // Preserve behavior for other runtime exceptions
@@ -114,7 +133,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             } else if (header != null && !header.isEmpty()) {
                 // Header is present but malformed
                 log.debug("Malformed Authorization header");
-                sendErrorResponse(response, "Malformed Authorization header");
+                sendErrorResponse(response, getMessage("security.authHeader.malformed"));
                 return;
             }
         }
@@ -135,5 +154,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         Map<String, String> errorBody = Map.of("message", message);
         mapper.writeValue(response.getWriter(), errorBody);
         response.getWriter().flush();
+    }
+
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
