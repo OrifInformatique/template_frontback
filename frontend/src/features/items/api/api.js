@@ -15,7 +15,6 @@ export const getItems = async (includeDeleted = false) =>
 {
     try
     {
-        // Uncomment below to use the real backend.
         const response = await api.get(`/items/`, { params: { includeDeleted } });
         return response.data;
     }
@@ -29,8 +28,6 @@ export const modifyItem = async (id, data) =>
 {
     try
     {
-        // Uncomment below to use the real backend.
-        
         const response = await api.put(`/items/${id}`, data);
         return response.data;
     }
@@ -44,8 +41,6 @@ export const deleteItem = async (id) =>
 {
     try
     {
-        // Uncomment below to use the real backend.
-        
         const response = await api.delete(`/items/${id}`);
         return response.data;
     }
@@ -59,8 +54,6 @@ export const restoreItem = async (id) =>
 {
     try
     {
-        // Uncomment below to use the real backend.
-        
         const response = await api.post(`/items/${id}/restore`);
         return response.data;
     }
@@ -74,8 +67,6 @@ export const hardDeleteItem = async (id) =>
 {
     try
     {
-        // Uncomment below to use the real backend.
-        
         const response = await api.delete(`/items/${id}/hard`);
         return response.data;
         
@@ -97,8 +88,6 @@ export const hardDeleteItem = async (id) =>
 export const createItem = async (data) =>
 {
     try {
-        // Uncomment below to use the real backend.
-        
         const response = await api.post(`/items`, data);
         return response.data;
     }
