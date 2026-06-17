@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
-import ch.sectioninformatique.template.item.ItemsDTO;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 
@@ -33,12 +32,20 @@ public class ItemController {
     private ItemService itemService;
 
     /**
+     * Constructor for initializing the ItemController with the required service.
+     *
+     * @param itemService The item service to use
+     */
+    public ItemController(ItemService itemService) {
+        this.itemService = itemService;
+    }
+
+    /**
      * Retrieves all items in the system.
      * Requires the 'item:read' authority to access.
      *
      * @return An Iterable containing all items
      */
-
     @PreAuthorize("hasAuthority('item:read')")
     @GetMapping
     public List<ItemsDTO> getItems(@RequestParam(defaultValue = "false") boolean includeDeleted)

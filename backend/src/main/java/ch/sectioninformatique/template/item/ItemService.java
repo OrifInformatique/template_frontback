@@ -45,9 +45,10 @@ public class ItemService {
      * @param itemRepository Repository for item operations
      * @param userRepository Repository for user operations
      */
-    public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemService(ItemRepository itemRepository, UserRepository userRepository, EntityManager entityManager) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.entityManager = entityManager;
     }
 
     /**

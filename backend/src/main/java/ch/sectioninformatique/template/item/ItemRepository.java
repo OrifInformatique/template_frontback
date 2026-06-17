@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
 
@@ -16,7 +15,7 @@ import jakarta.transaction.Transactional;
  * operations
  * for the Item entity. It is automatically implemented by Spring Data JPA.
  */
-@Repository
+@SuppressWarnings("null")
 public interface ItemRepository extends CrudRepository<Item, Long> {
 
     Optional<Item> findById(Long id);
