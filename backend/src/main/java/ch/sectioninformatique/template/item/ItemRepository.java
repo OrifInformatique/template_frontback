@@ -1,7 +1,6 @@
 package ch.sectioninformatique.template.item;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,18 +17,29 @@ import jakarta.transaction.Transactional;
 @SuppressWarnings("null")
 public interface ItemRepository extends CrudRepository<Item, Long> {
 
-    Optional<Item> findById(Long id);
-
-    @Query("SELECT u FROM Item u")
+    /**
+     * Finds all items, including soft deleted ones.
+     *
+     * @return a list of all items
+     */
+    @Query("SELECT i FROM Item i")
     List<Item> findAllIncludingDeleted();
 
-    @Modifying
-    @Transactional
-
+    /**
+     * Checks if an item with the specified ID exists.
+     *
+     * @param id the ID of the item to check
+     * @return true if the item exists, false otherwise
+     */
     boolean existsById(Long id);
 
+    /**
+     * Deletes an item permanently by its ID.
+     *
+     * @param id the ID of the item to delete
+     */
     @Modifying
     @Transactional
-    @Query("DELETE FROM u Item WHERE u.id = :id")
+    @Query("DELETE FROM Item i WHERE i.id = :id")
     void deletePermanentlyById(Long id);
 }
