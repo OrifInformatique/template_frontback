@@ -16,9 +16,21 @@ const getAccessToken = async () => {
         const response = await api.get('/auth/tokens', {
             baseURL: BACKEND_API_URL || undefined,
         });
-        const accessToken = response?.data?.accessToken || response?.data?.token;
+        const data = response?.data || {};
+        const accessToken = data.accessToken || data.token;
+        const user =
+            data.user ||
+            (data.id
+                ? {
+                      ...data,
+                      roles: data.roles || data.appSpecificRoles,
+                  }
+                : null);
+
         if (accessToken) {
-            useAuthStore.getState().setAccessToken(accessToken);
+            const store = useAuthStore.getState();
+            store.setAccessToken(accessToken);
+            if (user) store.setUser(user);
             return accessToken;
         }
         return null;
