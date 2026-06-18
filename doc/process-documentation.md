@@ -138,25 +138,34 @@ _Sequence Diagram showing the actual authentication flow with spring-auth delega
 ```mermaid
 sequenceDiagram
     participant Frontend
-    participant AuthController
-    participant AuthClient
+    participant Backend
     participant spring-auth
     participant Azure
  
-    Frontend->>AuthController: /auth/login/azure with the redirect url
-    AuthController->>AuthClient: Create URI with spring-auth URL
-    AuthClient-->>AuthController: Return the URI
-    AuthController->>spring-auth: Redirect to /oauth2/login/azure
-    spring-auth->>Azure: Connects the user
-    Azure-->spring-auth: Response with a connected user
-    spring-auth-->>AuthController: Redirect to the backend with AuthCode
-    AuthController->>AuthClient: AuthClient.getTokenWithAuthCode(AuthCode)
-    AuthClient->>spring-auth: POST /oauth2/token with the AuthCode
-    spring-auth-->>AuthClient: Response with a userDto, token and refresh token
-    AuthClient-->>AuthController: Response with spring-auth's response. Create a new user with userDto and store the new user in session
-    AuthController-->>Frontend: Redirect to the frontend
-    Frontend->>AuthController: GET /auth/tokens get the userDto and token
-    AuthController-->>Frontend: Response with the stored userDto and token and delete the dto and token from the session
+    Note over Frontend,Backend: Redirect frontend to spring-auth Azure endpoint
+    Frontend->>Backend: /auth/login/azure with [frontend callback url]
+    Backend->>Backend: Create URI for spring-auth Azure endpoint with [/auth/auth-code callback url]
+    Backend-->>Frontend: Redirect to spring-auth Azure endpoint with [/auth/auth-code callback url]
+
+    Note over Frontend,Azure: Azure login process
+    Frontend->>spring-auth: /oauth2/login/azure with [backend /auth/auth-code callback url]
+    spring-auth->>spring-auth: /oauth2/authorization/azure Spring security's authorisation endpoint
+    spring-auth->>Azure: Initiate Azure login process
+    Azure-->>Frontend: (If needed, redirect frontend to Azure login form)
+    Frontend->>Azure: (If needed, display Azure login form)
+    Azure-->>spring-auth: /oauth2/success with OAuth2AuthenticationToken
+
+    Note over Frontend, spring-auth: Create jwt tokens and send them to the frontend
+    spring-auth->>spring-auth: Create or get the Azure user in spring-auth database
+    spring-auth->>spring-auth: Generate a temporary AuthCode to exchange with client's backend
+    spring-auth->>Backend: [/auth/auth-code callback url] with temporary AuthCode
+    Backend->>spring-auth: /oauth2/token with the temporary AuthCode
+    spring-auth-->>Backend: Response with userDto, access and refresh tokens
+    Backend->>Backend: Create or get the user in local database
+    Backend->>Backend: Store the userDto and tokens in session
+    Backend->>Frontend: Redirect to the [frontend callback url]
+    Frontend->>Backend: GET /auth/tokens get the userDto and tokens from session
+    Backend-->>Frontend: Response with userDto and tokens and delete them from the session
 ```
 _Sequence Diagram showing login with Azure_
 
