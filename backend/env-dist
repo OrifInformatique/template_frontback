@@ -30,9 +30,9 @@ SPRING_AUTH_URL=http://host.docker.internal:8080
 # URL to call for Azure login, which should point to the spring-auth Azure login endpoint.
 AZURE_LOGIN_URL=http://localhost:8080/oauth2/login/azure
 
-# Callback URL for spring-auth application after successful OAuth2 login.
-# This URL should point to the backend endpoint that handles the OAuth2 login success callback
-AFTER_OAUTH2_LOGIN_URL=http://localhost:8081/oauth2/login/success
+# Callback URL after a successfull OAuth2 login with spring-auth.
+# This URL should point to the backend endpoint that handles the temporary authentication code.
+AFTER_OAUTH2_LOGIN_URL=http://localhost:8081/auth/auth-code
 
 # JWT Token Configuration
 SECURITY_JWT_TOKEN_SECRET_KEY=your-secret-access-key-here-change-in-production
