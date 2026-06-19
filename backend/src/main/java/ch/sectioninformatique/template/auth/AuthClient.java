@@ -3,7 +3,6 @@ package ch.sectioninformatique.template.auth;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
@@ -16,7 +15,6 @@ import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsExc
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
-import io.micrometer.core.ipc.http.HttpSender.Response;
 import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
@@ -148,10 +146,10 @@ public class AuthClient {
         }
 
         /**
-         * Builds the URI for spring-auth OAuth2 login with Azure, including an optional redirectUrl query parameter.
+         * Build the URI for the spring-auth OAuth2 login endpoint with Azure,
+         * including a callback url in the query parameter.
          * 
-         * @param redirectUrl The URL to redirect to after successful authentication (optional).
-         * @return The built URI for spring-auth OAuth2 login with Azure.
+         * @return The built URI for spring-auth OAuth2 login endpoint with Azure.
          */
         public URI buildAzureLoginUri() {
                 var builder = org.springframework.web.util.UriComponentsBuilder.fromUriString(azureLoginUrl);
@@ -558,10 +556,16 @@ public class AuthClient {
                                 .toEntity(String.class);
         }
 
-        public Mono<ResponseEntity<UserDto>> getTokenWithAuthCode(AuthCodeDto dto){
+        /**
+         * Retrieves the access and refresh tokens using the provided temporary authentication code.
+         * 
+         * @param authCodeDto The DTO containing the authentication code.
+         * @return A Mono emitting the ResponseEntity with the user details, including tokens
+         */
+        public Mono<ResponseEntity<UserDto>> getTokenWithAuthCode(AuthCodeDto authCodeDto){
                 return webClient.post()
                 .uri(uriWithOptionalLang("/oauth2/token"))
-                .bodyValue(dto)
+                .bodyValue(authCodeDto)
                 .exchangeToMono(response ->{
                         if(response.statusCode().isError()){
                                 return response.bodyToMono(ErrorDto.class)
