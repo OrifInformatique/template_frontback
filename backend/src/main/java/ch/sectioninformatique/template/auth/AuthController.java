@@ -222,14 +222,14 @@ public class AuthController {
 
         HttpSession session = request.getSession();
 
-        AuthCodeDto dto = AuthCodeDto.builder()
+        AuthCodeDto authCodeDto = AuthCodeDto.builder()
             .code(authCode)
             .id(userId)
             .build();
 
         // Exchange the AuthCode provided by spring-auth application and get
         // a ResponseEntity containing user informations, including tokens
-        ResponseEntity<UserDto> response = authClient.getTokenWithAuthCode(dto).block();
+        ResponseEntity<UserDto> response = authClient.getTokenWithAuthCode(authCodeDto).block();
     
         UserDto user = response.getBody();
         List<String> cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
@@ -244,11 +244,10 @@ public class AuthController {
 
         log.debug("Got tokens, get or create the logged user in local database");
 
-        UserDto newUser = userService.getOrCreateUser(user);
+        UserDto loggedUser = userService.getOrCreateUser(user);
        
-        newUser.setToken(user.getToken());
-        session.setAttribute("loggedUser", newUser);
-        newUser.setToken(user.getToken());
+        loggedUser.setToken(user.getToken());
+        session.setAttribute("loggedUser", loggedUser);
 
         log.debug("Redirecting to: {}", redirectUrl);
         return ResponseEntity
