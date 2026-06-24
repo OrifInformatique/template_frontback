@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-
 public class UserAuthenticationProvider {
 
     private final UserService userService;
