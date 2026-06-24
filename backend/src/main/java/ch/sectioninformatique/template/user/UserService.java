@@ -1,13 +1,15 @@
 package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
+import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.Role;
@@ -48,11 +50,9 @@ import org.hibernate.Session;
 public class UserService {
 
     /** EntityManager for database operations */
-    @Autowired
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     /** Repository for user data access */
-    @Autowired
     private final UserRepository userRepository;
 
     /** Repository for role data access */
@@ -503,5 +503,34 @@ public class UserService {
                             new UserDeletionException("user.delete.failed.missingResponse", true));
                     }
                 });
+    }
+
+    public UserDto getOrCreateUser(UserDto userDto){
+        
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
+        
+        Role role = roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole()))
+        .orElseThrow(() -> new RoleNotFoundException());
+
+        Set<Role> appSpecificRoles = new HashSet<Role>();
+        
+        appSpecificRoles.add(role);
+
+        if(optionalUser.isEmpty()){
+            appSpecificRoles.add(role);
+            
+            User newUser = User.builder()
+                .firstName(userDto.getFirstName())
+                .lastName(userDto.getLastName())
+                .login(userDto.getLogin())
+                .mainRole(role)
+                .appSpecificRoles(appSpecificRoles)
+                .build();
+
+            userRepository.save(newUser);
+            return userMapper.toUserDto(newUser);
+        }
+
+        return userMapper.toUserDto(optionalUser.get());
     }
 }
