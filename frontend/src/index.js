@@ -12,7 +12,7 @@ import MainLayout from './common/layouts/MainLayout';
 import Home from './features/home';
 import Contact from './features/contact';
 import Login from './features/auth/ui/login';
-import Azure from './features/auth/ui/login/azure';
+import AzureCallback from './features/auth/ui/login/AzureCallback';
 import ChangePassword from './features/auth/ui/change-password';
 import ResetPassword from './features/auth/ui/reset-password';
 import ApiAuthCall from './features/auth';
@@ -68,7 +68,7 @@ root.render(
 
                     <Route
                         path="/azure"
-                        element={<Azure />}
+                        element={<AzureCallback />}
                     />
 
                     <Route

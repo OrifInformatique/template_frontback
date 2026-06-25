@@ -30,14 +30,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.stereotype.Service;
+import org.springframework.lang.NonNull;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.hibernate.Session;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.lang.NonNull;
 
 /**
  * Service class for managing user-related operations.
@@ -55,8 +56,7 @@ import org.springframework.lang.NonNull;
 public class UserService {
 
     /** EntityManager for database operations */
-    @Autowired
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     /** Repository for user data access */
     private final UserRepository userRepository;
@@ -558,5 +558,34 @@ public class UserService {
 
         // Save modified Entity
         userRepository.save(userToRestore);
+    }
+
+    public UserDto getOrCreateUser(UserDto userDto){
+        
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
+        
+        Role role = roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole()))
+        .orElseThrow(() -> new RoleNotFoundException());
+
+        Set<Role> appSpecificRoles = new HashSet<Role>();
+        
+        appSpecificRoles.add(role);
+
+        if(optionalUser.isEmpty()){
+            appSpecificRoles.add(role);
+            
+            User newUser = User.builder()
+                .firstName(userDto.getFirstName())
+                .lastName(userDto.getLastName())
+                .login(userDto.getLogin())
+                .mainRole(role)
+                .appSpecificRoles(appSpecificRoles)
+                .build();
+
+            userRepository.save(newUser);
+            return userMapper.toUserDto(newUser);
+        }
+
+        return userMapper.toUserDto(optionalUser.get());
     }
 }
