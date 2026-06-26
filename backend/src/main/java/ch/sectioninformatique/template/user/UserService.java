@@ -24,7 +24,6 @@ import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException
 import jakarta.persistence.EntityManager;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -37,8 +36,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.hibernate.Session;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Service class for managing user-related operations.
