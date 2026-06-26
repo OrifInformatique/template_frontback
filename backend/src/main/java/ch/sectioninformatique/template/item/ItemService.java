@@ -2,11 +2,9 @@ package ch.sectioninformatique.template.item;
 
 import jakarta.persistence.EntityManager;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,21 +106,25 @@ public class ItemService {
     }
 
     /**
+     * By default, getItems method returns only non-deleted items.
+     * 
+     * @return An Iterable containing all non-deleted items
+     */
+    public List<Item> getItems() {
+        return getItems(false);
+    }
+
+    /**
      * Retrieves all items in the system.
      *
-     * @return An Iterable containing all items
+     * @param includeDeleted Whether to include soft-deleted items
+     * @return A List containing all items including or not soft-deleted ones
      */
-    public Iterable<Item> getItems(boolean includeDeleted)
-    {
-        Session session = entityManager.unwrap(Session.class);
-        if(includeDeleted) {
-            session.disableFilter("delete");
-        } else {
-            session.enableFilter("delete").setParameter("deleted", false);
+    public List<Item> getItems(boolean includeDeleted) {
+        if (includeDeleted) {
+            return itemRepository.findAllIncludingDeleted();
         }
-        List<Item> items = new ArrayList<>();
-        itemRepository.findAll().forEach(items::add);
-        return items;
+        return itemRepository.findAllByDeletedFalse();
     }
 
     /**

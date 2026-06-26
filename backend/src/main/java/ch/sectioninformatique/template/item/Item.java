@@ -5,11 +5,8 @@ import ch.sectioninformatique.template.user.User;
 import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -38,8 +35,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE items SET deleted = true WHERE id = ?")
-@FilterDef(name = "delete", parameters = @ParamDef(name = "deleted", type = Boolean.class))
-@Filter(name = "delete", condition = "deleted = :deleted")
 public class Item {
 
     /**
