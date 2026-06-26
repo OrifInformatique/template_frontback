@@ -21,8 +21,6 @@ import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletion
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
 
-import jakarta.persistence.EntityManager;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,8 +32,6 @@ import org.springframework.lang.NonNull;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.hibernate.Session;
 
 /**
  * Service class for managing user-related operations.
@@ -51,9 +47,6 @@ import org.hibernate.Session;
 @Slf4j
 @SuppressWarnings("null")
 public class UserService {
-
-    /** EntityManager for database operations */
-    private final EntityManager entityManager;
 
     /** Repository for user data access */
     private final UserRepository userRepository;
@@ -111,10 +104,9 @@ public class UserService {
      * @return List of all User entities
      */
     public List<UserDto> allUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", false);
         List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
+        users = userRepository.findAllByDeletedFalse();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -129,7 +121,8 @@ public class UserService {
      */
     public List<UserDto> allWithDeletedUsers() {
         List<User> users = new ArrayList<>();
-        userRepository.findAllIncludingDeleted().forEach(users::add);
+        users = userRepository.findAllIncludingDeleted();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -143,10 +136,9 @@ public class UserService {
      * @return List of soft-deleted User entities
      */
     public List<UserDto> deletedUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", true);
         List<User> users = new ArrayList<>();
-        userRepository.findAllDeleted().forEach(users::add);
+        users = userRepository.findAllDeleted();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));

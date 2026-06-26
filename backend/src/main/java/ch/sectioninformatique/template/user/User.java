@@ -24,9 +24,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -45,8 +42,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @Builder
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
-@FilterDef(name = "deletedFilter", parameters = @ParamDef(name = "isDeleted", type = Boolean.class))
-@Filter(name = "deletedFilter", condition = "deleted = :isDeleted")
 public class User {
 
     /** Unique identifier for the user */
