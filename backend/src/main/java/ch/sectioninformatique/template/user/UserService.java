@@ -101,7 +101,7 @@ public class UserService {
     /**
      * Retrieves all users in the system (not including soft-deleted users).
      *
-     * @return List of all User entities
+     * @return List of all users as UserDto
      */
     public List<UserDto> allUsers() {
         List<User> users = new ArrayList<>();
@@ -117,7 +117,7 @@ public class UserService {
     /**
      * Retrieves all users including soft-deleted ones.
      *
-     * @return List of all User entities including deleted
+     * @return List of all users as UserDto including deleted ones
      */
     public List<UserDto> allWithDeletedUsers() {
         List<User> users = new ArrayList<>();
@@ -133,9 +133,9 @@ public class UserService {
     /**
      * Retrieves only soft-deleted users.
      *
-     * @return List of soft-deleted User entities
+     * @return List of soft-deleted users as UserDto
      */
-    public List<UserDto> deletedUsers() {
+        public List<UserDto> deletedUsers() {
         List<User> users = new ArrayList<>();
         users = userRepository.findAllDeleted();
 
@@ -501,7 +501,8 @@ public class UserService {
     }
 
     /**
-     * Updates a user's information.
+     * Updates a user's informations.
+     * 
      * @param userId The ID of the user to update
      * @param newUser The updated user information
      */
