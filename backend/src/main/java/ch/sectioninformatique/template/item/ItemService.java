@@ -108,7 +108,7 @@ public class ItemService {
     /**
      * By default, getItems method returns only non-deleted items.
      * 
-     * @return An Iterable containing all non-deleted items
+     * @return A List containing all non-deleted items
      */
     public List<Item> getItems() {
         return getItems(false);
@@ -161,7 +161,7 @@ public class ItemService {
     {
         try {
             itemRepository.deletePermanentlyById(id);
-
+L contai
         } catch (Exception e) {
             throw new ItemNotFoundException(id);
         }
