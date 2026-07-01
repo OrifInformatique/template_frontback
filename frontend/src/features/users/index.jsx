@@ -33,7 +33,7 @@ function UserList() {
 
         useEffect(() => {
             fetchUsers();
-        }, [showDeleted, users]);
+        }, [showDeleted]);
 
         const actions = useMemo(() => ({
             edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user); setFormOpen(true)}},
