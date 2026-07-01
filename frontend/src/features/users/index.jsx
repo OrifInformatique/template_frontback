@@ -20,6 +20,7 @@ function UserList() {
 
         const fetchUsers = async () => {
                 try {
+                    // console.log(showDeleted)
                     const response = showDeleted 
                     ? await getUserWithDeleted()
                     : await getUsers();
@@ -36,8 +37,8 @@ function UserList() {
         }, [showDeleted]);
 
         const actions = useMemo(() => ({
-            edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user); setFormOpen(true)}},
-            delete: { permission: "user:delete", onClick: (user) => deleteUserLocal(user.id).then(() => deleteUserDistant(user.id).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err))) },
+            edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user), setFormOpen(true)}},
+            delete: { permission: "user:delete", onClick: (user) => { deleteUserLocal(user.id).then(() => deleteUserDistant(user.id).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err)))}},
             hardDelete: { permission: "user:delete", onClick: (user) => hardDeleteUserLocal(user.id).then(() => hardDeleteUserDistant(user.id).then(() => fetchUsers())).catch((err) => console.error("Hard delete failed:", err)) },
             viewDeleted: { permission: "user:read"},
             restore: { permission: "user:update", onClick: (user) => restoreUser(user.id).then(() => restoreDistantUser(user.id).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err))) }
@@ -52,7 +53,7 @@ function UserList() {
                 console.log(`Action "${actionKey}" is allowed for user with permissions:`, usersPermissions);
                 return acc;
             }, {})
-        , [user]);
+        , [user, actions]);
 
         return (
             <div>
@@ -66,6 +67,7 @@ function UserList() {
                 {user?.permissions?.includes("user:write") && (
                     <Button label="Create User" variant="primary" className="mb-4" onClick={() => { setSelectedUser(null); setFormOpen(true); }} />
                 )}
+
                 <List
                     items={users}
                     actions={allowedAction}
