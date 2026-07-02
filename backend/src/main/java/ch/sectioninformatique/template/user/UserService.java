@@ -189,9 +189,25 @@ public class UserService {
             User user = userMapper.signUpToUser(registerDto);
 
             // Add default USER role
-            Role userRole = roleRepository.findByName(RoleEnum.USER)
-                .orElseThrow(DefaultRoleNotFoundException::new);
-            user.setMainRole(userRole);
+            if(registerDto.mainRole() == null ){ // || registerDto.mainRole().isBlank() add once field is implemented in front
+                Role userRole = roleRepository.findByName(RoleEnum.USER).orElseThrow(DefaultRoleNotFoundException::new);
+            }
+            else{
+                Role userRole = registerDto.mainRole();
+            }
+            // Add default USER role
+            if(registerDto.appSpecificRoles() != null){ // || registerDto.appSpecificRoles().isBlank() add once field is implemented in front
+                Set<Role> appSpecificRoles = registerDto.appSpecificRoles();
+            }
+            else{
+                
+            }
+            
+
+
+            //Role userRole = roleRepository.findByName(RoleEnum.USER)
+            //    .orElseThrow(DefaultRoleNotFoundException::new);
+            //user.setMainRole(userRole);
 
             User savedUser = userRepository.save(user);
             return savedUser;
@@ -227,7 +243,7 @@ public class UserService {
 
             if (localUser == null) {
                 RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                        userDto.getLogin(), null);
+                        userDto.getLogin(), null, null, null);
 
                 localUser = this.register(newUser);
             }
