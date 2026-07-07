@@ -189,26 +189,26 @@ public class UserService {
             User user = userMapper.signUpToUser(registerDto);
 
             // Add default USER role
-            if(registerDto.mainRole() == null ){ // || registerDto.mainRole().isBlank() add once field is implemented in front
-                Role userRole = roleRepository.findByName(RoleEnum.USER).orElseThrow(DefaultRoleNotFoundException::new);
+            if(registerDto.mainRole() == null || registerDto.mainRole().isBlank()){ 
+                Role userRole = roleRepository.findByName(RoleEnum.USER).orElseThrow(RoleNotFoundException::new);
+                user.setMainRole(userRole);
             }
             else{
-                Role userRole = registerDto.mainRole();
+                Role userRole = roleRepository.findByName(RoleEnum.valueOf(registerDto.mainRole())).orElseThrow(RoleNotFoundException::new);
+                user.setMainRole(userRole);
             }
+            
             // Add default USER role
-            if(registerDto.appSpecificRoles() != null){ // || registerDto.appSpecificRoles().isBlank() add once field is implemented in front
-                Set<Role> appSpecificRoles = registerDto.appSpecificRoles();
-            }
-            else{
+            if(registerDto.appSpecificRoles() != null ){ // || registerDto.appSpecificRoles().isBlank() add once field is implemented in front
+                
+                Set<Role> appSpecificRoles = new HashSet<>();
+                for (String role : registerDto.appSpecificRoles()) {
+                    appSpecificRoles.add(roleRepository.findByName(RoleEnum.valueOf(role)).orElseThrow(RoleNotFoundException::new));
+                    user.setAppSpecificRoles(appSpecificRoles);
+                }
                 
             }
             
-
-
-            //Role userRole = roleRepository.findByName(RoleEnum.USER)
-            //    .orElseThrow(DefaultRoleNotFoundException::new);
-            //user.setMainRole(userRole);
-
             User savedUser = userRepository.save(user);
             return savedUser;
         } catch (UserValidationException | DuplicateUserException | DefaultRoleNotFoundException e) {

@@ -1,8 +1,6 @@
 package ch.sectioninformatique.template.auth;
 
-import java.util.Set;
-
-import ch.sectioninformatique.template.security.Role;
+import java.util.List;
 
 /**
  * Data transfer object for user registration.
@@ -16,4 +14,4 @@ import ch.sectioninformatique.template.security.Role;
  * @param mainRole          The user's main role
  * @param appSpecificRoles  The user's appSpecificRoles
  */
-public record RegisterDto(String firstName, String lastName, String login, char[] password, Role mainRole , Set<Role> appSpecificRoles ) {}
+public record RegisterDto(String firstName, String lastName, String login, char[] password, String mainRole , List<String> appSpecificRoles ) {}
