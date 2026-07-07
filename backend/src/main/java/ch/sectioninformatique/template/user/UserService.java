@@ -204,9 +204,8 @@ public class UserService {
                 Set<Role> appSpecificRoles = new HashSet<>();
                 for (String role : registerDto.appSpecificRoles()) {
                     appSpecificRoles.add(roleRepository.findByName(RoleEnum.valueOf(role)).orElseThrow(RoleNotFoundException::new));
-                    user.setAppSpecificRoles(appSpecificRoles);
                 }
-                
+                user.setAppSpecificRoles(appSpecificRoles);
             }
             
             User savedUser = userRepository.save(user);
