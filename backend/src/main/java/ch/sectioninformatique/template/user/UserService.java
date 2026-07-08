@@ -188,18 +188,20 @@ public class UserService {
 
             User user = userMapper.signUpToUser(registerDto);
 
-            // Add default USER role
+            // Define the user's main role (transversal for all applications)
             if(registerDto.mainRole() == null || registerDto.mainRole().isBlank()){ 
+                // No role is provided, add default USER role
                 Role userRole = roleRepository.findByName(RoleEnum.USER).orElseThrow(RoleNotFoundException::new);
                 user.setMainRole(userRole);
             }
             else{
+                // Add the provided role
                 Role userRole = roleRepository.findByName(RoleEnum.valueOf(registerDto.mainRole())).orElseThrow(RoleNotFoundException::new);
                 user.setMainRole(userRole);
             }
             
-            // Add default USER role
-            if(registerDto.appSpecificRoles() != null ){ // || registerDto.appSpecificRoles().isBlank() add once field is implemented in front
+            // Define the user's specific role(s) for this application
+            if(registerDto.appSpecificRoles() != null ){
                 
                 Set<Role> appSpecificRoles = new HashSet<>();
                 for (String role : registerDto.appSpecificRoles()) {
