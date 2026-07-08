@@ -24,8 +24,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserMapper;
 import ch.sectioninformatique.template.user.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -49,6 +52,9 @@ public class AuthController {
 
     /** Client to send authentication requests to the spring-auth application */
     private final AuthClient authClient;
+
+    /** Mapper for converting between User entities and DTOs */
+    private final UserMapper userMapper;
 
     // Logger for debugging and monitoring the authentication flow.
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -100,10 +106,11 @@ public class AuthController {
         return authClient.register(token, user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
-                    userService.register(user);
+                    User localUser = userService.register(user);
+                    UserDto localUserDto = userMapper.toUserDto(localUser);
 
-                    // Return HTTP 200 OK with the response body
-                    return Mono.just(response);
+                    // Return HTTP 200 OK with the locally registered user
+                    return Mono.just(ResponseEntity.status(response.getStatusCode()).body(localUserDto));
                 })
                 .block();
     }
