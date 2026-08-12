@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button, InputText, MultiSelect  } from '@orif-informatique/react-components-library';
 
-import { createUser, updateAuthUser, updateUser, createAuthUser, getRoles } from "./api/api";
+import { createUser, updateUser, getRoles } from "./api/api";
 
 function UserForm({ user, onClose }) {
 const [firstName, setFirstName] = useState(user ? user.firstName : "");
@@ -83,36 +83,19 @@ return (
             <Button 
             label={user ? "Save" : "Create"} 
             variant="primary" 
-            onClick={() => { user ? Promise.all([
-                updateUser(user.id, {
-                    "firstName" : firstName, 
-                    "lastName" : lastName, 
-                    "login" : login,
-                    "mainRole" : userRoles,
-                    "appSpecificRoles" : userAppSpefRole
-            }),
-                
-                updateAuthUser(user.id,{
+            onClick={() => { user ? updateUser(user.id, {
                     "firstName" : firstName,
                     "lastName" : lastName,
                     "login" : login,
                     "mainRole" : userRoles,
-                    "password" : password,
-                })
-            ]).then(() => onClose()).catch((err) => console.error("Update failed:", err)) :
-            Promise.all([
+                    "appSpecificRoles" : userAppSpefRole
+            }).then(() => onClose()).catch((err) => console.error("Update failed:", err)) :
             createUser({
                 "firstName" : firstName,
                 "lastName" : lastName,
                 "login" : login,
                 "password" : password
-            }),
-            createAuthUser({
-                "firstName" : firstName,
-                "lastName" : lastName,
-                "login" : login,
-                "password" : password
-            })]).then(() => onClose()).catch((err) => console.error("Create failed:", err)) }} />
+            }).then(() => onClose()).catch((err) => console.error("Create failed:", err)) }} />
         </div>
     </>
 
