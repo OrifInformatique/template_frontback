@@ -1,4 +1,3 @@
-import auth from "./authClient";
 import api from "../../auth/ui/api/apiClient";
 
 export const getUsers = async () => {
@@ -92,28 +91,6 @@ export const updateUser = async (id, data) => {
     }
 };
 
-export const updateAuthUser = async (id, data) => {
-    try {
-        const response = await auth.put(`/users/${id}`, data);
-        return response.data;
-    }
-    catch(error) {
-        console.error(`Error while updating authenticated user: ${error.message}`);
-        return null;
-    }
-};
-
-export const createAuthUser = async (data) => {
-    try {
-        const response = await auth.post(`/auth/register`, data);
-        return response.data;
-    }
-    catch(error) {
-        console.error(`Error while creating authenticated user: ${error.message}`);
-        return null;
-    }
-};
-
 export const getUserWithDeleted = async () => {
     try {
         const response = await api.get(`/users/all-with-deleted`);
@@ -135,14 +112,3 @@ export const restoreUser = async (id) => {
         return null;
     }
 };
-
-export const restoreDistantUser = async (id) => {
-    try{
-        const response = await  auth.put(`/users/${id}/restore`)
-        return response.data;
-    }
-    catch (error) {
-        console.error(`Error whil restoring user : ${error.message}`);
-        return null
-    }
-}

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import  { useTranslation } from 'react-i18next'
 import useAuthStore from '../auth/authStore';
 
-import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers, getUserWithDeleted, restoreDistantUser} from './api/api';
+import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers, getUserWithDeleted} from './api/api';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import UserForm from './userForm';
 
@@ -41,7 +41,7 @@ function UserList() {
             delete: { permission: "user:delete", onClick: (user) => { deleteUserLocal(user.id).then(() => deleteUserDistant(user.id).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err)))}},
             hardDelete: { permission: "user:delete", onClick: (user) => hardDeleteUserLocal(user.id).then(() => hardDeleteUserDistant(user.id).then(() => fetchUsers())).catch((err) => console.error("Hard delete failed:", err)) },
             viewDeleted: { permission: "user:read"},
-            restore: { permission: "user:update", onClick: (user) => restoreUser(user.id).then(() => restoreDistantUser(user.id).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err))) }
+            restore: { permission: "user:update", onClick: (user) => restoreUser(user.id).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err)) }
         }), [showDeleted]);
 
 
