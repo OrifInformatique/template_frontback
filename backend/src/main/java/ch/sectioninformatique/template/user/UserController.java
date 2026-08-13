@@ -149,7 +149,7 @@ public class UserController {
     }
 
     /**
-     * Handles permanent DELETE requests to "/{userId}/{global}/permanent"
+     * Handles permanent DELETE requests to "/{userId}/{global}/{hardDelete}"
      * Permanently deletes a user either locally or from the global auth service,
      * based on the 'global' flag
      * If 'global' is false, permanently deletes the user from the local database
@@ -159,17 +159,30 @@ public class UserController {
      * 
      * @param userId The ID of the user to permanently delete
      * @param global Flag indicating whether to delete locally or globally
+     * @param hardDelete A boolean for soft or hard delete (default: false)
      * @return ResponseEntity with permanent deletion result message
      */
-    @DeleteMapping("/{userId}/{global}/permanent")
+    @DeleteMapping("/{userId}/{global}/{hardDelete}")
     @PreAuthorize("hasAuthority('user:delete')")
     public Mono<ResponseEntity<?>> deletePermanent(@RequestHeader("Authorization") String token,
             @PathVariable Long userId,
-            @PathVariable boolean global) {
+            @PathVariable boolean global, @PathVariable(required = false) Boolean hardDelete) {
+        
+        // If hardDelete parameter is null, default to false (soft delete)
+        boolean isHardDelete = hardDelete != null ? hardDelete : false;
+
         // Determine permanent deletion scope based on global flag
         if (global) {
-            return userService.deleteGlobalAndLocalPermanent(token, userId)
+            if (isHardDelete) {
+                
+                return userService.deleteGlobalAndLocalPermanent(token, userId, isHardDelete)
                     .map(message -> ResponseEntity.ok(Map.of("message", message)));
+            }
+            else{
+               
+                return userService.deleteGlobalAndLocal(token, userId)
+                    .map(message -> ResponseEntity.ok(Map.of("message", message))); 
+            }
         } else {
             // Permanently delete user from local database only
             userService.deleteUserPermanent(userId);

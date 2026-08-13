@@ -500,11 +500,12 @@ public class UserService {
      *
      * @param token  The authorization token
      * @param userId The ID of the user to permanently delete
+     * @param hardDelete A boolean for soft or hard delete (default: false)
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
-        return authClient.deleteGlobalUserPermanent(token, userId)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId, Boolean hardDelete) {
+        return authClient.deleteGlobalUserPermanent(token, userId, hardDelete)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
