@@ -409,7 +409,7 @@ public class UserControllerTest {
         Map<String, String> authServiceResponse = Map.of(
                 "deletedUserLogin", "test.admin2@test.com",
                 "message", "User deleted from auth service");
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin())))
                 .thenReturn(Mono.just(ResponseEntity.ok(authServiceResponse)));
 
         performRequest(
@@ -423,7 +423,7 @@ public class UserControllerTest {
                 null);
 
         // Verify the auth client was called
-        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()));
+        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin()));
         // Verify DB side effect (soft or hard delete)
         assertUserDeleted(admin2User);
     }
@@ -452,7 +452,7 @@ public class UserControllerTest {
         assertNotNull(managerUser, "Test manager user should exist");
 
         // Mock the external auth service to return an error
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getLogin())))
                 .thenReturn(Mono.error(new UserDeletionException("Failed to delete user from auth service")));
 
         performRequest(
@@ -573,7 +573,7 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Test manager user should exist");
 
         // Mock auth client to return error for global delete
-        when(authClient.deleteGlobalUser(any(String.class), any(Long.class)))
+        when(authClient.deleteGlobalUser(any(String.class), any(String.class)))
             .thenReturn(Mono.error(new UserDeletionException("Database constraint violation")));
 
         performRequest(
@@ -816,7 +816,7 @@ public class UserControllerTest {
                 "message", "User deleted successfully",
             "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUser(anyString(), anyLong()))
+        when(authClient.deleteGlobalUser(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
@@ -939,7 +939,7 @@ public class UserControllerTest {
                 "message", "User deleted permanently",
             "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong()))
+        when(authClient.deleteGlobalUserPermanent(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
@@ -1001,7 +1001,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.user@test.com");
         assertNotNull(userToPromote, "Test user should exist");
-        when(authClient.promoteToManager(anyString(), anyLong()))
+        when(authClient.promoteToManager(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("User promoted to manager successfully")));
 
         performRequest(
@@ -1060,7 +1060,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToRevoke, "Test manager user should exist");
-        when(authClient.revokeManager(anyString(), anyLong()))
+        when(authClient.revokeManager(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Manager role revoked successfully")));
 
         performRequest(
@@ -1119,7 +1119,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToPromote, "Test manager user should exist");
-        when(authClient.promoteToAdmin(anyString(), anyLong()))
+        when(authClient.promoteToAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role assigned successfully")));
 
         performRequest(
@@ -1178,7 +1178,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToRevoke, "Test admin2 user should exist");
-        when(authClient.revokeAdmin(anyString(), anyLong()))
+        when(authClient.revokeAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role revoked successfully")));
 
         performRequest(
@@ -1237,7 +1237,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDowngrade = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToDowngrade, "Test admin2 user should exist");
-        when(authClient.downgradeAdmin(anyString(), anyLong()))
+        when(authClient.downgradeAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role downgraded successfully")));
 
         performRequest(

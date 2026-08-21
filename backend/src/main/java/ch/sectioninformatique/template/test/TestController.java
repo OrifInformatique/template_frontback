@@ -93,11 +93,11 @@ public class TestController {
      * @param userId The ID of the user to promote
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userId}/promote-test")
+    @PutMapping("/{userLogin}/promote-test")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
+    public ResponseEntity<?> promoteToTestAdmin(@PathVariable String userLogin) {
 
-            userService.promoteToLocalAppRole(userId);
+            userService.promoteToLocalAppRole(userLogin);
             String message = messageSource.getMessage(
                 "user.promoted.local",
                 null,
