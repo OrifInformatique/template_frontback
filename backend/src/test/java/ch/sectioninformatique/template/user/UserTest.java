@@ -62,7 +62,6 @@ class UserTest {
         userRole.setName(RoleEnum.USER);
 
         User user = User.builder()
-                .mainRole(userRole)
                 .build();
 
         // When
@@ -90,42 +89,15 @@ class UserTest {
         // When
         User user = User.builder()
                 .id(TEST_ID)
-                .firstName(TEST_FIRST_NAME)
-                .lastName(TEST_LAST_NAME)
                 .login(TEST_LOGIN)
                 .createdAt(TEST_CREATED_AT)
                 .updatedAt(TEST_UPDATED_AT)
-                .mainRole(role)
                 .build();
 
         // Then
         assertEquals(TEST_ID, user.getId());
-        assertEquals(TEST_FIRST_NAME, user.getFirstName());
-        assertEquals(TEST_LAST_NAME, user.getLastName());
         assertEquals(TEST_LOGIN, user.getLogin());
         assertEquals(TEST_CREATED_AT, user.getCreatedAt());
         assertEquals(TEST_UPDATED_AT, user.getUpdatedAt());
-        assertEquals(role, user.getMainRole());
-    }
-
-    /**
-     * Tests role management.
-     * Verifies that:
-     * - Roles can be added
-     * - First role can be retrieved
-     */
-    @Test
-    void testRoleManagement() {
-        // Given
-        User user = User.builder().build();
-        Role role = new Role();
-        role.setName(RoleEnum.USER);
-
-        // When
-        user.setMainRole(role);
-
-        // Then
-        assertEquals(role, user.getMainRole());
-        assertTrue(user.getMainRole() == role);
     }
 } 

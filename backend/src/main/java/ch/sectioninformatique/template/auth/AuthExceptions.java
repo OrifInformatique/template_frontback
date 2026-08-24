@@ -1,8 +1,9 @@
 package ch.sectioninformatique.template.auth;
 
+import org.springframework.http.HttpStatus;
+
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.MessageKeyProvider;
-import org.springframework.http.HttpStatus;
 
 /**
  * Container class for authentication and authorization related exceptions.
@@ -141,6 +142,17 @@ public class AuthExceptions {
         @Override
         public String getMessageKey() {
             return "auth.loginAlreadyExists";
+        }
+    }
+
+    public static class AuthCodeNotFoundException extends AppException implements MessageKeyProvider{
+        public AuthCodeNotFoundException(){
+            super(HttpStatus.NOT_FOUND);
+        }
+
+        @Override
+        public String getMessageKey(){
+            return "auth.code.not.found";
         }
     }
 }

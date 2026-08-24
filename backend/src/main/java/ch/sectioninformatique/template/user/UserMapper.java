@@ -40,14 +40,11 @@ public interface UserMapper {
      * @param user The User entity to convert
      * @return A UserDto containing the user's information
      */
-    @Mapping(target = "mainRole", expression = "java(user.getMainRole().getName().name())")
     @Mapping(target = "appSpecificRoles", expression = "java(user.getAppSpecificRolesString())")
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")
     @Mapping(target = "token", ignore = true)
     @Mapping(target = "deleted", source = "deleted")
     @Mapping(target = "id", source = "id")
-    @Mapping(target = "firstName", source = "firstName")
-    @Mapping(target = "lastName", source = "lastName")
     @Mapping(target = "login", source = "login")
     UserDto toUserDto(User user);
 
@@ -61,7 +58,6 @@ public interface UserMapper {
      * @param RegisterDto The RegisterDto containing user registration data
      * @return A new User entity with the signup information
      */
-    @Mapping(target = "mainRole", ignore = true)
     @Mapping(target = "appSpecificRoles", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "id", ignore = true)

@@ -83,41 +83,23 @@ public class TestUserSeeder implements CommandLineRunner {
 	 */
 	private void loadUserData() {
 		if (this.userRepository.count() == 0) {
-			Role userRole = roleRepository.findByName(RoleEnum.USER)
-					.orElseThrow(() -> new RuntimeException("Role USER not found"));
-			Role managerRole = roleRepository.findByName(RoleEnum.MANAGER)
-					.orElseThrow(() -> new RuntimeException("Role MANAGER not found"));
-			Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-					.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
 			// Create users with User.builder()
 
 			User testUser = User.builder()
-					.firstName("Test")
-					.lastName("User")
 					.login("test.user@test.com")
-					.mainRole(userRole)
 					.build();
 
 			User testManager = User.builder()
-					.firstName("Test")
-					.lastName("Manager")
 					.login("test.manager@test.com")
-					.mainRole(managerRole)
 					.build();
 
 			User testAdmin = User.builder()
-					.firstName("Test")
-					.lastName("Admin")
 					.login("test.admin@test.com")
-					.mainRole(adminRole)
 					.build();
 
 			User testAdmin2 = User.builder()
-					.firstName("Test2")
-					.lastName("Admin2")
 					.login("test.admin2@test.com")
-					.mainRole(adminRole)
 					.build();
 
 			userRepository.saveAll(Arrays.asList(testUser, testManager, testAdmin, testAdmin2));

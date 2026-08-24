@@ -42,13 +42,10 @@ class UserMapperTest {
         // Given
         User user = new User();
         user.setId(1L);
-        user.setFirstName("John");
-        user.setLastName("Doe");
         user.setLogin("johndoe");
         
         Role role = new Role();
         role.setName(RoleEnum.MANAGER);
-        user.setMainRole(role);
 
         // When
         UserDto userDto = userMapper.toUserDto(user);

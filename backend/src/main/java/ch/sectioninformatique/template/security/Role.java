@@ -99,18 +99,6 @@ public class Role {
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    /**
-     * Set of users who have this role as mainRole.
-     * This field:
-     * - Implements a one-to-many relationship with User entity
-     * - Is mapped by the 'mainRole' field in the User class
-     * - Uses eager fetching to ensure the mainRole are always available
-     * - Is ignored during JSON serialization to prevent infinite recursion
-     * - Is initialized as an empty HashSet to prevent null pointer exceptions
-     */
-    @OneToMany(mappedBy = "mainRole", fetch = FetchType.EAGER)
-    @JsonIgnore
-    private Set<User> usersMains = new HashSet<>();
 
     /**
      * Set of users who have this appSpecificRole.

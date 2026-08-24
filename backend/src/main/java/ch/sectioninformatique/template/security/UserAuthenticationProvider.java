@@ -1,10 +1,10 @@
 package ch.sectioninformatique.template.security;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,11 +19,12 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
-import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenTypeException;
-import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
-import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
-import ch.sectioninformatique.template.security.SecurityExceptions.JwtTokenExpiredException;
+import ch.qos.logback.core.subst.Token;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidJwtSignatureException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenTypeException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtTokenExpiredException;
+import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
 import ch.sectioninformatique.template.security.SecurityExceptions.MalformedJwtException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
@@ -37,9 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * This class is responsible for:
  * - Creating and validating JWT tokens
  * - Managing user authentication
- * - Handling OAuth2 integration
  * - Converting user roles and permissions into Spring Security authorities
- * - Managing Azure user creation for OAuth2 users
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -194,11 +193,11 @@ public class UserAuthenticationProvider {
                     .permissions(decoded.getClaim("permissions").asList(String.class))
                     .build();
 
+            log.debug("currentUser : login={} | firstName={} | lastName={} | mainRole={} | appSpecificRoles={}", currentUser.getLogin(), currentUser.getFirstName(), currentUser.getLastName(), currentUser.getMainRole(), currentUser.getAppSpecificRoles());
+
             User localUser = userService.getOrCreateAuthenticatedUser(currentUser);
 
-            userService.updateMainRole(localUser, currentUser);
-
-            List<String> allRoles = userService.getRolesList(localUser);
+            List<String> allRoles = userService.getRolesList(localUser, currentUser);
 
             List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles);
 
@@ -218,7 +217,8 @@ public class UserAuthenticationProvider {
         } catch (InvalidTokenTypeException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected error during token validation: {}", e.getMessage(), e);
+            log.error("Unexpected error during token validation: {} | StackTrace : {}", e.getClass(), e.getStackTrace());
+            log.error("{}", e);
             throw new InvalidTokenException(e.getMessage());
         }
     }

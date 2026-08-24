@@ -1,16 +1,11 @@
 package ch.sectioninformatique.template.user;
 
+import java.util.Arrays;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
-import ch.sectioninformatique.template.security.RoleRepository;
-
 import org.springframework.core.annotation.Order;
-
-import java.util.Arrays;
+import org.springframework.stereotype.Component;
 
 /**
  * Seeder class for initializing the database with default user data.
@@ -28,19 +23,15 @@ public class UserSeeder implements CommandLineRunner {
 	/** Repository for user data access */
 	private final UserRepository userRepository;
 
-	/** Repository for role data access */
-	private final RoleRepository roleRepository;
-
 	/**
 	 * Constructs a new UserSeeder with the required dependencies.
 	 *
 	 * @param userRepository Repository for user data access
 	 * @param roleRepository Repository for role data access
 	 */
-	public UserSeeder(UserRepository userRepository,
-			RoleRepository roleRepository) {
+	public UserSeeder(UserRepository userRepository) {
 		this.userRepository = userRepository;
-		this.roleRepository = roleRepository;
+
 	}
 
 	/**
@@ -81,75 +72,42 @@ public class UserSeeder implements CommandLineRunner {
 	 */
 	private void loadUserData() {
 		if (this.userRepository.count() == 0) {
-			Role userRole = roleRepository.findByName(RoleEnum.USER)
-					.orElseThrow(() -> new RuntimeException("Role USER not found"));
-			Role managerRole = roleRepository.findByName(RoleEnum.MANAGER)
-					.orElseThrow(() -> new RuntimeException("Role MANAGER not found"));
-			Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-					.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
 			// Create users with User.builder()
 			User user0 = User.builder()
-					.firstName("deleted")
-					.lastName("user")
 					.login("deleted.user@test.com")
-					.mainRole(userRole)
 					.build();
 
 			User user1 = User.builder()
-					.firstName("John")
-					.lastName("DOE")
 					.login("john.doe@test.com")
-					.mainRole(userRole)
 					.build();
 
 			User user2 = User.builder()
-					.firstName("Jane")
-					.lastName("SMITH")
 					.login("jane.smith@test.com")
-					.mainRole(managerRole)
 					.build();
 
 			User user3 = User.builder()
-					.firstName("Alice")
-					.lastName("JOHNSON")
 					.login("alice.johnson@test.com")
-					.mainRole(userRole)
 					.build();
 
 			User user4 = User.builder()
-					.firstName("Dan")
-					.lastName("SERGEANT")
 					.login("dan.sergeant@test.com")
-					.mainRole(userRole)
 					.build();
 
 			User user5 = User.builder()
-					.firstName("Bobby")
-					.lastName("BALLOONZI")
 					.login("bobby.balloonzi@test.com")
-					.mainRole(userRole)
 					.build();
 
 			User user6 = User.builder()
-					.firstName("Rob")
-					.lastName("JAKE")
 					.login("rob.jake@test.com")
-					.mainRole(userRole)
 					.build();
 
 			User user7 = User.builder()
-					.firstName("Super")
-					.lastName("Admin")
 					.login("super.admin@test.com")
-					.mainRole(adminRole)
 					.build();
 
 			User user8 = User.builder()
-					.firstName("Neuro")
-					.lastName("Sama")
 					.login("not.an.ia@vedal.ia")
-					.mainRole(adminRole)
 					.build();
 
 			userRepository.saveAll(Arrays.asList(user0, user1, user2, user3, user4, user5, user6, user7, user8));

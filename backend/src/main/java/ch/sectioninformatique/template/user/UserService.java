@@ -1,13 +1,17 @@
 package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 
+import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.CredentialsDto;
 import ch.sectioninformatique.template.auth.RegisterDto;
@@ -31,8 +35,10 @@ import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 import org.hibernate.Session;
+import org.hibernate.mapping.UserDefinedObjectType;
 
 /**
  * Service class for managing user-related operations.
@@ -49,11 +55,9 @@ import org.hibernate.Session;
 public class UserService {
 
     /** EntityManager for database operations */
-    @Autowired
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     /** Repository for user data access */
-    @Autowired
     private final UserRepository userRepository;
 
     /** Repository for role data access */
@@ -193,11 +197,7 @@ public class UserService {
             }
 
             User user = userMapper.signUpToUser(registerDto);
-
-            // Add default USER role
-            Role userRole = roleRepository.findByName(RoleEnum.USER)
-                .orElseThrow(DefaultRoleNotFoundException::new);
-            user.setMainRole(userRole);
+            log.debug("User created : {}", user);
 
             User savedUser = userRepository.save(user);
             return savedUser;
@@ -258,16 +258,30 @@ public class UserService {
      * @throws RoleNotFoundException if the new role is not found
      * @throws UserUpdateException if the role update fails
      */
-    public void updateMainRole(User localUser, UserDto currentUser) {
+    public void updateMainRole(User localUser, UserDto currentUser, String token) {
+
+        log.debug("Token reçus dans UserService : {}", token);
+
+        Map<String, String> bodyUser = authClient.findUserByLogin(token, localUser.getLogin()).block().getBody();
+
+
         try {
-            String localMainRole = localUser.getMainRole().getName().name();
+            String localMainRole = bodyUser.get("mainRole");
 
             if (!localMainRole.contains(currentUser.getMainRole())) {
                 Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
                         .orElseThrow(() -> new RoleNotFoundException(currentUser.getMainRole()));
 
-                localUser.setMainRole(newMainRole);
-                userRepository.save(localUser);
+                bodyUser.put("mainRole", newMainRole.getName().name());
+
+                UserDto dto = UserDto.builder()
+                    .firstName(bodyUser.get("firsName"))
+                    .lastName(bodyUser.get("lastName"))
+                    .login(bodyUser.get("login"))
+                    .build();
+
+
+                authClient.updateUser(token, bodyUser.get("login"), dto);
             }
         } catch (RoleNotFoundException e) {
             throw e;
@@ -286,7 +300,9 @@ public class UserService {
      * @param localUser The local user's data
      * @return list of roles
      */
-    public List<String> getRolesList(User localUser) {
+    public List<String> getRolesList(User localUser, UserDto currentUser) {
+
+        // Map<String, String> bodyUser = authClient.findUserByLogin(token, localUser.getLogin()).block().getBody();
 
         List<String> allRoles = new ArrayList<>();
 
@@ -296,7 +312,7 @@ public class UserService {
             }
         }
 
-        allRoles.add(localUser.getMainRole().getName().name());
+        allRoles.add(currentUser.getMainRole());
 
         return allRoles;
     }
@@ -424,9 +440,6 @@ public class UserService {
         if(user.isEmpty()){
             User newUser = new User();
             newUser.setLogin(userDto.getLogin());
-            newUser.setFirstName(userDto.getFirstName());
-            newUser.setLastName(userDto.getLastName());
-            newUser.setMainRole(roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole())).orElseThrow(RoleNotFoundException::new));
             userRepository.save(newUser);
         }
         else if(user.get().isDeleted()){
@@ -460,10 +473,6 @@ public class UserService {
             if (user.isDeleted()) {
                 throw new InactiveUserException("user.inactive.orDeleted");
             }
-
-            log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
-                    user.getId(), user.getFirstName(), user.getLastName(),
-                    user.getMainRole());
 
             UserDto userDto = userMapper.toUserDto(user);
             log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
@@ -529,5 +538,31 @@ public class UserService {
                             new UserDeletionException("user.delete.failed.missingResponse", true));
                     }
                 });
+    }
+
+    public UserDto getOrCreateUser(UserDto userDto){
+        
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
+        
+        Role role = roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole()))
+        .orElseThrow(() -> new RoleNotFoundException());
+
+        Set<Role> appSpecificRoles = new HashSet<Role>();
+        
+        appSpecificRoles.add(role);
+
+        if(optionalUser.isEmpty()){
+            appSpecificRoles.add(role);
+            
+            User newUser = User.builder()
+                .login(userDto.getLogin())
+                .appSpecificRoles(appSpecificRoles)
+                .build();
+
+            userRepository.save(newUser);
+            return userMapper.toUserDto(newUser);
+        }
+
+        return userMapper.toUserDto(optionalUser.get());
     }
 }

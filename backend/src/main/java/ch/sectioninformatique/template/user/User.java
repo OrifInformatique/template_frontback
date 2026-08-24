@@ -36,14 +36,6 @@ public class User {
     @Column(nullable = false)
     private long id;
 
-    /** First name of the user */
-    @Column(nullable = false, name = "first_name")
-    private String firstName;
-
-    /** Last name of the user */
-    @Column(nullable = false, name = "last_name")
-    private String lastName;
-
     /** Login username of the user */
     @Column(unique = true, nullable = false)
     private String login;
@@ -63,10 +55,6 @@ public class User {
     @Builder.Default
     private boolean deleted = false;
 
-    /** Main role assigned to the user */
-    @ManyToOne(fetch = FetchType.EAGER)
-    @Builder.Default
-    private Role mainRole = new Role();
 
     /** Additional application-specific roles assigned to the user */
     @ManyToMany(fetch = FetchType.EAGER)
@@ -77,33 +65,24 @@ public class User {
      * Constructs a new User with the specified details.
      *
      * @param id                 Unique identifier for the user
-     * @param firstName          First name of the user
-     * @param lastName           Last name of the user
      * @param login              Login username of the user
      * @param createdAt          Timestamp when the user was created
      * @param updatedAt          Timestamp when the user was last updated
      * @param deleted            Flag indicating if the user is soft-deleted
-     * @param mainRole           Main role assigned to the user
      * @param appSpecificRoles   Additional application-specific roles assigned to the user
      */
     public User(long id,
-                String firstName,
-                String lastName,
                 String login,
                 Date createdAt,
                 Date updatedAt,
                 boolean deleted,
-                Role mainRole,
                 Set<Role> appSpecificRoles) {
         super();
         this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
         this.login = login;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.deleted = deleted;
-        this.mainRole = mainRole;
         this.appSpecificRoles = appSpecificRoles;
     }
 
@@ -117,7 +96,6 @@ public class User {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
         Set<Role> roleList = this.appSpecificRoles;
-        roleList.add(this.mainRole);
         for (Role role : roleList) {
             authorities.addAll(role.getName().getGrantedAuthorities());
         }
@@ -161,12 +139,6 @@ public class User {
      */
     public boolean isEnabled() { return !deleted; } // Optional tie-in
 
-    /** 
-     * Returns the main role assigned to the user.
-     *
-     * @return The main Role of the user
-     */
-    public Role getMainRole() { return mainRole; }
 
     /** 
      * Returns a list of application-specific role names assigned to the user.
@@ -194,13 +166,6 @@ public class User {
         }
         return allRoles;
     }
-
-    /** 
-     * Sets the main role assigned to the user.
-     *
-     * @param role The Role to set as the main role
-     */
-    public void setMainRole(Role role) { mainRole = role; }
 
     /** 
      * Adds an application-specific role to the user.
