@@ -83,9 +83,9 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalAppRole(@NonNull Long userId) {
+    public UserDto promoteToLocalAppRole(@NonNull String userLogin) {
         try {
-            User user = userRepository.findById(userId)
+            User user = userRepository.findByLogin(userLogin)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
@@ -112,16 +112,30 @@ public class UserService {
      *
      * @return List of all User entities
      */
-    public List<UserDto> allUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", false);
-        List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
-        List<UserDto> usersDto = new ArrayList<>();
-        for (User user : users) {
-            usersDto.add(userMapper.toUserDto(user));
+    // public List<UserDto> allUsers() {
+    //     Session session = entityManager.unwrap(Session.class);
+    //     session.enableFilter("deletedFilter").setParameter("isDeleted", false);
+    //     List<User> users = new ArrayList<>();
+    //     userRepository.findAll().forEach(users::add);
+    //     List<UserDto> usersDto = new ArrayList<>();
+    //     for (User user : users) {
+    //         usersDto.add(userMapper.toUserDto(user));
+    //     }
+    //     return usersDto;
+    // }
+    public List<UserDto> allUsers(String token){
+        List<User> users = userRepository.findAll();
+        List<String> logins = new ArrayList<>();
+
+        for (User user : users){
+            if (!user.isDeleted()){
+                logins.add(user.getLogin());
+            }
         }
-        return usersDto;
+
+        List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
+
+        return allUsers;
     }
 
     /**
@@ -129,14 +143,18 @@ public class UserService {
      *
      * @return List of all User entities including deleted
      */
-    public List<UserDto> allWithDeletedUsers() {
-        List<User> users = new ArrayList<>();
-        userRepository.findAllIncludingDeleted().forEach(users::add);
-        List<UserDto> usersDto = new ArrayList<>();
-        for (User user : users) {
-            usersDto.add(userMapper.toUserDto(user));
-        }
-        return usersDto;
+    public List<UserDto> allWithDeletedUsers(String token) {
+       List<User> users = userRepository.findAll();
+
+       List<String> logins = new ArrayList<>();
+
+       for (User user : users){
+                logins.add(user.getLogin());
+            }
+
+       List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
+
+       return allUsers;
     }
 
     /**
@@ -144,16 +162,18 @@ public class UserService {
      *
      * @return List of soft-deleted User entities
      */
-    public List<UserDto> deletedUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", true);
-        List<User> users = new ArrayList<>();
-        userRepository.findAllDeleted().forEach(users::add);
-        List<UserDto> usersDto = new ArrayList<>();
-        for (User user : users) {
-            usersDto.add(userMapper.toUserDto(user));
+    public List<UserDto> deletedUsers(String token) {
+        List<User> users = userRepository.findAllDeleted();
+
+        List<String> logins = new ArrayList<>();
+
+        for (User user : users){
+            logins.add(user.getLogin());
         }
-        return usersDto;
+
+        List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
+
+        return allUsers;
     }
 
     /**
@@ -328,14 +348,14 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUser(@NonNull Long userId) {
+    public UserDto deleteUser(@NonNull String userLogin) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findById(userId)
+            User userToDelete = userRepository.findByLogin(userLogin)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
-            userRepository.deleteById(userId);
+            userRepository.deleteById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundException e) {
             throw e;
@@ -355,14 +375,14 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
-    public UserDto deleteUserPermanent(@NonNull Long userId) {
+    public UserDto deleteUserPermanent(@NonNull String userLogin) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findById(userId)
+            User userToDelete = userRepository.findByLogin(userLogin)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
-            userRepository.deletePermanentlyById(userId);
+            userRepository.deletePermanentlyById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundException e) {
             throw e;
@@ -499,8 +519,8 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
-        return authClient.deleteGlobalUser(token, userId)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, String userLogin) {
+        return authClient.deleteGlobalUser(token, userLogin)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
@@ -526,8 +546,8 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
-        return authClient.deleteGlobalUserPermanent(token, userId)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, String userLogin) {
+        return authClient.deleteGlobalUserPermanent(token, userLogin)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {

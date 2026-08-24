@@ -40,8 +40,6 @@ import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
@@ -279,7 +277,6 @@ public class AuthControllerTest {
                         response.andExpect(status().isOk());
 
                         // Assert response body fields
-                        response.andExpect(jsonPath("$.firstName").value("Test"));
                         response.andExpect(jsonPath("$.login").value("test.user@test.com"));
 
                         // Assert refresh token cookie
@@ -332,10 +329,7 @@ public class AuthControllerTest {
         // Create a new user DTO that doesn't exist yet in the database
 
         UserDto newUser = UserDto.builder()
-                .firstName("NewTest")
-                .lastName("Register")
                 .login("newtest.register@test.com")
-                .mainRole("USER")
                 .permissions(new ArrayList<>())
                 .token("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...")
                 .build();

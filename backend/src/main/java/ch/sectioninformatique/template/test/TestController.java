@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
@@ -95,9 +96,9 @@ public class TestController {
      */
     @PutMapping("/{userId}/promote-test")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
+    public ResponseEntity<?> promoteToTestAdmin(@PathVariable String userLogin) {
 
-            userService.promoteToLocalAppRole(userId);
+            userService.promoteToLocalAppRole(userLogin);
             String message = messageSource.getMessage(
                 "user.promoted.local",
                 null,
@@ -117,8 +118,8 @@ public class TestController {
      */
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('user:read')")
-    public ResponseEntity<List<UserDto>> allUsers() {
-        List<UserDto> users = userService.allUsers();
+    public ResponseEntity<List<UserDto>> allUsers(@RequestHeader ("Authorization") String token) {
+        List<UserDto> users = userService.allUsers(token);
         return ResponseEntity.ok(users);
     }
 }
