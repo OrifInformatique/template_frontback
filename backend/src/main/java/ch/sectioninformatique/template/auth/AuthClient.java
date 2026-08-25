@@ -350,34 +350,28 @@ public class AuthClient {
                                 .map(body -> ResponseEntity.ok(body));
         }
 
-        /**
-         * find a list of users by their logins
+       /**
+         * Get all users from spring-auth
          * 
-         * @param token
-         * @param usersLogin the list of user's login
-         * @return
+         * @param token The access token
+         * @return A Mono<ResponseEntity<List<UserDto>>> containing all users
+         * @throws AppException if the status is 4xx or 5xx
          */
 
-        public Mono<ResponseEntity<List<UserDto>>> findAll(String token, List<String> usersLogin){
-                return webClient.post()
-                .uri(uriWithOptionalLang("/users/search"))
+        public Mono<ResponseEntity<List<UserDto>>> findAll(String token){
+
+                return webClient.get()
+                .uri(uriWithOptionalLang("/users/all-with-deleted"))
                 .header(HttpHeaders.AUTHORIZATION, token)
-                .bodyValue(usersLogin)
                 .retrieve()
                 .onStatus(status -> status.value() >= 400,
-                               response -> response.bodyToMono(ErrorDto.class)
-                                .doOnNext( error -> {
-                                        log.error("Error : {}", error);
-                                        log.error("Message : {}", error.message());
-                                        log.error("Status : {}", response.statusCode());
-                                })
-                                .flatMap(error -> Mono.error(new RuntimeException(error.message()))))
-
-                .bodyToMono(new ParameterizedTypeReference<List<UserDto>>(){
-
+                                response -> response.bodyToMono(ErrorDto.class)
+                                        .flatMap(error -> Mono.error(new AppException(HttpStatus.resolve(
+                                                response.statusCode().value())))))
+                .bodyToMono(new ParameterizedTypeReference<List<UserDto>>() {
+                        
                 })
                 .map(body -> ResponseEntity.ok(body));
-        
         }
 
         /**

@@ -1,6 +1,4 @@
 package ch.sectioninformatique.template.user;
-
-import java.lang.foreign.Linker.Option;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +52,7 @@ import org.hibernate.mapping.UserDefinedObjectType;
 @Service
 @Slf4j
 public class UserService {
+
 
     /** EntityManager for database operations */
     private final EntityManager entityManager;
@@ -114,16 +113,32 @@ public class UserService {
      * @return List of all User entities
      */
     public List<UserDto> allUsers(String token){
-        List<User> users = userRepository.findAll();
-        List<String> logins = new ArrayList<>();
 
-        for (User user : users){
-            if (!user.isDeleted()){
-                logins.add(user.getLogin());
+        List<UserDto> allUsers = authClient.findAll(token).block().getBody();
+
+        allUsers.removeIf(user -> {
+            Optional<User> localUser = userRepository.findByLogin(user.getLogin());
+            return localUser.isEmpty() || localUser.get().isDeleted();
+        });
+
+        for (UserDto user : allUsers){
+
+            Optional<User> localUser = userRepository.findByLogin(user.getLogin());
+
+            if(!localUser.isEmpty()){
+                if (localUser.get().isDeleted()){
+                    allUsers.remove(user);
+                }
+
+                Optional<Role> mainRole = roleRepository.findByName(RoleEnum.valueOf(user.getMainRole()));
+
+
+                if (!mainRole.isEmpty()){
+                    localUser.get().addAppSpecificRoles(mainRole.get());
+                }
+                user.setAppSpecificRoles(localUser.get().getAppSpecificRolesString());
             }
         }
-
-        List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
 
         return allUsers;
     }
@@ -134,15 +149,8 @@ public class UserService {
      * @return List of all User entities including deleted
      */
     public List<UserDto> allWithDeletedUsers(String token) {
-       List<User> users = userRepository.findAll();
 
-       List<String> logins = new ArrayList<>();
-
-       for (User user : users){
-                logins.add(user.getLogin());
-            }
-
-       List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
+       List<UserDto> allUsers = authClient.findAll(token).block().getBody();
 
        for (UserDto user : allUsers){
 
@@ -152,6 +160,15 @@ public class UserService {
                 if(localUser.get().isDeleted()){
                     user.setDeleted(true);
                 }
+
+                Optional<Role> mainRole = roleRepository.findByName(RoleEnum.valueOf(user.getMainRole()));
+
+
+                if (!mainRole.isEmpty()){
+                    localUser.get().addAppSpecificRoles(mainRole.get());
+                }
+
+                user.setAppSpecificRoles(localUser.get().getAppSpecificRolesString());
             }
         }
 
@@ -164,24 +181,31 @@ public class UserService {
      * @return List of soft-deleted User entities
      */
     public List<UserDto> deletedUsers(String token) {
-        List<User> users = userRepository.findAllDeleted();
 
-        List<String> logins = new ArrayList<>();
+        List<UserDto> allUsers = authClient.findAll(token).block().getBody();
 
-        for (User user : users){
-            logins.add(user.getLogin());
-        }
+        allUsers.removeIf(user -> {
+            Optional<User> localUser = userRepository.findByLogin(user.getLogin());
+            // log.debug("Username : {} | isDeleted : {} | condition : {}", localUser.get().getLogin(), localUser.get().isDeleted(), localUser.isEmpty() || !localUser.get().isDeleted());
+            return localUser.isEmpty() || !localUser.get().isDeleted();
+        });
 
-        List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
+        log.debug(allUsers.toString());
 
         for (UserDto user : allUsers){
 
             Optional<User> localUser = userRepository.findByLogin(user.getLogin());
-            
-            if (!localUser.isEmpty()){
-                if(localUser.get().isDeleted()){
-                    user.setDeleted(true);
+            if(!localUser.isEmpty()){
+                user.setDeleted(true);
+
+                Optional<Role> mainRole = roleRepository.findByName(RoleEnum.valueOf(user.getMainRole()));
+
+
+                if (!mainRole.isEmpty()){
+                    localUser.get().addAppSpecificRoles(mainRole.get());
                 }
+
+                user.setAppSpecificRoles(localUser.get().getAppSpecificRolesString());
             }
         }
 
