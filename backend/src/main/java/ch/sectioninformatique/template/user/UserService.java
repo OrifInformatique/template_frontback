@@ -1,5 +1,6 @@
 package ch.sectioninformatique.template.user;
 
+import java.lang.foreign.Linker.Option;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -112,17 +113,6 @@ public class UserService {
      *
      * @return List of all User entities
      */
-    // public List<UserDto> allUsers() {
-    //     Session session = entityManager.unwrap(Session.class);
-    //     session.enableFilter("deletedFilter").setParameter("isDeleted", false);
-    //     List<User> users = new ArrayList<>();
-    //     userRepository.findAll().forEach(users::add);
-    //     List<UserDto> usersDto = new ArrayList<>();
-    //     for (User user : users) {
-    //         usersDto.add(userMapper.toUserDto(user));
-    //     }
-    //     return usersDto;
-    // }
     public List<UserDto> allUsers(String token){
         List<User> users = userRepository.findAll();
         List<String> logins = new ArrayList<>();
@@ -154,6 +144,17 @@ public class UserService {
 
        List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
 
+       for (UserDto user : allUsers){
+
+            Optional<User> localUser = userRepository.findByLogin(user.getLogin());
+            
+            if (!localUser.isEmpty()){
+                if(localUser.get().isDeleted()){
+                    user.setDeleted(true);
+                }
+            }
+        }
+
        return allUsers;
     }
 
@@ -172,6 +173,17 @@ public class UserService {
         }
 
         List<UserDto> allUsers = authClient.findAll(token, logins).block().getBody();
+
+        for (UserDto user : allUsers){
+
+            Optional<User> localUser = userRepository.findByLogin(user.getLogin());
+            
+            if (!localUser.isEmpty()){
+                if(localUser.get().isDeleted()){
+                    user.setDeleted(true);
+                }
+            }
+        }
 
         return allUsers;
     }
