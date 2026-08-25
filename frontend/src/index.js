@@ -16,6 +16,7 @@ import AzureCallback from './features/auth/ui/login/AzureCallback';
 import ChangePassword from './features/auth/ui/change-password';
 import ResetPassword from './features/auth/ui/reset-password';
 import ApiAuthCall from './features/auth';
+import Admin from './features/admin';
 
 // Utils
 import Redirect from './common/utils/Redirect'
@@ -64,6 +65,11 @@ root.render(
                     <Route
                         path="/login"
                         element={<Login />}
+                    />
+
+                    <Route
+                        path="/admin"
+                        element={<Admin />}
                     />
 
                     <Route
