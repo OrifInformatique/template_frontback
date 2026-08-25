@@ -3,7 +3,6 @@ package ch.sectioninformatique.template.auth;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
@@ -16,7 +15,6 @@ import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsExc
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
-import io.micrometer.core.ipc.http.HttpSender.Response;
 import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
