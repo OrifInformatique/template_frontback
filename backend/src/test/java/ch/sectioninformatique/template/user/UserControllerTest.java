@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional; 
 
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
@@ -940,7 +940,7 @@ public class UserControllerTest {
                 "message", "User deleted permanently",
             "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong()))
+        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong(), true))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
