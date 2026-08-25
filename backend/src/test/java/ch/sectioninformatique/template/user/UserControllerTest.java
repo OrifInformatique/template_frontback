@@ -940,7 +940,7 @@ public class UserControllerTest {
                 "message", "User deleted permanently",
             "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong()))
+        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong(), true))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
