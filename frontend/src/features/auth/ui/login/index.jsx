@@ -13,6 +13,7 @@ import {
 } from '@orif-informatique/react-components-library';
 import Link from '../../../../common/ui/link';
 import LoginTestIndicator from '../../../../common/ui/tests/loginTestIndicator';
+import { handleOAuth2Login } from '../api/azureLogin';
 
 const Login = () => {
     const BACKEND_API_URL = process.env.BACKEND_API_URL;

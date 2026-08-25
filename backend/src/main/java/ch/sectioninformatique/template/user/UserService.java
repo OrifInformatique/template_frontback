@@ -53,12 +53,10 @@ import org.hibernate.Session;
 public class UserService {
 
     /** EntityManager for database operations */
-    @Autowired
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     /** Repository for user data access */
-    @Autowired
-    private @Lazy UserRepository userRepository;
+    private final UserRepository userRepository;
 
     /** Repository for role data access */
     private final RoleRepository roleRepository;
