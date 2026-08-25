@@ -117,8 +117,8 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:delete')")
     public Mono<ResponseEntity<?>> deleteUser(@RequestHeader("Authorization") String token,
             @PathVariable String userLogin,
-            @RequestParam (required = true) boolean global,
-            @RequestParam (required = true) boolean hard) {
+            @RequestParam (required = true) Boolean global,
+            @RequestParam (required = true) Boolean hard) {
         // Determine permanent deletion scope based on global flag
         if (global) {
             if (hard){

@@ -627,18 +627,18 @@ public class AuthControllerTest {
      * Azure login endpoint that redirects to spring-auth Azure login.
      */
     @Test
-    public void azureLogin_inTestEnvironment_shouldReturn401() throws Exception {
+    public void azureLogin_inTestEnvironment_shouldReturn302() throws Exception {
         performRequest(
                 "GET",
                 "/auth/login/azure",
                 null,
                 null,
                 MediaType.APPLICATION_JSON,
-                401,
+                302,
                 "azure-login",
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().is3xxRedirection());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
