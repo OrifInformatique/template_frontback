@@ -6,6 +6,7 @@ import RequireRole from '../../common/utils/requireRole';
 
 const Admin = () => {
     const { t } = useTranslation("admin", "common");
+
     return (
         <RequireRole role="ADMIN">
                 <Title>{t("admin_title")}</Title>

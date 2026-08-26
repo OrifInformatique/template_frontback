@@ -13,16 +13,16 @@ const RequireRole = ({ role, children }) => {
 
     // If a role does not match the specified role, redirect to the home page and put a snackbar message
 
-    if (role && user.role !== role) {
-        return <>
-        <Navigate to="/" replace />;
-        <SnackBar
-            message="You do not have permission to access this page."
-            type="error"
-            autoHideDuration={3000}
-        />
-        </>
-
+    if (role && user.mainRole !== role) {
+        return (
+            <Navigate to="/" replace state={{ 
+                snackbar: {
+                    message: "You do not have permission to access this page.",
+                    type: "error",
+                    autoHideDuration: 3000,
+                } 
+            }}
+        />);
     }
 
     return children || <Outlet />;
