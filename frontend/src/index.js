@@ -17,6 +17,7 @@ import ChangePassword from './features/auth/ui/change-password';
 import ResetPassword from './features/auth/ui/reset-password';
 import ApiAuthCall from './features/auth';
 import Admin from './features/admin';
+import UserList from './features/users';
 
 // Utils
 import Redirect from './common/utils/Redirect'
@@ -70,7 +71,10 @@ root.render(
                     <Route
                         path="/admin"
                         element={<Admin />}
-                    />
+                    >
+                        <Route path="users" element={<UserList />} />
+                        // You can add more admin routes here for other admin pages
+                    </Route>
 
                     <Route
                         path="/azure"

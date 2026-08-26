@@ -32,8 +32,9 @@ const MainLayout = () => {
         logoPath="/images/logo.svg"
         onLogin={() => navigate('/login')}
         onLogout={handleLogout}
-        administrationPath="/admin"
-        showAdministration={effectiveUser?.mainRole === "ADMIN"}
+        administrationPath="/admin/users"
+        administrationLabel={t("admin")}
+        showAdminMenu={effectiveUser?.mainRole === "ADMIN"}
         user={effectiveUser ? { name: effectiveUser?.firstName || "", role: effectiveUser?.mainRole || "user" } : null}
       />
       <main className="p-5 sm:p-10 bg-background">
