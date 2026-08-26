@@ -4,7 +4,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,39 +23,29 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
 
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
-import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
+import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import reactor.core.publisher.Mono;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 /**
  * Integration tests for the UserController REST endpoints.
@@ -249,7 +248,7 @@ public class UserControllerTest {
             });
     }
 
-    // ==================== GET /users/all ====================
+    // ==================== GET /users/ ====================
 
     /**
      * Test: GET /users/all - Success
@@ -261,7 +260,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
             "GET",
-            "/users/all",
+            "/users?deleted=false",
             adminToken,
             MediaType.APPLICATION_JSON,
             200,
@@ -277,7 +276,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/all
+     * Test: GET /users/
      *
      * Verify users with user:read authority can retrieve all users from the system.
      */
@@ -288,7 +287,7 @@ public class UserControllerTest {
 
         performRequest(
             "GET",
-            "/users/all",
+            "/users?deleted=false",
             validToken,
             MediaType.APPLICATION_JSON,
             200,
@@ -306,7 +305,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/all - 401 Unauthorized
+     * Test: GET /users/ - 401 Unauthorized
      *
      * Test retrieving all users without proper authorization.
      */
@@ -314,7 +313,7 @@ public class UserControllerTest {
     public void allUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/all",
+                "/users/",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -342,7 +341,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
                 "GET",
-                "/users/all-with-deleted",
+                "/users",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -364,7 +363,7 @@ public class UserControllerTest {
      */
     @Test
     @Transactional
-    public void deleteLocalUser_withoutGlobalFlag_shouldReturn200AndDeleteFromDatabase() throws Exception {
+    public void deleteLocalUser_withoutGlobalFlag_shouldReture200() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         // Get a different test user to delete (not the admin performing the deletion)
         UserDto userToDelete = userService.findByLogin("test.user@test.com");
@@ -372,16 +371,18 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getId() + "/false",
+                "/users/" + userToDelete.getLogin() + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
-            "delete-local-success",
+                "delete-local-success",
                 true,
                 response -> {
                     try {
+                        response.andDo(print());
+                        response.andExpect(status().isOk());
                         response.andExpect(jsonPath("$.message")
-                                .value(getMessage("user.deleted.local")));
+                            .value(getMessage("user.deleted.local")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -410,12 +411,12 @@ public class UserControllerTest {
         Map<String, String> authServiceResponse = Map.of(
                 "deletedUserLogin", "test.admin2@test.com",
                 "message", "User deleted from auth service");
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin())))
                 .thenReturn(Mono.just(ResponseEntity.ok(authServiceResponse)));
 
         performRequest(
                 "DELETE",
-                "/users/" + admin2User.getId() + "/true",
+                "/users/" + admin2User.getLogin() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -424,7 +425,7 @@ public class UserControllerTest {
                 null);
 
         // Verify the auth client was called
-        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()));
+        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin()));
         // Verify DB side effect (soft or hard delete)
         assertUserDeleted(admin2User);
     }
@@ -453,12 +454,12 @@ public class UserControllerTest {
         assertNotNull(managerUser, "Test manager user should exist");
 
         // Mock the external auth service to return an error
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getLogin())))
                 .thenReturn(Mono.error(new UserDeletionException("Failed to delete user from auth service")));
 
         performRequest(
                 "DELETE",
-                "/users/" + managerUser.getId() + "/true",
+                "/users/" + managerUser.getLogin() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -497,7 +498,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getId() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -528,7 +529,7 @@ public class UserControllerTest {
         // First promotion should succeed
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getId() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -541,7 +542,7 @@ public class UserControllerTest {
         // Second promotion attempt should fail with 409 Conflict
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getId() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 409,
@@ -574,12 +575,12 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Test manager user should exist");
 
         // Mock auth client to return error for global delete
-        when(authClient.deleteGlobalUser(any(String.class), any(Long.class)))
+        when(authClient.deleteGlobalUser(any(String.class), any(String.class)))
             .thenReturn(Mono.error(new UserDeletionException("Database constraint violation")));
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getId() + "/true",
+                "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -612,11 +613,11 @@ public class UserControllerTest {
     @Transactional
     public void deleteUser_withNonExistentId_shouldReturn404UserNotFound() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
-        Long nonExistentUserId = 99999L;
+        String nonExistentUserLogin = "Non-login";
 
         performRequest(
                 "DELETE",
-                "/users/" + nonExistentUserId + "/false",
+                "/users/" + nonExistentUserLogin + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 404,
@@ -652,7 +653,7 @@ public class UserControllerTest {
     public void allUsers_withoutAuthentication_shouldReturn401Unauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/all",
+                "/users?deleted=false",
                 null, // No token
                 MediaType.APPLICATION_JSON,
                 401,
@@ -677,7 +678,7 @@ public class UserControllerTest {
     public void allWithDeletedUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/all-with-deleted",
+                "/users",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -705,7 +706,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
                 "GET",
-                "/users/deleted",
+                "/users?deleted=true",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -729,7 +730,7 @@ public class UserControllerTest {
     public void deletedUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/deleted",
+                "/users?deleted=true",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -784,7 +785,7 @@ public class UserControllerTest {
     public void deleteUser_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false",
+                "/users/test.user@test.com?global=false&hard=false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -817,12 +818,12 @@ public class UserControllerTest {
                 "message", "User deleted successfully",
             "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUser(anyString(), anyLong()))
+        when(authClient.deleteGlobalUser(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
                 "DELETE",
-            "/users/" + userToDelete.getId() + "/true",
+            "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -880,7 +881,7 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Temporary user should exist");
         performRequest(
                 "DELETE",
-            "/users/" + userToDelete.getId() + "/false/permanent",
+                "/users/" + userToDelete.getLogin() + "?global=false&hard=true",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -907,7 +908,7 @@ public class UserControllerTest {
     public void deleteUserPermanent_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false/permanent",
+                "/users//false/permanent",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -940,12 +941,12 @@ public class UserControllerTest {
                 "message", "User deleted permanently",
             "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong(), true))
+        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
                 "DELETE",
-            "/users/" + userToDelete.getId() + "/true/permanent",
+            "/users/" + userToDelete.getLogin() + "?global=true&hard=true",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1002,12 +1003,12 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.user@test.com");
         assertNotNull(userToPromote, "Test user should exist");
-        when(authClient.promoteToManager(anyString(), anyLong()))
+        when(authClient.promoteToManager(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("User promoted to manager successfully")));
 
         performRequest(
                 "PUT",
-            "/users/" + userToPromote.getId() + "/promote-manager",
+            "/users/" + userToPromote.getLogin() + "/promote-manager",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1032,7 +1033,7 @@ public class UserControllerTest {
     public void promoteToManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/promote-manager",
+                "/users/test.user@test.com/promote-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1061,12 +1062,12 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToRevoke, "Test manager user should exist");
-        when(authClient.revokeManager(anyString(), anyLong()))
+        when(authClient.revokeManager(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Manager role revoked successfully")));
 
         performRequest(
                 "PUT",
-            "/users/" + userToRevoke.getId() + "/revoke-manager",
+            "/users/" + userToRevoke.getLogin() + "/revoke-manager",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1091,7 +1092,7 @@ public class UserControllerTest {
     public void revokeManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/revoke-manager",
+                "/users/test.user@test.com/revoke-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1120,12 +1121,12 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToPromote, "Test manager user should exist");
-        when(authClient.promoteToAdmin(anyString(), anyLong()))
+        when(authClient.promoteToAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role assigned successfully")));
 
         performRequest(
                 "PUT",
-            "/users/" + userToPromote.getId() + "/promote-admin",
+            "/users/" + userToPromote.getLogin() + "/promote-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1150,7 +1151,7 @@ public class UserControllerTest {
     public void promoteToAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/promote-admin",
+                "/users/test.user@test.com/promote-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1179,12 +1180,12 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToRevoke, "Test admin2 user should exist");
-        when(authClient.revokeAdmin(anyString(), anyLong()))
+        when(authClient.revokeAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role revoked successfully")));
 
         performRequest(
                 "PUT",
-            "/users/" + userToRevoke.getId() + "/revoke-admin",
+            "/users/" + userToRevoke.getLogin() + "/revoke-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1238,12 +1239,12 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDowngrade = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToDowngrade, "Test admin2 user should exist");
-        when(authClient.downgradeAdmin(anyString(), anyLong()))
+        when(authClient.downgradeAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role downgraded successfully")));
 
         performRequest(
                 "PUT",
-            "/users/" + userToDowngrade.getId() + "/downgrade-admin",
+            "/users/" + userToDowngrade.getLogin() + "/downgrade-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1268,7 +1269,7 @@ public class UserControllerTest {
     public void downgradeAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/downgrade-admin",
+                "/users/test.admin@test.com/downgrade-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1296,7 +1297,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + targetUser.getId() + "/false",
+                "/users/" + targetUser.getLogin() + "?global=false&hard=false",
                 userToken,
                 MediaType.APPLICATION_JSON,
                 403,

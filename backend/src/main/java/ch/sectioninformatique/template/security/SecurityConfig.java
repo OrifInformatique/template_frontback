@@ -2,6 +2,8 @@ package ch.sectioninformatique.template.security;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -59,7 +61,9 @@ public class SecurityConfig {
      * - Extracts user information from tokens
      * - Sets up authentication context
      */
-    private final JwtAuthFilter jwtAuthFilter;
+
+    @Autowired
+    private @Lazy JwtAuthFilter jwtAuthFilter;
 
     /**
      * Configures the security filter chain with all necessary security settings.
@@ -75,6 +79,7 @@ public class SecurityConfig {
      * @return The configured SecurityFilterChain
      * @throws Exception if security configuration fails
      */
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.debug("Configuring SecurityFilterChain");

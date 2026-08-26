@@ -376,7 +376,7 @@ public class TestControllerTest {
         String token = userAuthenticationProvider.createToken(adminDto);
         performRequest(
                 "PUT",
-                "/tests/" + userDto.getId() + "/promote-test",
+                "/tests/" + userDto.getLogin() + "/promote-test",
                 null,
                 token,
                 MediaType.APPLICATION_JSON,
