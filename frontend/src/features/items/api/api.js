@@ -15,7 +15,7 @@ export const getItems = async (includeDeleted = false) =>
 {
     try
     {
-        const response = await api.get(`/items/`, { params: { includeDeleted } });
+        const response = await api.get(`/items`, { params: { includeDeleted } });
         return response.data;
     }
     catch(error)
@@ -88,7 +88,7 @@ export const hardDeleteItem = async (id) =>
 export const createItem = async (data) =>
 {
     try {
-        const response = await api.post(`/items`, data);
+        const response = await api.post(`/items/`, data);
         return response.data;
     }
     catch(error)
