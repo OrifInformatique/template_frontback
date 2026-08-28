@@ -7,6 +7,9 @@ PORT=8081
 
 # WARN: Set your database production database in `application.properties`!
 
+# Frontend url
+FRONTEND_URL = http://localhost:4000
+
 # Local dev database (Local mariadb)
 DEV_SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/dev_db
 

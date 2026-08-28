@@ -58,6 +58,9 @@ public class AuthController {
     @Value("${SECURITY_JWT_TOKEN_ACCESS_TOKEN_LIFETIME}")
     private Duration refreshTokenLifeTime; 
 
+    @Value("${FRONTEND_URL}")
+    private String frontendUrl;
+
 
     /**
      * Handles POST requests to "/login"
@@ -161,10 +164,11 @@ public class AuthController {
      *         or an error response if the redirection fails.
      */
     @GetMapping("/login/azure")
-    public ResponseEntity<Void> OAuth2AzureLogin(@RequestParam(required = false) String redirectUrl,
-                                                 HttpServletRequest request) {
+    public ResponseEntity<Void> OAuth2AzureLogin(HttpServletRequest request) {
 
         HttpSession session = request.getSession(true);
+
+        String redirectUrl = frontendUrl;
 
         // Store redirect URL in session if provided, otherwise store the referer header
         if (redirectUrl != null && !redirectUrl.isEmpty()) {
