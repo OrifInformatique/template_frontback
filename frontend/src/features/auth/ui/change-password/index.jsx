@@ -1,13 +1,17 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { Button,
          InputPassword,
        } from "@orif-informatique/react-components-library";
 
+
 const ChangePassword = () =>
 {
     const { t } = useTranslation("auth", "common");
+    const navigate = useNavigate();
+
     const handleChangePasswordFormSubmit = (e) =>
     {
         e.preventDefault();
@@ -48,7 +52,9 @@ const ChangePassword = () =>
                         <Button
                             variant="tertiary"
                             label={t("cancel", { ns: 'common' })}
+                            type="button"
                             className="basis-1/2"
+                            onClick={() => navigate(-1)}
                         />
 
                         <Button
