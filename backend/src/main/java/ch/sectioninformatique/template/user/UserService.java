@@ -1,5 +1,16 @@
 package ch.sectioninformatique.template.user;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+import org.springframework.lang.NonNull;
+
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
@@ -20,15 +31,6 @@ import ch.sectioninformatique.template.user.UserExceptions.UserValidationExcepti
 import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import org.springframework.stereotype.Service;
-import org.springframework.lang.NonNull;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +57,8 @@ public class UserService {
     private final RoleRepository roleRepository;
 
     /** Client for authentication operations */
-    private final AuthClient authClient;
+    @Autowired
+    private @Lazy AuthClient authClient;
 
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
@@ -74,9 +77,9 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalAppRole(@NonNull Long userId) {
+    public UserDto promoteToLocalAppRole(@NonNull String userLogin) {
         try {
-            User user = userRepository.findById(userId)
+            User user = userRepository.findByLogin(userLogin)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
@@ -323,14 +326,14 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUser(@NonNull Long userId) {
+    public UserDto deleteUser(@NonNull String userLogin) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findById(userId)
+            User userToDelete = userRepository.findByLogin(userLogin)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
-            userRepository.deleteById(userId);
+            userRepository.deleteById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundException e) {
             throw e;
@@ -350,14 +353,14 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
-    public UserDto deleteUserPermanent(@NonNull Long userId) {
+    public UserDto deleteUserPermanent(@NonNull String userLogin) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findById(userId)
+            User userToDelete = userRepository.findByLogin(userLogin)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
-            userRepository.deletePermanentlyById(userId);
+            userRepository.deletePermanentlyById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundException e) {
             throw e;
@@ -476,8 +479,8 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
-        return authClient.deleteGlobalUser(token, userId)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, String userLogin) {
+        return authClient.deleteGlobalUser(token, userLogin)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
@@ -504,8 +507,8 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId, Boolean hardDelete) {
-        return authClient.deleteGlobalUserPermanent(token, userId, hardDelete)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, String userLogin) {
+        return authClient.deleteGlobalUserPermanent(token, userLogin)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {

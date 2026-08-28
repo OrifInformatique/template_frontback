@@ -46,7 +46,6 @@ import reactor.core.publisher.Mono;
 @SuppressWarnings("null")
 public class AuthController {
 
-
     /** Service for handling user-related operations */
     private final UserService userService;
 
@@ -61,7 +60,6 @@ public class AuthController {
 
     // Name of the Session attribute used to store the frontend redirect URL during login initiation.
     private static final String FRONTEND_REDIRECT_SESSION_KEY = "FRONTEND_REDIRECT_URL";
-
 
     @Value("${SECURITY_JWT_TOKEN_ACCESS_TOKEN_LIFETIME}")
     private Duration refreshTokenLifeTime; 
@@ -306,6 +304,7 @@ public class AuthController {
         // No session provided, access is not authorized
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
 
     /**
      * Handles POST requests to "/logout"

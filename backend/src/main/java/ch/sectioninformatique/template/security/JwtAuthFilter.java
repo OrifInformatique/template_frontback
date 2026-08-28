@@ -39,6 +39,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 @Component
+
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     /**
@@ -48,6 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * - Handles token validation logic
      * - Manages user authentication state
      */
+
     private final UserAuthenticationProvider userAuthenticationProvider;
     private final MessageSource messageSource;
 

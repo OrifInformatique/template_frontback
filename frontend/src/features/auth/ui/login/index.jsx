@@ -66,6 +66,11 @@ const Login = () => {
         refreshAccessToken();
     }, [BACKEND_API_URL, accessToken, clearAuth, loginType, setAccessToken]);
 
+    const handleOAuth2Login = () => {
+        const loginUrl = new URL('/auth/login/azure', BACKEND_API_URL);
+        window.location.assign(loginUrl.toString());
+    };
+
     const handleLogoutClick = async () => {
         await handleLogout();
         setLoginType(null);
