@@ -93,11 +93,11 @@ public class TestController {
      * @param userId The ID of the user to promote
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userId}/promote-test")
+    @PutMapping("/{userLogin}/promote-test")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
+    public ResponseEntity<?> promoteToTestAdmin(@PathVariable String userLogin) {
 
-            userService.promoteToLocalAppRole(userId);
+            userService.promoteToLocalAppRole(userLogin);
             String message = messageSource.getMessage(
                 "user.promoted.local",
                 null,
@@ -120,21 +120,5 @@ public class TestController {
     public ResponseEntity<List<UserDto>> allUsers() {
         List<UserDto> users = userService.allUsers();
         return ResponseEntity.ok(users);
-    }
-
-    /**
-     * Handles GET requests to "/oauth2/login"
-     * Redirects the client to the OAuth2 authorization endpoint for Azure
-     * This initiates the OAuth2 login flow
-     * After successful login, the user will be redirected back to the application
-     * 
-     * @return ResponseEntity with redirection to OAuth2 login URL
-     */
-    @GetMapping("/oauth2/login")
-    public ResponseEntity<Object> testCallOAuth2() {
-
-        // Redirect frontend to spring-auth OAuth2 login endpoint
-        URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
-        return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
     }
 }

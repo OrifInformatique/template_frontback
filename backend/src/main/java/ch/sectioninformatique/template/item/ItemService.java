@@ -1,5 +1,8 @@
 package ch.sectioninformatique.template.item;
 
+import jakarta.persistence.EntityManager;
+
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -13,8 +16,8 @@ import org.springframework.stereotype.Service;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
-import ch.sectioninformatique.template.user.UserRepository;
 import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
+import ch.sectioninformatique.template.user.UserRepository;
 
 /**
  * Service class for managing items in the system.
@@ -31,6 +34,8 @@ public class ItemService {
     private ItemRepository itemRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     /**
      * Constructs a new ItemService with the required repositories.
@@ -38,9 +43,10 @@ public class ItemService {
      * @param itemRepository Repository for item operations
      * @param userRepository Repository for user operations
      */
-    public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemService(ItemRepository itemRepository, UserRepository userRepository, EntityManager entityManager) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -100,12 +106,25 @@ public class ItemService {
     }
 
     /**
+     * By default, getItems method returns only non-deleted items.
+     * 
+     * @return A List containing all non-deleted items
+     */
+    public List<Item> getItems() {
+        return getItems(false);
+    }
+
+    /**
      * Retrieves all items in the system.
      *
-     * @return An Iterable containing all items
+     * @param includeDeleted Whether to include soft-deleted items
+     * @return A List containing all items including or not soft-deleted ones
      */
-    public Iterable<Item> getItems() {
-        return itemRepository.findAll();
+    public List<Item> getItems(boolean includeDeleted) {
+        if (includeDeleted) {
+            return itemRepository.findAllIncludingDeleted();
+        }
+        return itemRepository.findAllByDeletedFalse();
     }
 
     /**
@@ -136,6 +155,18 @@ public class ItemService {
         }
         
         itemRepository.deleteById(id);
+    }
+
+    public void deletePermanentById(Long id)
+    {
+        try {
+            itemRepository.deletePermanentlyById(id);
+
+        } catch (Exception e) {
+            throw new ItemNotFoundException(id);
+        }
+        
+
     }
 
     /**
@@ -178,14 +209,5 @@ public class ItemService {
                 return itemRepository.save(item);
             })
             .orElseThrow(() -> new ItemNotFoundException(id));
-    }
-
-    /**
-     * This method sets the item's author to null for all items associated with the given author ID.
-     * This method is used when a user is deleted from the database.
-     * @param authorId
-     */
-    public void setAuthorNullByAuthorId(Long authorId) {
-        itemRepository.setAuthorNullByAuthorId(authorId);
     }
 }

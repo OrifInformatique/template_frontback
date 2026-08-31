@@ -1,13 +1,13 @@
 package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
@@ -31,11 +31,9 @@ import ch.sectioninformatique.template.user.UserExceptions.UserValidationExcepti
 import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
-import jakarta.persistence.EntityManager;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.hibernate.Session;
 
 /**
  * Service class for managing user-related operations.
@@ -49,11 +47,8 @@ import org.hibernate.Session;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@SuppressWarnings("null")
 public class UserService {
-
-    /** EntityManager for database operations */
-    @Autowired
-    private EntityManager entityManager;
 
     /** Repository for user data access */
     private final UserRepository userRepository;
@@ -62,13 +57,11 @@ public class UserService {
     private final RoleRepository roleRepository;
 
     /** Client for authentication operations */
-    private final AuthClient authClient;
+    @Autowired
+    private @Lazy AuthClient authClient;
 
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
-
-
-
 
     /**
      * Promotes a user to a local app role.
@@ -84,9 +77,9 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalAppRole(@NonNull Long userId) {
+    public UserDto promoteToLocalAppRole(@NonNull String userLogin) {
         try {
-            User user = userRepository.findById(userId)
+            User user = userRepository.findByLogin(userLogin)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
@@ -111,13 +104,12 @@ public class UserService {
     /**
      * Retrieves all users in the system (not including soft-deleted users).
      *
-     * @return List of all User entities
+     * @return List of all users as UserDto
      */
     public List<UserDto> allUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", false);
         List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
+        users = userRepository.findAllByDeletedFalse();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -128,11 +120,12 @@ public class UserService {
     /**
      * Retrieves all users including soft-deleted ones.
      *
-     * @return List of all User entities including deleted
+     * @return List of all users as UserDto including deleted ones
      */
     public List<UserDto> allWithDeletedUsers() {
         List<User> users = new ArrayList<>();
-        userRepository.findAllIncludingDeleted().forEach(users::add);
+        users = userRepository.findAllIncludingDeleted();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -143,13 +136,12 @@ public class UserService {
     /**
      * Retrieves only soft-deleted users.
      *
-     * @return List of soft-deleted User entities
+     * @return List of soft-deleted users as UserDto
      */
-    public List<UserDto> deletedUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", true);
+        public List<UserDto> deletedUsers() {
         List<User> users = new ArrayList<>();
-        userRepository.findAllDeleted().forEach(users::add);
+        users = userRepository.findAllDeleted();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -199,11 +191,28 @@ public class UserService {
 
             User user = userMapper.signUpToUser(registerDto);
 
-            // Add default USER role
-            Role userRole = roleRepository.findByName(RoleEnum.USER)
-                .orElseThrow(DefaultRoleNotFoundException::new);
-            user.setMainRole(userRole);
-
+            // Define the user's main role (transversal for all applications)
+            if(registerDto.mainRole() == null || registerDto.mainRole().isBlank()){ 
+                // No role is provided, add default USER role
+                Role userRole = roleRepository.findByName(RoleEnum.USER).orElseThrow(RoleNotFoundException::new);
+                user.setMainRole(userRole);
+            }
+            else{
+                // Add the provided role
+                Role userRole = roleRepository.findByName(RoleEnum.valueOf(registerDto.mainRole())).orElseThrow(RoleNotFoundException::new);
+                user.setMainRole(userRole);
+            }
+            
+            // Define the user's specific role(s) for this application
+            if(registerDto.appSpecificRoles() != null ){
+                
+                Set<Role> appSpecificRoles = new HashSet<>();
+                for (String role : registerDto.appSpecificRoles()) {
+                    appSpecificRoles.add(roleRepository.findByName(RoleEnum.valueOf(role)).orElseThrow(RoleNotFoundException::new));
+                }
+                user.setAppSpecificRoles(appSpecificRoles);
+            }
+            
             User savedUser = userRepository.save(user);
             return savedUser;
         } catch (UserValidationException | DuplicateUserException | DefaultRoleNotFoundException e) {
@@ -238,7 +247,7 @@ public class UserService {
 
             if (localUser == null) {
                 RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                        userDto.getLogin(), null);
+                        userDto.getLogin(), null, null, null);
 
                 localUser = this.register(newUser);
             }
@@ -317,14 +326,14 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUser(@NonNull Long userId) {
+    public UserDto deleteUser(@NonNull String userLogin) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findById(userId)
+            User userToDelete = userRepository.findByLogin(userLogin)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
-            userRepository.deleteById(userId);
+            userRepository.deleteById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundException e) {
             throw e;
@@ -344,15 +353,14 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
-    public UserDto deleteUserPermanent(@NonNull Long userId) {
+    public UserDto deleteUserPermanent(@NonNull String userLogin) {
         try {
             // Get the user to delete
-
-            User userToDelete = userRepository.findById(userId)
+            User userToDelete = userRepository.findByLogin(userLogin)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
-            userRepository.deletePermanentlyById(userId);
+            userRepository.deletePermanentlyById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
         } catch (UserNotFoundException e) {
             throw e;
@@ -471,8 +479,8 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
-        return authClient.deleteGlobalUser(token, userId)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, String userLogin) {
+        return authClient.deleteGlobalUser(token, userLogin)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
@@ -495,11 +503,12 @@ public class UserService {
      *
      * @param token  The authorization token
      * @param userId The ID of the user to permanently delete
+     * @param hardDelete A boolean for soft or hard delete (default: false)
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
-        return authClient.deleteGlobalUserPermanent(token, userId)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, String userLogin) {
+        return authClient.deleteGlobalUserPermanent(token, userLogin)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
@@ -512,11 +521,15 @@ public class UserService {
                 });
     }
 
+    /**
+     * Updates a user's informations.
+     * 
+     * @param userId The ID of the user to update
+     * @param newUser The updated user information
+     */
     public void updateUser(Long userId, UserDto newUser) {
     User existingUser = userRepository.findById(userId)
-            .orElseThrow(UserNotFoundException::new);
-
-    log.debug("MainRole : {}", newUser.getMainRole());
+        .orElseThrow(() -> new UserNotFoundException(userId));
 
     Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
             .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
@@ -524,7 +537,6 @@ public class UserService {
     if (newUser.getAppSpecificRoles() != null){
         Set<Role> newAppSpecificRoles = new HashSet<>();
         for (String role : newUser.getAppSpecificRoles()) {
-            log.debug("Role String : {}", role);
             Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
             .orElseThrow(() -> new RoleNotFoundException(role));
             newAppSpecificRoles.add(newRole);
@@ -538,17 +550,51 @@ public class UserService {
     existingUser.setLogin(newUser.getLogin());
     existingUser.setMainRole(newMainRole);
 
-    userRepository.save(existingUser);
-}
+        // Save modified Entity
+        userRepository.save(existingUser);
+    }
 
-public void restoreUser(Long userId) {
-    User userToRestore = userRepository.findById(userId)
-            .orElseThrow(UserNotFoundException::new);
+    /**
+     * Restores a soft-deleted user.
+     * @param userId The ID of the user to restore
+     */
+    public void restoreUser(Long userId) {
+        User userToRestore = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-    userToRestore.setDeleted(false);
-    userToRestore.setUpdatedAt(new Date());
+        // Change deleted value in the Entity
+        userToRestore.setDeleted(false);
 
-    userRepository.save(userToRestore);
-}
+        // Save modified Entity
+        userRepository.save(userToRestore);
+    }
 
+    public UserDto getOrCreateUser(UserDto userDto){
+        
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
+        
+        Role role = roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole()))
+        .orElseThrow(() -> new RoleNotFoundException());
+
+        Set<Role> appSpecificRoles = new HashSet<Role>();
+        
+        appSpecificRoles.add(role);
+
+        if(optionalUser.isEmpty()){
+            appSpecificRoles.add(role);
+            
+            User newUser = User.builder()
+                .firstName(userDto.getFirstName())
+                .lastName(userDto.getLastName())
+                .login(userDto.getLogin())
+                .mainRole(role)
+                .appSpecificRoles(appSpecificRoles)
+                .build();
+
+            userRepository.save(newUser);
+            return userMapper.toUserDto(newUser);
+        }
+
+        return userMapper.toUserDto(optionalUser.get());
+    }
 }

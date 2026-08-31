@@ -1,8 +1,16 @@
 package ch.sectioninformatique.template.auth;
 
 import java.net.URI;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.time.Duration;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,11 +21,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserMapper;
 import ch.sectioninformatique.template.user.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -30,14 +43,27 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @RestController
+@SuppressWarnings("null")
 public class AuthController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
 
     /** Client to send authentication requests to the spring-auth application */
-    @Autowired
     private final AuthClient authClient;
+
+    /** Mapper for converting between User entities and DTOs */
+    private final UserMapper userMapper;
+
+    // Logger for debugging and monitoring the authentication flow.
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
+    // Name of the Session attribute used to store the frontend redirect URL during login initiation.
+    private static final String FRONTEND_REDIRECT_SESSION_KEY = "FRONTEND_REDIRECT_URL";
+
+    @Value("${SECURITY_JWT_TOKEN_ACCESS_TOKEN_LIFETIME}")
+    private Duration refreshTokenLifeTime; 
+
 
     /**
      * Handles POST requests to "/login"
@@ -78,10 +104,11 @@ public class AuthController {
         return authClient.register(token, user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
-                    userService.register(user);
+                    User localUser = userService.register(user);
+                    UserDto localUserDto = userMapper.toUserDto(localUser);
 
-                    // Return HTTP 200 OK with the response body
-                    return Mono.just(response);
+                    // Return HTTP 200 OK with the locally registered user
+                    return Mono.just(ResponseEntity.status(response.getStatusCode()).body(localUserDto));
                 })
                 .block();
     }
@@ -125,25 +152,164 @@ public class AuthController {
     }
 
     /**
-     * Handles GET requests to "/oauth2/login"
-     * Redirects the client to the OAuth2 authorization endpoint for Azure
-     * This initiates the OAuth2 login flow
-     * After successful login, the user will be redirected back to the application
+     * Handles GET requests to "/auth/login/azure"
      * 
-     * @return ResponseEntity with redirection to OAuth2 login URL
+     * This endpoint is used to initiate the OAuth2 login process by redirecting
+     * to the spring-auth Azure login endpoint.
+     * The login process is handled by the spring-auth application, which will manage the
+     * authentication flow with Azure and redirect to redirectUrl after successful login.
+     * 
+     * @param redirectUrl  The URL to redirect to after successful authentication (optional).
+     *                     If not provided, uses the Referer header. If neither is available,
+     *                     no redirect URL is used.
+     * @param request      The HTTP request object
+     *
+     * @return ResponseEntity<Void> with redirect to the spring-auth Azure login endpoint
+     *         or an error response if the redirection fails.
      */
-    @GetMapping("/oauth2/login")
-    public ResponseEntity<Object> testCallOAuth2() {
+    @GetMapping("/login/azure")
+    public ResponseEntity<Void> OAuth2AzureLogin(@RequestParam(required = false) String redirectUrl,
+                                                 HttpServletRequest request) {
 
-        // Redirect frontend to spring-auth OAuth2 login endpoint
-        URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
-        return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
+        HttpSession session = request.getSession(true);
+
+        // Store redirect URL in session if provided, otherwise store the referer header
+        if (redirectUrl != null && !redirectUrl.isEmpty()) {
+            session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, redirectUrl);
+            log.debug("Stored redirect URL from parameter: {}", redirectUrl);
+        } else {
+            String referer = request.getHeader("Referer");
+            if (referer != null && !referer.isEmpty()) {
+                session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, referer);
+                log.debug("Stored redirect URL from Referer header: {}", referer);
+            } else {
+                log.debug("No redirect URL provided");
+            }
+        }
+
+        ResponseCookie cookie = ResponseCookie.from("redirect_url", redirectUrl)
+        .httpOnly(true)
+        .path("/")
+        .sameSite("None")
+        .secure(true)
+        .build();
+
+        // Build the login URI for the spring-auth Azure login endpoint
+        URI loginUri = authClient.buildAzureLoginUri();
+
+        // Redirect to the spring-auth Azure login endpoint
+        log.debug("Redirecting to spring-auth Azure login endpoint: {}", loginUri);
+        return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.SET_COOKIE, cookie.toString()).location(loginUri).build();
     }
+
+    /**
+     * Handles GET requests to "/auth/auth-code"
+     * 
+     * This endpoint is called after a successful OAuth2 login handeled by spring-auth application.
+     * It is used to exchange the authorization code for access and refresh tokens.
+     * 
+     * Then it gets or create the corresponding user in local database, stores user informations
+     * in session and redirects to the frontend application.
+     * 
+     * The frontend should then call /auth/tokens endpoint to get the informations wich where
+     * stored in session.
+     * 
+     * @param authCode the authorization code received from the spring-auth application
+     * @param userId the ID of the user for whom to exchange the authorization code
+     * @param request the HTTP request object
+     * @param redirectUrl the URL to redirect to after successful authentication
+     * @return ResponseEntity redirecting to the frontend 
+     */
+    @GetMapping("/auth-code")
+    public ResponseEntity<?> authCode(@RequestParam String authCode, @RequestParam Long userId, HttpServletRequest request, @CookieValue(name="redirect_url") String redirectUrl) {
+        
+        log.debug("OAuth2 login successful, using authcode to get tokens");
+
+        HttpSession session = request.getSession();
+
+        AuthCodeDto authCodeDto = AuthCodeDto.builder()
+            .code(authCode)
+            .id(userId)
+            .build();
+
+        // Exchange the AuthCode provided by spring-auth application and get
+        // a ResponseEntity containing user informations, including tokens
+        ResponseEntity<UserDto> response = authClient.getTokenWithAuthCode(authCodeDto).block();
+    
+        UserDto user = response.getBody();
+        List<String> cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+
+        if (cookies != null) {
+            for (String cookie : cookies) {
+                if (cookie.startsWith("refresh_token=")) {
+                    session.setAttribute("refresh_token", cookie);
+                }
+            }
+        }
+
+        log.debug("Got tokens, get or create the logged user in local database");
+
+        UserDto loggedUser = userService.getOrCreateUser(user);
+       
+        loggedUser.setToken(user.getToken());
+        session.setAttribute("loggedUser", loggedUser);
+
+        log.debug("Redirecting to: {}", redirectUrl);
+        return ResponseEntity
+            .status(HttpStatus.FOUND)
+            .location(URI.create(redirectUrl))
+            .build(); 
+    }
+
+    /**
+     * Retrieves the informations for the logged-in user, including authentication and refresh tokens
+     * 
+     * @param request the HTTP request object
+     * @return ResponseEntity with the user informations, including authentication and refresh tokens
+     */
+    @GetMapping("/tokens")
+    public ResponseEntity<?> getToken(HttpServletRequest request){
+        HttpSession session = request.getSession();
+
+        if(session != null){
+            try{
+                UserDto userDto = (UserDto) session.getAttribute("loggedUser");
+                String cookies = (String) session.getAttribute("refresh_token");
+                log.debug("refresh_token : {}", cookies);
+                log.debug("UserDto : {}", userDto);
+
+                String refreshToken = cookies
+                    .substring("refresh_token=".length())
+                    .split(";")[0];
+
+                ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/auth/refresh")
+                    .maxAge(refreshTokenLifeTime)
+                    .sameSite("None")
+                    .build();
+
+                return ResponseEntity
+                    .status(200)
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(userDto);
+                    
+            }
+            catch (NullPointerException e){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+        
+        // No session provided, access is not authorized
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
 
     /**
      * Handles POST requests to "/logout"
      * Sends the logout request to the authentication provider
-     * Passes the authorization token from the request header
+     * Passes the authorization token from the request header7
      * Returns the response from the authentication provider
      * 
      * @param token The authorization token from the request header

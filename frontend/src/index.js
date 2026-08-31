@@ -12,11 +12,10 @@ import MainLayout from './common/layouts/MainLayout';
 import Home from './features/home';
 import Contact from './features/contact';
 import Login from './features/auth/ui/login';
-import Azure from './features/auth/ui/login/azure';
+import AzureCallback from './features/auth/ui/login/AzureCallback';
 import ChangePassword from './features/auth/ui/change-password';
 import ResetPassword from './features/auth/ui/reset-password';
 import ApiAuthCall from './features/auth';
-
 
 // Utils
 import Redirect from './common/utils/Redirect'
@@ -24,7 +23,6 @@ import Redirect from './common/utils/Redirect'
 // Styles
 import '@orif-informatique/react-components-library/styles.css';
 import './index.pcss';
-
 
 const container = document.getElementById('root');
 const root = createRoot(container);
@@ -70,7 +68,7 @@ root.render(
 
                     <Route
                         path="/azure"
-                        element={<Azure />}
+                        element={<AzureCallback />}
                     />
 
                     <Route
@@ -82,7 +80,6 @@ root.render(
                         path="/reset-password"
                         element={<ResetPassword />}
                     />
-
                 </Route>
             </Routes>
         </BrowserRouter>
