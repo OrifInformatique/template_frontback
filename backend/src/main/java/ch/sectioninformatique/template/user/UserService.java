@@ -516,24 +516,27 @@ public class UserService {
     User existingUser = userRepository.findById(userId)
             .orElseThrow(UserNotFoundException::new);
 
+    log.debug("MainRole : {}", newUser.getMainRole());
+
     Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
             .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
 
-    Set<Role> newAppSpecificRoles = new HashSet<>();
-    for (String role : newUser.getAppSpecificRoles()) {
-        Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
-        .orElseThrow(() -> new RoleNotFoundException(role));
-        newAppSpecificRoles.add(newRole);
-   }
+    if (newUser.getAppSpecificRoles() != null){
+        Set<Role> newAppSpecificRoles = new HashSet<>();
+        for (String role : newUser.getAppSpecificRoles()) {
+            log.debug("Role String : {}", role);
+            Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
+            .orElseThrow(() -> new RoleNotFoundException(role));
+            newAppSpecificRoles.add(newRole);
+        }
+
+        existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
+    }
 
     existingUser.setFirstName(newUser.getFirstName());
     existingUser.setLastName(newUser.getLastName());
     existingUser.setLogin(newUser.getLogin());
     existingUser.setMainRole(newMainRole);
-    
-    existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
-
-    existingUser.setUpdatedAt(new Date());
 
     userRepository.save(existingUser);
 }
