@@ -264,8 +264,8 @@ public class UserController {
                 .getContext()
                 .getAuthentication();
             
-                UserDto current_user = (UserDto) authentication.getPrincipal();
-                if (current_user.getLogin().equals(userLogin)) {
+                UserDto currentUser = (UserDto) authentication.getPrincipal();
+                if (currentUser.getLogin().equals(userLogin)) {
                     String message = messageSource.getMessage(
                         "user.downgrade.self",
                         null,
