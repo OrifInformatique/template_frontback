@@ -302,8 +302,8 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
 
-        userService.updateUser(id, user);
         String message = authClient.updateUser(token, id, user).block().getBody();
+        userService.updateUser(id, user);
         return ResponseEntity.ok().body(message);
     }
 
