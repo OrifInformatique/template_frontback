@@ -1,15 +1,15 @@
 package ch.sectioninformatique.template.item;
 
+import ch.sectioninformatique.template.user.User;
+
 import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import ch.sectioninformatique.template.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,8 +35,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE items SET deleted = true WHERE id = ?")
-@FilterDef(name = "delete", parameters = @ParamDef(name = "deleted", type = Boolean.class))
-@Filter(name = "delete", condition = "deleted = :deleted")
 public class Item {
 
     /**
@@ -62,7 +61,8 @@ public class Item {
      * Uses eager fetching to ensure author information is always available.
      */
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "author_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "author_id", nullable = true)
     private User author;
 
 

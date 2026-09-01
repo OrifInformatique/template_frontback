@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getItems, deleteItem, restoreItem, hardDeleteItem } from './api/api';
+import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import ItemForm from './itemForm';
 import ItemDetail from './itemDetail';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
@@ -38,7 +38,7 @@ const Items = () => {
     }, [showDeleted]);
 
     // Imperative refresh for event handlers (after mutations).
-    const fetchItems = async () => {
+    const fetchItems = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -49,16 +49,20 @@ const Items = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [showDeleted, t]);
 
-    const actions = {
-        edit: { permission: "user:update", onClick: (item) => { setSelectedItem(items.find((i) => i.id === item.id) ?? item); setFormOpen(true); } },
-        delete: { permission: "user:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
-        restore: { permission: "user:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
-        hardDelete: { permission: "user:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
-        viewDeleted: { permission: "user:read" },
-        view: { permission: "user:read", onClick: (item) => { setSelectedItem(items.find((i) => i.id === item.id) ?? item); setItemOpen(true); } },
-    };
+    useEffect(() => {
+        fetchItems();
+    }, [fetchItems]);
+
+    const actions = useMemo(() => ({
+        // TODO: Replace hardcoded edit with a proper edit form/modal
+        edit: { permission: "item:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
+        delete: { permission: "item:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
+        restore: { permission: "item:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
+        hardDelete: { permission: "item:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
+        viewDeleted: { permission: "item:read" },
+    }), [fetchItems]);
 
     return (
         <div>

@@ -352,6 +352,7 @@ public class AuthClient {
          * 
          * @param token  The access token
          * @param userId The ID of the user to delete permanently
+         * @param hardDelete A boolean for soft or hard delete (default: false)
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
          *         deletion response (e.g., token or status message)
          */
