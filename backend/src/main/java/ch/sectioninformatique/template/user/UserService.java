@@ -532,38 +532,44 @@ public class UserService {
     /**
      * Updates a user's informations.
      * 
-     * @param userId The ID of the user to update
+     * @param login The login (username) of the user to update
      * @param newUser The updated user information
+     * @param token The authorization token for the request
+     * @return ResponseEntity containing the update result
      */
     public ResponseEntity<?> updateUser(String login, UserDto newUser, String token) {
 
+        // Retrieve the existing user from the database
+        User existingUser = userRepository.findByLogin(login)
+            .orElseThrow(() -> new UserNotFoundException(login));
+
+        // Retrieve the new main role from the database
+        Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
+                .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
+
+        // Call the AuthClient to update the user in the global auth service
+        // If the response is not successful, return an error response
         ResponseEntity<?> response = authClient.updateUser(token, login, newUser).block();
         if (response == null || !response.getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());
         }
 
+        // Update the existing user's information with the new data in the local database
+        if (newUser.getAppSpecificRoles() != null){
+            Set<Role> newAppSpecificRoles = new HashSet<>();
+            for (String role : newUser.getAppSpecificRoles()) {
+                Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
+                .orElseThrow(() -> new RoleNotFoundException(role));
+                newAppSpecificRoles.add(newRole);
+            }
 
-    User existingUser = userRepository.findByLogin(login)
-        .orElseThrow(() -> new UserNotFoundException(login));
-
-    Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
-            .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
-
-    if (newUser.getAppSpecificRoles() != null){
-        Set<Role> newAppSpecificRoles = new HashSet<>();
-        for (String role : newUser.getAppSpecificRoles()) {
-            Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
-            .orElseThrow(() -> new RoleNotFoundException(role));
-            newAppSpecificRoles.add(newRole);
+            existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
         }
 
-        existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
-    }
-
-    existingUser.setFirstName(newUser.getFirstName());
-    existingUser.setLastName(newUser.getLastName());
-    existingUser.setLogin(newUser.getLogin());
-    existingUser.setMainRole(newMainRole);
+        existingUser.setFirstName(newUser.getFirstName());
+        existingUser.setLastName(newUser.getLastName());
+        existingUser.setLogin(newUser.getLogin());
+        existingUser.setMainRole(newMainRole);
 
         // Save modified Entity
         userRepository.save(existingUser);
