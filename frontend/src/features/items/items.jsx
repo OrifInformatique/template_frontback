@@ -107,8 +107,8 @@ const Items = () => {
                 noItemsLabel={t("no_items", "No items to display.")}
                 showDeleted={showDeleted}
                 onToggleShowDeleted={setShowDeleted}
-                confirmHardDeleteLabel={t("confirm_hard_delete", "Confirm Permanent Deletion")}
-                confirmHardDeleteLabelText={t("confirm_hard_delete_text", "Are you sure you want to permanently delete this item? This action cannot be undone.")}
+                confirmHardDeleteTitle={t("confirm_hard_delete", "Confirm Permanent Deletion")}
+                confirmHardDeleteText={t("confirm_hard_delete_text", "Are you sure you want to permanently delete this item? This action cannot be undone.")}
             />
         </div>
     );
