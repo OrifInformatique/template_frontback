@@ -603,13 +603,13 @@ public class AuthClient {
 /**
  * Method for updating users
  * @param token the access token
- * @param userId the user's Id
+ * @param login the user's email
  * @param userDto the user's DTO
  */
 
-public Mono<ResponseEntity<String>> updateUser(String token, Long userId, UserDto userDto){
+public Mono<ResponseEntity<String>> updateUser(String token, String login, UserDto userDto){
         return webClient.put()
-        .uri(uriWithOptionalLang("/users/" + userId))
+        .uri(uriWithOptionalLang("/users/" + login))
         .header(HttpHeaders.AUTHORIZATION, token)
         .bodyValue(userDto)
         .retrieve()

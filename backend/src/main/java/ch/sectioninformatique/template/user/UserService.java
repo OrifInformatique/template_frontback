@@ -1,13 +1,19 @@
 package ch.sectioninformatique.template.user;
 
+import java.lang.foreign.Linker.Option;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.mapstruct.ap.shaded.freemarker.core.LocalContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
@@ -49,6 +55,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings("null")
 public class UserService {
+
+    private final MessageSource messageSource;
 
     /** Repository for user data access */
     private final UserRepository userRepository;
@@ -527,9 +535,16 @@ public class UserService {
      * @param userId The ID of the user to update
      * @param newUser The updated user information
      */
-    public void updateUser(Long userId, UserDto newUser) {
-    User existingUser = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException(userId));
+    public ResponseEntity<?> updateUser(String login, UserDto newUser, String token) {
+
+        ResponseEntity<?> response = authClient.updateUser(token, login, newUser).block();
+        if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());
+        }
+
+
+    User existingUser = userRepository.findByLogin(login)
+        .orElseThrow(() -> new UserNotFoundException(login));
 
     Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
             .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
@@ -552,6 +567,8 @@ public class UserService {
 
         // Save modified Entity
         userRepository.save(existingUser);
+
+        return ResponseEntity.ok().body(messageSource.getMessage("user.update.success", null, LocaleContextHolder.getLocale()));
     }
 
     /**
