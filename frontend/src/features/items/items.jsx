@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from './api/api';
+import { getItems, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import ItemForm from './itemForm';
 import ItemDetail from './itemDetail';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';

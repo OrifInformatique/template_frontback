@@ -1,9 +1,4 @@
-import itemsData from "../mocks/items.json";
 import api from "../../auth/ui/api/apiClient";
-import useAuthStore from "../../auth/authStore";
-
-// Mutable copy of the mock data so mutations don't affect the original import
-let items = [...itemsData];
 
 /**
  * Gets all the items.
@@ -70,13 +65,7 @@ export const hardDeleteItem = async (id) =>
         const response = await api.delete(`/items/${id}/hard`);
         return response.data;
         
-        const index = items.findIndex((item) => item.id === id);
-        if (index !== -1)
-        {
-            items.splice(index, 1);
-            return { id };
-        }
-        return null;
+
     }
     catch(error)
     {
