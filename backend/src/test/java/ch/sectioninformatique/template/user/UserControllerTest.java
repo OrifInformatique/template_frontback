@@ -115,7 +115,7 @@ public class UserControllerTest {
 
     private UserDto createTemporaryUser() {
         String uniqueLogin = "temp.permanent." + System.currentTimeMillis() + "@test.com";
-        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null));
+        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null, null, null));
         return userService.findByLogin(uniqueLogin);
     }
 

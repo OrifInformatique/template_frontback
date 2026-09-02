@@ -3,7 +3,6 @@ package ch.sectioninformatique.template.user;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,7 +47,6 @@ public class UserController {
     /**
      * Client for making user-related HTTP requests to the authentication service
      */
-    @Autowired
     private final AuthClient authClient;
 
     /**
@@ -101,7 +100,7 @@ public class UserController {
     }
 
     /**
-     * Handles permanent DELETE requests to "/{userId}/{global}/permanent"
+     * Handles permanent DELETE requests to "/{userId}/{global}/{hardDelete}"
      * Permanently deletes a user either locally or from the global auth service,
      * based on the 'global' flag
      * If 'global' is false, permanently deletes the user from the local database
@@ -111,6 +110,7 @@ public class UserController {
      * 
      * @param userId The ID of the user to permanently delete
      * @param global Flag indicating whether to delete locally or globally
+     * @param hardDelete A boolean for soft or hard delete (default: false)
      * @return ResponseEntity with permanent deletion result message
      */
     @DeleteMapping("/{userLogin}")
@@ -285,5 +285,42 @@ public class UserController {
                 null,
                 LocaleContextHolder.getLocale());
             return ResponseEntity.ok().body(message);
+    }
+
+    /**
+     * Updates a user's information.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Validates the user exists and updates their information
+     * - Returns success/error message
+     *
+     * @param id   The ID of the user to update
+     * @param user The updated user information
+     * @return ResponseEntity with success message or error details
+     */
+    @PutMapping("/{login}")
+    @PreAuthorize("hasAuthority('user:update')")
+    public ResponseEntity<?> updateUser(@PathVariable String login, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
+
+        ResponseEntity<?> reponse = userService.updateUser(login, user, token);
+        return reponse;
+    }
+
+    /**
+     * Restores a soft-deleted user.
+     * This endpoint:
+     * - Requires the 'user:update' authority
+     * - Validates the user exists and is deleted
+     * - Returns success/error message
+     *
+     * @param id The ID of the user to restore
+     * @return ResponseEntity with success message or error details
+     */
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('user:update')")
+    public ResponseEntity<?> restoreUser(@PathVariable Long id) {
+
+        userService.restoreUser(id);
+        return ResponseEntity.ok().body("User restored successfully.");
     }
 }
