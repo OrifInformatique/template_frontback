@@ -240,11 +240,19 @@ public class UserService {
 
                 localUser = this.register(newUser);
             }
-
+            if (localUser.getMainRole().getName().equals(RoleEnum.ADMIN)){
+                List<Role> allRoles = roleRepository.findAll();
+                    for (Role role : allRoles) {
+                        localUser.addAppSpecificRoles(role);
+                        log.debug("ROLE : {}", role.getName());
+                    }
+                }
+            userRepository.save(localUser);
             return localUser;
         } catch (DuplicateUserException | DefaultRoleNotFoundException | UserCreationException e) {
             throw e;
         } catch (Exception e) {
+            log.error("ERROR : {} | Message : {} | StackTrace : {}", e.getClass(), e.getMessage(), e.getStackTrace());
             throw new UserCreationException(e.getMessage());
         }
     }
@@ -272,7 +280,8 @@ public class UserService {
                 localUser.setMainRole(newMainRole);
                 userRepository.save(localUser);
             }
-        } catch (RoleNotFoundException e) {
+        }
+        catch (RoleNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new UserUpdateException(e.getMessage());

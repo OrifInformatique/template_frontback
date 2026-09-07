@@ -1,9 +1,10 @@
 package ch.sectioninformatique.template.security;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 /**
  * Repository interface for Role entity operations.
@@ -33,4 +34,13 @@ public interface RoleRepository extends CrudRepository<Role, Long> {
      * @return Optional containing the role if found, empty Optional otherwise
      */
     Optional<Role> findByName(RoleEnum name);
+
+    /**
+     * Finds all roles in the database.
+     * This method:
+     * Retrieves all role from the database
+     * Return a List of roles
+     * @return List of all roles
+     */
+    List<Role> findAll();
 }
