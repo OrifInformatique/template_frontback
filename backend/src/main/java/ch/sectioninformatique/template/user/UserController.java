@@ -313,14 +313,14 @@ public class UserController {
      * - Validates the user exists and is deleted
      * - Returns success/error message
      *
-     * @param id The ID of the user to restore
+     * @param userLogin The login of the user to restore
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{id}/restore")
+    @PutMapping("/{userLogin}/restore")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> restoreUser(@PathVariable Long id) {
+    public ResponseEntity<?> restoreUser(@PathVariable String userLogin) {
 
-        userService.restoreUser(id);
+        userService.restoreUser(userLogin);
         return ResponseEntity.ok().body("User restored successfully.");
     }
 }

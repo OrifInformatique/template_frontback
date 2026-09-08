@@ -102,9 +102,9 @@ export const getUserWithDeleted = async () => {
     }
 };
 
-export const restoreUser = async (id) => {
+export const restoreUser = async (userLogin) => {
     try {
-        const response = await api.put(`/users/${id}/restore`);
+        const response = await api.put(`/users/${userLogin}/restore`);
         return response.data;
     }
     catch(error) {

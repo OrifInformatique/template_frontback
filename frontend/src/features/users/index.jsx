@@ -41,7 +41,7 @@ function UserList() {
             delete: { permission: "user:delete", onClick: (user) => { deleteUserLocal(user.login).then(() => deleteUserDistant(user.login).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err)))}},
             hardDelete: { permission: "user:delete", onClick: (user) => hardDeleteUserLocal(user.login).then(() => hardDeleteUserDistant(user.login).then(() => fetchUsers())).catch((err) => console.error("Hard delete failed:", err)) },
             viewDeleted: { permission: "user:read"},
-            restore: { permission: "user:update", onClick: (user) => restoreUser(user.id).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err)) }
+            restore: { permission: "user:update", onClick: (user) => restoreUser(user.login).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err)) }
         }), [showDeleted]);
 
 

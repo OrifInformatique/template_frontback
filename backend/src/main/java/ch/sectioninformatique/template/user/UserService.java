@@ -577,11 +577,11 @@ public class UserService {
 
     /**
      * Restores a soft-deleted user.
-     * @param userId The ID of the user to restore
+     * @param userLogin The login of the user to restore
      */
-    public void restoreUser(Long userId) {
-        User userToRestore = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+    public void restoreUser(String userLogin) {
+        User userToRestore = userRepository.findByLogin(userLogin)
+                .orElseThrow(() -> new UserNotFoundException(userLogin));
 
         // Change deleted value in the Entity
         userToRestore.setDeleted(false);
