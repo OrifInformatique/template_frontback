@@ -1,13 +1,11 @@
 package ch.sectioninformatique.template.user;
 
-import java.lang.foreign.Linker.Option;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.mapstruct.ap.shaded.freemarker.core.LocalContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Lazy;
