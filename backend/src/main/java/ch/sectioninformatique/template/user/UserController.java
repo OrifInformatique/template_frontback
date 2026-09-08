@@ -298,11 +298,11 @@ public class UserController {
      * @param user The updated user information
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{login}")
+    @PutMapping("/{userLogin}")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> updateUser(@PathVariable String login, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
+    public ResponseEntity<?> updateUser(@PathVariable String userLogin, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
 
-        ResponseEntity<?> reponse = userService.updateUser(login, user, token);
+        ResponseEntity<?> reponse = userService.updateUser(userLogin, user, token);
         return reponse;
     }
 
