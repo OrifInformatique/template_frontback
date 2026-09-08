@@ -32,6 +32,7 @@ import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletion
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +54,8 @@ import org.hibernate.Session;
 public class UserService {
 
     /** EntityManager for database operations */
-    private final EntityManager entityManager;
+    @PersistenceContext 
+    private EntityManager entityManager;
 
     /** Repository for user data access */
     private final UserRepository userRepository;

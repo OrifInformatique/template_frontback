@@ -1,27 +1,26 @@
 package ch.sectioninformatique.template.security;
 
+import java.io.IOException;
+import java.util.Map;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.auth0.jwt.exceptions.JWTVerificationException;
+
+import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
-
-import org.springframework.stereotype.Component;
-import org.springframework.lang.NonNull;
-
-import java.io.IOException;
-import java.util.Map;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * JWT Authentication Filter for processing JWT tokens in incoming requests.
