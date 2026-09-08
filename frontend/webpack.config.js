@@ -29,7 +29,7 @@ module.exports = {
         historyApiFallback: true,
         proxy: [
             {
-                context: ['/auth', '/users', '/tests'],
+                context: ['/auth', '/users', '/roles', '/tests'],
                 target: process.env.BACKEND_API_URL || "http://localhost:8081",
                 changeOrigin: true,
                 secure: false,

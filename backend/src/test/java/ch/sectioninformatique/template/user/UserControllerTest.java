@@ -248,10 +248,10 @@ public class UserControllerTest {
             });
     }
 
-    // ==================== GET /users/ ====================
+    // ==================== GET /users ====================
 
     /**
-     * Test: GET /users/all - Success
+     * Test: GET /users?deleted=false - Success
      *
      * Test retrieving all users with proper authorization.
      */
@@ -276,7 +276,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/
+     * Test: GET /users?deleted=false
      *
      * Verify users with user:read authority can retrieve all users from the system.
      */
@@ -305,7 +305,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/ - 401 Unauthorized
+     * Test: GET /users - 401 Unauthorized
      *
      * Test retrieving all users without proper authorization.
      */
@@ -329,10 +329,10 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== GET /users/all-with-deleted ====================
+    // ==================== GET /users (including soft-deleted) ====================
 
     /**
-     * Test: GET /users/all-with-deleted - Success
+     * Test: GET /users (no deleted param) - Success
      *
      * Test retrieving all users including soft-deleted ones with proper authorization.
      */
@@ -632,7 +632,7 @@ public class UserControllerTest {
     }
     
     /**
-     * Test: Any protected endpoint (e.g., GET /users/all)
+     * Test: Any protected endpoint (e.g., GET /users?deleted=false)
      * Exception: SecurityExceptions.AuthenticationRequiredException (401
      * Unauthorized)
      *
@@ -670,7 +670,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/all-with-deleted - 401 Unauthorized
+     * Test: GET /users (no deleted param) - 401 Unauthorized
      *
      * Test retrieving all users including soft-deleted ones without proper authorization.
      */
@@ -694,10 +694,10 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== GET /users/deleted ====================
+    // ==================== GET /users?deleted=true ====================
 
     /**
-     * Test: GET /users/deleted - Success
+     * Test: GET /users?deleted=true - Success
      *
      * Test retrieving all soft-deleted users with proper authorization.
      */
@@ -722,7 +722,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/deleted - 401 Unauthorized
+     * Test: GET /users?deleted=true - 401 Unauthorized
      *
      * Test retrieving all soft-deleted users without proper authorization.
      */

@@ -1,12 +1,12 @@
 package ch.sectioninformatique.template.security;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 
-@Controller
+@RestController
 @RequestMapping("/roles")
 public class RoleController {
     private final RoleService roleService;
@@ -20,7 +20,7 @@ public class RoleController {
      *
      * @return A ResponseEntity containing the list of all roles
      */
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<?> getRoles() {
         return ResponseEntity.ok().body(roleService.getAllRoles());
     }

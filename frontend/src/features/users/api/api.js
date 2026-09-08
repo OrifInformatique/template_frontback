@@ -2,7 +2,7 @@ import api from "../../auth/ui/api/apiClient";
 
 export const getUsers = async () => {
     try {
-        const response = await api.get(`/users`);
+        const response = await api.get(`/users?deleted=false`);
         return response.data;
     }
     catch(error) {
@@ -24,7 +24,7 @@ export const deleteUserLocal = async (userLogin) => {
 
 export const getRoles = async () => {
     try {
-        const response = await api.get(`/roles/all`);
+        const response = await api.get(`/roles`);
         return response.data;
     }
     catch(error) {
@@ -93,7 +93,7 @@ export const updateUser = async (id, data) => {
 
 export const getUserWithDeleted = async () => {
     try {
-        const response = await api.get(`/users/all-with-deleted`);
+        const response = await api.get(`/users`);
         return response.data;
     }
     catch(error) {
