@@ -15,6 +15,7 @@ import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsExc
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
+import ch.sectioninformatique.template.user.UserExceptions.UserUpdateException;
 import ch.sectioninformatique.template.user.UserDto;
 import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
@@ -598,4 +599,25 @@ public class AuthClient {
                         });
                 });
         }
+
+/**
+ * Method for updating users
+ * @param token the access token
+ * @param login the user's email
+ * @param userDto the user's DTO
+ */
+
+public Mono<ResponseEntity<String>> updateUser(String token, String login, UserDto userDto){
+        return webClient.put()
+        .uri(uriWithOptionalLang("/users/" + login))
+        .header(HttpHeaders.AUTHORIZATION, token)
+        .bodyValue(userDto)
+        .retrieve()
+        .onStatus(status -> status.value() >= 400,
+                response -> response.bodyToMono(ErrorDto.class)
+        .flatMap(error -> Mono.error(new UserUpdateException(error.message()))))
+
+        .toEntity(String.class);
+}
+
 }

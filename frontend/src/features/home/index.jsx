@@ -10,6 +10,8 @@ const Home = () => {
   <>
     <Title>{t("home_title")}</Title>
     <Items />
+
+    <UserList />
   </>
   )
 }

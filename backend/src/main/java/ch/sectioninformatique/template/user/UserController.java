@@ -294,16 +294,17 @@ public class UserController {
      * - Validates the user exists and updates their information
      * - Returns success/error message
      *
-     * @param id   The ID of the user to update
+     * @param userLogin   The login of the user to update
      * @param user The updated user information
+     * @param token The authorization token (Bearer token) for authentication
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{id}")
+    @PutMapping("/{userLogin}")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDto user ) {
+    public ResponseEntity<?> updateUser(@PathVariable String userLogin, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
 
-        userService.updateUser(id, user);
-        return ResponseEntity.ok().body("User updated successfully.");
+        ResponseEntity<?> reponse = userService.updateUser(userLogin, user, token);
+        return reponse;
     }
 
     /**
@@ -313,14 +314,14 @@ public class UserController {
      * - Validates the user exists and is deleted
      * - Returns success/error message
      *
-     * @param id The ID of the user to restore
+     * @param userLogin The login of the user to restore
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{id}/restore")
+    @PutMapping("/{userLogin}/restore")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> restoreUser(@PathVariable Long id) {
+    public ResponseEntity<?> restoreUser(@PathVariable String userLogin) {
 
-        userService.restoreUser(id);
+        userService.restoreUser(userLogin);
         return ResponseEntity.ok().body("User restored successfully.");
     }
 }

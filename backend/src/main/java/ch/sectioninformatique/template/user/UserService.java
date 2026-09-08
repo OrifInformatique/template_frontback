@@ -7,7 +7,11 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
@@ -32,15 +36,6 @@ import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletion
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import org.springframework.stereotype.Service;
-import org.springframework.lang.NonNull;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,8 +51,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-
+@SuppressWarnings("null")
 public class UserService {
+
+    private final MessageSource messageSource;
 
     /** Repository for user data access */
     private final UserRepository userRepository;
@@ -533,45 +530,58 @@ public class UserService {
     /**
      * Updates a user's informations.
      * 
-     * @param userId The ID of the user to update
+     * @param login The login (username) of the user to update
      * @param newUser The updated user information
+     * @param token The authorization token for the request
+     * @return ResponseEntity containing the update result
      */
-    public void updateUser(Long userId, UserDto newUser) {
+    public ResponseEntity<?> updateUser(String login, UserDto newUser, String token) {
 
-        // Get the existing user
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        // Retrieve the existing user from the database
+        User existingUser = userRepository.findByLogin(login)
+            .orElseThrow(() -> new UserNotFoundException(login));
 
-        // Validate and set the new main role
+        // Retrieve the new main role from the database
         Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
                 .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
 
-        // Validate and set the new app-specific roles
-        Set<Role> newAppSpecificRoles = new HashSet<>();
-        for (String role : newUser.getAppSpecificRoles()) {
-            Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
-                    .orElseThrow(() -> new RoleNotFoundException(role));
-            newAppSpecificRoles.add(newRole);
+        // Call the AuthClient to update the user in the global auth service
+        // If the response is not successful, return an error response
+        ResponseEntity<?> response = authClient.updateUser(token, login, newUser).block();
+        if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());
         }
 
-        // Prepare new user's informations in Entity
+        // Update the existing user's information with the new data in the local database
+        if (newUser.getAppSpecificRoles() != null){
+            Set<Role> newAppSpecificRoles = new HashSet<>();
+            for (String role : newUser.getAppSpecificRoles()) {
+                Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
+                .orElseThrow(() -> new RoleNotFoundException(role));
+                newAppSpecificRoles.add(newRole);
+            }
+
+            existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
+        }
+
         existingUser.setFirstName(newUser.getFirstName());
         existingUser.setLastName(newUser.getLastName());
         existingUser.setLogin(newUser.getLogin());
         existingUser.setMainRole(newMainRole);
-        existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
 
         // Save modified Entity
         userRepository.save(existingUser);
+
+        return ResponseEntity.ok().body(messageSource.getMessage("user.update.success", null, LocaleContextHolder.getLocale()));
     }
 
     /**
      * Restores a soft-deleted user.
-     * @param userId The ID of the user to restore
+     * @param userLogin The login of the user to restore
      */
-    public void restoreUser(Long userId) {
-        User userToRestore = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+    public void restoreUser(String userLogin) {
+        User userToRestore = userRepository.findByLogin(userLogin)
+                .orElseThrow(() -> new UserNotFoundException(userLogin));
 
         // Change deleted value in the Entity
         userToRestore.setDeleted(false);

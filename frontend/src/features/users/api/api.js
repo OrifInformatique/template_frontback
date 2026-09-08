@@ -10,10 +10,10 @@ export const getUsers = async () => {
         return [];
     }
 };
-export const deleteUserLocal = async (id) => {
-    console.log("userID :" + id);
+export const deleteUserLocal = async (userLogin) => {
+    console.log("userID :" + userLogin);
     try {
-        const response = await api.delete(`/users/${id}/false`);
+        const response = await api.delete(`/users/${userLogin}?global=false&hard=false`);
         return response.data;
     }
     catch(error) {
@@ -33,10 +33,10 @@ export const getRoles = async () => {
     };
 }
 
-export const deleteUserDistant = async (id) => {
-    console.log("userID :" + id);
+export const deleteUserDistant = async (userLogin) => {
+    console.log("userID :" + userLogin);
     try {
-        const response = await api.delete(`/users/${id}/true`);
+        const response = await api.delete(`/users/${userLogin}?global=true&hard=false`);
         return response.data;
     }
     catch(error) {
@@ -45,10 +45,10 @@ export const deleteUserDistant = async (id) => {
     }
 };
 
-export const hardDeleteUserLocal = async (id) => {
-    console.log("userID :" + id);
+export const hardDeleteUserLocal = async (userLogin) => {
+    console.log("userID :" + userLogin);
     try {
-        const response = await api.delete(`/users/${id}/false/permanent`);
+        const response = await api.delete(`/users/${userLogin}?global=false&hard=true`);
         return response.data;
     }
     catch(error) {
@@ -102,9 +102,9 @@ export const getUserWithDeleted = async () => {
     }
 };
 
-export const restoreUser = async (id) => {
+export const restoreUser = async (userLogin) => {
     try {
-        const response = await api.put(`/users/${id}/restore`);
+        const response = await api.put(`/users/${userLogin}/restore`);
         return response.data;
     }
     catch(error) {
