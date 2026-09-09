@@ -33,6 +33,16 @@ function UserList() {
             fetchUsers();
         }, [showDeleted]);
 
+        const closeForm = () => {
+            setFormOpen(false);
+            setSelectedUser(null);
+        };
+
+        const handleUserSaved = async () => {
+            closeForm();
+            await fetchUsers();
+        };
+
         const actions = useMemo(() => ({
             edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user), setFormOpen(true)}},
             delete: { permission: "user:delete", onClick: (user) => { deleteUserLocal(user.login).then(() => deleteUserDistant(user.login).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err)))}},
@@ -56,9 +66,9 @@ function UserList() {
             <div>
                 {formOpen ? (
                 <PopUp
-                    onClose={() => setFormOpen(false)}
+                    onClose={closeForm}
                     title={selectedUser ? "Edit User" : "Create User"}
-                    children={<UserForm user={selectedUser} onClose={() => setFormOpen(false)} />}
+                    children={<UserForm user={selectedUser} onClose={closeForm} onSaved={handleUserSaved} />}
                 />
                 ) : null}
                 {user?.permissions?.includes("user:write") && (

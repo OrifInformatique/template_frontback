@@ -3,15 +3,16 @@ import { Button, InputText, MultiSelect  } from '@orif-informatique/react-compon
 
 import { createUser, updateUser, getRoles } from "./api/api";
 
-function UserForm({ user, onClose }) {
+function UserForm({ user, onClose, onSaved }) {
 const [firstName, setFirstName] = useState(user ? user.firstName : "");
 const [lastName, setLastName] = useState(user ? user.lastName : "");
 const [login, setLogin] = useState(user ? user.login : "");
 const [password, setPassword] = useState("");
-const [userRoles, setUserRoles] = useState(user ? user.mainRole : "");
+    const [userRoles, setUserRoles] = useState(user?.mainRole || "USER");
 const [roles, setRoles] = useState([]);
 const [appSpefRole, setAppSpefRole] = useState([])
 const [userAppSpefRole, setUserAppSpefRole] = useState(user ? user.appSpecificRoles : [])
+const [saveError, setSaveError] = useState("");
 const roleName = []
 const userRolesName = []
 
@@ -36,7 +37,7 @@ useEffect(() => {
         setLastName(user.lastName || "");
         setLogin(user.login || "");
         setPassword(user.password || "");
-        setUserRoles(user.mainRole || "");
+            setUserRoles(user.mainRole || "USER");
         setUserAppSpefRole(user.appSpecificRoles || [])
 
         console.log("USER_APP_SPECIFIC_ROLES : " + user.appSpecificRoles)
@@ -45,6 +46,41 @@ useEffect(() => {
     }
 }, [user]);
 
+const handleSaveError = (error) => {
+    const message = error.response?.data?.message || error.message || "Unable to save user.";
+    setSaveError(message);
+    console.error("User save failed:", error.response?.data || error);
+};
+
+const handleSave = async () => {
+    setSaveError("");
+
+    try {
+        if (user) {
+            await updateUser(user.login, {
+                "firstName" : firstName,
+                "lastName" : lastName,
+                "login" : login,
+                    "mainRole": userRoles,
+                "appSpecificRoles" : userAppSpefRole
+            });
+        } else {
+            await createUser({
+                "firstName" : firstName,
+                "lastName" : lastName,
+                "login" : login,
+                "password" : password,
+                    "mainRole": userRoles,
+                "appSpecificRoles" : []
+            });
+        }
+
+        onSaved();
+    } catch (error) {
+        handleSaveError(error);
+    }
+};
+
 return (
     <>
     
@@ -52,15 +88,14 @@ return (
         <InputText id="user-last-name" name="lastName" label="Last Name" value={lastName} onChangeFunction={(e) => setLastName(e.target.value)} />
         <InputText id="user-login" name="login" label="Login" value={login} onChangeFunction={(e) => setLogin(e.target.value)} />
         <InputText id="user-password" name="password" label="Password" type="password" value={password} onChangeFunction={(e) => setPassword(e.target.value)} />
-        {user ? 
         <div>
-        <label for="user-roles" className="block text-sm font-medium text-gray-700 mt-4">Main Role</label>
+            <label htmlFor="user-roles" className="block text-sm font-medium text-gray-700 mt-4">Main Role</label>
         <select id="user-roles" name="roles" label="Main Role" value={userRoles} onChange={(e) => setUserRoles(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
             {roles.map((role) => (
                 <option key={role.id} value={role.name}>{role.name}</option>
             ))}
         </select>
-        </div> : null}
+        </div>
     
         <MultiSelect
         name="Role spécifique"
@@ -76,6 +111,8 @@ return (
         multipleLabel='sélectionnés'
         />
 
+        {saveError ? <p className="mt-3 text-red-600" role="alert">{saveError}</p> : null}
+
 
 
         <div className="flex justify-end mt-4">
@@ -83,19 +120,7 @@ return (
             <Button 
             label={user ? "Save" : "Create"} 
             variant="primary" 
-            onClick={() => { user ? updateUser(user.id, {
-                    "firstName" : firstName,
-                    "lastName" : lastName,
-                    "login" : login,
-                    "mainRole" : userRoles,
-                    "appSpecificRoles" : userAppSpefRole
-            }).then(() => onClose()).catch((err) => console.error("Update failed:", err)) :
-            createUser({
-                "firstName" : firstName,
-                "lastName" : lastName,
-                "login" : login,
-                "password" : password
-            }).then(() => onClose()).catch((err) => console.error("Create failed:", err)) }} />
+            onClick={handleSave} />
         </div>
     </>
 

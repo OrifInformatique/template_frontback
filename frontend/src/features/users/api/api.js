@@ -81,18 +81,18 @@ export const createUser = async (data) => {
     }
     catch(error) {
         console.error(`Error while creating user: ${error.message}`);
-        return null;
+        throw error;
     }
 };
 
-export const updateUser = async (id, data) => {
+export const updateUser = async (userLogin, data) => {
     try {
-        const response = await api.put(`/users/${id}`, data);
+        const response = await api.put(`/users/${encodeURIComponent(userLogin)}`, data);
         return response.data;
     }
     catch(error) {
         console.error(`Error while updating user: ${error.message}`);
-        return null;
+        throw error;
     }
 };
 
