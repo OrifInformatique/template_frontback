@@ -33,13 +33,24 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
     Optional<User> findByLogin(String login);
 
     /**
+     * Returns all users that are not soft-deleted.
+     * 
+     * @return List of active users
+     */
+    List<User> findAllByDeletedFalse();
+
+    /**
      * Returns all users including those that are soft-deleted.
+     * 
+     * @return List of all users
      */
     @Query("SELECT u FROM User u")
     List<User> findAllIncludingDeleted();
 
     /**
      * Returns only soft-deleted users.
+     * 
+     * @return List of soft-deleted users
      */
     @Query("SELECT u FROM User u WHERE u.deleted = true")
     List<User> findAllDeleted();
