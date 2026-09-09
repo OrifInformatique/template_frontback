@@ -3,8 +3,7 @@ package ch.sectioninformatique.template.user;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 
 import java.util.Date;
 import java.util.Collection;
@@ -58,11 +57,8 @@ class UserTest {
     @Test
     void testAuthoritiesWithRoles() {
         // Given
-        Role userRole = new Role();
-        userRole.setName(RoleEnum.USER);
-
         User user = User.builder()
-                .mainRole(userRole)
+                .mainRole(MainRoleEnum.USER)
                 .build();
 
         // When
@@ -82,11 +78,6 @@ class UserTest {
      */
     @Test
     void testBuilderWithAllFields() {
-        // Given
-        Role role = new Role();
-        role.setName(RoleEnum.USER);
-        
-
         // When
         User user = User.builder()
                 .id(TEST_ID)
@@ -95,7 +86,7 @@ class UserTest {
                 .login(TEST_LOGIN)
                 .createdAt(TEST_CREATED_AT)
                 .updatedAt(TEST_UPDATED_AT)
-                .mainRole(role)
+                .mainRole(MainRoleEnum.USER)
                 .build();
 
         // Then
@@ -105,7 +96,7 @@ class UserTest {
         assertEquals(TEST_LOGIN, user.getLogin());
         assertEquals(TEST_CREATED_AT, user.getCreatedAt());
         assertEquals(TEST_UPDATED_AT, user.getUpdatedAt());
-        assertEquals(role, user.getMainRole());
+        assertEquals(MainRoleEnum.USER, user.getMainRole());
     }
 
     /**
@@ -118,14 +109,11 @@ class UserTest {
     void testRoleManagement() {
         // Given
         User user = User.builder().build();
-        Role role = new Role();
-        role.setName(RoleEnum.USER);
 
         // When
-        user.setMainRole(role);
+        user.setMainRole(MainRoleEnum.MANAGER);
 
         // Then
-        assertEquals(role, user.getMainRole());
-        assertTrue(user.getMainRole() == role);
+        assertEquals(MainRoleEnum.MANAGER, user.getMainRole());
     }
 } 

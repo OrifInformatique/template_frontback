@@ -3,16 +3,13 @@ package ch.sectioninformatique.template.item;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import ch.sectioninformatique.template.app.DeletionFilter;
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
-import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
 
@@ -28,20 +25,16 @@ public class ItemServiceTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
-
     @Test
     public void getItemsTest() {
         // Clear items table
         itemRepository.deleteAllPermanently();
-        
-        Optional<Role> role = roleRepository.findByName(RoleEnum.USER);
+
         User author = User.builder()
             .firstName("author")
             .lastName("test")
             .login("test.author@test.com")
-            .mainRole(role.get())
+            .mainRole(MainRoleEnum.USER)
             .build();
         author = userRepository.save(author);
 
@@ -85,12 +78,11 @@ public class ItemServiceTest {
     @Test
     public void deleteAuthorTest() {
 
-        Optional<Role> role = roleRepository.findByName(RoleEnum.USER);
         User author = User.builder()
             .firstName("author")
             .lastName("test")
             .login("test.author@test.com")
-            .mainRole(role.get())
+            .mainRole(MainRoleEnum.USER)
             .build();
         userRepository.save(author);
 

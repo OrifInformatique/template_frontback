@@ -6,63 +6,33 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_DELETE;
 import static ch.sectioninformatique.template.security.PermissionEnum.USER_READ;
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_UPDATE;
 import static ch.sectioninformatique.template.security.PermissionEnum.USER_WRITE;
+import static ch.sectioninformatique.template.security.PermissionEnum.USER_UPDATE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_READ;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_WRITE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_UPDATE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_DELETE;
 
 /**
- * Enumeration defining the available roles in the application.
- * Each role has a predefined set of permissions that determine what actions
- * a user with that role can perform. The roles are hierarchical:
- * - USER: Basic access to resources
- * - MANAGER: Extended access to user management
- * - ADMIN: Full access to all system features
+ * Enumeration of the <b>local roles</b>, which are defined only in this
+ * application.
+ *
+ * <p>Unlike the {@link MainRoleEnum main roles} (owned by the external
+ * spring-auth service), local roles are persisted in the {@code roles} table
+ * (seeded by {@link RoleSeeder}), exposed by {@code GET /roles}, and assigned to
+ * users as {@code appSpecificRoles}. They never leave this application.
+ *
+ * <p>To add a new local role, add a constant here with its description and
+ * permission set; {@link RoleSeeder} will persist it automatically on startup.
  */
-public enum RoleEnum {
-    /**
-     * Basic user role with limited permissions.
-     * Can only read user information.
-     */
-    USER(EnumSet.of(
-            USER_READ,
-            ITEM_READ)),
+public enum LocalRoleEnum {
 
     /**
-     * Manager role with extended permissions.
-     * Can manage users, but cannot delete them.
+     * Example of a local application role which is specific to this app and is not
+     * transmitted from the spring-auth application.
      */
-    MANAGER(EnumSet.of(
-            USER_READ,
-            USER_WRITE,
-            USER_UPDATE,
-            ITEM_READ,
-            ITEM_WRITE,
-            ITEM_UPDATE)),
-
-    /**
-     * Administrator role with full system access.
-     * Has all permissions including deletion of users.
-     */
-    ADMIN(EnumSet.of(
-            USER_READ,
-            USER_WRITE,
-            USER_UPDATE,
-            USER_DELETE,
-            ITEM_READ,
-            ITEM_WRITE,
-            ITEM_UPDATE,
-            ITEM_DELETE)),
-
-    /**
-     * Example of a local application role wich is specific to this app and not
-     * transmitted from spring-auth application.
-     */
-    LOCAL_APP_ROLE(EnumSet.of(
+    LOCAL_APP_ROLE("Example of local application role", EnumSet.of(
             USER_READ,
             USER_WRITE,
             USER_UPDATE,
@@ -71,16 +41,30 @@ public enum RoleEnum {
             ITEM_UPDATE,
             ITEM_DELETE));
 
+    /** Human-readable description, used when seeding the role into the database */
+    private final String description;
+
     /** Set of permissions associated with this role */
     private final Set<PermissionEnum> permissions;
 
     /**
-     * Constructs a new RoleEnum with the specified permissions.
+     * Constructs a new LocalRoleEnum with the specified description and permissions.
      *
+     * @param description A human-readable description of the role
      * @param permissions The set of permissions to be associated with this role
      */
-    RoleEnum(Set<PermissionEnum> permissions) {
+    LocalRoleEnum(String description, Set<PermissionEnum> permissions) {
+        this.description = description;
         this.permissions = permissions;
+    }
+
+    /**
+     * Returns the human-readable description of the role.
+     *
+     * @return The role description
+     */
+    public String getDescription() {
+        return description;
     }
 
     /**
@@ -96,16 +80,16 @@ public enum RoleEnum {
      * Converts the role's permissions into Spring Security GrantedAuthority
      * objects.
      * This method creates SimpleGrantedAuthority objects for each permission and
-     * adds a role-based authority (e.g., "ROLE_USER").
+     * adds a role-based authority (e.g., "ROLE_LOCAL_APP_ROLE").
      *
      * @return Set of SimpleGrantedAuthority objects representing the role's
      *         permissions
      */
     public Set<SimpleGrantedAuthority> getGrantedAuthorities() {
-        Set<SimpleGrantedAuthority> permissions = getPermissions().stream()
+        Set<SimpleGrantedAuthority> authorities = getPermissions().stream()
                 .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
                 .collect(Collectors.toSet());
-        permissions.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
-        return permissions;
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
+        return authorities;
     }
 }

@@ -245,7 +245,7 @@ classDiagram
         +Date createdAt
         +Date updatedAt
         +boolean deleted
-        +Role mainRole
+        +MainRoleEnum mainRole
         +Set<Role> appSpecificRoles
         +Collection<GrantedAuthority> getAuthorities()
         +String getPassword()
@@ -258,12 +258,11 @@ classDiagram
 
     class Role {
         +long id
-        +RoleEnum name
+        +LocalRoleEnum name
         +String description
         +Date createdAt
         +Date updatedAt
-        +Set~User~ users
-        +Set~SimpleGrantedAuthority~ getGrantedAuthorities()
+        +Set~User~ usersAppSpecifique
     }
 
     class UserDto {
@@ -295,9 +294,8 @@ classDiagram
     }
 
     %% Relationships
-    User --> "1" Role : mainRole
     User --> "0..*" Role : appSpecificRoles
-    Role --> "0..*" User : users
+    Role --> "0..*" User : usersAppSpecifique
     UserMapper ..> User : uses
     UserMapper ..> UserDto : creates
     UserMapper ..> RegisterDto : uses
@@ -436,10 +434,11 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | `CustomAccessDeniedHandler.java`    | Handles authenticated-but-forbidden requests (403) with localized error messages. |
 | `JwtAuthFilter.java`                | Authentication filter that processes tokens for incoming requests. |
 | `PermissionEnum.java`               | Enumeration defining available permissions.                        |
-| `Role.java`                         | Role entity class representing a user role.                        |
-| `RoleEnum.java`                     | Enumeration defining roles and their permissions.                  |
-| `RoleRepository.java`               | Interface for database operations related to roles.                |
-| `RoleSeeder.java`                   | Seeds the database with predefined roles.                          |
+| `MainRoleEnum.java`                 | Read-only mirror of the main roles (USER, MANAGER, ADMIN) owned by `spring-auth`; not persisted, used to resolve authorities from the JWT `mainRole` claim. |
+| `LocalRoleEnum.java`                | Enumeration of the local roles defined only in this app (e.g. LOCAL_APP_ROLE) and their permissions. |
+| `Role.java`                         | Entity for a **local** role row (`roles` table); its `name` is a `LocalRoleEnum`. |
+| `RoleRepository.java`               | Interface for database operations related to local roles.          |
+| `RoleSeeder.java`                   | Seeds the database with every `LocalRoleEnum` role on startup.     |
 | `SecurityConfig.java`               | Security configuration defining the filter chain and access rules. |
 | `SecurityExceptions.java`           | Container class for security-specific custom exceptions.           |
 | `UserAuthenticationEntryPoint.java` | Handles unauthenticated access (401) with i18n-aware JSON error responses. |

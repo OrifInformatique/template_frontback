@@ -27,12 +27,12 @@ public class RoleService {
     }
 
     /**
-     * Finds a role by its name.
+     * Finds a local role by its name.
      *
-     * @param name role enum to search for
+     * @param name local role enum to search for
      * @return Optional containing the Role if found
      */
-    public Optional<Role> findByName(RoleEnum name) {
+    public Optional<Role> findByName(LocalRoleEnum name) {
         return roleRepository.findByName(name);
     }
 }

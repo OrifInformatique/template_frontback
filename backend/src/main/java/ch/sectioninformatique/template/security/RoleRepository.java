@@ -22,15 +22,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RoleRepository extends CrudRepository<Role, Long> {
     /**
-     * Finds a role by its name.
+     * Finds a local role by its name.
      * This method:
-     * - Searches for a role using its RoleEnum value
+     * - Searches for a role using its LocalRoleEnum value
      * - Returns an Optional to handle cases where the role is not found
      * - Is used for role lookup and validation
      * - Supports case-sensitive role name matching
      *
-     * @param name The RoleEnum value to search for
+     * @param name The LocalRoleEnum value to search for
      * @return Optional containing the role if found, empty Optional otherwise
      */
-    Optional<Role> findByName(RoleEnum name);
+    Optional<Role> findByName(LocalRoleEnum name);
 }

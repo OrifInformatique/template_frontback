@@ -19,24 +19,25 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Entity class representing a role in the system.
+ * Entity class representing a <b>local role</b> in the system.
  * This class maps to the 'roles' table in the database and defines the roles
- * available in the application. Each role has:
+ * that are specific to this application (see {@link LocalRoleEnum}). The
+ * {@link MainRoleEnum main roles} owned by spring-auth are <b>not</b> persisted
+ * here. Each local role has:
  * - A unique identifier
- * - A name defined by RoleEnum
+ * - A name defined by {@link LocalRoleEnum}
  * - A human-readable description
  * - Creation and update timestamps
- * - A set of users assigned to this role
- * 
+ * - A set of users to whom this role is assigned as an app-specific role
+ *
  * The class uses JPA annotations for persistence and Hibernate annotations
  * for automatic timestamp management. It implements a many-to-many relationship
- * with the User entity to manage role assignments.
+ * with the User entity to manage app-specific role assignments.
  */
 @Entity
 @Table(name = "roles")
@@ -56,16 +57,16 @@ public class Role {
     private long id;
 
     /**
-     * The name of the role, defined by the RoleEnum.
+     * The name of the role, defined by the {@link LocalRoleEnum}.
      * This field:
      * - Is unique across all roles
      * - Cannot be null
      * - Is stored as a string in the database
-     * - Maps to predefined role types (USER, MANAGER, ADMIN)
+     * - Maps to predefined local role types (e.g. LOCAL_APP_ROLE)
      */
     @Column(unique = true, nullable = false)
     @Enumerated(EnumType.STRING)
-    private RoleEnum name;
+    private LocalRoleEnum name;
 
     /**
      * A human-readable description of the role.
@@ -98,19 +99,6 @@ public class Role {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Date updatedAt;
-
-    /**
-     * Set of users who have this role as mainRole.
-     * This field:
-     * - Implements a one-to-many relationship with User entity
-     * - Is mapped by the 'mainRole' field in the User class
-     * - Uses eager fetching to ensure the mainRole are always available
-     * - Is ignored during JSON serialization to prevent infinite recursion
-     * - Is initialized as an empty HashSet to prevent null pointer exceptions
-     */
-    @OneToMany(mappedBy = "mainRole", fetch = FetchType.EAGER)
-    @JsonIgnore
-    private Set<User> usersMains = new HashSet<>();
 
     /**
      * Set of users who have this appSpecificRole.
