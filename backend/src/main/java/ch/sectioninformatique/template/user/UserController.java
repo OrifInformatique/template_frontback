@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.auth.AuthClient;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -70,33 +71,27 @@ public class UserController {
     }
 
     /**
-     * Retrieves all users in the system depending on a flag "deleted "s.
+     * Retrieves users in the system, filtered by their soft-delete state.
      * This endpoint:
      * - Requires the 'user:read' authority
-     * - Returns a list of all users
+     * - Returns only active users by default ({@code ?state=active})
+     * - Returns only soft-deleted users with {@code ?state=deleted}
+     * - Returns every user with {@code ?state=all}
      * - Is typically used by administrators
-     * @param deleted who determines if we get all the users, only the deleted, or the ones not deleted
-     * @return ResponseEntity containing a list of all users who are not soft-deleted
+     *
+     * @param state which subset of users to return (default {@code active})
+     * @return ResponseEntity containing the matching list of users
      */
     @GetMapping("")
     @PreAuthorize("hasAuthority('user:read')")
-    public ResponseEntity<List<UserDto>> allUsers(@RequestParam(required = false) Boolean deleted) {
-        if(deleted == null){
-            List<UserDto> users = userService.allWithDeletedUsers();
-            return ResponseEntity.ok(users);
-        }
-
-        else if (deleted == true){
-            List<UserDto> users = userService.deletedUsers();
-            return ResponseEntity.ok(users);
-        }
-
-        else{
-            List<UserDto> users = userService.allUsers();
-            return ResponseEntity.ok(users);
-        }
-
-
+    public ResponseEntity<List<UserDto>> allUsers(
+            @RequestParam(defaultValue = "active") DeletionFilter state) {
+        List<UserDto> users = switch (state) {
+            case ACTIVE -> userService.allUsers();
+            case DELETED -> userService.deletedUsers();
+            case ALL -> userService.allWithDeletedUsers();
+        };
+        return ResponseEntity.ok(users);
     }
 
     /**

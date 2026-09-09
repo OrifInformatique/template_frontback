@@ -1,16 +1,16 @@
 import api from "../../auth/ui/api/apiClient";
 
 /**
- * Gets all the items.
+ * Gets items filtered by soft-delete state.
  *
+ * @param {'active'|'deleted'|'all'} state which subset to fetch (default 'active')
  * @returns {Array}
- *
  */
-export const getItems = async (includeDeleted = false) =>
+export const getItems = async (state = 'active') =>
 {
     try
     {
-        const response = await api.get(`/items`, { params: { includeDeleted } });
+        const response = await api.get(`/items`, { params: { state } });
         return response.data;
     }
     catch(error)

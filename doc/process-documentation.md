@@ -322,11 +322,11 @@ sequenceDiagram
     JwtAuthFilter->>UserController: Authorized UserDto from SecurityContext
     UserController->>Client: UserDto in response
 
-    Note over Client,UserController: Get All Users
-    Client->>JwtAuthFilter: GET /users/all with JWT token
+    Note over Client,UserController: Get Users (state = active | deleted | all)
+    Client->>JwtAuthFilter: GET /users?state=active with JWT token
     JwtAuthFilter->>UserController: Authorized (requires user:read)
-    UserController->>UserService: allUsers()
-    UserService->>UserRepository: findAll()
+    UserController->>UserService: allUsers() / deletedUsers() / allWithDeletedUsers()
+    UserService->>UserRepository: findAllByDeletedFalse() / findAllDeleted() / findAllIncludingDeleted()
     UserRepository-->>UserService: List<User>
     UserService-->>UserController: List<User>
     UserController->>Client: List of Users

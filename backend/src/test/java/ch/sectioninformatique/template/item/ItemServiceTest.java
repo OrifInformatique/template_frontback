@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.security.Role;
 import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
@@ -63,16 +64,16 @@ public class ItemServiceTest {
         item.setDeleted(true);
         item = itemRepository.save(item);
 
-        // Check that default getItems returns only non-deleted items
-        List<Item> items = itemService.getItems();
+        // ACTIVE returns only non-deleted items
+        List<Item> items = itemService.getItems(DeletionFilter.ACTIVE);
         assertEquals(2, items.size());
 
-        // Check that getItems with includeDeleted = false returns only non-deleted items
-        items = itemService.getItems(false);
-        assertEquals(2, items.size());
+        // DELETED returns only soft-deleted items
+        items = itemService.getItems(DeletionFilter.DELETED);
+        assertEquals(1, items.size());
 
-        // Check that getItems with includeDeleted = true returns all items, uncluding deleted ones
-        items = itemService.getItems(true);
+        // ALL returns every item, including soft-deleted ones
+        items = itemService.getItems(DeletionFilter.ALL);
         assertEquals(3, items.size());
 
         // Clear items table

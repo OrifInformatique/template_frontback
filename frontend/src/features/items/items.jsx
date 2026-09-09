@@ -24,7 +24,7 @@ const Items = () => {
         let ignore = false;
         setIsLoading(true);
         setError(null);
-        getItems(showDeleted)
+        getItems(showDeleted ? 'all' : 'active')
             .then((data) => {
                 if (!ignore) setItems(data);
             })
@@ -42,7 +42,7 @@ const Items = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await getItems(showDeleted);
+            const data = await getItems(showDeleted ? 'all' : 'active');
             setItems(data);
         } catch (err) {
             setError(err.message || t("fetch_error", "Failed to load items."));

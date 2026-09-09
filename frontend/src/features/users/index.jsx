@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import  { useTranslation } from 'react-i18next'
 import useAuthStore from '../auth/authStore';
 
-import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers, getUserWithDeleted} from './api/api';
+import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers} from './api/api';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import UserForm from './userForm';
 
@@ -20,11 +20,8 @@ function UserList() {
 
         const fetchUsers = async () => {
                 try {
-                    // console.log(showDeleted)
-                    const response = showDeleted 
-                    ? await getUserWithDeleted()
-                    : await getUsers();
-                    
+                    const response = await getUsers(showDeleted ? 'all' : 'active');
+
                     setUser(response);
                 } catch (error) {
                     console.error('Error fetching users:', error);

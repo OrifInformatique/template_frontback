@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -181,6 +182,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Object> handleMissingParams(MissingServletRequestParameterException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /**
+     * Handles MethodArgumentTypeMismatchException - thrown when a request
+     * parameter cannot be converted to the expected type.
+     *
+     * Occurs, for instance, when an enum-typed query parameter receives a value
+     * that matches no constant (e.g. {@code GET /users?state=foo}). The
+     * underlying cause's message carries the accepted values.
+     *
+     * @param ex The MethodArgumentTypeMismatchException from Spring
+     * @return ResponseEntity with HTTP 400 and the parameter name in the message
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String reason = ex.getMostSpecificCause().getMessage();
+        return buildResponse(HttpStatus.BAD_REQUEST,
+            msg("error.parameter.invalid", ex.getName(), ex.getValue(), reason));
     }
 
     /**

@@ -1,8 +1,13 @@
 import api from "../../auth/ui/api/apiClient";
 
-export const getUsers = async () => {
+/**
+ * Gets users filtered by soft-delete state.
+ *
+ * @param {'active'|'deleted'|'all'} state which subset to fetch (default 'active')
+ */
+export const getUsers = async (state = 'active') => {
     try {
-        const response = await api.get(`/users?deleted=false`);
+        const response = await api.get(`/users`, { params: { state } });
         return response.data;
     }
     catch(error) {
@@ -88,17 +93,6 @@ export const updateUser = async (id, data) => {
     catch(error) {
         console.error(`Error while updating user: ${error.message}`);
         return null;
-    }
-};
-
-export const getUserWithDeleted = async () => {
-    try {
-        const response = await api.get(`/users`);
-        return response.data;
-    }
-    catch(error) {
-        console.error(`Error while fetching users with deleted: ${error.message}`);
-        return [];
     }
 };
 
