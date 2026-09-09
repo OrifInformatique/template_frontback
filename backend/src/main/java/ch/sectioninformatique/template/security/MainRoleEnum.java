@@ -37,7 +37,7 @@ public enum MainRoleEnum {
      * Basic user role with limited permissions.
      * Can only read user and item information.
      */
-    USER(EnumSet.of(
+    USER("Basic user role with read-only access", EnumSet.of(
             USER_READ,
             ITEM_READ)),
 
@@ -45,7 +45,7 @@ public enum MainRoleEnum {
      * Manager role with extended permissions.
      * Can manage users, but cannot delete them.
      */
-    MANAGER(EnumSet.of(
+    MANAGER("Manager role with user and item management, without deletion", EnumSet.of(
             USER_READ,
             USER_WRITE,
             USER_UPDATE,
@@ -57,7 +57,7 @@ public enum MainRoleEnum {
      * Administrator role with full system access.
      * Has all permissions including deletion of users.
      */
-    ADMIN(EnumSet.of(
+    ADMIN("Administrator role with full system access", EnumSet.of(
             USER_READ,
             USER_WRITE,
             USER_UPDATE,
@@ -67,16 +67,30 @@ public enum MainRoleEnum {
             ITEM_UPDATE,
             ITEM_DELETE));
 
+    /** Human-readable description of the role */
+    private final String description;
+
     /** Set of permissions associated with this role */
     private final Set<PermissionEnum> permissions;
 
     /**
-     * Constructs a new MainRoleEnum with the specified permissions.
+     * Constructs a new MainRoleEnum with the specified description and permissions.
      *
+     * @param description A human-readable description of the role
      * @param permissions The set of permissions to be associated with this role
      */
-    MainRoleEnum(Set<PermissionEnum> permissions) {
+    MainRoleEnum(String description, Set<PermissionEnum> permissions) {
+        this.description = description;
         this.permissions = permissions;
+    }
+
+    /**
+     * Returns the human-readable description of the role.
+     *
+     * @return The role description
+     */
+    public String getDescription() {
+        return description;
     }
 
     /**

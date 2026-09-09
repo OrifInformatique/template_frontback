@@ -73,9 +73,11 @@ Azure OAuth2 login is a three-party redirect dance (Frontend ↔ this Backend �
 Roles come in **two clearly separated kinds**, each with its own enum. Both enums map every constant to a fixed `EnumSet<PermissionEnum>` (`security/PermissionEnum`, e.g. `item:read`, `user:write`) and expose `getGrantedAuthorities()`, which yields `ROLE_*` plus the individual permission strings. Controllers authorize with `@PreAuthorize("hasAuthority('item:write')")`-style expressions, sometimes combined with `hasRole(...)`.
 
 - `security/MainRoleEnum` (USER, MANAGER, ADMIN) — the **main roles**, defined and managed by the external `spring-auth` service. They are **not** persisted here: they arrive in the JWT `mainRole` claim and this enum is only a read-only mirror used to resolve authorities. On `User`, `mainRole` is a plain `@Enumerated` column (no FK), synced from the token by `UserService.updateMainRole` and promoted globally via `AuthClient.promoteToAdmin`.
-- `security/LocalRoleEnum` (LOCAL_APP_ROLE, + whatever a fork adds) — the **local roles**, defined only in this app. These are the ones persisted in the `roles` table via the `Role` entity (seeded by `RoleSeeder`, listed by `GET /roles`) and assigned to users as `Set<Role> appSpecificRoles`, promoted purely against the local DB via `UserService.promoteToLocalAppRole`.
+- `security/LocalRoleEnum` (LOCAL_APP_ROLE, + whatever a fork adds) — the **local roles**, defined only in this app. These are the ones persisted in the `roles` table via the `Role` entity (seeded by `RoleSeeder`) and assigned to users as `Set<Role> appSpecificRoles`, promoted purely against the local DB via `UserService.promoteToLocalAppRole`.
 
 Don't conflate the two: a new local role goes in `LocalRoleEnum` (and is auto-seeded); the main-role vocabulary is owned by `spring-auth`, so `MainRoleEnum` only mirrors it.
+
+`GET /roles` returns both kinds through a uniform `RoleDto` (`id` null for main roles, `type` = `MAIN`/`LOCAL`, plus `permissions`), filtered by `?scope=` (`local` default / `main` / `all`) — same enum-param pattern as `?state=`, bound by a converter in `config/WebMvcConfig`.
 
 `User` also supports soft delete (`deleted` flag, default repository queries exclude it) alongside a separate permanent/hard-delete path (`UserRepositoryPermanentDelete`, `DELETE /users/{id}/false/permanent`) that also cleans up the `users_app_specific_roles` join table first.
 
