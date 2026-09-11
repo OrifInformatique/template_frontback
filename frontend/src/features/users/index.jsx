@@ -94,8 +94,8 @@ function UserList() {
                     showDeleted={showDeleted}
 
                     noItemsLabel={t("no_user_found", "No user found")}
-                    confirmHardDeleteText={t("confirm_hard_delete", "Confirm Permanent Deletion")}
-                    confirmHardDeleteTitle={t("confirm_hard_delete_text", "Are you sure you want to permanently delete this user ? This action cannot be undone.")}
+                    confirmHardDeleteTitle={t("confirm_hard_delete", "Confirm Permanent Deletion")}
+                    confirmHardDeleteText={t("confirm_hard_delete_text", "Are you sure you want to permanently delete this user ? This action cannot be undone.")}
 
                     isDeletedKey='deleted'
                 />
