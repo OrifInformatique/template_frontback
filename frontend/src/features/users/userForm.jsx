@@ -23,9 +23,10 @@ userAppSpefRole.map(r => userRolesName.push(r.name))
 
 useEffect(() => {
     const fetchRoles = async () => {
-        const rolesData = await getRoles();
-        setRoles(rolesData);
-        setAppSpefRole(rolesData)
+        const mainRoles = await getRoles('main');
+        const localRoles = await getRoles('local');
+        setRoles(mainRoles);
+        setAppSpefRole(localRoles);
     };
 
     fetchRoles();
@@ -92,7 +93,7 @@ return (
             <label htmlFor="user-roles" className="block text-sm font-medium text-gray-700 mt-4">Main Role</label>
         <select id="user-roles" name="roles" label="Main Role" value={userRoles} onChange={(e) => setUserRoles(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
             {roles.map((role) => (
-                <option key={role.id} value={role.name}>{role.name}</option>
+                <option key={role.name} value={role.name}>{role.name}</option>
             ))}
         </select>
         </div>

@@ -27,9 +27,9 @@ export const deleteUserLocal = async (userLogin) => {
     }
 };
 
-export const getRoles = async () => {
+export const getRoles = async (scope = 'local') => {
     try {
-        const response = await api.get(`/roles`);
+        const response = await api.get(`/roles`, { params: { scope } });
         return response.data;
     }
     catch(error) {
