@@ -1,15 +1,11 @@
 package ch.sectioninformatique.template.security;
 
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.auth0.jwt.JWT;
@@ -122,31 +118,6 @@ public class UserAuthenticationProvider {
     }
 
     /**
-     * Builds a list of authorities from a role and permissions.
-     * This method converts:
-     * - Role into a "ROLE_" prefixed authority
-     * - Permissions into individual authorities
-     * The resulting authorities are used by Spring Security for authorization
-     * checks.
-     *
-     * @param role The user's role (e.g., "USER", "MANAGER")
-     * 
-     * @return List of SimpleGrantedAuthority objects for Spring Security
-     */
-    private List<SimpleGrantedAuthority> buildAuthorities(List<String> roles) {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        for (String role : roles) {
-            if (role != null && !role.isEmpty()) {
-                Set<SimpleGrantedAuthority> authoritySet = RoleEnum.valueOf(role).getGrantedAuthorities();
-                authorities.addAll(authoritySet);
-            }
-        }
-
-        log.debug("Built authorities for role {}: {}", roles, authorities);
-        return authorities;
-    }
-
-    /**
      * Validates a JWT token and creates an Authentication object.
      * This method performs basic token validation without checking the database.
      * It verifies:
@@ -197,9 +168,9 @@ public class UserAuthenticationProvider {
 
             userService.updateMainRole(localUser, currentUser);
 
-            List<String> allRoles = userService.getRolesList(localUser);
-
-            List<SimpleGrantedAuthority> authorities = buildAuthorities(allRoles);
+            // Authorities come from the synced local user: its main role (mirrored
+            // from the spring-auth token) plus its locally-managed app-specific roles.
+            var authorities = localUser.getAuthorities();
 
             return new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
         } catch (TokenExpiredException e) {

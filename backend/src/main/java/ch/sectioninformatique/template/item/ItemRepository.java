@@ -23,7 +23,14 @@ public interface ItemRepository extends CrudRepository<Item, Long> {
      * @return a list of non-deleted items
      */
     List<Item> findAllByDeletedFalse();
-    
+
+    /**
+     * Finds only the items that are soft deleted.
+     *
+     * @return a list of soft-deleted items
+     */
+    List<Item> findAllByDeletedTrue();
+
     /**
      * Finds all items, including soft deleted ones.
      *

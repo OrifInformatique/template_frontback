@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
@@ -106,25 +107,18 @@ public class ItemService {
     }
 
     /**
-     * By default, getItems method returns only non-deleted items.
-     * 
-     * @return A List containing all non-deleted items
-     */
-    public List<Item> getItems() {
-        return getItems(false);
-    }
-
-    /**
-     * Retrieves all items in the system.
+     * Retrieves items in the system, filtered by their soft-delete state.
      *
-     * @param includeDeleted Whether to include soft-deleted items
-     * @return A List containing all items including or not soft-deleted ones
+     * @param filter which subset of items to return: {@link DeletionFilter#ACTIVE},
+     *               {@link DeletionFilter#DELETED} or {@link DeletionFilter#ALL}
+     * @return the matching list of items
      */
-    public List<Item> getItems(boolean includeDeleted) {
-        if (includeDeleted) {
-            return itemRepository.findAllIncludingDeleted();
-        }
-        return itemRepository.findAllByDeletedFalse();
+    public List<Item> getItems(DeletionFilter filter) {
+        return switch (filter) {
+            case ACTIVE -> itemRepository.findAllByDeletedFalse();
+            case DELETED -> itemRepository.findAllByDeletedTrue();
+            case ALL -> itemRepository.findAllIncludingDeleted();
+        };
     }
 
     /**

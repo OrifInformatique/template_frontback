@@ -1,16 +1,16 @@
 import api from "../../auth/ui/api/apiClient";
 
 /**
- * Gets all the items.
+ * Gets items filtered by soft-delete state.
  *
+ * @param {'active'|'deleted'|'all'} state which subset to fetch (default 'active')
  * @returns {Array}
- *
  */
-export const getItems = async (includeDeleted = false) =>
+export const getItems = async (state = 'active') =>
 {
     try
     {
-        const response = await api.get(`/items/`, { params: { includeDeleted } });
+        const response = await api.get(`/items`, { params: { state } });
         return response.data;
     }
     catch(error)
@@ -64,8 +64,6 @@ export const hardDeleteItem = async (id) =>
     {
         const response = await api.delete(`/items/${id}/hard`);
         return response.data;
-        
-
     }
     catch(error)
     {
@@ -77,7 +75,7 @@ export const hardDeleteItem = async (id) =>
 export const createItem = async (data) =>
 {
     try {
-        const response = await api.post(`/items`, data);
+        const response = await api.post(`/items/`, data);
         return response.data;
     }
     catch(error)
