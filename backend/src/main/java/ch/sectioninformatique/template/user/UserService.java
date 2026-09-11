@@ -18,8 +18,9 @@ import org.springframework.lang.NonNull;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
+import ch.sectioninformatique.template.security.LocalRoleEnum;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
 import ch.sectioninformatique.template.user.UserExceptions.DefaultRoleNotFoundException;
 import ch.sectioninformatique.template.user.UserExceptions.DuplicateUserException;
@@ -89,13 +90,13 @@ public class UserService {
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
-                if (role.getName().equals(RoleEnum.LOCAL_APP_ROLE)) {
-                    throw new UserAlreadyHasRoleException(RoleEnum.LOCAL_APP_ROLE.name());
+                if (role.getName().equals(LocalRoleEnum.LOCAL_APP_ROLE)) {
+                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_APP_ROLE.name());
                 }
             }
 
-            Role testAdminRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
-                    .orElseThrow(() -> new RoleNotFoundException(RoleEnum.LOCAL_APP_ROLE.name()));
+            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_APP_ROLE)
+                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_APP_ROLE.name()));
 
             user.getAppSpecificRoles().add(testAdminRole);
             userRepository.save(user);
@@ -197,24 +198,23 @@ public class UserService {
 
             User user = userMapper.signUpToUser(registerDto);
 
-            // Define the user's main role (transversal for all applications)
-            if(registerDto.mainRole() == null || registerDto.mainRole().isBlank()){ 
+            // Define the user's main role (owned by spring-auth, transversal for all
+            // applications) - stored locally as a plain enum value, no DB lookup.
+            if(registerDto.mainRole() == null || registerDto.mainRole().isBlank()){
                 // No role is provided, add default USER role
-                Role userRole = roleRepository.findByName(RoleEnum.USER).orElseThrow(RoleNotFoundException::new);
-                user.setMainRole(userRole);
+                user.setMainRole(MainRoleEnum.USER);
             }
             else{
                 // Add the provided role
-                Role userRole = roleRepository.findByName(RoleEnum.valueOf(registerDto.mainRole())).orElseThrow(RoleNotFoundException::new);
-                user.setMainRole(userRole);
+                user.setMainRole(MainRoleEnum.valueOf(registerDto.mainRole()));
             }
-            
-            // Define the user's specific role(s) for this application
+
+            // Define the user's specific (local) role(s) for this application
             if(registerDto.appSpecificRoles() != null ){
-                
+
                 Set<Role> appSpecificRoles = new HashSet<>();
                 for (String role : registerDto.appSpecificRoles()) {
-                    appSpecificRoles.add(roleRepository.findByName(RoleEnum.valueOf(role)).orElseThrow(RoleNotFoundException::new));
+                    appSpecificRoles.add(roleRepository.findByName(LocalRoleEnum.valueOf(role)).orElseThrow(RoleNotFoundException::new));
                 }
                 user.setAppSpecificRoles(appSpecificRoles);
             }
@@ -280,45 +280,17 @@ public class UserService {
      */
     public void updateMainRole(User localUser, UserDto currentUser) {
         try {
-            String localMainRole = localUser.getMainRole().getName().name();
+            String localMainRole = localUser.getMainRole().name();
 
-            if (!localMainRole.contains(currentUser.getMainRole())) {
-                Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
-                        .orElseThrow(() -> new RoleNotFoundException(currentUser.getMainRole()));
-
-                localUser.setMainRole(newMainRole);
+            if (!localMainRole.equals(currentUser.getMainRole())) {
+                localUser.setMainRole(MainRoleEnum.valueOf(currentUser.getMainRole()));
                 userRepository.save(localUser);
             }
-        } catch (RoleNotFoundException e) {
-            throw e;
+        } catch (IllegalArgumentException e) {
+            throw new RoleNotFoundException(currentUser.getMainRole());
         } catch (Exception e) {
             throw new UserUpdateException(e.getMessage());
         }
-    }
-
-    /**
-     * get the list of roles attribuated to the user
-     * This method:
-     * - Test if the current user's has app specifique roles registered
-     * - add the app specifique roles to a list
-     * - add the main role of the user to the list
-     *
-     * @param localUser The local user's data
-     * @return list of roles
-     */
-    public List<String> getRolesList(User localUser) {
-
-        List<String> allRoles = new ArrayList<>();
-
-        if (localUser.getAppSpecificRoles() != null) {
-            for (String role : localUser.getAppSpecificRolesString()) {
-                allRoles.add(role);
-            }
-        }
-
-        allRoles.add(localUser.getMainRole().getName().name());
-
-        return allRoles;
     }
 
     /**
@@ -541,9 +513,13 @@ public class UserService {
         User existingUser = userRepository.findByLogin(login)
             .orElseThrow(() -> new UserNotFoundException(login));
 
-        // Retrieve the new main role from the database
-        Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(newUser.getMainRole()))
-                .orElseThrow(() -> new RoleNotFoundException(newUser.getMainRole()));
+        // Resolve the new main role (owned by spring-auth) from its enum name
+        MainRoleEnum newMainRole;
+        try {
+            newMainRole = MainRoleEnum.valueOf(newUser.getMainRole());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new RoleNotFoundException(newUser.getMainRole());
+        }
 
         // Call the AuthClient to update the user in the global auth service
         // If the response is not successful, return an error response
@@ -556,7 +532,7 @@ public class UserService {
         if (newUser.getAppSpecificRoles() != null){
             Set<Role> newAppSpecificRoles = new HashSet<>();
             for (String role : newUser.getAppSpecificRoles()) {
-                Role newRole = roleRepository.findByName(RoleEnum.valueOf(role))
+                Role newRole = roleRepository.findByName(LocalRoleEnum.valueOf(role))
                 .orElseThrow(() -> new RoleNotFoundException(role));
                 newAppSpecificRoles.add(newRole);
             }
@@ -591,25 +567,22 @@ public class UserService {
     }
 
     public UserDto getOrCreateUser(UserDto userDto){
-        
-        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
-        
-        Role role = roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole()))
-        .orElseThrow(() -> new RoleNotFoundException());
 
-        Set<Role> appSpecificRoles = new HashSet<Role>();
-        
-        appSpecificRoles.add(role);
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
 
         if(optionalUser.isEmpty()){
-            appSpecificRoles.add(role);
-            
+            MainRoleEnum mainRole;
+            try {
+                mainRole = MainRoleEnum.valueOf(userDto.getMainRole());
+            } catch (IllegalArgumentException | NullPointerException e) {
+                throw new RoleNotFoundException();
+            }
+
             User newUser = User.builder()
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
                 .login(userDto.getLogin())
-                .mainRole(role)
-                .appSpecificRoles(appSpecificRoles)
+                .mainRole(mainRole)
                 .build();
 
             userRepository.save(newUser);

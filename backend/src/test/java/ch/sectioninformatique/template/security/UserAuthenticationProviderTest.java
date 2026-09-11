@@ -10,10 +10,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -101,27 +100,24 @@ class UserAuthenticationProviderTest {
     }
 
     /**
-     * Tests the authority building functionality.
-     * Verifies that:
+     * Tests the authority building for a main role.
+     * The provider now derives authorities from {@link MainRoleEnum#getGrantedAuthorities()}
+     * (main role) merged with the user's local app-specific roles. Verifies that:
      * - Role is properly prefixed with "ROLE_"
      * - Permissions are correctly converted to authorities
      * - All authorities are included in the result
      */
     @Test
-    void testBuildAuthorities() throws Exception {
+    void testMainRoleGrantedAuthorities() {
         // Given
-        List<String> roles = Arrays.asList("USER");
-        int authoritiesExpectedCount = RoleEnum.USER.getPermissions().size() + 1; // permissions + role_USER
+        int authoritiesExpectedCount = MainRoleEnum.USER.getPermissions().size() + 1; // permissions + ROLE_USER
 
         // When
-        Method method = UserAuthenticationProvider.class.getDeclaredMethod("buildAuthorities", List.class);
-        method.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        List<SimpleGrantedAuthority> authorities = (List<SimpleGrantedAuthority>) method.invoke(authenticationProvider, roles);
+        Set<SimpleGrantedAuthority> authorities = MainRoleEnum.USER.getGrantedAuthorities();
 
         // Then
         assertNotNull(authorities);
-        assertEquals(authoritiesExpectedCount, authorities.size()); 
+        assertEquals(authoritiesExpectedCount, authorities.size());
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
         assertTrue(authorities.stream()

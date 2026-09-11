@@ -5,8 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.Arrays;
@@ -46,9 +45,7 @@ class UserMapperTest {
         user.setLastName("Doe");
         user.setLogin("johndoe");
         
-        Role role = new Role();
-        role.setName(RoleEnum.MANAGER);
-        user.setMainRole(role);
+        user.setMainRole(MainRoleEnum.MANAGER);
 
         // When
         UserDto userDto = userMapper.toUserDto(user);
