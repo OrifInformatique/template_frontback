@@ -17,15 +17,19 @@ const storeAccessToken = (token) => {
     if (store?.setAccessToken) store.setAccessToken(token);
 };
 
-api.interceptors.request.use((config) => {
-    const store = useAuthStore.getState ? useAuthStore.getState() : null;
-    const token = store?.accessToken;
-    if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+const hasAuthorizationHeader = (headers) =>
+    headers?.has ? headers.has('Authorization') : !!headers?.Authorization;
+
+api.interceptors.request.use(
+    (config) => {
+        const store = useAuthStore.getState ? useAuthStore.getState() : null;
+        const token = store?.accessToken;
+        if (token) config.headers.set('Authorization', `Bearer ${token}`);
+        return config;
+    },
+    null,
+    { synchronous: true }
+);
 
 let refreshPromise = null;
 
@@ -40,7 +44,7 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         // Refresh on 401 (expired token) or on 400 when the request was sent without Authorization.
-        const missingAuthHeader = !(originalRequest?.headers && originalRequest.headers.Authorization);
+        const missingAuthHeader = !hasAuthorizationHeader(originalRequest?.headers);
         const shouldRefresh =
             !!originalRequest && !originalRequest._retry && (status === 401 || (status === 400 && missingAuthHeader));
 
@@ -66,8 +70,7 @@ api.interceptors.response.use(
 
             const newToken = await refreshPromise;
             if (newToken) {
-                originalRequest.headers = originalRequest.headers || {};
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                originalRequest.headers.set('Authorization', `Bearer ${newToken}`);
                 return api(originalRequest);
             }
         }
