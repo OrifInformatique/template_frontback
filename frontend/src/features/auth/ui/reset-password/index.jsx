@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { Button,
          InputEmail,
@@ -9,6 +10,7 @@ import { Button,
 const ResetPassword = () =>
 {
     const { t } = useTranslation("auth", "common");
+    const navigate = useNavigate();
     // TODO :  Control the InputEmail to display it in the explicative text of step 2 and fill the InputText when coming back from step 2 to step 1.
 
     const [formStep, setFormStep] = useState(1);
@@ -59,6 +61,7 @@ const ResetPassword = () =>
                                 label={t("cancel", { ns: 'common' })}
                                 type="button"
                                 className="basis-1/2"
+                                onClick={() => navigate(-1)}
                             />
 
                             <Button
