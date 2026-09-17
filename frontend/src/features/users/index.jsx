@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import  { useTranslation } from 'react-i18next'
 import useAuthStore from '../auth/authStore';
 
-import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers, getUserWithDeleted} from './api/api';
+import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers} from './api/api';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import UserForm from './userForm';
 
@@ -20,11 +20,8 @@ function UserList() {
 
         const fetchUsers = async () => {
                 try {
-                    // console.log(showDeleted)
-                    const response = showDeleted 
-                    ? await getUserWithDeleted()
-                    : await getUsers();
-                    
+                    const response = await getUsers(showDeleted ? 'all' : 'active');
+
                     setUser(response);
                 } catch (error) {
                     console.error('Error fetching users:', error);
@@ -35,6 +32,16 @@ function UserList() {
         useEffect(() => {
             fetchUsers();
         }, [showDeleted]);
+
+        const closeForm = () => {
+            setFormOpen(false);
+            setSelectedUser(null);
+        };
+
+        const handleUserSaved = async () => {
+            closeForm();
+            await fetchUsers();
+        };
 
         const actions = useMemo(() => ({
             edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user), setFormOpen(true)}},
@@ -59,9 +66,9 @@ function UserList() {
             <div>
                 {formOpen ? (
                 <PopUp
-                    onClose={() => setFormOpen(false)}
+                    onClose={closeForm}
                     title={selectedUser ? "Edit User" : "Create User"}
-                    children={<UserForm user={selectedUser} onClose={() => setFormOpen(false)} />}
+                    children={<UserForm user={selectedUser} onClose={closeForm} onSaved={handleUserSaved} />}
                 />
                 ) : null}
                 {user?.permissions?.includes("user:write") && (
@@ -87,8 +94,8 @@ function UserList() {
                     showDeleted={showDeleted}
 
                     noItemsLabel={t("no_user_found", "No user found")}
-                    confirmHardDeleteText={t("confirm_hard_delete", "Confirm Permanent Deletion")}
-                    confirmHardDeleteTitle={t("confirm_hard_delete_text", "Are you sure you want to permanently delete this user ? This action cannot be undone.")}
+                    confirmHardDeleteTitle={t("confirm_hard_delete", "Confirm Permanent Deletion")}
+                    confirmHardDeleteText={t("confirm_hard_delete_text", "Are you sure you want to permanently delete this user ? This action cannot be undone.")}
 
                     isDeletedKey='deleted'
                 />

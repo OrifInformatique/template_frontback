@@ -40,7 +40,7 @@ public interface UserMapper {
      * @param user The User entity to convert
      * @return A UserDto containing the user's information
      */
-    @Mapping(target = "mainRole", expression = "java(user.getMainRole().getName().name())")
+    @Mapping(target = "mainRole", expression = "java(user.getMainRole().name())")
     @Mapping(target = "appSpecificRoles", expression = "java(user.getAppSpecificRolesString().stream().sorted().toList())"
 )
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")

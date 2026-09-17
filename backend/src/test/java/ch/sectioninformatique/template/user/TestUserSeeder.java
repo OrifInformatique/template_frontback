@@ -4,9 +4,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
-import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 
 import org.springframework.core.annotation.Order;
 
@@ -28,20 +26,13 @@ public class TestUserSeeder implements CommandLineRunner {
 	/** Repository for user data access */
 	private final UserRepository userRepository;
 
-	/** Repository for role data access */
-	private final RoleRepository roleRepository;
-
 	/**
 	 * Constructs a new UserSeeder with the required dependencies.
 	 *
-	 * @param userRepository  Repository for user data access
-	 * @param passwordEncoder Encoder for password hashing
-	 * @param roleRepository  Repository for role data access
+	 * @param userRepository Repository for user data access
 	 */
-	public TestUserSeeder(UserRepository userRepository,
-			RoleRepository roleRepository) {
+	public TestUserSeeder(UserRepository userRepository) {
 		this.userRepository = userRepository;
-		this.roleRepository = roleRepository;
 	}
 
 	/**
@@ -78,17 +69,9 @@ public class TestUserSeeder implements CommandLineRunner {
 	 * - First and last name
 	 * - Appropriate role(s)
 	 *
-	 * @throws RuntimeException if any required role (USER, MANAGER, ADMIN) is not
-	 *                          found in the database
 	 */
 	private void loadUserData() {
 		if (this.userRepository.count() == 0) {
-			Role userRole = roleRepository.findByName(RoleEnum.USER)
-					.orElseThrow(() -> new RuntimeException("Role USER not found"));
-			Role managerRole = roleRepository.findByName(RoleEnum.MANAGER)
-					.orElseThrow(() -> new RuntimeException("Role MANAGER not found"));
-			Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-					.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
 			// Create users with User.builder()
 
@@ -96,28 +79,28 @@ public class TestUserSeeder implements CommandLineRunner {
 					.firstName("Test")
 					.lastName("User")
 					.login("test.user@test.com")
-					.mainRole(userRole)
+					.mainRole(MainRoleEnum.USER)
 					.build();
 
 			User testManager = User.builder()
 					.firstName("Test")
 					.lastName("Manager")
 					.login("test.manager@test.com")
-					.mainRole(managerRole)
+					.mainRole(MainRoleEnum.MANAGER)
 					.build();
 
 			User testAdmin = User.builder()
 					.firstName("Test")
 					.lastName("Admin")
 					.login("test.admin@test.com")
-					.mainRole(adminRole)
+					.mainRole(MainRoleEnum.ADMIN)
 					.build();
 
 			User testAdmin2 = User.builder()
 					.firstName("Test2")
 					.lastName("Admin2")
 					.login("test.admin2@test.com")
-					.mainRole(adminRole)
+					.mainRole(MainRoleEnum.ADMIN)
 					.build();
 
 			userRepository.saveAll(Arrays.asList(testUser, testManager, testAdmin, testAdmin2));

@@ -40,9 +40,7 @@ import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
-import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
@@ -72,9 +70,6 @@ public class AuthControllerTest {
     /** Service for handling user-related operations */
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private RoleRepository roleRepository;
 
     @Autowired
     private UserMapper userMapper;
@@ -331,8 +326,6 @@ public class AuthControllerTest {
     public void register_withValidData_shouldReturn200AndSaveUserToDatabase() throws Exception {
         // Create a new user DTO that doesn't exist yet in the database
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         
 
@@ -349,7 +342,7 @@ public class AuthControllerTest {
             .firstName("admin")
             .lastName("user")
             .login("admin.user@test.com")
-            .mainRole(adminRole)
+            .mainRole(MainRoleEnum.ADMIN)
             .build();
 
         
@@ -392,14 +385,11 @@ public class AuthControllerTest {
     @Test
     public void register_withWrongPermission_shouldReturn403() throws Exception{
         
-        Role userRole =roleRepository.findByName(RoleEnum.USER)
-            .orElseThrow(() -> new RuntimeException("Role USER not found"));
-        
         User user = User.builder()
             .firstName("user")
             .lastName("test")
             .login("user.test@test.com")
-            .mainRole(userRole)
+            .mainRole(MainRoleEnum.USER)
             .build();
 
 
@@ -456,14 +446,12 @@ public class AuthControllerTest {
     @Transactional
     public void register_withExistingUser_shouldReturn409Conflict() throws Exception {
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         User adminUser = User.builder()
         .firstName("admin")
         .lastName("User")
         .login("admin.user@test.com")
-        .mainRole(adminRole)
+        .mainRole(MainRoleEnum.ADMIN)
         .build();
 
         UserDto adminDto = userMapper.toUserDto(adminUser);
@@ -703,14 +691,12 @@ public class AuthControllerTest {
     @Transactional
     public void register_withValidationError_shouldReturn400RegistrationFailed() throws Exception {
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         User newUser = User.builder()
         .firstName("test")
         .lastName("user")
         .login("invalid-email")
-        .mainRole(adminRole)
+        .mainRole(MainRoleEnum.ADMIN)
         .build();
 
         UserDto userDto = userMapper.toUserDto(newUser);
@@ -953,14 +939,12 @@ public class AuthControllerTest {
     @Transactional
     public void register_withDuplicateLogin_shouldReturn409Conflict() throws Exception {
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         User admin = User.builder()
         .firstName("admin")
         .lastName("user")
         .login("admin.user@test.com")
-        .mainRole(adminRole)
+        .mainRole(MainRoleEnum.ADMIN)
         .build();
 
         UserDto adminDto = userMapper.toUserDto(admin);

@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getItems, deleteItem, restoreItem, hardDeleteItem } from './api/api';
+import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import ItemForm from './itemForm';
 import ItemDetail from './itemDetail';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
@@ -24,7 +24,7 @@ const Items = () => {
         let ignore = false;
         setIsLoading(true);
         setError(null);
-        getItems(showDeleted)
+        getItems(showDeleted ? 'all' : 'active')
             .then((data) => {
                 if (!ignore) setItems(data);
             })
@@ -42,7 +42,7 @@ const Items = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await getItems(showDeleted);
+            const data = await getItems(showDeleted ? 'all' : 'active');
             setItems(data);
         } catch (err) {
             setError(err.message || t("fetch_error", "Failed to load items."));

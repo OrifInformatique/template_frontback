@@ -451,7 +451,7 @@ It returns a message indicating the token format is incorrect.
 == 3 User Endpoints
 
 === 3.1 All Users
-This is an example output for the `GET /users/all` endpoint.
+This is an example output for the `GET /users?state=active` endpoint (the `state` parameter defaults to `active`; accepted values are `active`, `deleted`, `all`).
 
 .request
 include::users/all-users/http-request.adoc[]
@@ -462,7 +462,7 @@ include::users/all-users/http-response.adoc[]
 It returns the list of users with their roles and permissions.
 
 ==== 3.1.2 Success (Detailed)
-This is another example output for the `GET /users/all` endpoint.
+This is another example output for the `GET /users?state=active` endpoint.
 
 .request
 include::users/all-users-success/http-request.adoc[]
@@ -473,7 +473,7 @@ include::users/all-users-success/http-response.adoc[]
 It returns the list of users.
 
 ==== 3.1.3 Success (All Users)
-This is another example output for the `GET /users/all` endpoint.
+This is another example output for the `GET /users` endpoint.
 
 .request
 include::users/all/http-request.adoc[]
@@ -671,7 +671,7 @@ include::users/me-unauthorized-missing-token/http-response.adoc[]
 It returns a message indicating authentication is required.
 
 === 3.6 All Users With Deleted
-This is an example output for the `GET /users/all-with-deleted` endpoint.
+This is an example output for the `GET /users?state=all` endpoint, which returns every user, including soft-deleted ones.
 
 .request
 include::users/all-with-deleted/http-request.adoc[]
@@ -682,7 +682,7 @@ include::users/all-with-deleted/http-response.adoc[]
 It returns the list of users, including soft-deleted users.
 
 ==== 3.6.1 Success (Alternative)
-This is another example output for the `GET /users/all-with-deleted` endpoint.
+This is another example output for the `GET /users?state=all` endpoint, which returns every user, including soft-deleted ones.
 
 .request
 include::users/all-with-deleted-success/http-request.adoc[]
@@ -704,7 +704,7 @@ include::users/all-with-deleted-unauthorized-missing-token/http-response.adoc[]
 It returns a message indicating authentication is required.
 
 === 3.7 Deleted Users
-This is an example output for the `GET /users/deleted` endpoint.
+This is an example output for the `GET /users?state=deleted` endpoint.
 
 .request
 include::users/deleted/http-request.adoc[]
@@ -715,7 +715,7 @@ include::users/deleted/http-response.adoc[]
 It returns the list of soft-deleted users.
 
 ==== 3.7.1 Success (Alternative)
-This is another example output for the `GET /users/deleted` endpoint.
+This is another example output for the `GET /users?state=deleted` endpoint.
 
 .request
 include::users/deleted-users-success/http-request.adoc[]

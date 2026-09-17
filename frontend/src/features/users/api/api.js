@@ -1,8 +1,13 @@
 import api from "../../auth/ui/api/apiClient";
 
-export const getUsers = async () => {
+/**
+ * Gets users filtered by soft-delete state.
+ *
+ * @param {'active'|'deleted'|'all'} state which subset to fetch (default 'active')
+ */
+export const getUsers = async (state = 'active') => {
     try {
-        const response = await api.get(`/users/all`);
+        const response = await api.get(`/users`, { params: { state } });
         return response.data;
     }
     catch(error) {
@@ -22,9 +27,9 @@ export const deleteUserLocal = async (userLogin) => {
     }
 };
 
-export const getRoles = async () => {
+export const getRoles = async (scope = 'local') => {
     try {
-        const response = await api.get(`/roles/all`);
+        const response = await api.get(`/roles`, { params: { scope } });
         return response.data;
     }
     catch(error) {
@@ -76,29 +81,18 @@ export const createUser = async (data) => {
     }
     catch(error) {
         console.error(`Error while creating user: ${error.message}`);
-        return null;
+        throw error;
     }
 };
 
-export const updateUser = async (id, data) => {
+export const updateUser = async (userLogin, data) => {
     try {
-        const response = await api.put(`/users/${id}`, data);
+        const response = await api.put(`/users/${encodeURIComponent(userLogin)}`, data);
         return response.data;
     }
     catch(error) {
         console.error(`Error while updating user: ${error.message}`);
-        return null;
-    }
-};
-
-export const getUserWithDeleted = async () => {
-    try {
-        const response = await api.get(`/users?deleted=true`);
-        return response.data;
-    }
-    catch(error) {
-        console.error(`Error while fetching users with deleted: ${error.message}`);
-        return [];
+        throw error;
     }
 };
 
