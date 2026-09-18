@@ -260,19 +260,6 @@ public class UserController {
     public Mono<ResponseEntity<String>> downgradeAdmin(@RequestHeader("Authorization") String token,
             @PathVariable String userLogin) {
 
-               Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-            
-                UserDto currentUser = (UserDto) authentication.getPrincipal();
-                if (currentUser.getLogin().equals(userLogin)) {
-                    String message = messageSource.getMessage(
-                        "user.downgrade.self",
-                        null,
-                        LocaleContextHolder.getLocale());
-                    return Mono.just(ResponseEntity.badRequest().body(message));
-                }
-
         // Call auth service to downgrade admin to manager globally
         return authClient.downgradeAdmin(token, userLogin)
                 .flatMap(response -> {
