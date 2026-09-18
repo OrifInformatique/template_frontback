@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../authStore';
 import api from './apiClient';
 
 export const useLogin = () => {
+    const navigate = useNavigate();
     const setAccessToken = useAuthStore((state) => state.setAccessToken);
     const setUser = useAuthStore((state) => state.setUser);
 
@@ -30,6 +32,8 @@ export const useLogin = () => {
             if (token) setAccessToken(token);
             if (user) setUser(user);
             if (token) localStorage.setItem('loginType', 'local');
+
+            navigate(-1); // Navigate back to the previous page after login
 
             console.log('Logged in — token set:', !!token, 'user set:', !!user);
         } catch (error) {

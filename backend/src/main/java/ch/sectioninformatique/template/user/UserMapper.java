@@ -41,7 +41,8 @@ public interface UserMapper {
      * @return A UserDto containing the user's information
      */
     @Mapping(target = "mainRole", expression = "java(user.getMainRole().getName().name())")
-    @Mapping(target = "appSpecificRoles", expression = "java(user.getAppSpecificRolesString())")
+    @Mapping(target = "appSpecificRoles", expression = "java(user.getAppSpecificRolesString().stream().sorted().toList())"
+)
     @Mapping(target = "permissions", source = "authorities", qualifiedByName = "authoritiesToPermissions")
     @Mapping(target = "token", ignore = true)
     @Mapping(target = "deleted", source = "deleted")

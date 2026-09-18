@@ -1,17 +1,33 @@
 package ch.sectioninformatique.template.user;
 
-import jakarta.persistence.*;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.*;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import ch.sectioninformatique.template.security.Role;
 
-import org.springframework.security.core.GrantedAuthority;
-import java.util.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Entity class representing a user in the system.
@@ -26,8 +42,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
-@FilterDef(name = "deletedFilter", parameters = @ParamDef(name = "isDeleted", type = Boolean.class))
-@Filter(name = "deletedFilter", condition = "deleted = :isDeleted")
 public class User {
 
     /** Unique identifier for the user */

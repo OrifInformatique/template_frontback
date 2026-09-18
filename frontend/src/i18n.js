@@ -27,7 +27,7 @@ function loadLocales() {
             resources[lng][namespace] = context(key);
         }
     });
-    
+    console.log(resources)
     return resources;
 }
 
