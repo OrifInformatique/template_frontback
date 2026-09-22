@@ -65,6 +65,11 @@ public final class RestDocsSnippets {
                 fieldWithPath("newPassword").description("New password"));
     }
 
+    /** Matches a JSON array of {@code RoleDto}. */
+    public static Snippet roleListResponse() {
+        return responseFields(roleFields("[].", true));
+    }
+
     /** Matches {@code MessageResponseDto}. */
     public static Snippet messageResponse() {
         return responseFields(
@@ -99,5 +104,23 @@ public final class RestDocsSnippets {
         return new FieldDescriptor[] {
                 id, firstName, lastName, login, token, deleted, mainRole, appSpecificRoles, permissions
         };
+    }
+
+    private static FieldDescriptor[] roleFields(String prefix, boolean optionalItems) {
+        var id = fieldWithPath(prefix + "id").optional().type(JsonFieldType.NUMBER)
+                .description("Database id, null for main roles");
+        var name = fieldWithPath(prefix + "name").description("Role name (enum constant)");
+        var description = fieldWithPath(prefix + "description").description("Human-readable role description");
+        var type = fieldWithPath(prefix + "type").description("Role origin: MAIN (spring-auth) or LOCAL (this app)");
+        var permissions = fieldWithPath(prefix + "permissions").optional().type(JsonFieldType.ARRAY)
+                .description("Permission strings granted by the role");
+
+        if (optionalItems) {
+            name = name.optional().type(JsonFieldType.STRING);
+            description = description.optional().type(JsonFieldType.STRING);
+            type = type.optional().type(JsonFieldType.STRING);
+        }
+
+        return new FieldDescriptor[] { id, name, description, type, permissions };
     }
 }

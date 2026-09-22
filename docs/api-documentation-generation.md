@@ -39,6 +39,7 @@ Classes involved:
 - `AuthControllerTest`
 - `UserControllerTest`
 - `TestControllerTest`
+- `RoleControllerTest`
 - `RestDocsSnippets` (centralized `requestFields` / `responseFields` contracts)
 - `RestDocsSensitiveDataMasking` (masks JWT and refresh-token values in snippets)
 
@@ -48,7 +49,7 @@ Configuration:
 @AutoConfigureRestDocs(outputDir = "target/generated-snippets")
 ```
 
-Each `document("auth/…", "users/…", or "tests/…", …, snippets)` call produces a folder under `backend/target/generated-snippets/`, for example:
+Each `document("auth/…", "users/…", "tests/…", or "roles/…", …, snippets)` call produces a folder under `backend/target/generated-snippets/`, for example:
 
 ```
 backend/target/generated-snippets/auth/login/http-request.adoc
@@ -143,7 +144,7 @@ source .env
 set +a
 
 # On the host, use localhost instead of the Docker service name "db"
-export TEST_SPRING_DATASOURCE_URL="${TEST_SPRING_DATASOURCE_URL/db/localhost}"
+export TEST_SPRING_DATASOURCE_URL="${TEST_SPRING_DATASOURCE_URL//:\/\/db:/:\/\/localhost:}"
 export SPRING_DATASOURCE_USERNAME="$DB_USERNAME"
 export SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD"
 
@@ -156,7 +157,7 @@ Run only the REST Docs-related tests:
 
 ```bash
 mvn -Dspring.profiles.active=test test -Dtest=RestDocsSensitiveDataMaskingTest
-mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest
+mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest,RoleControllerTest
 ```
 
 Inspect snippets:

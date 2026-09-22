@@ -995,3 +995,49 @@ include::{snippets}/users/delete-permanent-global-unauthorized-missing-token/htt
 include::{snippets}/users/delete-permanent-global-unauthorized-missing-token/http-response.adoc[]
 
 It returns a message indicating authentication is required.
+
+== 4 Role Endpoints
+
+=== 4.1 List Roles (local scope)
+This is an example output for the `GET /roles` endpoint with the default `scope=local` filter.
+
+.request
+include::{snippets}/roles/local/http-request.adoc[]
+
+.response
+include::{snippets}/roles/local/http-response.adoc[]
+
+It returns only the roles defined in this application (`type=LOCAL`).
+
+=== 4.2 List Roles (main scope)
+This is an example output for the `GET /roles?scope=main` endpoint.
+
+.request
+include::{snippets}/roles/main/http-request.adoc[]
+
+.response
+include::{snippets}/roles/main/http-response.adoc[]
+
+It returns only the main roles mirrored from spring-auth (`type=MAIN`, `id` is null).
+
+=== 4.3 List Roles (all scopes)
+This is an example output for the `GET /roles?scope=all` endpoint.
+
+.request
+include::{snippets}/roles/all/http-request.adoc[]
+
+.response
+include::{snippets}/roles/all/http-response.adoc[]
+
+It returns both main and local roles.
+
+==== 4.3.1 Error 400 - Invalid Scope
+This is an example output when an unknown `scope` query parameter is sent.
+
+.request
+include::{snippets}/roles/invalid-scope/http-request.adoc[]
+
+.response
+include::{snippets}/roles/invalid-scope/http-response.adoc[]
+
+It returns a message indicating that the scope value is invalid.

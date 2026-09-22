@@ -164,7 +164,7 @@ Check if the project's structure is valid
 
 ## API documentation
 
-HTTP documentation for the template backend (`/auth`, `/users`, `/tests`) is generated automatically from integration tests with **Spring REST Docs** and published as [../docs/index.html](../docs/index.html).
+HTTP documentation for the template backend (`/auth`, `/users`, `/tests`, `/roles`) is generated automatically from integration tests with **Spring REST Docs** and published as [../docs/index.html](../docs/index.html).
 
 - **AsciiDoc template:** `src/asciidoc/index.adoc` (structure and snippet includes)
 - **Snippets:** produced during tests under `target/generated-snippets/`
@@ -184,7 +184,7 @@ source .env
 set +a
 
 # On the host, use localhost instead of the Docker service name "db"
-export TEST_SPRING_DATASOURCE_URL="${TEST_SPRING_DATASOURCE_URL/db/localhost}"
+export TEST_SPRING_DATASOURCE_URL="${TEST_SPRING_DATASOURCE_URL//:\/\/db:/:\/\/localhost:}"
 export SPRING_DATASOURCE_USERNAME="$DB_USERNAME"
 export SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD"
 
@@ -197,7 +197,7 @@ Run only the REST Docs-related tests:
 
 ```bash
 mvn -Dspring.profiles.active=test test -Dtest=RestDocsSensitiveDataMaskingTest
-mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest
+mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest,RoleControllerTest
 ```
 
 After an API change: update the integration tests and `RestDocsSnippets` if payloads change, regenerate snippets and HTML, then commit `docs/index.html` if the published reference must follow.
