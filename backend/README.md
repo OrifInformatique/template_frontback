@@ -164,7 +164,7 @@ Check if the project's structure is valid
 
 ## API documentation
 
-HTTP documentation for the template backend (`/auth`, `/users`, `/tests`, `/roles`) is generated automatically from integration tests with **Spring REST Docs** and published as [../docs/index.html](../docs/index.html).
+HTTP documentation for the template backend (`/auth`, `/users`, `/tests`, `/roles`, `/items`) is generated automatically from integration tests with **Spring REST Docs** and published as [../docs/index.html](../docs/index.html).
 
 - **AsciiDoc template:** `src/asciidoc/index.adoc` (structure and snippet includes)
 - **Snippets:** produced during tests under `target/generated-snippets/`
@@ -197,7 +197,7 @@ Run only the REST Docs-related tests:
 
 ```bash
 mvn -Dspring.profiles.active=test test -Dtest=RestDocsSensitiveDataMaskingTest
-mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest,RoleControllerTest
+mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest,RoleControllerTest,ItemControllerTest
 ```
 
 After an API change: update the integration tests and `RestDocsSnippets` if payloads change, regenerate snippets and HTML, then commit `docs/index.html` if the published reference must follow.

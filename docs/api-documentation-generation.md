@@ -40,6 +40,7 @@ Classes involved:
 - `UserControllerTest`
 - `TestControllerTest`
 - `RoleControllerTest`
+- `ItemControllerTest`
 - `RestDocsSnippets` (centralized `requestFields` / `responseFields` contracts)
 - `RestDocsSensitiveDataMasking` (masks JWT and refresh-token values in snippets)
 
@@ -49,7 +50,7 @@ Configuration:
 @AutoConfigureRestDocs(outputDir = "target/generated-snippets")
 ```
 
-Each `document("auth/…", "users/…", "tests/…", or "roles/…", …, snippets)` call produces a folder under `backend/target/generated-snippets/`, for example:
+Each `document("auth/…", "users/…", "tests/…", "roles/…", or "items/…", …, snippets)` call produces a folder under `backend/target/generated-snippets/`, for example:
 
 ```
 backend/target/generated-snippets/auth/login/http-request.adoc
@@ -112,7 +113,7 @@ Separate concern, related to test suite reliability (and therefore documentation
 
 Related fixes in the template backend:
 
-- `@AfterEach`: `SecurityContextHolder.clearContext()` in `AuthControllerTest`, `UserControllerTest`, and `TestControllerTest`
+- `@AfterEach`: `SecurityContextHolder.clearContext()` in `AuthControllerTest`, `UserControllerTest`, `TestControllerTest`, and `ItemControllerTest`
 - `SecurityConfig` uses a single JWT filter chain; `SessionCreationPolicy.ALWAYS` is required for the Azure OAuth2 callback flow (`/auth/tokens`)
 
 ## Where does the HTML land?
@@ -157,7 +158,7 @@ Run only the REST Docs-related tests:
 
 ```bash
 mvn -Dspring.profiles.active=test test -Dtest=RestDocsSensitiveDataMaskingTest
-mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest,RoleControllerTest
+mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest,RoleControllerTest,ItemControllerTest
 ```
 
 Inspect snippets:
