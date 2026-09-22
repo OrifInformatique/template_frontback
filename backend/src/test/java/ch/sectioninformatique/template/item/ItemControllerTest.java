@@ -200,6 +200,51 @@ public class ItemControllerTest {
 
     @Test
     @Transactional
+    public void getItems_all_returnsActiveAndDeletedItems() throws Exception {
+        clearItems();
+        saveDocItem(userEntity(USER_LOGIN), "Active item", "Still visible");
+        Item deleted = saveDocItem(userEntity(USER_LOGIN), "Archived item", "Soft deleted");
+        itemRepository.deleteById(deleted.getId());
+
+        performRequest(
+                "GET",
+                "/items?state=all",
+                null,
+                tokenFor(ADMIN_LOGIN),
+                200,
+                "list-all",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.length()").value(2));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.itemsListResponse());
+    }
+
+    @Test
+    @Transactional
+    public void getItems_missingToken_returns401() throws Exception {
+        performRequest(
+                "GET",
+                "/items",
+                null,
+                null,
+                401,
+                "list/401/missing-token",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
+    @Transactional
     public void getItemById_found_returnsItem() throws Exception {
         clearItems();
         Item item = saveDocItem(userEntity(USER_LOGIN), "Doc item", "For REST Docs");
@@ -236,6 +281,29 @@ public class ItemControllerTest {
                 response -> {
                     try {
                         response.andExpect(jsonPath("$.message").value(getMessage("item.notFound")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
+    @Transactional
+    public void getItemById_missingToken_returns401() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "Doc item", "For REST Docs");
+
+        performRequest(
+                "GET",
+                "/items/" + item.getId(),
+                null,
+                null,
+                401,
+                "get-by-id/401/missing-token",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -283,6 +351,27 @@ public class ItemControllerTest {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    @Test
+    @Transactional
+    public void createItem_missingToken_returns401() throws Exception {
+        performRequest(
+                "POST",
+                "/items/",
+                itemJson("Ghost item", "No authentication"),
+                null,
+                401,
+                "create/401/missing-token",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.itemCreateRequest());
     }
 
     @Test
@@ -335,6 +424,73 @@ public class ItemControllerTest {
 
     @Test
     @Transactional
+    public void updateItem_withoutUpdatePermission_returns403() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(MANAGER_LOGIN), "Manager item", "USER cannot update");
+
+        performRequest(
+                "PUT",
+                "/items/" + item.getId(),
+                itemJson("Blocked update", "Not allowed"),
+                tokenFor(USER_LOGIN),
+                403,
+                "update/403/forbidden",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message").value(getMessage("error.accessDenied")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.itemCreateRequest());
+    }
+
+    @Test
+    @Transactional
+    public void updateItem_notFound_returns404() throws Exception {
+        performRequest(
+                "PUT",
+                "/items/999999",
+                itemJson("Missing item", "Does not exist"),
+                tokenFor(MANAGER_LOGIN),
+                404,
+                "update/404/not-found",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message").value(getMessage("item.notFound")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.itemCreateRequest());
+    }
+
+    @Test
+    @Transactional
+    public void updateItem_missingToken_returns401() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(MANAGER_LOGIN), "Protected item", "Needs auth");
+
+        performRequest(
+                "PUT",
+                "/items/" + item.getId(),
+                itemJson("Anonymous update", "Not allowed"),
+                null,
+                401,
+                "update/401/missing-token",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.itemCreateRequest());
+    }
+
+    @Test
+    @Transactional
     public void deleteItem_asAdmin_softDeletesItem() throws Exception {
         clearItems();
         Item item = saveDocItem(userEntity(USER_LOGIN), "To delete", "Soft delete via REST Docs");
@@ -347,6 +503,65 @@ public class ItemControllerTest {
                 200,
                 "delete-soft",
                 null);
+    }
+
+    @Test
+    @Transactional
+    public void deleteItem_asAdmin_permanentlyDeletesItem() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "Permanent delete", "Removed from database");
+        Long itemId = item.getId();
+
+        performRequest(
+                "DELETE",
+                "/items/" + itemId + "?softDelete=false",
+                null,
+                tokenFor(ADMIN_LOGIN),
+                200,
+                "delete-permanent",
+                null);
+    }
+
+    @Test
+    @Transactional
+    public void deleteItem_notFound_returns404() throws Exception {
+        performRequest(
+                "DELETE",
+                "/items/999999",
+                null,
+                tokenFor(ADMIN_LOGIN),
+                404,
+                "delete/404/not-found",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message").value(getMessage("item.notFound")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
+    @Transactional
+    public void deleteItem_missingToken_returns401() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "Protected item", "Needs auth");
+
+        performRequest(
+                "DELETE",
+                "/items/" + item.getId(),
+                null,
+                null,
+                401,
+                "delete/401/missing-token",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     @Test

@@ -1057,6 +1057,14 @@ include::{snippets}/items/list-active/http-response.adoc[]
 
 It returns only non-soft-deleted items as {@code ItemsDTO} objects.
 
+==== 5.1.1 Error 401 - Missing Token
+
+.request
+include::{snippets}/items/list/401/missing-token/http-request.adoc[]
+
+.response
+include::{snippets}/items/list/401/missing-token/http-response.adoc[]
+
 === 5.2 List Deleted Items
 This is an example output for the `GET /items?state=deleted` endpoint.
 
@@ -1068,7 +1076,18 @@ include::{snippets}/items/list-deleted/http-response.adoc[]
 
 It returns only soft-deleted items.
 
-=== 5.3 Get Item by ID
+=== 5.3 List All Items
+This is an example output for the `GET /items?state=all` endpoint.
+
+.request
+include::{snippets}/items/list-all/http-request.adoc[]
+
+.response
+include::{snippets}/items/list-all/http-response.adoc[]
+
+It returns both active and soft-deleted items.
+
+=== 5.4 Get Item by ID
 This is an example output for the `GET /items/{id}` endpoint.
 
 .request
@@ -1079,7 +1098,7 @@ include::{snippets}/items/get-by-id/http-response.adoc[]
 
 It returns the full {@code Item} entity, including the nested {@code author}.
 
-==== 5.3.1 Error 404 - Item Not Found
+==== 5.4.1 Error 404 - Item Not Found
 
 .request
 include::{snippets}/items/get-by-id/404/not-found/http-request.adoc[]
@@ -1087,7 +1106,15 @@ include::{snippets}/items/get-by-id/404/not-found/http-request.adoc[]
 .response
 include::{snippets}/items/get-by-id/404/not-found/http-response.adoc[]
 
-=== 5.4 Create Item
+==== 5.4.2 Error 401 - Missing Token
+
+.request
+include::{snippets}/items/get-by-id/401/missing-token/http-request.adoc[]
+
+.response
+include::{snippets}/items/get-by-id/401/missing-token/http-response.adoc[]
+
+=== 5.5 Create Item
 This is an example output for the `POST /items/` endpoint.
 
 .request
@@ -1098,7 +1125,7 @@ include::{snippets}/items/create/http-response.adoc[]
 
 Requires the `item:write` authority.
 
-==== 5.4.1 Error 403 - Forbidden
+==== 5.5.1 Error 403 - Forbidden
 
 .request
 include::{snippets}/items/create/403/forbidden/http-request.adoc[]
@@ -1106,7 +1133,15 @@ include::{snippets}/items/create/403/forbidden/http-request.adoc[]
 .response
 include::{snippets}/items/create/403/forbidden/http-response.adoc[]
 
-=== 5.5 Update Item
+==== 5.5.2 Error 401 - Missing Token
+
+.request
+include::{snippets}/items/create/401/missing-token/http-request.adoc[]
+
+.response
+include::{snippets}/items/create/401/missing-token/http-response.adoc[]
+
+=== 5.6 Update Item
 This is an example output for the `PUT /items/{id}` endpoint when the caller updates their own item.
 
 .request
@@ -1115,7 +1150,7 @@ include::{snippets}/items/update-own/http-request.adoc[]
 .response
 include::{snippets}/items/update-own/http-response.adoc[]
 
-==== 5.5.1 Error 401 - Unauthorized (Not the Author)
+==== 5.6.1 Error 401 - Unauthorized (Not the Author)
 
 .request
 include::{snippets}/items/update/401/unauthorized/http-request.adoc[]
@@ -1123,7 +1158,31 @@ include::{snippets}/items/update/401/unauthorized/http-request.adoc[]
 .response
 include::{snippets}/items/update/401/unauthorized/http-response.adoc[]
 
-=== 5.6 Delete Item (Soft Delete)
+==== 5.6.2 Error 403 - Forbidden
+
+.request
+include::{snippets}/items/update/403/forbidden/http-request.adoc[]
+
+.response
+include::{snippets}/items/update/403/forbidden/http-response.adoc[]
+
+==== 5.6.3 Error 404 - Item Not Found
+
+.request
+include::{snippets}/items/update/404/not-found/http-request.adoc[]
+
+.response
+include::{snippets}/items/update/404/not-found/http-response.adoc[]
+
+==== 5.6.4 Error 401 - Missing Token
+
+.request
+include::{snippets}/items/update/401/missing-token/http-request.adoc[]
+
+.response
+include::{snippets}/items/update/401/missing-token/http-response.adoc[]
+
+=== 5.7 Delete Item (Soft Delete)
 This is an example output for the `DELETE /items/{id}` endpoint with the default `softDelete=true`.
 
 .request
@@ -1134,10 +1193,37 @@ include::{snippets}/items/delete-soft/http-response.adoc[]
 
 Requires the `item:delete` authority (ADMIN role in the default permission model).
 
-==== 5.6.1 Error 403 - Forbidden
+==== 5.7.1 Delete Item (Permanent)
+This is an example output for the `DELETE /items/{id}?softDelete=false` endpoint.
+
+.request
+include::{snippets}/items/delete-permanent/http-request.adoc[]
+
+.response
+include::{snippets}/items/delete-permanent/http-response.adoc[]
+
+The item is removed from the database permanently.
+
+==== 5.7.2 Error 403 - Forbidden
 
 .request
 include::{snippets}/items/delete/403/forbidden/http-request.adoc[]
 
 .response
 include::{snippets}/items/delete/403/forbidden/http-response.adoc[]
+
+==== 5.7.3 Error 404 - Item Not Found
+
+.request
+include::{snippets}/items/delete/404/not-found/http-request.adoc[]
+
+.response
+include::{snippets}/items/delete/404/not-found/http-response.adoc[]
+
+==== 5.7.4 Error 401 - Missing Token
+
+.request
+include::{snippets}/items/delete/401/missing-token/http-request.adoc[]
+
+.response
+include::{snippets}/items/delete/401/missing-token/http-response.adoc[]

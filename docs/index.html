@@ -654,26 +654,39 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_5_item_endpoints">5 Item Endpoints</a>
 <ul class="sectlevel2">
-<li><a href="#_5_1_list_active_items">5.1 List Active Items</a></li>
+<li><a href="#_5_1_list_active_items">5.1 List Active Items</a>
+<ul class="sectlevel3">
+<li><a href="#_5_1_1_error_401_missing_token">5.1.1 Error 401 - Missing Token</a></li>
+</ul>
+</li>
 <li><a href="#_5_2_list_deleted_items">5.2 List Deleted Items</a></li>
-<li><a href="#_5_3_get_item_by_id">5.3 Get Item by ID</a>
+<li><a href="#_5_3_list_all_items">5.3 List All Items</a></li>
+<li><a href="#_5_4_get_item_by_id">5.4 Get Item by ID</a>
 <ul class="sectlevel3">
-<li><a href="#_5_3_1_error_404_item_not_found">5.3.1 Error 404 - Item Not Found</a></li>
+<li><a href="#_5_4_1_error_404_item_not_found">5.4.1 Error 404 - Item Not Found</a></li>
+<li><a href="#_5_4_2_error_401_missing_token">5.4.2 Error 401 - Missing Token</a></li>
 </ul>
 </li>
-<li><a href="#_5_4_create_item">5.4 Create Item</a>
+<li><a href="#_5_5_create_item">5.5 Create Item</a>
 <ul class="sectlevel3">
-<li><a href="#_5_4_1_error_403_forbidden">5.4.1 Error 403 - Forbidden</a></li>
+<li><a href="#_5_5_1_error_403_forbidden">5.5.1 Error 403 - Forbidden</a></li>
+<li><a href="#_5_5_2_error_401_missing_token">5.5.2 Error 401 - Missing Token</a></li>
 </ul>
 </li>
-<li><a href="#_5_5_update_item">5.5 Update Item</a>
+<li><a href="#_5_6_update_item">5.6 Update Item</a>
 <ul class="sectlevel3">
-<li><a href="#_5_5_1_error_401_unauthorized_not_the_author">5.5.1 Error 401 - Unauthorized (Not the Author)</a></li>
+<li><a href="#_5_6_1_error_401_unauthorized_not_the_author">5.6.1 Error 401 - Unauthorized (Not the Author)</a></li>
+<li><a href="#_5_6_2_error_403_forbidden">5.6.2 Error 403 - Forbidden</a></li>
+<li><a href="#_5_6_3_error_404_item_not_found">5.6.3 Error 404 - Item Not Found</a></li>
+<li><a href="#_5_6_4_error_401_missing_token">5.6.4 Error 401 - Missing Token</a></li>
 </ul>
 </li>
-<li><a href="#_5_6_delete_item_soft_delete">5.6 Delete Item (Soft Delete)</a>
+<li><a href="#_5_7_delete_item_soft_delete">5.7 Delete Item (Soft Delete)</a>
 <ul class="sectlevel3">
-<li><a href="#_5_6_1_error_403_forbidden">5.6.1 Error 403 - Forbidden</a></li>
+<li><a href="#_5_7_1_delete_item_permanent">5.7.1 Delete Item (Permanent)</a></li>
+<li><a href="#_5_7_2_error_403_forbidden">5.7.2 Error 403 - Forbidden</a></li>
+<li><a href="#_5_7_3_error_404_item_not_found">5.7.3 Error 404 - Item Not Found</a></li>
+<li><a href="#_5_7_4_error_401_missing_token">5.7.4 Error 401 - Missing Token</a></li>
 </ul>
 </li>
 </ul>
@@ -1218,9 +1231,9 @@ Content-Length: 184
 
 {
   "message" : "Access denied: You do not have permission to access this resource",
-  "error" : "Forbidden",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 54, 907764891 ],
   "status" : 403,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 36, 778359334 ]
+  "error" : "Forbidden"
 }</code></pre>
 </div>
 </div>
@@ -1262,13 +1275,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 133
+Content-Length: 132
 
 {
   "message" : "User not found",
-  "error" : "Not Found",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 55, 56491058 ],
   "status" : 404,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 36, 899415406 ]
+  "error" : "Not Found"
 }</code></pre>
 </div>
 </div>
@@ -1508,7 +1521,7 @@ Host: localhost:8080
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
-Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 12:39:38 GMT; HttpOnly
+Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 12:50:56 GMT; HttpOnly
 Content-Type: application/json
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
@@ -1571,9 +1584,9 @@ Content-Length: 141
 
 {
   "message" : "Invalid credentials",
-  "error" : "Unauthorized",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 271466325 ],
   "status" : 401,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 191948240 ]
+  "error" : "Unauthorized"
 }</code></pre>
 </div>
 </div>
@@ -1614,13 +1627,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 140
+Content-Length: 141
 
 {
   "message" : "Invalid credentials",
-  "error" : "Unauthorized",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 145163152 ],
   "status" : 401,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 54064003 ]
+  "error" : "Unauthorized"
 }</code></pre>
 </div>
 </div>
@@ -1665,9 +1678,9 @@ Content-Length: 133
 
 {
   "message" : "User not found",
-  "error" : "Not Found",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 321993240 ],
   "status" : 404,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 242973205 ]
+  "error" : "Not Found"
 }</code></pre>
 </div>
 </div>
@@ -1770,9 +1783,9 @@ Content-Length: 137
 
 {
   "message" : "User already exists",
-  "error" : "Conflict",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 204847024 ],
   "status" : 409,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 118664303 ]
+  "error" : "Conflict"
 }</code></pre>
 </div>
 </div>
@@ -1819,9 +1832,9 @@ Content-Length: 137
 
 {
   "message" : "User already exists",
-  "error" : "Conflict",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 233210710 ],
   "status" : 409,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 150442920 ]
+  "error" : "Conflict"
 }</code></pre>
 </div>
 </div>
@@ -1870,9 +1883,9 @@ Content-Length: 162
 
 {
   "message" : "Registration failed: Invalid email format",
-  "error" : "Bad Request",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 215771951 ],
   "status" : 400,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 132651878 ]
+  "error" : "Bad Request"
 }</code></pre>
 </div>
 </div>
@@ -1902,7 +1915,7 @@ Cookie: refresh_token={refresh-token}</code></pre>
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
-Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 12:39:38 GMT; HttpOnly
+Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 12:50:56 GMT; HttpOnly
 Content-Type: application/json
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
@@ -1948,13 +1961,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 153
+Content-Length: 154
 
 {
   "message" : "Invalid or expired refresh token",
-  "error" : "Unauthorized",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 189729018 ],
   "status" : 401,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 99640480 ]
+  "error" : "Unauthorized"
 }</code></pre>
 </div>
 </div>
@@ -1994,9 +2007,9 @@ Content-Length: 146
 
 {
   "message" : "Invalid or expired token",
-  "error" : "Unauthorized",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 276423781 ],
   "status" : 401,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 197244273 ]
+  "error" : "Unauthorized"
 }</code></pre>
 </div>
 </div>
@@ -2036,9 +2049,9 @@ Content-Length: 154
 
 {
   "message" : "Invalid or expired refresh token",
-  "error" : "Unauthorized",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 222243053 ],
   "status" : 401,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 139756577 ]
+  "error" : "Unauthorized"
 }</code></pre>
 </div>
 </div>
@@ -2078,9 +2091,9 @@ Content-Length: 151
 
 {
   "message" : "JWT token verification failed",
-  "error" : "Unauthorized",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 316240951 ],
   "status" : 401,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 238354315 ]
+  "error" : "Unauthorized"
 }</code></pre>
 </div>
 </div>
@@ -2290,9 +2303,9 @@ Content-Length: 170
 
 {
   "message" : "Password update failed: Old password is incorrect",
-  "error" : "Bad Request",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 292827757 ],
   "status" : 400,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 38, 215825861 ]
+  "error" : "Bad Request"
 }</code></pre>
 </div>
 </div>
@@ -2810,13 +2823,13 @@ Expires: 0
 X-Frame-Options: DENY
 Content-Disposition: inline;filename=f.txt
 Content-Type: application/json
-Content-Length: 183
+Content-Length: 182
 
 {
   "message" : "Failed to delete user: Failed to delete user from auth service",
-  "error" : "Bad Request",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 43588017 ],
   "status" : 400,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 37, 943064710 ]
+  "error" : "Bad Request"
 }</code></pre>
 </div>
 </div>
@@ -2935,9 +2948,9 @@ Content-Length: 184
 
 {
   "message" : "Access denied: You do not have permission to access this resource",
-  "error" : "Forbidden",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 55, 742424563 ],
   "status" : 403,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 37, 591452292 ]
+  "error" : "Forbidden"
 }</code></pre>
 </div>
 </div>
@@ -2973,13 +2986,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 133
+Content-Length: 132
 
 {
   "message" : "User not found",
-  "error" : "Not Found",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 56, 18441247 ],
   "status" : 404,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 37, 905206968 ]
+  "error" : "Not Found"
 }</code></pre>
 </div>
 </div>
@@ -3020,9 +3033,9 @@ Content-Length: 173
 
 {
   "message" : "Failed to delete user: Database constraint violation",
-  "error" : "Bad Request",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 55, 853118513 ],
   "status" : 400,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 37, 711633881 ]
+  "error" : "Bad Request"
 }</code></pre>
 </div>
 </div>
@@ -3174,9 +3187,9 @@ Content-Length: 162
 
 {
   "message" : "The user already has the LOCAL_APP_ROLE role",
-  "error" : "Conflict",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 55, 686045642 ],
   "status" : 409,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 37, 534435384 ]
+  "error" : "Conflict"
 }</code></pre>
 </div>
 </div>
@@ -4264,7 +4277,7 @@ Content-Length: 59
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077177840@test.com?global=false&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077855968@test.com?global=false&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4303,7 +4316,7 @@ Content-Length: 51
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077177840@test.com?global=false&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077855968@test.com?global=false&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4382,7 +4395,7 @@ Content-Length: 59
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077177874@test.com?global=true&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077855999@test.com?global=true&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4421,7 +4434,7 @@ Content-Length: 44
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077177874@test.com?global=true&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790077855999@test.com?global=true&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4687,9 +4700,9 @@ Content-Length: 200
 
 {
   "message" : "Invalid value 'bogus' for parameter 'scope' (expected one of: local, main, all)",
-  "error" : "Bad Request",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 53, 840159367 ],
   "status" : 400,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 35, 629350973 ]
+  "error" : "Bad Request"
 }</code></pre>
 </div>
 </div>
@@ -4751,14 +4764,46 @@ Content-Length: 219
   "description" : "For REST Docs",
   "authorFirstName" : "Test",
   "authorLastName" : "User",
-  "createdAt" : 1790077174240,
-  "updatedAt" : 1790077174240,
+  "createdAt" : 1790077852357,
+  "updatedAt" : 1790077852357,
   "deleted" : false
 } ]</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>It returns only non-soft-deleted items as {@code ItemsDTO} objects.</p>
+</div>
+<div class="sect3">
+<h4 id="_5_1_1_error_401_missing_token">5.1.1 Error 401 - Missing Token</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /items HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Host: localhost:8080</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 401 Unauthorized
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 59
+
+{
+  "message" : "Invalid or missing authentication token"
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -4792,13 +4837,13 @@ X-Frame-Options: DENY
 Content-Length: 238
 
 [ {
-  "id" : 26,
+  "id" : 33,
   "name" : "Deleted item",
   "description" : "Soft deleted for REST Docs",
   "authorFirstName" : "Test",
   "authorLastName" : "Manager",
-  "createdAt" : 1790077174530,
-  "updatedAt" : 1790077174530,
+  "createdAt" : 1790077852801,
+  "updatedAt" : 1790077852801,
   "deleted" : true
 } ]</code></pre>
 </div>
@@ -4808,14 +4853,69 @@ Content-Length: 238
 </div>
 </div>
 <div class="sect2">
-<h3 id="_5_3_get_item_by_id">5.3 Get Item by ID</h3>
+<h3 id="_5_3_list_all_items">5.3 List All Items</h3>
+<div class="paragraph">
+<p>This is an example output for the <code>GET /items?state=all</code> endpoint.</p>
+</div>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /items?state=all HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Authorization: Bearer {access-token}
+Host: localhost:8080</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 442
+
+[ {
+  "id" : 28,
+  "name" : "Active item",
+  "description" : "Still visible",
+  "authorFirstName" : "Test",
+  "authorLastName" : "User",
+  "createdAt" : 1790077852709,
+  "updatedAt" : 1790077852709,
+  "deleted" : false
+}, {
+  "id" : 29,
+  "name" : "Archived item",
+  "description" : "Soft deleted",
+  "authorFirstName" : "Test",
+  "authorLastName" : "User",
+  "createdAt" : 1790077852711,
+  "updatedAt" : 1790077852711,
+  "deleted" : true
+} ]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It returns both active and soft-deleted items.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_4_get_item_by_id">5.4 Get Item by ID</h3>
 <div class="paragraph">
 <p>This is an example output for the <code>GET /items/{id}</code> endpoint.</p>
 </div>
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /items/24 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /items/26 HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4838,7 +4938,7 @@ X-Frame-Options: DENY
 Content-Length: 785
 
 {
-  "id" : 24,
+  "id" : 26,
   "name" : "Doc item",
   "description" : "For REST Docs",
   "author" : {
@@ -4846,8 +4946,8 @@ Content-Length: 785
     "firstName" : "Test",
     "lastName" : "User",
     "login" : "test.user@test.com",
-    "createdAt" : 1790077173958,
-    "updatedAt" : 1790077173958,
+    "createdAt" : 1790077852067,
+    "updatedAt" : 1790077852067,
     "deleted" : false,
     "mainRole" : "USER",
     "appSpecificRoles" : [ ],
@@ -4866,8 +4966,8 @@ Content-Length: 785
     "appSpecificRolesString" : [ ],
     "allRoles" : [ ]
   },
-  "createdAt" : 1790077174467,
-  "updatedAt" : 1790077174467,
+  "createdAt" : 1790077852648,
+  "updatedAt" : 1790077852648,
   "deleted" : false
 }</code></pre>
 </div>
@@ -4876,7 +4976,7 @@ Content-Length: 785
 <p>It returns the full {@code Item} entity, including the nested {@code author}.</p>
 </div>
 <div class="sect3">
-<h4 id="_5_3_1_error_404_item_not_found">5.3.1 Error 404 - Item Not Found</h4>
+<h4 id="_5_4_1_error_404_item_not_found">5.4.1 Error 404 - Item Not Found</h4>
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
@@ -4904,16 +5004,48 @@ Content-Length: 138
 
 {
   "message" : "Could not find item",
-  "error" : "Not Found",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 52, 874462270 ],
   "status" : 404,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 34, 615533784 ]
+  "error" : "Not Found"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_4_2_error_401_missing_token">5.4.2 Error 401 - Missing Token</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /items/22 HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Host: localhost:8080</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 401 Unauthorized
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 59
+
+{
+  "message" : "Invalid or missing authentication token"
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_5_4_create_item">5.4 Create Item</h3>
+<h3 id="_5_5_create_item">5.5 Create Item</h3>
 <div class="paragraph">
 <p>This is an example output for the <code>POST /items/</code> endpoint.</p>
 </div>
@@ -4927,8 +5059,8 @@ Content-Length: 73
 Host: localhost:8080
 
 {
-  "description" : "Created via REST Docs test",
-  "name" : "New item"
+  "name" : "New item",
+  "description" : "Created via REST Docs test"
 }</code></pre>
 </div>
 </div>
@@ -4949,7 +5081,7 @@ X-Frame-Options: DENY
 Content-Length: 983
 
 {
-  "id" : 25,
+  "id" : 32,
   "name" : "New item",
   "description" : "Created via REST Docs test",
   "author" : {
@@ -4957,8 +5089,8 @@ Content-Length: 983
     "firstName" : "Test",
     "lastName" : "Manager",
     "login" : "test.manager@test.com",
-    "createdAt" : 1790077173959,
-    "updatedAt" : 1790077173959,
+    "createdAt" : 1790077852068,
+    "updatedAt" : 1790077852068,
     "deleted" : false,
     "mainRole" : "MANAGER",
     "appSpecificRoles" : [ ],
@@ -4985,8 +5117,8 @@ Content-Length: 983
     "appSpecificRolesString" : [ ],
     "allRoles" : [ ]
   },
-  "createdAt" : 1790077174513,
-  "updatedAt" : 1790077174513,
+  "createdAt" : 1790077852781,
+  "updatedAt" : 1790077852781,
   "deleted" : false
 }</code></pre>
 </div>
@@ -4995,7 +5127,7 @@ Content-Length: 983
 <p>Requires the <code>item:write</code> authority.</p>
 </div>
 <div class="sect3">
-<h4 id="_5_4_1_error_403_forbidden">5.4.1 Error 403 - Forbidden</h4>
+<h4 id="_5_5_1_error_403_forbidden">5.5.1 Error 403 - Forbidden</h4>
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
@@ -5006,8 +5138,8 @@ Content-Length: 74
 Host: localhost:8080
 
 {
-  "description" : "Should not be created",
-  "name" : "Forbidden item"
+  "name" : "Forbidden item",
+  "description" : "Should not be created"
 }</code></pre>
 </div>
 </div>
@@ -5029,31 +5161,69 @@ Content-Length: 184
 
 {
   "message" : "Access denied: You do not have permission to access this resource",
-  "error" : "Forbidden",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 52, 856306663 ],
   "status" : 403,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 34, 596565865 ]
+  "error" : "Forbidden"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_5_2_error_401_missing_token">5.5.2 Error 401 - Missing Token</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">POST /items/ HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Content-Length: 66
+Host: localhost:8080
+
+{
+  "name" : "Ghost item",
+  "description" : "No authentication"
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 401 Unauthorized
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 59
+
+{
+  "message" : "Invalid or missing authentication token"
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_5_5_update_item">5.5 Update Item</h3>
+<h3 id="_5_6_update_item">5.6 Update Item</h3>
 <div class="paragraph">
 <p>This is an example output for the <code>PUT /items/{id}</code> endpoint when the caller updates their own item.</p>
 </div>
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /items/27 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /items/34 HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Content-Length: 70
 Host: localhost:8080
 
 {
-  "description" : "Updated description",
-  "name" : "Updated name"
+  "name" : "Updated name",
+  "description" : "Updated description"
 }</code></pre>
 </div>
 </div>
@@ -5074,7 +5244,7 @@ X-Frame-Options: DENY
 Content-Length: 980
 
 {
-  "id" : 27,
+  "id" : 34,
   "name" : "Updated name",
   "description" : "Updated description",
   "author" : {
@@ -5082,8 +5252,8 @@ Content-Length: 980
     "firstName" : "Test",
     "lastName" : "Manager",
     "login" : "test.manager@test.com",
-    "createdAt" : 1790077173959,
-    "updatedAt" : 1790077173959,
+    "createdAt" : 1790077852068,
+    "updatedAt" : 1790077852068,
     "deleted" : false,
     "mainRole" : "MANAGER",
     "appSpecificRoles" : [ ],
@@ -5110,26 +5280,26 @@ Content-Length: 980
     "appSpecificRolesString" : [ ],
     "allRoles" : [ ]
   },
-  "createdAt" : 1790077174559,
-  "updatedAt" : 1790077174559,
+  "createdAt" : 1790077852818,
+  "updatedAt" : 1790077852818,
   "deleted" : false
 }</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_5_5_1_error_401_unauthorized_not_the_author">5.5.1 Error 401 - Unauthorized (Not the Author)</h4>
+<h4 id="_5_6_1_error_401_unauthorized_not_the_author">5.6.1 Error 401 - Unauthorized (Not the Author)</h4>
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /items/22 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /items/23 HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Content-Length: 63
 Host: localhost:8080
 
 {
-  "description" : "Not allowed",
-  "name" : "Stolen update"
+  "name" : "Stolen update",
+  "description" : "Not allowed"
 }</code></pre>
 </div>
 </div>
@@ -5151,23 +5321,145 @@ Content-Length: 175
 
 {
   "message" : "You can only perform this operation on your own items",
-  "error" : "Unauthorized",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 52, 596011460 ],
   "status" : 401,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 34, 426422554 ]
+  "error" : "Unauthorized"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_6_2_error_403_forbidden">5.6.2 Error 403 - Forbidden</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /items/24 HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Authorization: Bearer {access-token}
+Content-Length: 64
+Host: localhost:8080
+
+{
+  "name" : "Blocked update",
+  "description" : "Not allowed"
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 403 Forbidden
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 184
+
+{
+  "message" : "Access denied: You do not have permission to access this resource",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 52, 619954794 ],
+  "status" : 403,
+  "error" : "Forbidden"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_6_3_error_404_item_not_found">5.6.3 Error 404 - Item Not Found</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /items/999999 HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Authorization: Bearer {access-token}
+Content-Length: 65
+Host: localhost:8080
+
+{
+  "name" : "Missing item",
+  "description" : "Does not exist"
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 404 Not Found
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 138
+
+{
+  "message" : "Could not find item",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 52, 766301129 ],
+  "status" : 404,
+  "error" : "Not Found"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_6_4_error_401_missing_token">5.6.4 Error 401 - Missing Token</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /items/30 HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Content-Length: 66
+Host: localhost:8080
+
+{
+  "name" : "Anonymous update",
+  "description" : "Not allowed"
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 401 Unauthorized
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 59
+
+{
+  "message" : "Invalid or missing authentication token"
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_5_6_delete_item_soft_delete">5.6 Delete Item (Soft Delete)</h3>
+<h3 id="_5_7_delete_item_soft_delete">5.7 Delete Item (Soft Delete)</h3>
 <div class="paragraph">
 <p>This is an example output for the <code>DELETE /items/{id}</code> endpoint with the default <code>softDelete=true</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /items/23 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /items/25 HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -5192,11 +5484,44 @@ X-Frame-Options: DENY</code></pre>
 <p>Requires the <code>item:delete</code> authority (ADMIN role in the default permission model).</p>
 </div>
 <div class="sect3">
-<h4 id="_5_6_1_error_403_forbidden">5.6.1 Error 403 - Forbidden</h4>
+<h4 id="_5_7_1_delete_item_permanent">5.7.1 Delete Item (Permanent)</h4>
+<div class="paragraph">
+<p>This is an example output for the <code>DELETE /items/{id}?softDelete=false</code> endpoint.</p>
+</div>
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /items/28 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /items/27?softDelete=false HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Authorization: Bearer {access-token}
+Host: localhost:8080</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The item is removed from the database permanently.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_7_2_error_403_forbidden">5.7.2 Error 403 - Forbidden</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /items/35 HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -5220,9 +5545,77 @@ Content-Length: 184
 
 {
   "message" : "Access denied: You do not have permission to access this resource",
-  "error" : "Forbidden",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 52, 889478847 ],
   "status" : 403,
-  "timestamp" : [ 2026, 9, 22, 11, 39, 34, 634507904 ]
+  "error" : "Forbidden"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_7_3_error_404_item_not_found">5.7.3 Error 404 - Item Not Found</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /items/999999 HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Authorization: Bearer {access-token}
+Host: localhost:8080</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 404 Not Found
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 138
+
+{
+  "message" : "Could not find item",
+  "timestamp" : [ 2026, 9, 22, 11, 50, 52, 541726418 ],
+  "status" : 404,
+  "error" : "Not Found"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_5_7_4_error_401_missing_token">5.7.4 Error 401 - Missing Token</h4>
+<div class="listingblock">
+<div class="title">request</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /items/31 HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+Host: localhost:8080</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">response</div>
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 401 Unauthorized
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Content-Type: application/json
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Length: 59
+
+{
+  "message" : "Invalid or missing authentication token"
 }</code></pre>
 </div>
 </div>
@@ -5233,7 +5626,7 @@ Content-Length: 184
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-22 11:37:36 UTC
+Last updated 2026-09-22 11:45:11 UTC
 </div>
 </div>
 </body>
