@@ -532,6 +532,7 @@ _Sequence Diagram showing how message keys become localized API errors._
 ## Related Documentation
 
 - [Project README](../README.md)
+- [API documentation generation](api-documentation-generation.md)
 - [API Documentation (`docs/index.html`)](../docs/index.html)
 - [Frontend Repository](../frontend/README.md)
 
