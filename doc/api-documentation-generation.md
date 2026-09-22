@@ -60,7 +60,7 @@ Each `document(...)` call also applies `maskSensitiveData()` before `prettyPrint
 
 ## Sensitive data masking
 
-Integration tests use real JWT tokens (signed with the test secret from `application-test.properties`). Without masking, those values would be copied verbatim into `target/generated-snippets/` and `docs/index.html`.
+Integration tests use real JWT tokens (signed with `SECURITY_JWT_TOKEN_SECRET_KEY` from `.env` or local `application.properties`). Without masking, those values would be copied verbatim into `target/generated-snippets/` and `docs/index.html`.
 
 `RestDocsSensitiveDataMasking` is an `OperationPreprocessor` applied in the controller test helpers:
 
@@ -136,9 +136,17 @@ From `backend/` with Java 21 and Maven 3.9 on the host, and MariaDB available (D
 
 ```bash
 docker compose up -d db
+
+# Load JWT, spring-auth URL, and other vars from .env (see env-dist)
+set -a
+source .env
+set +a
+
+# On the host, use localhost instead of the Docker service name "db"
 export TEST_SPRING_DATASOURCE_URL=jdbc:mariadb://localhost:3306/test_db
 export SPRING_DATASOURCE_USERNAME=root
 export SPRING_DATASOURCE_PASSWORD=pwd
+
 mvn -Dspring.profiles.active=test clean verify
 mvn -Dspring.profiles.active=test clean package
 cp target/generated-snippets-html/index.html ../docs/index.html

@@ -678,7 +678,7 @@ Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
 Content-Type: text/plain;charset=ISO-8859-1
-Content-Length: 203
+Content-Length: 210
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
@@ -686,7 +686,7 @@ Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
 
-&lt;strong&gt;Hello World !&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;JAVA_HOME : &lt;/strong&gt;/usr/lib/jvm/default-jvm&lt;br&gt;&lt;strong&gt;Spring active profile : &lt;/strong&gt;test&lt;br&gt;&lt;strong&gt;Database used : &lt;/strong&gt;jdbc:mariadb://db:3306/test_db</code></pre>
+&lt;strong&gt;Hello World !&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;JAVA_HOME : &lt;/strong&gt;/home/adrien/.local/java&lt;br&gt;&lt;strong&gt;Spring active profile : &lt;/strong&gt;test&lt;br&gt;&lt;strong&gt;Database used : &lt;/strong&gt;jdbc:mariadb://localhost:3306/test_db</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1177,13 +1177,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 183
+Content-Length: 182
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 48, 851848131 ],
-  "status" : 403,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 40, 856225572 ],
+  "message" : "Access denied: You do not have permission to access this resource",
   "error" : "Forbidden",
-  "message" : "Access denied: You do not have permission to access this resource"
+  "status" : 403
 }</code></pre>
 </div>
 </div>
@@ -1225,13 +1225,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 132
+Content-Length: 131
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 48, 977753835 ],
-  "status" : 404,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 40, 985847218 ],
+  "message" : "User not found",
   "error" : "Not Found",
-  "message" : "User not found"
+  "status" : 404
 }</code></pre>
 </div>
 </div>
@@ -1471,7 +1471,7 @@ Host: localhost:8080
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
-Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 09:16:50 GMT; HttpOnly
+Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 10:06:42 GMT; HttpOnly
 Content-Type: application/json
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
@@ -1530,13 +1530,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 140
+Content-Length: 139
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 101366247 ],
-  "status" : 401,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 137744642 ],
+  "message" : "Invalid credentials",
   "error" : "Unauthorized",
-  "message" : "Invalid credentials"
+  "status" : 401
 }</code></pre>
 </div>
 </div>
@@ -1577,13 +1577,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 140
+Content-Length: 139
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 49, 975276369 ],
-  "status" : 401,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 41, 996623330 ],
+  "message" : "Invalid credentials",
   "error" : "Unauthorized",
-  "message" : "Invalid credentials"
+  "status" : 401
 }</code></pre>
 </div>
 </div>
@@ -1624,13 +1624,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 132
+Content-Length: 131
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 145039652 ],
-  "status" : 404,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 189197989 ],
+  "message" : "User not found",
   "error" : "Not Found",
-  "message" : "User not found"
+  "status" : 404
 }</code></pre>
 </div>
 </div>
@@ -1729,13 +1729,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 135
+Content-Length: 134
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 33708315 ],
-  "status" : 409,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 58697813 ],
+  "message" : "User already exists",
   "error" : "Conflict",
-  "message" : "User already exists"
+  "status" : 409
 }</code></pre>
 </div>
 </div>
@@ -1778,13 +1778,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 135
+Content-Length: 134
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 58433152 ],
-  "status" : 409,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 90631072 ],
+  "message" : "User already exists",
   "error" : "Conflict",
-  "message" : "User already exists"
+  "status" : 409
 }</code></pre>
 </div>
 </div>
@@ -1829,13 +1829,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 160
+Content-Length: 159
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 43840021 ],
-  "status" : 400,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 71758290 ],
+  "message" : "Registration failed: Invalid email format",
   "error" : "Bad Request",
-  "message" : "Registration failed: Invalid email format"
+  "status" : 400
 }</code></pre>
 </div>
 </div>
@@ -1865,7 +1865,7 @@ Cookie: refresh_token={refresh-token}</code></pre>
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
-Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 09:16:49 GMT; HttpOnly
+Set-Cookie: refresh_token=fakeToken123; Path=/; Max-Age=3600; Expires=Tue, 22 Sep 2026 10:06:42 GMT; HttpOnly
 Content-Type: application/json
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
@@ -1911,13 +1911,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 152
+Content-Length: 151
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 19310739 ],
-  "status" : 401,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 42069700 ],
+  "message" : "Invalid or expired refresh token",
   "error" : "Unauthorized",
-  "message" : "Invalid or expired refresh token"
+  "status" : 401
 }</code></pre>
 </div>
 </div>
@@ -1953,13 +1953,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 145
+Content-Length: 144
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 105654529 ],
-  "status" : 401,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 143307531 ],
+  "message" : "Invalid or expired token",
   "error" : "Unauthorized",
-  "message" : "Invalid or expired token"
+  "status" : 401
 }</code></pre>
 </div>
 </div>
@@ -1995,13 +1995,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 152
+Content-Length: 151
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 49448497 ],
-  "status" : 401,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 79435804 ],
+  "message" : "Invalid or expired refresh token",
   "error" : "Unauthorized",
-  "message" : "Invalid or expired refresh token"
+  "status" : 401
 }</code></pre>
 </div>
 </div>
@@ -2037,13 +2037,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 150
+Content-Length: 149
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 139413915 ],
-  "status" : 401,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 184140874 ],
+  "message" : "JWT token verification failed",
   "error" : "Unauthorized",
-  "message" : "JWT token verification failed"
+  "status" : 401
 }</code></pre>
 </div>
 </div>
@@ -2249,13 +2249,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 169
+Content-Length: 168
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 50, 118044829 ],
-  "status" : 400,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 42, 158801438 ],
+  "message" : "Password update failed: Old password is incorrect",
   "error" : "Bad Request",
-  "message" : "Password update failed: Old password is incorrect"
+  "status" : 400
 }</code></pre>
 </div>
 </div>
@@ -2773,13 +2773,13 @@ Expires: 0
 X-Frame-Options: DENY
 Content-Disposition: inline;filename=f.txt
 Content-Type: application/json
-Content-Length: 182
+Content-Length: 181
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 49, 866161749 ],
-  "status" : 400,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 41, 884965600 ],
+  "message" : "Failed to delete user: Failed to delete user from auth service",
   "error" : "Bad Request",
-  "message" : "Failed to delete user: Failed to delete user from auth service"
+  "status" : 400
 }</code></pre>
 </div>
 </div>
@@ -2894,13 +2894,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 183
+Content-Length: 182
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 49, 554019452 ],
-  "status" : 403,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 41, 576307163 ],
+  "message" : "Access denied: You do not have permission to access this resource",
   "error" : "Forbidden",
-  "message" : "Access denied: You do not have permission to access this resource"
+  "status" : 403
 }</code></pre>
 </div>
 </div>
@@ -2936,13 +2936,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 132
+Content-Length: 131
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 49, 835029805 ],
-  "status" : 404,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 41, 857941541 ],
+  "message" : "User not found",
   "error" : "Not Found",
-  "message" : "User not found"
+  "status" : 404
 }</code></pre>
 </div>
 </div>
@@ -2979,13 +2979,13 @@ Expires: 0
 X-Frame-Options: DENY
 Content-Disposition: inline;filename=f.txt
 Content-Type: application/json
-Content-Length: 172
+Content-Length: 171
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 49, 663223220 ],
-  "status" : 400,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 41, 685497771 ],
+  "message" : "Failed to delete user: Database constraint violation",
   "error" : "Bad Request",
-  "message" : "Failed to delete user: Database constraint violation"
+  "status" : 400
 }</code></pre>
 </div>
 </div>
@@ -3133,13 +3133,13 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 161
+Content-Length: 160
 
 {
-  "timestamp" : [ 2026, 9, 22, 8, 16, 49, 490920087 ],
-  "status" : 409,
+  "timestamp" : [ 2026, 9, 22, 9, 6, 41, 518220210 ],
+  "message" : "The user already has the LOCAL_APP_ROLE role",
   "error" : "Conflict",
-  "message" : "The user already has the LOCAL_APP_ROLE role"
+  "status" : 409
 }</code></pre>
 </div>
 </div>
@@ -4227,7 +4227,7 @@ Content-Length: 59
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790065009781@test.com?global=false&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790068001804@test.com?global=false&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4266,7 +4266,7 @@ Content-Length: 51
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790065009781@test.com?global=false&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790068001804@test.com?global=false&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4345,7 +4345,7 @@ Content-Length: 59
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790065009812@test.com?global=true&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790068001838@test.com?global=true&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
@@ -4384,7 +4384,7 @@ Content-Length: 44
 <div class="listingblock">
 <div class="title">request</div>
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790065009812@test.com?global=true&amp;hard=true HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /users/temp.permanent.1790068001838@test.com?global=true&amp;hard=true HTTP/1.1
 Content-Type: application/json;charset=UTF-8
 Authorization: Bearer {access-token}
 Host: localhost:8080</code></pre>
