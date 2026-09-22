@@ -5,7 +5,7 @@ Companion guide to the [backend README](../backend/README.md). It describes **ho
 See also:
 
 - [process-documentation.md](process-documentation.md): application structure, security, database, test execution
-- [docs/index.html](../docs/index.html): consumer-facing API reference (HTML, generated)
+- [index.html](index.html): consumer-facing API reference (HTML, generated)
 - [backend/src/asciidoc/index.adoc](../backend/src/asciidoc/index.adoc): AsciiDoc template (structure and snippet includes)
 
 ## Pipeline overview
@@ -14,7 +14,7 @@ Library: **Spring REST Docs** (`spring-restdocs-mockmvc` 3.0.2, see `backend/pom
 
 Source diagram: [process/restdocs-pipeline.drawio](process/restdocs-pipeline.drawio)
 
-> PNG exports under `doc/process/export/` are optional. Regenerate them after editing the Draw.io sources (see [Regenerate PNG exports](#regenerate-png-exports)).
+> PNG exports under `docs/process/export/` are optional. Regenerate them after editing the Draw.io sources (see [Regenerate PNG exports](#regenerate-png-exports)).
 
 Tests **do not** generate `index.adoc`: only the AsciiDoc template is maintained by hand. HTTP examples come from the tests.
 
@@ -132,7 +132,7 @@ cp target/generated-snippets-html/index.html ../docs/index.html
 
 ## Common commands
 
-From `backend/` with Java 21 and Maven 3.9 on the host, and MariaDB available (Docker or local):
+From `backend/` with Java 21 and Maven 3.9 on the host, and MariaDB available (Docker or local). Database credentials come from your `.env` (see `env-dist` for local defaults; never reuse those values in production):
 
 ```bash
 docker compose up -d db
@@ -143,9 +143,9 @@ source .env
 set +a
 
 # On the host, use localhost instead of the Docker service name "db"
-export TEST_SPRING_DATASOURCE_URL=jdbc:mariadb://localhost:3306/test_db
-export SPRING_DATASOURCE_USERNAME=root
-export SPRING_DATASOURCE_PASSWORD=pwd
+export TEST_SPRING_DATASOURCE_URL="${TEST_SPRING_DATASOURCE_URL/db/localhost}"
+export SPRING_DATASOURCE_USERNAME="$DB_USERNAME"
+export SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD"
 
 mvn -Dspring.profiles.active=test clean verify
 mvn -Dspring.profiles.active=test clean package
@@ -180,10 +180,10 @@ xdg-open ../docs/index.html
 From the **repository root** (Docker required):
 
 ```bash
-mkdir -p doc/process/export
+mkdir -p docs/process/export
 for f in restdocs-pipeline restdocs-generation; do
   docker run --rm \
-    -v "$PWD/doc/process:/data" \
+    -v "$PWD/docs/process:/data" \
     rlespinasse/drawio-export:v4.6.0 \
     -f png -t -s 2 -o /data/export /data/${f}.drawio
 done
@@ -191,11 +191,11 @@ done
 
 Options: `-t` transparent background, `-s 2` scale 2x. Edit `.drawio` files with [diagrams.net](https://app.diagrams.net/) or the Draw.io Integration extension.
 
-After export, embed PNGs in this document if you want inline diagrams (paths under `doc/process/export/`).
+After export, embed PNGs in this document if you want inline diagrams (paths under `docs/process/export/`).
 
 ## Maintenance rule
 
-Any change to the pipeline or detailed processes must update the Draw.io files (`restdocs-pipeline.drawio`, `restdocs-generation.drawio`) **and** the PNGs in `doc/process/export/` **in the same commit** as the code or text documentation.
+Any change to the pipeline or detailed processes must update the Draw.io files (`restdocs-pipeline.drawio`, `restdocs-generation.drawio`) **and** the PNGs in `docs/process/export/` **in the same commit** as the code or text documentation.
 
 After an API change:
 

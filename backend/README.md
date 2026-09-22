@@ -14,10 +14,10 @@ Template to start developing a new REST API application with Spring Boot.
 | Document | Scope |
 | -------- | ----- |
 | **This README** | Setup, Docker, Maven, OAuth2 overview |
-| [../doc/process-documentation.md](../doc/process-documentation.md) | Application architecture, modules, security, database, `spring-auth` integration |
-| [../doc/api-documentation-generation.md](../doc/api-documentation-generation.md) | Spring REST Docs pipeline (snippets, Asciidoctor, maintenance) |
+| [../docs/process-documentation.md](../docs/process-documentation.md) | Application architecture, modules, security, database, `spring-auth` integration |
+| [../docs/api-documentation-generation.md](../docs/api-documentation-generation.md) | Spring REST Docs pipeline (snippets, Asciidoctor, maintenance) |
 | [../docs/index.html](../docs/index.html) | Generated API reference (endpoints, request/response examples) |
-| [../doc/process/](../doc/process/) | Draw.io diagrams for the REST Docs pipeline (`restdocs-pipeline.drawio`, `restdocs-generation.drawio`) |
+| [../docs/process/](../docs/process/) | Draw.io diagrams for the REST Docs pipeline (`restdocs-pipeline.drawio`, `restdocs-generation.drawio`) |
 
 # Table of Contents
 - [Spring template](#spring-template)
@@ -172,9 +172,9 @@ HTTP documentation for the template backend (`/auth`, `/users`, `/tests`) is gen
 - **Contracts:** `RestDocsSnippets` (JSON field checks on happy paths)
 - **Masking:** `RestDocsSensitiveDataMasking` replaces JWT and refresh-token values in snippets before HTML is built
 
-For the full pipeline, diagrams, and maintenance rules, see [../doc/api-documentation-generation.md](../doc/api-documentation-generation.md). Process diagrams live under [../doc/process/](../doc/process/).
+For the full pipeline, diagrams, and maintenance rules, see [../docs/api-documentation-generation.md](../docs/api-documentation-generation.md). Process diagrams live under [../docs/process/](../docs/process/).
 
-Quick start from `backend/` on the host (MariaDB in Docker, Maven on the host):
+Quick start from `backend/` on the host (MariaDB in Docker, Maven on the host). Copy `env-dist` to `.env` first if you have not already (default dev credentials live there; do not reuse them in production):
 
 ```bash
 docker compose up -d db
@@ -182,9 +182,11 @@ docker compose up -d db
 set -a
 source .env
 set +a
-export TEST_SPRING_DATASOURCE_URL=jdbc:mariadb://localhost:3306/test_db
-export SPRING_DATASOURCE_USERNAME=root
-export SPRING_DATASOURCE_PASSWORD=pwd
+
+# On the host, use localhost instead of the Docker service name "db"
+export TEST_SPRING_DATASOURCE_URL="${TEST_SPRING_DATASOURCE_URL/db/localhost}"
+export SPRING_DATASOURCE_USERNAME="$DB_USERNAME"
+export SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD"
 
 mvn -Dspring.profiles.active=test clean verify
 mvn -Dspring.profiles.active=test clean package

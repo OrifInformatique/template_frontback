@@ -64,7 +64,7 @@ Code lives under `ch.sectioninformatique.template`, one package per domain (`use
 
 ### Auth is delegated, not implemented locally
 
-`auth/AuthController` does not perform authentication itself — it relays requests (login, register, refresh, Azure OAuth2 callback) to the external `spring-auth` service via `auth/AuthClient` (a Spring WebFlux `WebClient`, configured in `security/WebClientConfig`). `spring-auth`'s base URL comes from `SPRING_AUTH_URL` in `.env`. Locally-issued JWTs from `spring-auth` are then validated on every request by `security/JwtAuthFilter` + `security/UserAuthenticationProvider`, which populate the Spring Security context. See `doc/frontend_backend_auth_architecture.mmd`/`.png` and `doc/process-documentation.md` for full sequence diagrams (standard login, Azure OAuth2 login, refresh token flow).
+`auth/AuthController` does not perform authentication itself — it relays requests (login, register, refresh, Azure OAuth2 callback) to the external `spring-auth` service via `auth/AuthClient` (a Spring WebFlux `WebClient`, configured in `security/WebClientConfig`). `spring-auth`'s base URL comes from `SPRING_AUTH_URL` in `.env`. Locally-issued JWTs from `spring-auth` are then validated on every request by `security/JwtAuthFilter` + `security/UserAuthenticationProvider`, which populate the Spring Security context. See `docs/frontend_backend_auth_architecture.mmd`/`.png` and `docs/process-documentation.md` for full sequence diagrams (standard login, Azure OAuth2 login, refresh token flow).
 
 Azure OAuth2 login is a three-party redirect dance (Frontend ↔ this Backend ↔ spring-auth ↔ Azure): the backend receives a temporary auth code at `/auth/auth-code`, exchanges it with spring-auth for tokens, stashes them in the HTTP session, then the frontend polls `GET /auth/tokens` to retrieve and clear them. This is why `SecurityConfig` sets `SessionCreationPolicy.ALWAYS` even though the API is otherwise stateless/JWT-based.
 
@@ -100,5 +100,5 @@ The dev server proxies `/auth`, `/users`, `/tests` requests to `BACKEND_API_URL`
 ## Notes
 
 - Both `README.md`s (root, `backend/`, `frontend/`) contain more detailed one-time setup instructions (prerequisites, Docker walkthroughs, Azure OAuth2 sequence diagrams) — consult them for environment setup questions.
-- `doc/process-documentation.md` has an in-depth, kept-up-to-date module-by-module reference with class/sequence diagrams for the backend; check it before making non-trivial backend architecture changes.
-- Backend REST API docs are auto-generated from tests via Spring REST Docs + Asciidoctor (`mvn package`), output to `backend/target/generated-snippets-html` / `backend/docs`.
+- `docs/process-documentation.md` has an in-depth, kept-up-to-date module-by-module reference with class/sequence diagrams for the backend; check it before making non-trivial backend architecture changes.
+- Backend REST API docs are auto-generated from tests via Spring REST Docs + Asciidoctor (`mvn package`), output to `backend/target/generated-snippets-html` / `docs/index.html`.

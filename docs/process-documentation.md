@@ -74,8 +74,7 @@ _Illustrates interactions between the frontend and backend modules, as well as t
 | -------- | ----------------------------------------------------------------- |
 | `src`    | Contains the application’s source code and resources.             |
 | `target` | Compiled classes and build artifacts.                             |
-| `docs`   | Auto-generated REST API documentation (HTML format).              |
-| `doc`    | Manually created documentation (designs, requirements, diagrams). |
+| `docs`   | Project documentation: API reference (`index.html`, generated) and manual docs (architecture, diagrams). |
 
 ---
 
@@ -533,7 +532,7 @@ _Sequence Diagram showing how message keys become localized API errors._
 
 - [Project README](../README.md)
 - [API documentation generation](api-documentation-generation.md)
-- [API Documentation (`docs/index.html`)](../docs/index.html)
+- [API Documentation (`index.html`)](index.html)
 - [Frontend Repository](../frontend/README.md)
 
 ---
