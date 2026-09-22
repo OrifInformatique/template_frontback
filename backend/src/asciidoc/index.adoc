@@ -1041,3 +1041,103 @@ include::{snippets}/roles/invalid-scope/http-request.adoc[]
 include::{snippets}/roles/invalid-scope/http-response.adoc[]
 
 It returns a message indicating that the scope value is invalid.
+
+== 5 Item Endpoints
+
+NOTE: `GET /items` returns a list of {@code ItemsDTO}. `GET /items/{id}` and create/update responses return the full {@code Item} entity, including a nested {@code author} user object.
+
+=== 5.1 List Active Items
+This is an example output for the `GET /items` endpoint with the default `state=active` filter.
+
+.request
+include::{snippets}/items/list-active/http-request.adoc[]
+
+.response
+include::{snippets}/items/list-active/http-response.adoc[]
+
+It returns only non-soft-deleted items as {@code ItemsDTO} objects.
+
+=== 5.2 List Deleted Items
+This is an example output for the `GET /items?state=deleted` endpoint.
+
+.request
+include::{snippets}/items/list-deleted/http-request.adoc[]
+
+.response
+include::{snippets}/items/list-deleted/http-response.adoc[]
+
+It returns only soft-deleted items.
+
+=== 5.3 Get Item by ID
+This is an example output for the `GET /items/{id}` endpoint.
+
+.request
+include::{snippets}/items/get-by-id/http-request.adoc[]
+
+.response
+include::{snippets}/items/get-by-id/http-response.adoc[]
+
+It returns the full {@code Item} entity, including the nested {@code author}.
+
+==== 5.3.1 Error 404 - Item Not Found
+
+.request
+include::{snippets}/items/get-by-id/404/not-found/http-request.adoc[]
+
+.response
+include::{snippets}/items/get-by-id/404/not-found/http-response.adoc[]
+
+=== 5.4 Create Item
+This is an example output for the `POST /items/` endpoint.
+
+.request
+include::{snippets}/items/create/http-request.adoc[]
+
+.response
+include::{snippets}/items/create/http-response.adoc[]
+
+Requires the `item:write` authority.
+
+==== 5.4.1 Error 403 - Forbidden
+
+.request
+include::{snippets}/items/create/403/forbidden/http-request.adoc[]
+
+.response
+include::{snippets}/items/create/403/forbidden/http-response.adoc[]
+
+=== 5.5 Update Item
+This is an example output for the `PUT /items/{id}` endpoint when the caller updates their own item.
+
+.request
+include::{snippets}/items/update-own/http-request.adoc[]
+
+.response
+include::{snippets}/items/update-own/http-response.adoc[]
+
+==== 5.5.1 Error 401 - Unauthorized (Not the Author)
+
+.request
+include::{snippets}/items/update/401/unauthorized/http-request.adoc[]
+
+.response
+include::{snippets}/items/update/401/unauthorized/http-response.adoc[]
+
+=== 5.6 Delete Item (Soft Delete)
+This is an example output for the `DELETE /items/{id}` endpoint with the default `softDelete=true`.
+
+.request
+include::{snippets}/items/delete-soft/http-request.adoc[]
+
+.response
+include::{snippets}/items/delete-soft/http-response.adoc[]
+
+Requires the `item:delete` authority (ADMIN role in the default permission model).
+
+==== 5.6.1 Error 403 - Forbidden
+
+.request
+include::{snippets}/items/delete/403/forbidden/http-request.adoc[]
+
+.response
+include::{snippets}/items/delete/403/forbidden/http-response.adoc[]

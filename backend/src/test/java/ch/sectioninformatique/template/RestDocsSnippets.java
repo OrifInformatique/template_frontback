@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template;
 
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 
@@ -11,8 +12,8 @@ import org.springframework.restdocs.snippet.Snippet;
 /**
  * JSON field contracts for Spring REST Docs in template_frontback.
  * Derived from backend DTOs ({@code UserDto}, {@code RegisterDto}, {@code TokenResponseDto},
- * {@code MessageResponseDto}, {@code PasswordUpdateDto}) and the integration tests that
- * document HTTP examples.
+ * {@code MessageResponseDto}, {@code PasswordUpdateDto}, {@code ItemsDTO}, {@code Item})
+ * and the integration tests that document HTTP examples.
  */
 public final class RestDocsSnippets {
 
@@ -74,6 +75,45 @@ public final class RestDocsSnippets {
     public static Snippet messageResponse() {
         return responseFields(
                 fieldWithPath("message").description("Localized status message"));
+    }
+
+    /** Matches create/update request body ({@code name}, {@code description}). */
+    public static Snippet itemCreateRequest() {
+        return requestFields(
+                fieldWithPath("name").description("Item name"),
+                fieldWithPath("description").description("Item description"));
+    }
+
+    /** Matches a JSON array of {@code ItemsDTO} returned by {@code GET /items}. */
+    public static Snippet itemsListResponse() {
+        return responseFields(
+                fieldWithPath("[].id").description("Item identifier"),
+                fieldWithPath("[].name").description("Item name"),
+                fieldWithPath("[].description").description("Item description"),
+                fieldWithPath("[].authorFirstName").description("Author first name"),
+                fieldWithPath("[].authorLastName").description("Author last name"),
+                fieldWithPath("[].createdAt").description("Creation timestamp"),
+                fieldWithPath("[].updatedAt").description("Last update timestamp"),
+                fieldWithPath("[].deleted").description("Whether the item is soft-deleted"));
+    }
+
+    /**
+     * Matches the {@code Item} entity returned by {@code GET /items/{id}} and by create/update.
+     * Uses relaxed matching because the nested {@code author} serializes the full {@code User} entity.
+     */
+    public static Snippet itemDetailResponse() {
+        return relaxedResponseFields(
+                fieldWithPath("id").description("Item identifier"),
+                fieldWithPath("name").description("Item name"),
+                fieldWithPath("description").description("Item description"),
+                fieldWithPath("author").description("Item author (full user entity)"),
+                fieldWithPath("author.id").description("Author user identifier"),
+                fieldWithPath("author.firstName").description("Author first name"),
+                fieldWithPath("author.lastName").description("Author last name"),
+                fieldWithPath("author.login").description("Author login email"),
+                fieldWithPath("createdAt").description("Creation timestamp"),
+                fieldWithPath("updatedAt").description("Last update timestamp"),
+                fieldWithPath("deleted").description("Whether the item is soft-deleted"));
     }
 
     private static FieldDescriptor[] userFields(String prefix, boolean optionalItems) {
