@@ -12,10 +12,12 @@ import MainLayout from './common/layouts/MainLayout';
 import Home from './features/home';
 import Contact from './features/contact';
 import Login from './features/auth/ui/login';
-import Azure from './features/auth/ui/login/azure';
+import AzureCallback from './features/auth/ui/login/AzureCallback';
 import ChangePassword from './features/auth/ui/change-password';
 import ResetPassword from './features/auth/ui/reset-password';
 import ApiAuthCall from './features/auth';
+import Admin from './features/admin';
+import UserList from './features/users';
 
 // Utils
 import Redirect from './common/utils/Redirect'
@@ -67,8 +69,16 @@ root.render(
                     />
 
                     <Route
+                        path="/admin"
+                        element={<Admin />}
+                    >
+                        <Route path="users" element={<UserList />} />
+                        // You can add more admin routes here for other admin pages
+                    </Route>
+
+                    <Route
                         path="/azure"
-                        element={<Azure />}
+                        element={<AzureCallback />}
                     />
 
                     <Route

@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import reactor.core.publisher.Mono;
@@ -75,6 +79,9 @@ public class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private MessageSource messageSource;
+
     /**
      * Mock client for external auth service (only used for global delete
      * operations)
@@ -101,6 +108,16 @@ public class UserControllerTest {
 
         // Create and return a real JWT token
         return userAuthenticationProvider.createToken(userDto);
+    }
+
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+    }
+
+    private UserDto createTemporaryUser() {
+        String uniqueLogin = "temp.permanent." + System.currentTimeMillis() + "@test.com";
+        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null, null, null));
+        return userService.findByLogin(uniqueLogin);
     }
 
     /**
@@ -188,16 +205,19 @@ public class UserControllerTest {
      */
     @Test
     public void me_withToken_shouldReturnSuccess() throws Exception {
+        String validToken = getValidTokenForUser("test.user@test.com");
         performRequest(
             "GET",
             "/users/me",
-            null,
+            validToken,
             MediaType.APPLICATION_JSON,
-            401,
-            "me-unauthorized-invalid-token",
+            200,
+            "me-success",
             response -> {
                 try {
-                    response.andExpect(status().isUnauthorized());
+                    response.andExpect(status().isOk());
+                    response.andExpect(jsonPath("$.login")
+                        .value("test.user@test.com"));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -221,31 +241,35 @@ public class UserControllerTest {
             response -> {
                 try {
                     response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             });
     }
 
-    // ==================== GET /users/all ====================
+    // ==================== GET /users ====================
 
     /**
-     * Test: GET /users/all - Success
+     * Test: GET /users?state=active - Success
      *
-     * Test retrieving all users with proper authorization.
+     * Test retrieving active users with proper authorization.
      */
     @Test
     public void allUsers_withToken_shouldReturnSuccess() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
             "GET",
-            "/users/all",
-            null,
+            "/users?state=active",
+            adminToken,
             MediaType.APPLICATION_JSON,
-            401,
-            "all-unauthorized-invalid-token",
+            200,
+            "all-users-success",
             response -> {
                 try {
-                    response.andExpect(status().isUnauthorized());
+                    response.andExpect(status().isOk());
+                    response.andExpect(jsonPath("$").isArray());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -253,9 +277,9 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/all
+     * Test: GET /users?state=active
      *
-     * Verify users with user:read authority can retrieve all users from the system.
+     * Verify users with user:read authority can retrieve the user list.
      */
     @Test
     @Transactional
@@ -264,7 +288,7 @@ public class UserControllerTest {
 
         performRequest(
             "GET",
-            "/users/all",
+            "/users?state=active",
             validToken,
             MediaType.APPLICATION_JSON,
             200,
@@ -282,7 +306,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/all - 401 Unauthorized
+     * Test: GET /users - 401 Unauthorized
      *
      * Test retrieving all users without proper authorization.
      */
@@ -290,7 +314,7 @@ public class UserControllerTest {
     public void allUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/all",
+                "/users",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -298,31 +322,35 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
     }
 
-    // ==================== GET /users/all-with-deleted ====================
+    // ==================== GET /users?state=all ====================
 
     /**
-     * Test: GET /users/all-with-deleted - Success
+     * Test: GET /users?state=all - Success
      *
      * Test retrieving all users including soft-deleted ones with proper authorization.
      */
     @Test
     public void allWithDeletedUsers_withToken_shouldReturnSuccess() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
                 "GET",
-                "/users/all-with-deleted",
-                null,
+                "/users?state=all",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "all-with-deleted-unauthorized-invalid-token",
+                200,
+                "all-with-deleted-success",
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$").isArray());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -336,7 +364,7 @@ public class UserControllerTest {
      */
     @Test
     @Transactional
-    public void deleteLocalUser_withoutGlobalFlag_shouldReturn200AndDeleteFromDatabase() throws Exception {
+    public void deleteLocalUser_withoutGlobalFlag_shouldReture200() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         // Get a different test user to delete (not the admin performing the deletion)
         UserDto userToDelete = userService.findByLogin("test.user@test.com");
@@ -344,15 +372,18 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getId() + "/false/false",
+                "/users/" + userToDelete.getLogin() + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
-                "delete-local",
+                "delete-local-success",
                 true,
                 response -> {
                     try {
-                        response.andExpect(jsonPath("$.id").exists());
+                        response.andDo(print());
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("user.deleted.local")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -381,12 +412,12 @@ public class UserControllerTest {
         Map<String, String> authServiceResponse = Map.of(
                 "deletedUserLogin", "test.admin2@test.com",
                 "message", "User deleted from auth service");
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), anyBoolean()))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin())))
                 .thenReturn(Mono.just(ResponseEntity.ok(authServiceResponse)));
 
         performRequest(
                 "DELETE",
-                "/users/" + admin2User.getId() + "/true/false",
+                "/users/" + admin2User.getLogin() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -395,7 +426,7 @@ public class UserControllerTest {
                 null);
 
         // Verify the auth client was called
-        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), anyBoolean());
+        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin()));
         // Verify DB side effect (soft or hard delete)
         assertUserDeleted(admin2User);
     }
@@ -424,12 +455,12 @@ public class UserControllerTest {
         assertNotNull(managerUser, "Test manager user should exist");
 
         // Mock the external auth service to return an error
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId()), anyBoolean()))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getLogin())))
                 .thenReturn(Mono.error(new UserDeletionException("Failed to delete user from auth service")));
 
         performRequest(
                 "DELETE",
-                "/users/" + managerUser.getId() + "/true/false",
+                "/users/" + managerUser.getLogin() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -437,7 +468,8 @@ public class UserControllerTest {
                 true,
                 response -> {
                     try {
-                        response.andExpect(jsonPath("$.message").value("Failed to delete user: Failed to delete user from auth service"));
+                        response.andExpect(jsonPath("$.message").value(
+                                getMessage("user.delete.failed", "Failed to delete user from auth service")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -467,7 +499,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getId() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -498,7 +530,7 @@ public class UserControllerTest {
         // First promotion should succeed
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getId() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -511,7 +543,7 @@ public class UserControllerTest {
         // Second promotion attempt should fail with 409 Conflict
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getId() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 409,
@@ -544,12 +576,12 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Test manager user should exist");
 
         // Mock auth client to return error for global delete
-        when(authClient.deleteGlobalUser(any(String.class), any(Long.class), any(Boolean.class)))
+        when(authClient.deleteGlobalUser(any(String.class), any(String.class)))
             .thenReturn(Mono.error(new UserDeletionException("Database constraint violation")));
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getId() + "/true/false",
+                "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -557,7 +589,8 @@ public class UserControllerTest {
                 true,
                 response -> {
                     try {
-                        response.andExpect(jsonPath("$.message").value("Failed to delete user: Database constraint violation"));
+                        response.andExpect(jsonPath("$.message").value(
+                                getMessage("user.delete.failed", "Database constraint violation")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -581,20 +614,26 @@ public class UserControllerTest {
     @Transactional
     public void deleteUser_withNonExistentId_shouldReturn404UserNotFound() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
-        Long nonExistentUserId = 99999L;
+        String nonExistentUserLogin = "Non-login";
 
         performRequest(
                 "DELETE",
-                "/users/" + nonExistentUserId + "/false/false",
+                "/users/" + nonExistentUserLogin + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 404,
                 "delete-user-not-found",
-                null);
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.message").value(getMessage("user.notFound")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
     
     /**
-     * Test: Any protected endpoint (e.g., GET /users/all)
+     * Test: Any protected endpoint (e.g., GET /users?state=active)
      * Exception: SecurityExceptions.AuthenticationRequiredException (401
      * Unauthorized)
      *
@@ -615,7 +654,7 @@ public class UserControllerTest {
     public void allUsers_withoutAuthentication_shouldReturn401Unauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/all",
+                "/users?state=active",
                 null, // No token
                 MediaType.APPLICATION_JSON,
                 401,
@@ -623,6 +662,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -630,7 +671,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/all-with-deleted - 401 Unauthorized
+     * Test: GET /users?state=all - 401 Unauthorized
      *
      * Test retrieving all users including soft-deleted ones without proper authorization.
      */
@@ -638,7 +679,7 @@ public class UserControllerTest {
     public void allWithDeletedUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/all-with-deleted",
+                "/users?state=all",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -646,31 +687,35 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
     }
 
-    // ==================== GET /users/deleted ====================
+    // ==================== GET /users?state=deleted ====================
 
     /**
-     * Test: GET /users/deleted - Success
+     * Test: GET /users?state=deleted - Success
      *
-     * Test retrieving all soft-deleted users with proper authorization.
+     * Test retrieving only soft-deleted users with proper authorization.
      */
     @Test
     public void deletedUsers_withToken_shouldReturnSuccess() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
                 "GET",
-                "/users/deleted",
-                null,
+                "/users?state=deleted",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "deleted-unauthorized-invalid-token",
+                200,
+                "deleted-users-success",
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$").isArray());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -678,15 +723,15 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/deleted - 401 Unauthorized
+     * Test: GET /users?state=deleted - 401 Unauthorized
      *
-     * Test retrieving all soft-deleted users without proper authorization.
+     * Test retrieving only soft-deleted users without proper authorization.
      */
     @Test
     public void deletedUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/deleted",
+                "/users?state=deleted",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -694,6 +739,34 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: GET /users?state=bogus - 400 Bad Request
+     *
+     * An unknown value for the {@code state} filter is rejected with a
+     * standardized error body.
+     */
+    @Test
+    public void listUsers_withUnknownState_shouldReturnBadRequest() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        performRequest(
+                "GET",
+                "/users?state=bogus",
+                adminToken,
+                MediaType.APPLICATION_JSON,
+                400,
+                "list-invalid-state",
+                response -> {
+                    try {
+                        response.andExpect(status().isBadRequest());
+                        response.andExpect(jsonPath("$.message").exists());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -719,6 +792,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -726,30 +801,6 @@ public class UserControllerTest {
     }
 
     // ==================== DELETE /users/{userId}/{global} - Local ====================
-
-    /**
-     * Test: DELETE /users/{userId}/{global} - Local Success
-     *
-     * Test soft deleting a user locally with proper authorization.
-     */
-    @Test
-    @Transactional
-    public void deleteUser_locally_shouldReturnSuccess() throws Exception {
-        performRequest(
-                "DELETE",
-                "/users/1/false/false",
-                null,
-                MediaType.APPLICATION_JSON,
-                401,
-                "delete-local-unauthorized-invalid-token",
-                response -> {
-                    try {
-                        response.andExpect(status().isUnauthorized());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-    }
 
     /**
      * Test: DELETE /users/{userId}/{global} - Local 401 Unauthorized
@@ -761,7 +812,7 @@ public class UserControllerTest {
     public void deleteUser_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false/false",
+                "/users/test.user@test.com?global=false&hard=false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -769,6 +820,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -785,23 +838,29 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void deleteUser_globally_withMockedWebClient_shouldReturnSuccess() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToDelete = userService.findByLogin("test.user@test.com");
+        assertNotNull(userToDelete, "Test user should exist");
         Map<String, String> mockedResponse = Map.of(
                 "message", "User deleted successfully",
-                "deletedUserLogin", "test.user@test.com");
+            "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUser(anyString(), anyLong(), anyBoolean()))
+        when(authClient.deleteGlobalUser(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
                 "DELETE",
-                "/users/1/true/false",
-                null,
+            "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "delete-global-unauthorized-invalid-token",
+                200,
+                "delete-global-success",
+                true,
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.message")
+                            .value("User deleted successfully"));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -861,6 +920,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -877,16 +938,23 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void deleteUserPermanent_locally_shouldReturnSuccess() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToDelete = createTemporaryUser();
+        assertNotNull(userToDelete, "Temporary user should exist");
         performRequest(
                 "DELETE",
-                "/users/1/false/true",
-                null,
+                "/users/" + userToDelete.getLogin() + "?global=false&hard=true",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "delete-permanent-local-unauthorized-invalid-token",
+                200,
+                "delete-permanent-local-success",
+                true, // Controller returns Mono, so MockMvc must async-dispatch to get the JSON body.
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andDo(print());
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("user.deleted.local")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -902,7 +970,7 @@ public class UserControllerTest {
     public void deleteUserPermanent_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "DELETE",
-                "/users/1/false/true",
+                "/users//false/permanent",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -910,6 +978,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -926,23 +996,30 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void deleteUserPermanent_globally_withMockedWebClient_shouldReturnSuccess() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToDelete = createTemporaryUser();
+        assertNotNull(userToDelete, "Temporary user should exist");
         Map<String, String> mockedResponse = Map.of(
                 "message", "User deleted permanently",
-                "deletedUserLogin", "test.user@test.com");
+            "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUser(anyString(), anyLong(), anyBoolean()))
+        when(authClient.deleteGlobalUserPermanent(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
 
         performRequest(
                 "DELETE",
-                "/users/1/true/true",
-                null,
+            "/users/" + userToDelete.getLogin() + "?global=true&hard=true",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "delete-permanent-global-unauthorized-invalid-token",
+                200,
+                "delete-permanent-global-success",
+                true,
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andDo(print());
+                        response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.message")
+                            .value("User deleted permanently"));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -967,6 +1044,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -983,19 +1062,23 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void promoteToManager_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(authClient.promoteToManager(anyString(), anyLong()))
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToPromote = userService.findByLogin("test.user@test.com");
+        assertNotNull(userToPromote, "Test user should exist");
+        when(authClient.promoteToManager(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("User promoted to manager successfully")));
 
         performRequest(
                 "PUT",
-                "/users/1/promote-manager",
-                null,
+            "/users/" + userToPromote.getLogin() + "/promote-manager",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "promote-manager-unauthorized-invalid-token",
+                200,
+                "promote-manager-success",
+                true,
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1012,7 +1095,7 @@ public class UserControllerTest {
     public void promoteToManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/promote-manager",
+                "/users/test.user@test.com/promote-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1020,6 +1103,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1036,19 +1121,23 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void revokeManager_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(authClient.revokeManager(anyString(), anyLong()))
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToRevoke = userService.findByLogin("test.manager@test.com");
+        assertNotNull(userToRevoke, "Test manager user should exist");
+        when(authClient.revokeManager(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Manager role revoked successfully")));
 
         performRequest(
                 "PUT",
-                "/users/2/revoke-manager",
-                null,
+            "/users/" + userToRevoke.getLogin() + "/revoke-manager",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "revoke-manager-unauthorized-invalid-token",
+                200,
+                "revoke-manager-success",
+                true,
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1065,7 +1154,7 @@ public class UserControllerTest {
     public void revokeManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/revoke-manager",
+                "/users/test.user@test.com/revoke-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1073,6 +1162,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1089,19 +1180,23 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void promoteToAdmin_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(authClient.promoteToAdmin(anyString(), anyLong()))
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToPromote = userService.findByLogin("test.manager@test.com");
+        assertNotNull(userToPromote, "Test manager user should exist");
+        when(authClient.promoteToAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role assigned successfully")));
 
         performRequest(
                 "PUT",
-                "/users/2/promote-admin",
-                null,
+            "/users/" + userToPromote.getLogin() + "/promote-admin",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "promote-admin-unauthorized-invalid-token",
+                200,
+                "promote-admin-success",
+                true,
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1118,7 +1213,7 @@ public class UserControllerTest {
     public void promoteToAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/promote-admin",
+                "/users/test.user@test.com/promote-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1126,6 +1221,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1142,19 +1239,23 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void revokeAdmin_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(authClient.revokeAdmin(anyString(), anyLong()))
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToRevoke = userService.findByLogin("test.admin2@test.com");
+        assertNotNull(userToRevoke, "Test admin2 user should exist");
+        when(authClient.revokeAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role revoked successfully")));
 
         performRequest(
                 "PUT",
-                "/users/4/revoke-admin",
-                null,
+            "/users/" + userToRevoke.getLogin() + "/revoke-admin",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
-                "revoke-admin-unauthorized-invalid-token",
+                200,
+                "revoke-admin-success",
+                true,
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1179,6 +1280,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                            .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1195,19 +1298,23 @@ public class UserControllerTest {
     @Test
     @Transactional
     public void downgradeAdmin_withMockedWebClient_shouldReturnSuccess() throws Exception {
-        when(authClient.downgradeAdmin(anyString(), anyLong()))
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        UserDto userToDowngrade = userService.findByLogin("test.admin2@test.com");
+        assertNotNull(userToDowngrade, "Test admin2 user should exist");
+        when(authClient.downgradeAdmin(anyString(), anyString()))
                 .thenReturn(Mono.just(ResponseEntity.ok("Admin role downgraded successfully")));
 
         performRequest(
                 "PUT",
-                "/users/4/downgrade-admin",
-                null,
+            "/users/" + userToDowngrade.getLogin() + "/downgrade-admin",
+                adminToken,
                 MediaType.APPLICATION_JSON,
-                401,
+                200,
                 "downgrade-admin-success",
+                true,
                 response -> {
                     try {
-                        response.andExpect(status().isUnauthorized());
+                        response.andExpect(status().isOk());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1224,7 +1331,7 @@ public class UserControllerTest {
     public void downgradeAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/downgrade-admin",
+                "/users/test.admin@test.com/downgrade-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1232,6 +1339,8 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());
+                        response.andExpect(jsonPath("$.message")
+                                .value(getMessage("security.auth.missingOrInvalidToken")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1250,7 +1359,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + targetUser.getId() + "/false/false",
+                "/users/" + targetUser.getLogin() + "?global=false&hard=false",
                 userToken,
                 MediaType.APPLICATION_JSON,
                 403,

@@ -19,6 +19,8 @@
     - [1.9 Error and Exception Management (`main/java/app`)](#19-error-and-exception-management-mainjavaapp)
     - [1.10 Item Module (`main/java/item`)](#110-item-module-mainjavaitem)
     - [1.11 Test Module (`main/java/test`)](#111-test-module-mainjavatest)
+    - [1.12 Localization and Messages (`main/java/config` + `resources/messages`)](#112-localization-and-messages-mainjavaconfig--resourcesmessages)
+  - [2. Today's Branch Updates (2026-03-10)](#2-todays-branch-updates-2026-03-10)
   - [Related Documentation](#related-documentation)
 
 ---
@@ -55,7 +57,6 @@ _Illustrates interactions between the frontend and backend modules, as well as t
 ---
 
 ### 1.2 Root Files
-
 | File                     | Description                                                      |
 | ------------------------ | ---------------------------------------------------------------- |
 | `pom.xml`                | Defines project dependencies, plugins, and build configurations. |
@@ -105,6 +106,7 @@ Contains test classes for unit and integration tests.
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app`                     | Global error and exception handling used throughout the application.                                                                                                             |
 | `auth`                    | Handles authorization processes such as login and registration; controllers delegate to the [`spring-auth`](https://github.com/OrifInformatique/spring-auth) service via `AuthClient`. |
+| `config`                  | Cross-cutting configuration including locale resolution, message source registration, and validation message integration.                                                      |
 | `item`                    | Manages stock and inventory functionalities (CRUD with security guards).                                                                                                       |
 | `security`                | Security-related classes: JWT filters, password encoding, and authentication management.                                                                                         |
 | `user`                    | Manages user profiles, roles, and permissions.                                                                                                                                  |
@@ -125,12 +127,47 @@ sequenceDiagram
     Client->>AuthController: /auth/login with credentials
     AuthController->>AuthClient: authClient.login(credentialsDto)
     AuthClient->>spring-auth: POST /auth/login with credentials
-    spring-auth->>spring-auth: Validate credentials & create token
     spring-auth-->>AuthClient: Response with UserDto and token
     AuthClient-->>AuthController: UserDto wrapped in ResponseEntity
     AuthController-->>Client: Response with UserDto and access token
 ```
 _Sequence Diagram showing the actual authentication flow with spring-auth delegation._
+
+
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant spring-auth
+    participant Azure
+ 
+    Note over Frontend,Backend: Redirect frontend to spring-auth Azure endpoint
+    Frontend->>Backend: /auth/login/azure with [frontend callback url]
+    Backend->>Backend: Create URI for spring-auth Azure endpoint with [/auth/auth-code callback url]
+    Backend-->>Frontend: Redirect to spring-auth Azure endpoint with [/auth/auth-code callback url]
+
+    Note over Frontend,Azure: Azure login process
+    Frontend->>spring-auth: /oauth2/login/azure with [backend /auth/auth-code callback url]
+    spring-auth->>spring-auth: /oauth2/authorization/azure Spring security's authorisation endpoint
+    spring-auth->>Azure: Initiate Azure login process
+    Azure-->>Frontend: (If needed, redirect frontend to Azure login form)
+    Frontend->>Azure: (If needed, display Azure login form)
+    Azure-->>spring-auth: /oauth2/success with OAuth2AuthenticationToken
+
+    Note over Frontend, spring-auth: Create jwt tokens and send them to the frontend
+    spring-auth->>spring-auth: Create or get the Azure user in spring-auth database
+    spring-auth->>spring-auth: Generate a temporary AuthCode to exchange with client's backend
+    spring-auth->>Backend: [/auth/auth-code callback url] with temporary AuthCode
+    Backend->>spring-auth: /oauth2/token with the temporary AuthCode
+    spring-auth-->>Backend: Response with userDto, access and refresh tokens
+    Backend->>Backend: Create or get the user in local database
+    Backend->>Backend: Store the userDto and tokens in session
+    Backend->>Frontend: Redirect to the [frontend callback url]
+    Frontend->>Backend: GET /auth/tokens get the userDto and tokens from session
+    Backend-->>Frontend: Response with userDto and tokens and delete them from the session
+```
+_Sequence Diagram showing login with Azure_
 
 ```mermaid
 sequenceDiagram
@@ -139,8 +176,6 @@ sequenceDiagram
     participant AuthClient
     participant spring-auth
     participant UserService
-
-    Note over AuthController,spring-auth: Login Flow
     Client->>AuthController: POST /auth/login with credentials
     AuthController->>AuthClient: login(credentialsDto)
     AuthClient->>spring-auth: POST /auth/login
@@ -210,7 +245,7 @@ classDiagram
         +Date createdAt
         +Date updatedAt
         +boolean deleted
-        +Role mainRole
+        +MainRoleEnum mainRole
         +Set<Role> appSpecificRoles
         +Collection<GrantedAuthority> getAuthorities()
         +String getPassword()
@@ -223,12 +258,11 @@ classDiagram
 
     class Role {
         +long id
-        +RoleEnum name
+        +LocalRoleEnum name
         +String description
         +Date createdAt
         +Date updatedAt
-        +Set~User~ users
-        +Set~SimpleGrantedAuthority~ getGrantedAuthorities()
+        +Set~User~ usersAppSpecifique
     }
 
     class UserDto {
@@ -248,7 +282,6 @@ classDiagram
         <<DTO>>
         +String firstName
         +String lastName
-        +String login
         +char[] password
     }
 
@@ -261,16 +294,8 @@ classDiagram
     }
 
     %% Relationships
-    User --> "1" Role : mainRole
     User --> "0..*" Role : appSpecificRoles
-    Role --> "0..*" User : users
-    UserMapper ..> User : uses
-    UserMapper ..> UserDto : creates
-    UserMapper ..> RegisterDto : uses
-    %% Relationships
-    User --> "1" Role : mainRole
-    User --> "0..*" Role : appSpecificRoles
-    Role --> "0..*" User : users
+    Role --> "0..*" User : usersAppSpecifique
     UserMapper ..> User : uses
     UserMapper ..> UserDto : creates
     UserMapper ..> RegisterDto : uses
@@ -283,9 +308,11 @@ _Class Diagram showing the `User`, `Role`, `UserDto`, and `RegisterDto` structur
 sequenceDiagram
     participant Client
     participant JwtAuthFilter
+    participant SecurityLayer
     participant UserController
     participant UserService
     participant UserRepository
+    participant UserRepositoryImpl
     participant UserMapper
 
     Note over Client,UserController: Get Current User
@@ -293,11 +320,11 @@ sequenceDiagram
     JwtAuthFilter->>UserController: Authorized UserDto from SecurityContext
     UserController->>Client: UserDto in response
 
-    Note over Client,UserController: Get All Users
-    Client->>JwtAuthFilter: GET /users/all with JWT token
+    Note over Client,UserController: Get Users (state = active | deleted | all)
+    Client->>JwtAuthFilter: GET /users?state=active with JWT token
     JwtAuthFilter->>UserController: Authorized (requires user:read)
-    UserController->>UserService: allUsers()
-    UserService->>UserRepository: findAll()
+    UserController->>UserService: allUsers() / deletedUsers() / allWithDeletedUsers()
+    UserService->>UserRepository: findAllByDeletedFalse() / findAllDeleted() / findAllIncludingDeleted()
     UserRepository-->>UserService: List<User>
     UserService-->>UserController: List<User>
     UserController->>Client: List of Users
@@ -329,6 +356,15 @@ sequenceDiagram
     UserService->>UserMapper: UserMapper.toUserDto(user)
     UserMapper->>UserController: UserDto
     UserController->>Client: Response "User promoted to local app role successfully"
+
+    Note over Client,UserRepositoryImpl: Permanent Local Deletion (hard delete)
+    Client->>UserController: DELETE /users/{userId}/false/permanent
+    UserController->>UserService: deleteUserPermanent(userId)
+    UserService->>UserRepositoryImpl: deletePermanentlyById(userId)
+    UserRepositoryImpl->>UserRepositoryImpl: delete users_app_specific_roles links first
+    UserRepositoryImpl->>UserRepositoryImpl: delete users row
+    UserService-->>UserController: Success
+    UserController-->>Client: Localized success message
 ```
 
 _Sequence Diagram showing an example of the user management flow._
@@ -356,6 +392,9 @@ sequenceDiagram
     participant Client
     participant JwtAuthFilter
     participant UserAuthenticationProvider
+    participant UserAuthenticationEntryPoint
+    participant CustomAccessDeniedHandler
+    participant MessageSource
     participant UserController
     participant UserService
 
@@ -366,17 +405,25 @@ sequenceDiagram
     UserAuthenticationProvider->>UserService: Optionally lookup user details in DB
     UserService-->>UserAuthenticationProvider: User information
     UserAuthenticationProvider-->>JwtAuthFilter: Return Authentication object with authorities
-    alt Authentication succeeds
+    alt Token invalid or missing
+        JwtAuthFilter->>UserAuthenticationEntryPoint: commence(authException)
+        UserAuthenticationEntryPoint->>MessageSource: Resolve auth message key
+        MessageSource-->>UserAuthenticationEntryPoint: Localized auth message
+        UserAuthenticationEntryPoint-->>Client: 401 Unauthorized JSON ErrorDto
+    else Token valid
         JwtAuthFilter-->>JwtAuthFilter: Set SecurityContext with Authentication
         JwtAuthFilter-->>UserController: Forward request
-        note right of UserController: Controller handles authorized request
-        UserController->>UserService: Perform business logic
-        UserService-->>UserController: Return result
-        UserController-->>Client: Return HTTP response
-    else Authentication fails
-        JwtAuthFilter->>UserAuthenticationEntryPoint: JWT validation failed
-        UserAuthenticationEntryPoint-->>Client: Return 401 Unauthorized with error JSON 
-        note right of Client: Request rejected
+        alt Missing authority on protected endpoint
+            UserController->>CustomAccessDeniedHandler: AccessDeniedException
+            CustomAccessDeniedHandler->>MessageSource: Resolve access denied key
+            MessageSource-->>CustomAccessDeniedHandler: Localized forbidden message
+            CustomAccessDeniedHandler-->>Client: 403 Forbidden JSON ErrorDto
+        else Authorized
+            note right of UserController: Controller handles authorized request
+            UserController->>UserService: Perform business logic
+            UserService-->>UserController: Return result
+            UserController-->>Client: Return HTTP response
+        end
     end
 ```
 
@@ -384,16 +431,18 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 | File                                | Description                                                        |
 | ----------------------------------- | ------------------------------------------------------------------ |
+| `CustomAccessDeniedHandler.java`    | Handles authenticated-but-forbidden requests (403) with localized error messages. |
 | `JwtAuthFilter.java`                | Authentication filter that processes tokens for incoming requests. |
 | `PermissionEnum.java`               | Enumeration defining available permissions.                        |
-| `Role.java`                         | Role entity class representing a user role.                        |
-| `RoleEnum.java`                     | Enumeration defining roles and their permissions.                  |
-| `RoleRepository.java`               | Interface for database operations related to roles.                |
-| `RoleSeeder.java`                   | Seeds the database with predefined roles.                          |
+| `MainRoleEnum.java`                 | Read-only mirror of the main roles (USER, MANAGER, ADMIN) owned by `spring-auth`; not persisted, used to resolve authorities from the JWT `mainRole` claim. |
+| `LocalRoleEnum.java`                | Enumeration of the local roles defined only in this app (e.g. LOCAL_APP_ROLE) and their permissions. |
+| `Role.java`                         | Entity for a **local** role row (`roles` table); its `name` is a `LocalRoleEnum`. |
+| `RoleRepository.java`               | Interface for database operations related to local roles.          |
+| `RoleSeeder.java`                   | Seeds the database with every `LocalRoleEnum` role on startup.     |
 | `SecurityConfig.java`               | Security configuration defining the filter chain and access rules. |
 | `SecurityExceptions.java`           | Container class for security-specific custom exceptions.           |
-| `UserAuthenticationEntryPoint.java` | Handles unauthenticated access by returning a 401 response.        |
-| `UserAuthenticationProvider.java`   | Authentication provider for validating user credentials.           |
+| `UserAuthenticationEntryPoint.java` | Handles unauthenticated access (401) with i18n-aware JSON error responses. |
+| `UserAuthenticationProvider.java`   | Authentication provider for validating JWT access tokens.          |
 | `WebClientConfig.java`              | Configuration for WebClient used in inter-service communication.   |
 | `WebConfig.java`                    | Web configuration for general web-related settings.                |
 
@@ -404,8 +453,10 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | File                                   | Description                                                |
 | -------------------------------------- | ---------------------------------------------------------- |
 | `errors/ErrorDto.java`                 | Record serving as Data Transfer Object for errors.         |
-| `exceptions/AppException.java`         | Custom exception class for application-specific errors.    |
-| `exceptions/GlobalExceptionHandler.java` | Global exception handler for REST API endpoints.           |
+| `exceptions/AppException.java`         | Base exception carrying HTTP status for all application/domain exceptions. |
+| `exceptions/AppMessageKeyException.java` | Generic exception for explicit message-key based errors with optional args. |
+| `exceptions/MessageKeyProvider.java`   | Contract for exceptions exposing i18n message keys and formatting arguments. |
+| `exceptions/GlobalExceptionHandler.java` | Global REST exception handler resolving message keys through `MessageSource`; includes validation `fieldErrors`. |
 
 ---
 
@@ -419,9 +470,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | `ItemRepository.java`       | Interface for database operations related to items.                        |
 | `ItemSeeder.java`           | Seeds the database with test items for development.                        |
 | `ItemService.java`          | Business logic for item functionalities.                                   |
-| `ItemExceptionHandler.java` | Exception handler specific to item-related operations.                     |
-| `ItemNotFoundException.java` | Custom exception thrown when an item is not found.                         |
-| `UnauthorizedItemException.java` | Custom exception for unauthorized item access attempts.                |
+| `ItemExceptions.java`       | Container class for item-specific custom exceptions.                       |
 
 ---
 
@@ -430,6 +479,53 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | File                  | Description                                                |
 | --------------------- | ---------------------------------------------------------- |
 | `TestController.java` | Endpoints and utilities for development and testing purposes. |
+
+---
+
+### 1.12 Localization and Messages (`main/java/config` + `resources/messages`)
+
+| File / Path | Description |
+| ----------- | ----------- |
+| `config/LocaleConfig.java` | Registers `MessageSource`, locale resolver (default `fr-FR`), validator integration, and `lang` query-param locale switch interceptor. |
+| `resources/messages/app/messages_{en,fr}.properties` | App-level and generic API message keys (`error.*`, validation fallback, etc.). |
+| `resources/messages/auth/messages_{en,fr}.properties` | Authentication and registration related messages. |
+| `resources/messages/item/messages_{en,fr}.properties` | Item domain messages (not found, unauthorized operations). |
+| `resources/messages/security/messages_{en,fr}.properties` | Security/authentication/authorization error messages. |
+| `resources/messages/user/messages_{en,fr}.properties` | User domain messages (lookup, role operations, deletion). |
+
+> **Current structure note:** Message bundles are now organized per domain under `resources/messages/<domain>/` instead of a single flat `messages.properties` file.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller
+    participant Service
+    participant GlobalExceptionHandler
+    participant MessageSource
+    participant MessageBundle as messages/<domain>/messages_{lang}.properties
+
+    Client->>Controller: Request with lang=fr
+    Controller->>Service: Execute business action
+    Service-->>Controller: Throw AppException (MessageKeyProvider)
+    Controller-->>GlobalExceptionHandler: Exception bubbling
+    GlobalExceptionHandler->>MessageSource: getMessage(messageKey, args, locale)
+    MessageSource->>MessageBundle: Resolve key in domain bundle
+    MessageBundle-->>MessageSource: Localized text
+    MessageSource-->>GlobalExceptionHandler: Localized message
+    GlobalExceptionHandler-->>Client: Standardized JSON error (status, message, timestamp)
+```
+
+_Sequence Diagram showing how message keys become localized API errors._
+
+---
+
+## 2. Today's Branch Updates (2026-03-10)
+
+- Introduced message-key based localization flow for exceptions across modules (`app`, `auth`, `item`, `user`, `security`) using `MessageSource`.
+- Added `LocaleConfig` and domain-scoped message bundles in English/French (`messages/*/messages_en.properties`, `messages/*/messages_fr.properties`).
+- Updated security error responses (`401` and `403`) to resolve localized keys in `UserAuthenticationEntryPoint` and `CustomAccessDeniedHandler`.
+- Adjusted permanent local user deletion to clear `users_app_specific_roles` join-table rows before deleting user records in `UserRepositoryImpl`.
+- Updated tests and API docs artifacts: `UserControllerTest`, `AuthControllerTest`, and AsciiDoc index refinements (duplicate test doc cleanup).
 
 ---
 
@@ -442,4 +538,4 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 ---
 
 **Author:** Ken D. Cacciabue
-**Last Updated:** 23.01.2026
+**Last Updated:** 10.03.2026

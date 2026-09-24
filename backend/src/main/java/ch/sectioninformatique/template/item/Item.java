@@ -4,8 +4,12 @@ import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLDelete;
 
 import ch.sectioninformatique.template.user.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,7 +19,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Entity class representing an item in the system.
@@ -25,6 +32,9 @@ import lombok.Data;
 @Data
 @Table(name = "items")
 @Entity
+@Builder
+@NoArgsConstructor
+@SQLDelete(sql = "UPDATE items SET deleted = true WHERE id = ?")
 public class Item {
 
     /**
@@ -51,8 +61,10 @@ public class Item {
      * Uses eager fetching to ensure author information is always available.
      */
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "author_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "author_id", nullable = true)
     private User author;
+
 
     /**
      * Timestamp when the item was created.
@@ -69,10 +81,30 @@ public class Item {
     @Column(name = "updated_at")
     private Date updatedAt;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
     /**
      * Default constructor for JPA.
      */
-    public Item() {
+    public Item(
+        long id,
+        String name,
+        String description,
+        User author,
+        Date createdAt,
+        Date updatedAt,
+        boolean deleted
+    ) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.author = author;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.deleted = deleted;
     }
     
     /**

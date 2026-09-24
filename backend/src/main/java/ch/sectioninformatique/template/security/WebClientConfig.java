@@ -10,7 +10,7 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
-                .baseUrl("http://host.docker.internal:8081") // Replace with your real auth API base URL
+                .baseUrl("http://host.docker.internal:8080") // Replace with your real auth API base URL
                 .build();
     }
 }

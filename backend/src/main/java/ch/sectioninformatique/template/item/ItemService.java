@@ -1,5 +1,8 @@
 package ch.sectioninformatique.template.item;
 
+import jakarta.persistence.EntityManager;
+
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -10,9 +13,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
+import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.user.UserRepository;
 
 /**
@@ -30,6 +35,8 @@ public class ItemService {
     private ItemRepository itemRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     /**
      * Constructs a new ItemService with the required repositories.
@@ -37,9 +44,10 @@ public class ItemService {
      * @param itemRepository Repository for item operations
      * @param userRepository Repository for user operations
      */
-    public ItemService(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemService(ItemRepository itemRepository, UserRepository userRepository, EntityManager entityManager) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -53,6 +61,7 @@ public class ItemService {
         logger.debug("Full authentication principal: {}", authentication.getPrincipal());
         
         String currentUserEmail = authentication.getPrincipal().toString();
+        // spring-auth principal string is expected to contain "login=<email>,..."
         // Extract only the login from the principal string
         currentUserEmail = currentUserEmail.substring(currentUserEmail.indexOf("login=") + 6);
         currentUserEmail = currentUserEmail.substring(0, currentUserEmail.indexOf(","));
@@ -80,7 +89,7 @@ public class ItemService {
         }
         
         User author = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(UserNotFoundException::new);
         
         newItem.setAuthor(author);
         
@@ -98,12 +107,18 @@ public class ItemService {
     }
 
     /**
-     * Retrieves all items in the system.
+     * Retrieves items in the system, filtered by their soft-delete state.
      *
-     * @return An Iterable containing all items
+     * @param filter which subset of items to return: {@link DeletionFilter#ACTIVE},
+     *               {@link DeletionFilter#DELETED} or {@link DeletionFilter#ALL}
+     * @return the matching list of items
      */
-    public Iterable<Item> getItems() {
-        return itemRepository.findAll();
+    public List<Item> getItems(DeletionFilter filter) {
+        return switch (filter) {
+            case ACTIVE -> itemRepository.findAllByDeletedFalse();
+            case DELETED -> itemRepository.findAllByDeletedTrue();
+            case ALL -> itemRepository.findAllIncludingDeleted();
+        };
     }
 
     /**
@@ -118,7 +133,7 @@ public class ItemService {
         String currentUserEmail = getCurrentUserEmail();
         
         User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(UserNotFoundException::new);
         
         Item item = itemRepository.findById(id)
             .orElseThrow(() -> new ItemNotFoundException(id));
@@ -136,6 +151,18 @@ public class ItemService {
         itemRepository.deleteById(id);
     }
 
+    public void deletePermanentById(Long id)
+    {
+        try {
+            itemRepository.deletePermanentlyById(id);
+
+        } catch (Exception e) {
+            throw new ItemNotFoundException(id);
+        }
+        
+
+    }
+
     /**
      * Updates an existing item in the system.
      * Only the item's author or users with admin privileges can update an item.
@@ -150,7 +177,7 @@ public class ItemService {
         String currentUserEmail = getCurrentUserEmail();
         
         User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(UserNotFoundException::new);
         logger.debug("Found user with ID: {}", currentUser.getId());
         
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -5,15 +5,14 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;
 
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 
 /**
- * Seeder class for initializing the database with default roles.
+ * Seeder class for initializing the database with the default <b>local</b> roles.
  * This class implements ApplicationListener to execute the seeding process
- * when the application context is refreshed. It creates the basic roles
- * (USER, MANAGER, ADMIN) if they don't already exist in the database.
+ * when the application context is refreshed. It creates every {@link LocalRoleEnum}
+ * role that does not already exist in the database. The {@link MainRoleEnum main
+ * roles} are owned by spring-auth and are never seeded here.
  */
 @Component
 public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
@@ -42,32 +41,19 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
     }
 
     /**
-     * Loads the default roles into the database.
-     * Creates the following roles if they don't exist:
-     * - USER: Default user role
-     * - LOCAL_APP_ROLE: An example of a role specific to this application
-     * - MANAGER: Manager role
-     * - ADMIN: Administrator role
-     * Each role is created with a descriptive name and description.
+     * Loads the default local roles into the database.
+     * Creates every {@link LocalRoleEnum} constant (e.g. LOCAL_APP_ROLE) that does
+     * not already exist, using the description carried by the enum constant.
      */
     private void loadRoles() {
-        RoleEnum[] roleNames = new RoleEnum[] { RoleEnum.USER, RoleEnum.MANAGER,
-                RoleEnum.ADMIN, RoleEnum.LOCAL_APP_ROLE };
-
-        Map<RoleEnum, String> roleDescriptionMap = Map.of(
-                RoleEnum.USER, "Default user role",
-                RoleEnum.MANAGER, "Manager role",
-                RoleEnum.ADMIN, "Administrator role",
-                RoleEnum.LOCAL_APP_ROLE, "Example of local application role");
-
-        Arrays.stream(roleNames).forEach((roleName) -> {
+        for (LocalRoleEnum roleName : LocalRoleEnum.values()) {
             Optional<Role> optionalRole = roleRepository.findByName(roleName);
             optionalRole.ifPresentOrElse(System.out::println, () -> {
                 Role roleToCreate = new Role();
                 roleToCreate.setName(roleName);
-                roleToCreate.setDescription(roleDescriptionMap.get(roleName));
+                roleToCreate.setDescription(roleName.getDescription());
                 roleRepository.save(roleToCreate);
             });
-        });
+        }
     }
 }

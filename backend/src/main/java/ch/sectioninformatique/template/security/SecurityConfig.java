@@ -1,6 +1,9 @@
 package ch.sectioninformatique.template.security;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,17 +17,12 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 
 /**
  * Security configuration class for the application.
  * This class configures Spring Security settings including:
  * - Authentication and authorization rules
  * - CORS configuration
- * - OAuth2 login settings
  * - JWT filter integration
  * - Session management
  * - Exception handling
@@ -32,9 +30,8 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
  * The configuration ensures:
  * - Secure endpoints with appropriate authorization
  * - Cross-origin request handling
- * - Stateless session management
+ * - Session management
  * - Custom authentication failure handling
- * - OAuth2 integration for external authentication
  */
 @Configuration
 @EnableWebSecurity
@@ -53,13 +50,20 @@ public class SecurityConfig {
     private final UserAuthenticationEntryPoint userAuthenticationEntryPoint;
 
     /**
+     * Entry point for denied access failures.
+     */
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+
+    /**
      * Filter for JWT token authentication.
      * This component:
      * - Validates JWT tokens in requests
      * - Extracts user information from tokens
      * - Sets up authentication context
      */
-    private final JwtAuthFilter jwtAuthFilter;
+
+    @Autowired
+    private @Lazy JwtAuthFilter jwtAuthFilter;
 
     /**
      * Configures the security filter chain with all necessary security settings.
@@ -69,20 +73,22 @@ public class SecurityConfig {
      * - Disables CSRF protection (not needed for stateless API)
      * - Sets session management policy to ALWAYS
      * - Configures CORS with allowed origins and methods
-     * - Sets up OAuth2 login with success/failure handlers
      * - Defines HTTP request authorization rules
      *
      * @param http The HttpSecurity object to configure
      * @return The configured SecurityFilterChain
      * @throws Exception if security configuration fails
      */
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.debug("Configuring SecurityFilterChain");
         http
                 .exceptionHandling(customizer -> {
                     log.debug("Configuring exception handling with UserAuthenticationEntryPoint");
-                    customizer.authenticationEntryPoint(userAuthenticationEntryPoint);
+                    customizer
+                            .authenticationEntryPoint(userAuthenticationEntryPoint)
+                            .accessDeniedHandler(accessDeniedHandler);
                 })
                 .addFilterBefore(jwtAuthFilter, BasicAuthenticationFilter.class)
                 .csrf(csrf -> {
@@ -91,6 +97,7 @@ public class SecurityConfig {
                 })
                 .sessionManagement(customizer -> {
                     log.debug("Setting session creation policy to ALWAYS");
+                    // OAuth2 login flow relies on a session to store auth requests.
                     customizer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
                 })
                 .cors(cors -> {
@@ -104,17 +111,6 @@ public class SecurityConfig {
                         return corsConfig;
                     });
                 })
-                .oauth2Login(oauth2 -> {
-                    log.debug("Configuring OAuth2 login");
-                    oauth2
-                            .defaultSuccessUrl("/oauth2/success", true)
-                            .failureUrl("/oauth2/error")
-                            .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService()))
-                            .successHandler((request, response, authentication) -> {
-                                log.debug("OAuth2 authentication successful: {}", authentication);
-                                response.sendRedirect("/oauth2/success");
-                            });
-                })
                 .authorizeHttpRequests(requests -> {
                     log.debug("Configuring HTTP request authorization rules");
                     requests
@@ -122,33 +118,14 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/auth/oauth2/login").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/auth/login/azure").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/auth/auth-code").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/auth/tokens").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .anyRequest().authenticated();
                     log.debug("HTTP request authorization rules configured");
                 });
 
         return http.build();
-    }
-
-    /**
-     * Creates and configures the OAuth2 user service for handling OAuth2
-     * authentication.
-     * This service:
-     * - Loads user information from the OAuth2 provider
-     * - Converts OAuth2 user data into an OAuth2User object
-     * - Logs user attributes for debugging
-     * - Uses the default OAuth2 user service implementation
-     *
-     * @return Configured OAuth2UserService instance
-     */
-    @Bean
-    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
-        DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
-        return request -> {
-            OAuth2User user = delegate.loadUser(request);
-            log.debug("OAuth2 user loaded: {}", user.getAttributes());
-            return user;
-        };
     }
 }

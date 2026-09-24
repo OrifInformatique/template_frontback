@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +40,7 @@ public class TestController {
 
     /** Service for handling user-related operations */
     private final UserService userService;
+    private final MessageSource messageSource;
 
     @Autowired
     private Environment environment;
@@ -90,12 +93,16 @@ public class TestController {
      * @param userId The ID of the user to promote
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userId}/promote-test")
+    @PutMapping("/{userLogin}/promote-test")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToTestAdmin(@PathVariable Long userId) {
+    public ResponseEntity<?> promoteToTestAdmin(@PathVariable String userLogin) {
 
-            userService.promoteToLocalAppRole(userId);
-            return ResponseEntity.ok(Map.of("message", "User promoted to local app role successfully."));
+            userService.promoteToLocalAppRole(userLogin);
+            String message = messageSource.getMessage(
+                "user.promoted.local",
+                null,
+                LocaleContextHolder.getLocale());
+            return ResponseEntity.ok(Map.of("message", message));
 
     }
 
@@ -113,21 +120,5 @@ public class TestController {
     public ResponseEntity<List<UserDto>> allUsers() {
         List<UserDto> users = userService.allUsers();
         return ResponseEntity.ok(users);
-    }
-
-    /**
-     * Handles GET requests to "/oauth2/login"
-     * Redirects the client to the OAuth2 authorization endpoint for Azure
-     * This initiates the OAuth2 login flow
-     * After successful login, the user will be redirected back to the application
-     * 
-     * @return ResponseEntity with redirection to OAuth2 login URL
-     */
-    @GetMapping("/oauth2/login")
-    public ResponseEntity<Object> testCallOAuth2() {
-
-        // Redirect frontend to spring-auth OAuth2 login endpoint
-        URI uri = URI.create("http://localhost:8081/oauth2/authorization/azure");
-        return ResponseEntity.status(HttpStatus.FOUND).location(uri).build();
     }
 }
