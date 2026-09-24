@@ -1,27 +1,42 @@
 package ch.sectioninformatique.template.security;
 
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ch.sectioninformatique.template.RestDocsSensitiveDataMasking.maskSensitiveData;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+
+import java.util.function.Consumer;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.restdocs.snippet.Snippet;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import ch.sectioninformatique.template.AuthApplication;
+import ch.sectioninformatique.template.RestDocsSnippets;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 
 /**
  * Integration tests for the {@code GET /roles} endpoint, verifying that the
  * {@code ?scope=} query parameter selects local roles, main roles, or both.
+ *
+ * Snippets generated here feed the REST Docs section for role endpoints.
  */
 @SpringBootTest(classes = AuthApplication.class)
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs(outputDir = "target/generated-snippets")
 public class RoleControllerTest {
 
     @Autowired
@@ -39,41 +54,96 @@ public class RoleControllerTest {
         return userAuthenticationProvider.createToken(user);
     }
 
+    private void performRequest(
+            String endpoint,
+            int expectedStatus,
+            String docsFileName,
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
+        var request = mockMvc.perform(get(endpoint)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(expectedStatus));
+
+        if (script != null) {
+            script.accept(request);
+        }
+
+        request.andDo(document("roles/" + docsFileName,
+                preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()),
+                snippets));
+    }
+
     @Test
     public void getRoles_withoutScope_returnsOnlyLocalRoles() throws Exception {
-        mockMvc.perform(get("/roles").header(HttpHeaders.AUTHORIZATION, "Bearer " + token()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].type", Matchers.everyItem(Matchers.is("LOCAL"))))
-                .andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_APP_ROLE")))
-                .andExpect(jsonPath("$[*].name", Matchers.not(Matchers.hasItem("ADMIN"))));
+        performRequest(
+                "/roles",
+                200,
+                "local",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$[*].type", Matchers.everyItem(Matchers.is("LOCAL"))));
+                        response.andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_APP_ROLE")));
+                        response.andExpect(jsonPath("$[*].name", Matchers.not(Matchers.hasItem("ADMIN"))));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.roleListResponse());
     }
 
     @Test
     public void getRoles_withScopeMain_returnsOnlyMainRoles() throws Exception {
-        mockMvc.perform(get("/roles").param("scope", "main")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[*].type", Matchers.everyItem(Matchers.is("MAIN"))))
-                .andExpect(jsonPath("$[*].name",
-                        Matchers.containsInAnyOrder("USER", "MANAGER", "ADMIN")))
-                .andExpect(jsonPath("$[*].id", Matchers.everyItem(Matchers.nullValue())));
+        performRequest(
+                "/roles?scope=main",
+                200,
+                "main",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.length()").value(3));
+                        response.andExpect(jsonPath("$[*].type", Matchers.everyItem(Matchers.is("MAIN"))));
+                        response.andExpect(jsonPath("$[*].name",
+                                Matchers.containsInAnyOrder("USER", "MANAGER", "ADMIN")));
+                        response.andExpect(jsonPath("$[*].id", Matchers.everyItem(Matchers.nullValue())));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.roleListResponse());
     }
 
     @Test
     public void getRoles_withScopeAll_returnsMainAndLocalRoles() throws Exception {
-        mockMvc.perform(get("/roles").param("scope", "ALL")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", Matchers.hasItem("ADMIN")))
-                .andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_APP_ROLE")))
-                .andExpect(jsonPath("$[*].type", Matchers.hasItems("MAIN", "LOCAL")));
+        performRequest(
+                "/roles?scope=all",
+                200,
+                "all",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$[*].name", Matchers.hasItem("ADMIN")));
+                        response.andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_APP_ROLE")));
+                        response.andExpect(jsonPath("$[*].type", Matchers.hasItems("MAIN", "LOCAL")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.roleListResponse());
     }
 
     @Test
     public void getRoles_withUnknownScope_returnsBadRequest() throws Exception {
-        mockMvc.perform(get("/roles").param("scope", "bogus")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token()))
-                .andExpect(status().isBadRequest());
+        performRequest(
+                "/roles?scope=bogus",
+                400,
+                "invalid-scope",
+                response -> {
+                    try {
+                        response.andExpect(status().isBadRequest());
+                        response.andExpect(jsonPath("$.message").exists());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 }
