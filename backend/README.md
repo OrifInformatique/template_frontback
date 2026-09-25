@@ -51,7 +51,7 @@ The project's environment must contain these tools. Make sure that your Windows 
 
 #### Optionnal
 
-It is recommanded to develop the app using docker.
+It is recommended to develop the app using docker.
 This is not a hard requirement but it's highly encouraged.
 For more info, head to the [Docker section](#docker) of this documentation.
 
