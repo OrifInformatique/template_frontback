@@ -1,12 +1,13 @@
 import { MemoryRouter } from "react-router-dom";
 import Login from "./index";
+import "../../../../i18n";
 
 export default {
     title: "Components/UI/Auth/Login",
     component: Login,
     decorators: [
         (Story) => (
-            <MemoryRouter>
+            <MemoryRouter initialEntries={["/login"]}>
                 <Story />
             </MemoryRouter>
         ),
