@@ -8,7 +8,7 @@ import CopyPlugin from 'copy-webpack-plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const parsedEnv = dotenv.config().parsed || {};
+const parsedEnv = dotenv.config({ quiet: true }).parsed || {};
 
 const APP_ROOT = process.env.APP_ROOT || '/';
 
