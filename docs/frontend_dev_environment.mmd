@@ -1,0 +1,23 @@
+---
+title: Frontend — couches de l'environnement de développement
+---
+flowchart TB
+    os["<b>1. Système d'exploitation</b><br/>Linux, macOS ou Windows + WSL"]
+    node["<b>2. Node.js 22.18+ ou 24</b><br/>exécute les outils de build JavaScript"]
+    npm["<b>3. npm</b><br/>téléchargement des dépendances (package.json)"]
+    webpack["<b>4. Webpack 5</b><br/>build + serveur de dev (Babel, Tailwind CSS)"]
+    react["<b>5. React 19</b><br/>framework d'interface utilisateur"]
+    code["<b>6. Code du frontend</b><br/>src/ + .env"]
+
+    code --> react --> webpack --> npm --> node --> os
+
+    browser["<b>Navigateur web</b><br/>affiche l'application"]
+    backend["<b>Backend Spring Boot</b><br/>API REST"]
+
+    browser <-. "charge et exécute" .-> code
+    backend <-. "appels API" .-> code
+
+    classDef layer fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef service fill:#fef3c7,stroke:#d97706,color:#78350f
+    class os,node,npm,webpack,react,code layer
+    class browser,backend service

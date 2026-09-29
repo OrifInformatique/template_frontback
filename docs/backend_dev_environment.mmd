@@ -1,0 +1,22 @@
+---
+title: Backend — couches de l'environnement de développement
+---
+flowchart TB
+    os["<b>1. Système d'exploitation</b><br/>Linux, macOS ou Windows + WSL"]
+    jdk["<b>2. Java JDK 21</b><br/>compile et exécute le code (JVM)"]
+    maven["<b>3. Maven 3.9</b><br/>build + téléchargement des dépendances (pom.xml)"]
+    spring["<b>4. Spring Boot 3.5.8</b><br/>framework web, sécurité, accès BD"]
+    code["<b>5. Code du backend</b><br/>src/main/java + .env + application.properties"]
+
+    code --> spring --> maven --> jdk --> os
+
+    db[("<b>MariaDB 11.4</b><br/>base de données")]
+    auth["<b>spring-auth</b><br/>service d'authentification externe"]
+
+    db <-. "lit / écrit" .-> code
+    auth <-. "délègue le login" .-> code
+
+    classDef layer fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef service fill:#fef3c7,stroke:#d97706,color:#78350f
+    class os,jdk,maven,spring,code layer
+    class db,auth service
