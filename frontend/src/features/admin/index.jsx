@@ -18,9 +18,9 @@ const Admin = () => {
                         // You can add more links here for other admin pages, add them in the routes inside index.js in the admin route
                     ]}
                     activeLinkClassName="border-b-2 border-primary text-primary"
-                    linksAlign="center"
+                    linksAlign="start"
                     className="w-full"
-                    listClassName="md:w-full md:justify-center md:!flex-row"
+                    listClassName="mb-4"
                     burgerPosition="left"
                 />
                 <Outlet />

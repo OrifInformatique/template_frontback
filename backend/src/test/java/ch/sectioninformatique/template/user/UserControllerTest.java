@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -24,9 +25,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static ch.sectioninformatique.template.RestDocsSensitiveDataMasking.maskSensitiveData;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import org.springframework.restdocs.snippet.Snippet;
+
+import ch.sectioninformatique.template.RestDocsSnippets;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -88,6 +94,11 @@ public class UserControllerTest {
     @MockitoBean
     private AuthClient authClient;
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     /**
      * Helper method to generate a valid JWT token for a test user by login.
      * Retrieves the user from the database using UserService and creates a real JWT
@@ -143,7 +154,8 @@ public class UserControllerTest {
             int expectedStatus,
             String docsFileName,
             boolean handleAsync,
-            Consumer<ResultActions> script) throws Exception {
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
 
         var request = get(endpoint);
         if ("GET".equals(requestTypeString)) {
@@ -176,8 +188,8 @@ public class UserControllerTest {
             script.accept(result);
         }
 
-        result.andDo(document("users/" + docsFileName, preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())));
+        result.andDo(document("users/" + docsFileName, preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()), snippets));
     }
 
     /**
@@ -190,9 +202,10 @@ public class UserControllerTest {
         MediaType contentType,
         int expectedStatus,
         String docsFileName,
-        Consumer<ResultActions> script) throws Exception {
+        Consumer<ResultActions> script,
+        Snippet... snippets) throws Exception {
 
-            performRequest(requestTypeString, endpoint, token, contentType, expectedStatus, docsFileName, false, script);
+            performRequest(requestTypeString, endpoint, token, contentType, expectedStatus, docsFileName, false, script, snippets);
     }
 
     // ==================== GET /users/me ====================
@@ -220,7 +233,8 @@ public class UserControllerTest {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            });
+            },
+            RestDocsSnippets.userResponse());
     }
 
     /**
@@ -301,7 +315,8 @@ public class UserControllerTest {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            });
+            },
+            RestDocsSnippets.userListResponse());
     }
 
     /**

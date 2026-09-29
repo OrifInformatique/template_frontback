@@ -4,6 +4,7 @@ package ch.sectioninformatique.template.auth;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -20,9 +21,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static ch.sectioninformatique.template.RestDocsSensitiveDataMasking.maskSensitiveData;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import org.springframework.restdocs.snippet.Snippet;
+
+import ch.sectioninformatique.template.RestDocsSnippets;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -88,6 +94,11 @@ public class AuthControllerTest {
     @MockitoBean
     private AuthClient authClient; // mock this instead of the controller
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     /**
      * Helper method to generate a valid JWT token for the test user.
      * Retrieves the test user from the database using UserService and creates a
@@ -131,7 +142,8 @@ public class AuthControllerTest {
             MediaType contentType,
             int expectedStatus,
             String docsFileName,
-            Consumer<ResultActions> script) throws Exception {
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
 
         var requestType = get(endpoint);
 
@@ -169,9 +181,8 @@ public class AuthControllerTest {
             script.accept(request);
         }
 
-        // Generate a REST Docs snippet for the request/response pair
-        request.andDo(document("auth/" + docsFileName, preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())));
+        request.andDo(document("auth/" + docsFileName, preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()), snippets));
 
     }
 
@@ -193,7 +204,8 @@ public class AuthControllerTest {
             int expectedStatus,
             String docsFileName,
             Cookie cookie,
-            Consumer<ResultActions> script) throws Exception {
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
 
         var requestType = get(endpoint);
 
@@ -235,9 +247,8 @@ public class AuthControllerTest {
             script.accept(request);
         }
 
-        // Generate a REST Docs snippet for the request/response pair
-        request.andDo(document("auth/" + docsFileName, preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())));
+        request.andDo(document("auth/" + docsFileName, preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()), snippets));
 
     }
 
@@ -283,7 +294,9 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.loginRequest(),
+                RestDocsSnippets.userResponse());
     }
 
     /**
@@ -378,7 +391,9 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.registerRequest(),
+                RestDocsSnippets.userResponse());
     }
 
     @Transactional
@@ -517,7 +532,8 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.refreshResponse());
     }
 
     /**
@@ -581,7 +597,9 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.passwordUpdateRequest(),
+                RestDocsSnippets.messageResponse());
     }
 
     /**
