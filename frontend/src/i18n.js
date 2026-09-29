@@ -8,10 +8,13 @@ import { initReactI18next } from 'react-i18next';
  */
 function loadLocales() {
     const resources = {};
-    
-    // Loads all JSON files in locales subdirectories
-    const context = require.context('./', true, /locales\/.*\/.*\.json$/);
-    
+
+    // ESM equivalent of require.context (webpack-specific)
+    const context = import.meta.webpackContext('./', {
+        recursive: true,
+        regExp: /locales\/.*\/.*\.json$/,
+    });
+
     context.keys().forEach(key => {
         // Example of a key: ./features/auth/locales/fr/auth.json
         const match = key.match(/locales\/([^/]+)\/(.+)\.json$/);
