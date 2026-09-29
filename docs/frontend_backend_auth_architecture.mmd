@@ -1,0 +1,76 @@
+---
+id: a4c1f6ef-73d3-499e-bd86-38679bf3369c
+---
+architecture-beta
+    group frontend(cloud)[Frontend]
+        service react(logos:react)[React App] in frontend
+
+        junction frontBottomLeft in frontend
+        junction frontBottomCenter in frontend
+        junction frontBottomRight in frontend
+
+        frontBottomLeft:R -- L:frontBottomCenter
+        frontBottomCenter:R -- L:frontBottomRight
+
+        react:B -- T:frontBottomCenter
+
+    group backend(cloud)[Backend]
+        service registerBackAPI(internet)[register] in backend
+        service loginBackAPI(internet)[login] in backend
+        service refreshBackAPI(internet)[refresh] in backend
+        service backendSpring(logos:spring)[Spring App] in backend
+        service backendDB(database)[Database] in backend
+
+        junction backTopLeft in backend
+        junction backTopCenter in backend
+        junction backTopRight in backend
+
+        backTopLeft:R -- L:backTopCenter
+        backTopCenter:R -- L:backTopRight
+
+        registerBackAPI:B -- T:backTopLeft
+        loginBackAPI:B -- T:backTopCenter
+        refreshBackAPI:B -- T:backTopRight
+
+        junction backCenterCenter in backend
+        backCenterCenter:T -- B:backTopCenter
+        backendSpring:T -- B:backCenterCenter
+
+        junction backRightTop in backend
+        junction backRightCenter in backend
+        junction backRightBottom in backend
+
+        backRightTop:B -- T:backRightCenter
+        backRightCenter:B -- T:backRightBottom
+
+        backendSpring:R -- L:backRightCenter
+        backendSpring:B -- T:backendDB
+    
+    group auth(cloud)[Spring Auth]
+        service registerAuthAPI(internet)[register] in auth
+        service loginAuthAPI(internet)[login] in auth
+        service refreshAuthAPI(internet)[refresh] in auth
+        service springAuth(logos:spring)[Spring App] in auth
+        service authDB(database)[Database] in auth
+
+        junction authRightTop in auth
+        junction authRightCenter in auth
+        junction authRightBottom in auth
+
+        authRightTop:B -- T:authRightCenter
+        authRightCenter:B -- T:authRightBottom
+        
+        registerAuthAPI:R -- L:authRightTop
+        loginAuthAPI:R -- L:authRightCenter
+        refreshAuthAPI:R -- L:authRightBottom
+
+        authRightCenter:R -- L:springAuth
+        springAuth:R -- L:authDB
+
+    frontBottomLeft:B -- T:registerBackAPI
+    frontBottomCenter:B -- T:loginBackAPI
+    frontBottomRight:B -- T:refreshBackAPI
+
+    backRightTop:R -- L:registerAuthAPI
+    backRightCenter:R -- L:loginAuthAPI
+    backRightBottom:R -- L:refreshAuthAPI
