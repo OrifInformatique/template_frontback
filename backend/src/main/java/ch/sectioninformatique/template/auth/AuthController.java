@@ -58,8 +58,9 @@ public class AuthController {
     @Value("${SECURITY_JWT_TOKEN_ACCESS_TOKEN_LIFETIME}")
     private Duration refreshTokenLifeTime; 
 
-    @Value("${FRONTEND_URL}")
-    private String frontendUrl;
+    // Environment variable for the frontend URL to redirect to after successful Azure login.
+    @Value("${AFTER_OAUTH2_LOGIN_FRONTEND_CALLBACK}")
+    private String afterOauth2LoginFrontendCallback;
 
 
     /**
@@ -155,9 +156,6 @@ public class AuthController {
      * The login process is handled by the spring-auth application, which will manage the
      * authentication flow with Azure and redirect to redirectUrl after successful login.
      * 
-     * @param redirectUrl  The URL to redirect to after successful authentication (optional).
-     *                     If not provided, uses the Referer header. If neither is available,
-     *                     no redirect URL is used.
      * @param request      The HTTP request object
      *
      * @return ResponseEntity<Void> with redirect to the spring-auth Azure login endpoint
@@ -168,7 +166,8 @@ public class AuthController {
 
         HttpSession session = request.getSession(true);
 
-        String redirectUrl = frontendUrl;
+        // Get the redirect URL from the environment variable
+        String redirectUrl = afterOauth2LoginFrontendCallback;
 
         // Store redirect URL in session if provided, otherwise store the referer header
         if (redirectUrl != null && !redirectUrl.isEmpty()) {

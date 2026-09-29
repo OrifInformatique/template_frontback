@@ -7,9 +7,6 @@ PORT=8081
 
 # WARN: Set your database production database in `application.properties`!
 
-# Frontend url
-FRONTEND_URL = http://localhost:4000
-
 # Local dev database (Local mariadb)
 DEV_SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/dev_db
 
@@ -36,6 +33,9 @@ AZURE_LOGIN_URL=http://localhost:8080/oauth2/login/azure
 # Callback URL after a successfull OAuth2 login with spring-auth.
 # This URL should point to the backend endpoint that handles the temporary authentication code.
 AFTER_OAUTH2_LOGIN_URL=http://localhost:8081/auth/auth-code
+
+# URL to redirect to the frontend after Azure login
+AFTER_OAUTH2_LOGIN_FRONTEND_CALLBACK = http://localhost:4000
 
 # JWT Token Configuration
 SECURITY_JWT_TOKEN_SECRET_KEY=your-secret-access-key-here-change-in-production
