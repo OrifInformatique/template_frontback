@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -24,9 +25,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static ch.sectioninformatique.template.RestDocsSensitiveDataMasking.maskSensitiveData;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import org.springframework.restdocs.snippet.Snippet;
+
+import ch.sectioninformatique.template.RestDocsSnippets;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -88,6 +94,11 @@ public class UserControllerTest {
     @MockitoBean
     private AuthClient authClient;
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     /**
      * Helper method to generate a valid JWT token for a test user by login.
      * Retrieves the user from the database using UserService and creates a real JWT
@@ -115,7 +126,7 @@ public class UserControllerTest {
 
     private UserDto createTemporaryUser() {
         String uniqueLogin = "temp.permanent." + System.currentTimeMillis() + "@test.com";
-        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null));
+        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null, null, null));
         return userService.findByLogin(uniqueLogin);
     }
 
@@ -143,7 +154,8 @@ public class UserControllerTest {
             int expectedStatus,
             String docsFileName,
             boolean handleAsync,
-            Consumer<ResultActions> script) throws Exception {
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
 
         var request = get(endpoint);
         if ("GET".equals(requestTypeString)) {
@@ -176,8 +188,8 @@ public class UserControllerTest {
             script.accept(result);
         }
 
-        result.andDo(document("users/" + docsFileName, preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())));
+        result.andDo(document("users/" + docsFileName, preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()), snippets));
     }
 
     /**
@@ -190,9 +202,10 @@ public class UserControllerTest {
         MediaType contentType,
         int expectedStatus,
         String docsFileName,
-        Consumer<ResultActions> script) throws Exception {
+        Consumer<ResultActions> script,
+        Snippet... snippets) throws Exception {
 
-            performRequest(requestTypeString, endpoint, token, contentType, expectedStatus, docsFileName, false, script);
+            performRequest(requestTypeString, endpoint, token, contentType, expectedStatus, docsFileName, false, script, snippets);
     }
 
     // ==================== GET /users/me ====================
@@ -220,7 +233,8 @@ public class UserControllerTest {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            });
+            },
+            RestDocsSnippets.userResponse());
     }
 
     /**
@@ -248,19 +262,19 @@ public class UserControllerTest {
             });
     }
 
-    // ==================== GET /users/ ====================
+    // ==================== GET /users ====================
 
     /**
-     * Test: GET /users/all - Success
+     * Test: GET /users?state=active - Success
      *
-     * Test retrieving all users with proper authorization.
+     * Test retrieving active users with proper authorization.
      */
     @Test
     public void allUsers_withToken_shouldReturnSuccess() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
             "GET",
-            "/users?deleted=false",
+            "/users?state=active",
             adminToken,
             MediaType.APPLICATION_JSON,
             200,
@@ -276,9 +290,9 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/
+     * Test: GET /users?state=active
      *
-     * Verify users with user:read authority can retrieve all users from the system.
+     * Verify users with user:read authority can retrieve the user list.
      */
     @Test
     @Transactional
@@ -287,7 +301,7 @@ public class UserControllerTest {
 
         performRequest(
             "GET",
-            "/users?deleted=false",
+            "/users?state=active",
             validToken,
             MediaType.APPLICATION_JSON,
             200,
@@ -301,11 +315,12 @@ public class UserControllerTest {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            });
+            },
+            RestDocsSnippets.userListResponse());
     }
 
     /**
-     * Test: GET /users/ - 401 Unauthorized
+     * Test: GET /users - 401 Unauthorized
      *
      * Test retrieving all users without proper authorization.
      */
@@ -313,7 +328,7 @@ public class UserControllerTest {
     public void allUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users/",
+                "/users",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -329,10 +344,10 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== GET /users/all-with-deleted ====================
+    // ==================== GET /users?state=all ====================
 
     /**
-     * Test: GET /users/all-with-deleted - Success
+     * Test: GET /users?state=all - Success
      *
      * Test retrieving all users including soft-deleted ones with proper authorization.
      */
@@ -341,7 +356,7 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
                 "GET",
-                "/users",
+                "/users?state=all",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -632,7 +647,7 @@ public class UserControllerTest {
     }
     
     /**
-     * Test: Any protected endpoint (e.g., GET /users/all)
+     * Test: Any protected endpoint (e.g., GET /users?state=active)
      * Exception: SecurityExceptions.AuthenticationRequiredException (401
      * Unauthorized)
      *
@@ -653,7 +668,7 @@ public class UserControllerTest {
     public void allUsers_withoutAuthentication_shouldReturn401Unauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users?deleted=false",
+                "/users?state=active",
                 null, // No token
                 MediaType.APPLICATION_JSON,
                 401,
@@ -670,7 +685,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/all-with-deleted - 401 Unauthorized
+     * Test: GET /users?state=all - 401 Unauthorized
      *
      * Test retrieving all users including soft-deleted ones without proper authorization.
      */
@@ -678,7 +693,7 @@ public class UserControllerTest {
     public void allWithDeletedUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users",
+                "/users?state=all",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -694,19 +709,19 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== GET /users/deleted ====================
+    // ==================== GET /users?state=deleted ====================
 
     /**
-     * Test: GET /users/deleted - Success
+     * Test: GET /users?state=deleted - Success
      *
-     * Test retrieving all soft-deleted users with proper authorization.
+     * Test retrieving only soft-deleted users with proper authorization.
      */
     @Test
     public void deletedUsers_withToken_shouldReturnSuccess() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         performRequest(
                 "GET",
-                "/users?deleted=true",
+                "/users?state=deleted",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -722,15 +737,15 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: GET /users/deleted - 401 Unauthorized
+     * Test: GET /users?state=deleted - 401 Unauthorized
      *
-     * Test retrieving all soft-deleted users without proper authorization.
+     * Test retrieving only soft-deleted users without proper authorization.
      */
     @Test
     public void deletedUsers_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "GET",
-                "/users?deleted=true",
+                "/users?state=deleted",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -740,6 +755,32 @@ public class UserControllerTest {
                         response.andExpect(status().isUnauthorized());
                         response.andExpect(jsonPath("$.message")
                             .value(getMessage("security.auth.missingOrInvalidToken")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    /**
+     * Test: GET /users?state=bogus - 400 Bad Request
+     *
+     * An unknown value for the {@code state} filter is rejected with a
+     * standardized error body.
+     */
+    @Test
+    public void listUsers_withUnknownState_shouldReturnBadRequest() throws Exception {
+        String adminToken = getValidTokenForUser("test.admin@test.com");
+        performRequest(
+                "GET",
+                "/users?state=bogus",
+                adminToken,
+                MediaType.APPLICATION_JSON,
+                400,
+                "list-invalid-state",
+                response -> {
+                    try {
+                        response.andExpect(status().isBadRequest());
+                        response.andExpect(jsonPath("$.message").exists());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

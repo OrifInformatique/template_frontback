@@ -23,7 +23,7 @@ const Login = () => {
     const { t } = useTranslation("auth", "common");
     const [showLocalAccountLoginForm, setShowLocalAccountLoginForm] =
         useState(false);
-    const { login } = useLogin();
+    const { login, showError } = useLogin();
     const accessToken = useAuthStore((state) => state.accessToken);
     const { setAccessToken, clearAuth } = useAuthStore();
     const { handleLogout } = useLayoutAuth();
@@ -66,10 +66,6 @@ const Login = () => {
         refreshAccessToken();
     }, [BACKEND_API_URL, accessToken, clearAuth, loginType, setAccessToken]);
 
-    const handleOAuth2Login = () => {
-        const loginUrl = new URL('/auth/login/azure', BACKEND_API_URL);
-        window.location.assign(loginUrl.toString());
-    };
 
     const handleLogoutClick = async () => {
         await handleLogout();
@@ -111,6 +107,16 @@ const Login = () => {
 
                 {!accessToken && showLocalAccountLoginForm ? (
                     <>
+                        {showError && (
+                            <div
+                                className="border border-red-300 bg-red-50 p-3 text-sm text-red-700"
+                                role="alert"
+                                aria-live="polite"
+                            >
+                                {t("invalid_credentials")}
+                            </div>
+                        )}
+
                         <form onSubmit={login} className="flex flex-col gap-4">
                             <InputText
                                 id="identifier"
