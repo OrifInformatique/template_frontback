@@ -169,19 +169,9 @@ public class AuthController {
         // Get the redirect URL from the environment variable
         String redirectUrl = afterOauth2LoginFrontendCallback;
 
-        // Store redirect URL in session if provided, otherwise store the referer header
-        if (redirectUrl != null && !redirectUrl.isEmpty()) {
-            session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, redirectUrl);
-            log.debug("Stored redirect URL from parameter: {}", redirectUrl);
-        } else {
-            String referer = request.getHeader("Referer");
-            if (referer != null && !referer.isEmpty()) {
-                session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, referer);
-                log.debug("Stored redirect URL from Referer header: {}", referer);
-            } else {
-                log.debug("No redirect URL provided");
-            }
-        }
+        // Store the redirect URL in session
+        session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, redirectUrl);
+        log.debug("Stored redirect URL from environment variable: {}", redirectUrl);
 
         ResponseCookie cookie = ResponseCookie.from("redirect_url", redirectUrl)
         .httpOnly(true)
