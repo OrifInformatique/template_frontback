@@ -261,13 +261,13 @@ public class UserService {
 
                 localUser = this.register(newUser);
             }
-            if (localUser.getMainRole().getName().equals(RoleEnum.ADMIN)){
+            if (localUser.getMainRole() == MainRoleEnum.ADMIN) {
                 List<Role> allRoles = roleRepository.findAll();
-                    for (Role role : allRoles) {
-                        localUser.addAppSpecificRoles(role);
-                        log.debug("ROLE : {}", role.getName());
-                    }
+                for (Role role : allRoles) {
+                    localUser.addAppSpecificRoles(role);
+                    log.debug("ROLE : {}", role.getName());
                 }
+            }
             userRepository.save(localUser);
             return localUser;
         } catch (DuplicateUserException | DefaultRoleNotFoundException | UserCreationException e) {
