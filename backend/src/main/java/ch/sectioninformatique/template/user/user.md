@@ -108,7 +108,7 @@ It communicates with the internal or external authentication service to :
 - `PUT /users/{userId}/downgrade-admin` :
     - Downgrade an Admin -> Manager
 
-- `PUT /users/{userId}/promote-local-app-role` :
+- `PUT /users/{userId}/promote-local-manager-role` :
     - Add local role
 
 - `PUT /users/{id}` :

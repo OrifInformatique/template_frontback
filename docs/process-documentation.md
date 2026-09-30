@@ -345,7 +345,7 @@ sequenceDiagram
     AuthClient->>UserService: Response from spring-auth
     UserController->>Client: Response "User promoted to admin successfully"
 
-    Client->>SecurityLayer: /users/{userId}/promote-local-app-role
+    Client->>SecurityLayer: /users/{userId}/promote-local-manager-role
     SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
     note right of UserController: Local app-specific role promotion (local database)
     UserController->>UserService: UserService.promoteToLocalAppRole(userId)

@@ -744,7 +744,7 @@ include::{snippets}/users/deleted-unauthorized-missing-token/http-response.adoc[
 It returns a message indicating authentication is required.
 
 === 3.8 Promote Local App Role
-This is an example output for the `PUT /users/{userId}/promote-local-app-role` endpoint.
+This is an example output for the `PUT /users/{userId}/promote-local-manager-role` endpoint.
 
 .request
 include::{snippets}/users/promote-role-success/http-request.adoc[]
@@ -758,10 +758,10 @@ It confirms the user was promoted to the local app role.
 This is an example output when a request with a missing token is sent.
 
 .request
-include::{snippets}/users/promote-local-app-role-unauthorized-missing-token/http-request.adoc[]
+include::{snippets}/users/promote-local-manager-role-unauthorized-missing-token/http-request.adoc[]
 
 .response
-include::{snippets}/users/promote-local-app-role-unauthorized-missing-token/http-response.adoc[]
+include::{snippets}/users/promote-local-manager-role-unauthorized-missing-token/http-response.adoc[]
 
 It returns a message indicating authentication is required.
 

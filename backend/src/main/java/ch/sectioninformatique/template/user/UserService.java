@@ -75,11 +75,11 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to a local app role.
+     * Promotes a user to the local manager role.
      * This operation:
      * - Verifies the user exists
-     * - Checks if the user already has the local app role
-     * - Removes existing roles and assigns the local app role
+     * - Checks if the user already has the local manager role
+     * - Removes existing roles and assigns the local manager role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
@@ -88,19 +88,19 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalAppRole(@NonNull String userLogin) {
+    public UserDto promoteToLocalManagerRole(@NonNull String userLogin) {
         try {
             User user = userRepository.findByLogin(userLogin)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
-                if (role.getName().equals(LocalRoleEnum.LOCAL_APP_ROLE)) {
-                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_APP_ROLE.name());
+                if (role.getName().equals(LocalRoleEnum.LOCAL_MANAGER)) {
+                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_MANAGER.name());
                 }
             }
 
-            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_APP_ROLE)
-                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_APP_ROLE.name()));
+            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER)
+                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_MANAGER.name()));
 
             user.getAppSpecificRoles().add(testAdminRole);
             userRepository.save(user);

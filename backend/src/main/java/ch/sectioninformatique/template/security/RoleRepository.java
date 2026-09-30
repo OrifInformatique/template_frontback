@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
  * - Manage role assignments
  * - Retrieve role information
  * - Perform role-based queries
- * - Support role management operationsroles
+ * - Support role management operations
  */
 @Repository
 public interface RoleRepository extends CrudRepository<Role, Long> {
