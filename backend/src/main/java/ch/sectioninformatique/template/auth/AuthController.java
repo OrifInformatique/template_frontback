@@ -171,28 +171,12 @@ public class AuthController {
     @GetMapping("/login/azure")
     public ResponseEntity<Void> OAuth2AzureLogin(HttpServletRequest request) {
 
-        HttpSession session = request.getSession(true);
-
-        // Get the redirect URL from the environment variable
-        String redirectUrl = afterOauth2LoginFrontendCallback;
-
-        // Store the redirect URL in session
-        session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, redirectUrl);
-        log.debug("Stored redirect URL from environment variable: {}", redirectUrl);
-
-        ResponseCookie cookie = ResponseCookie.from("redirect_url", redirectUrl)
-        .httpOnly(true)
-        .path("/")
-        .sameSite("None")
-        .secure(true)
-        .build();
-
         // Build the login URI for the spring-auth Azure login endpoint
         URI loginUri = authClient.buildAzureLoginUri();
 
         // Redirect to the spring-auth Azure login endpoint
         log.debug("Redirecting to spring-auth Azure login endpoint: {}", loginUri);
-        return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.SET_COOKIE, cookie.toString()).location(loginUri).build();
+        return ResponseEntity.status(HttpStatus.FOUND).location(loginUri).build();
     }
 
     /**
@@ -210,11 +194,10 @@ public class AuthController {
      * @param authCode the authorization code received from the spring-auth application
      * @param userId the ID of the user for whom to exchange the authorization code
      * @param request the HTTP request object
-     * @param redirectUrl the URL to redirect to after successful authentication
      * @return ResponseEntity redirecting to the frontend 
      */
     @GetMapping("/auth-code")
-    public ResponseEntity<?> authCode(@RequestParam String authCode, @RequestParam Long userId, HttpServletRequest request, @CookieValue(name="redirect_url") String redirectUrl) {
+    public ResponseEntity<?> authCode(@RequestParam String authCode, @RequestParam Long userId, HttpServletRequest request) {
         
         log.debug("OAuth2 login successful, using authcode to get tokens");
 
@@ -247,10 +230,10 @@ public class AuthController {
         loggedUser.setToken(user.getToken());
         session.setAttribute("loggedUser", loggedUser);
 
-        log.debug("Redirecting to: {}", redirectUrl);
+        log.debug("Redirecting to: {}", afterOauth2LoginFrontendCallback);
         return ResponseEntity
             .status(HttpStatus.FOUND)
-            .location(URI.create(redirectUrl))
+            .location(URI.create(afterOauth2LoginFrontendCallback))
             .build(); 
     }
 
