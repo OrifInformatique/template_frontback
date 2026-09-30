@@ -1,17 +1,35 @@
 package ch.sectioninformatique.template.user;
 
-import jakarta.persistence.*;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.*;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.security.Role;
 
-import org.springframework.security.core.GrantedAuthority;
-import java.util.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Entity class representing a user in the system.
@@ -26,8 +44,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
-@FilterDef(name = "deletedFilter", parameters = @ParamDef(name = "isDeleted", type = Boolean.class))
-@Filter(name = "deletedFilter", condition = "deleted = :isDeleted")
 public class User {
 
     /** Unique identifier for the user */
@@ -41,7 +57,7 @@ public class User {
     private String firstName;
 
     /** Last name of the user */
-    @Column(nullable = false, name = "last_name")
+    @Column(nullable = true, name = "last_name")
     private String lastName;
 
     /** Login username of the user */
@@ -63,12 +79,18 @@ public class User {
     @Builder.Default
     private boolean deleted = false;
 
-    /** Main role assigned to the user */
-    @ManyToOne(fetch = FetchType.EAGER)
+    /**
+     * Main role assigned to the user.
+     * This role is owned and managed by the external spring-auth service; it is
+     * received in the JWT {@code mainRole} claim and stored here only as a plain
+     * enum value (no relation to the local {@code roles} table).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "main_role")
     @Builder.Default
-    private Role mainRole = new Role();
+    private MainRoleEnum mainRole = MainRoleEnum.USER;
 
-    /** Additional application-specific roles assigned to the user */
+    /** Additional application-specific (local) roles assigned to the user */
     @ManyToMany(fetch = FetchType.EAGER)
     @Builder.Default
     private Set<Role> appSpecificRoles = new HashSet<>();
@@ -93,7 +115,7 @@ public class User {
                 Date createdAt,
                 Date updatedAt,
                 boolean deleted,
-                Role mainRole,
+                MainRoleEnum mainRole,
                 Set<Role> appSpecificRoles) {
         super();
         this.id = id;
@@ -116,10 +138,13 @@ public class User {
      */
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        Set<Role> roleList = this.appSpecificRoles;
-        roleList.add(this.mainRole);
-        for (Role role : roleList) {
-            authorities.addAll(role.getName().getGrantedAuthorities());
+        if (this.mainRole != null) {
+            authorities.addAll(this.mainRole.getGrantedAuthorities());
+        }
+        if (this.appSpecificRoles != null) {
+            for (Role role : this.appSpecificRoles) {
+                authorities.addAll(role.getName().getGrantedAuthorities());
+            }
         }
         return authorities;
     }
@@ -161,12 +186,12 @@ public class User {
      */
     public boolean isEnabled() { return !deleted; } // Optional tie-in
 
-    /** 
+    /**
      * Returns the main role assigned to the user.
      *
-     * @return The main Role of the user
+     * @return The main role of the user (owned by spring-auth)
      */
-    public Role getMainRole() { return mainRole; }
+    public MainRoleEnum getMainRole() { return mainRole; }
 
     /** 
      * Returns a list of application-specific role names assigned to the user.
@@ -195,12 +220,12 @@ public class User {
         return allRoles;
     }
 
-    /** 
+    /**
      * Sets the main role assigned to the user.
      *
-     * @param role The Role to set as the main role
+     * @param role The main role to set (owned by spring-auth)
      */
-    public void setMainRole(Role role) { mainRole = role; }
+    public void setMainRole(MainRoleEnum role) { mainRole = role; }
 
     /** 
      * Adds an application-specific role to the user.

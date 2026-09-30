@@ -23,8 +23,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
+import ch.sectioninformatique.template.user.UserMapper;
 import ch.sectioninformatique.template.user.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -48,6 +51,9 @@ public class AuthController {
     /** Client to send authentication requests to the spring-auth application */
     private final AuthClient authClient;
 
+    /** Mapper for converting between User entities and DTOs */
+    private final UserMapper userMapper;
+
     // Logger for debugging and monitoring the authentication flow.
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
@@ -56,6 +62,10 @@ public class AuthController {
 
     @Value("${SECURITY_JWT_TOKEN_ACCESS_TOKEN_LIFETIME}")
     private Duration refreshTokenLifeTime; 
+
+    // Environment variable for the frontend URL to redirect to after successful Azure login.
+    @Value("${AFTER_OAUTH2_LOGIN_FRONTEND_CALLBACK}")
+    private String afterOauth2LoginFrontendCallback;
 
 
     /**
@@ -97,10 +107,11 @@ public class AuthController {
         return authClient.register(token, user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
-                    userService.register(user);
+                    User localUser = userService.register(user);
+                    UserDto localUserDto = userMapper.toUserDto(localUser);
 
-                    // Return HTTP 200 OK with the response body
-                    return Mono.just(response);
+                    // Return HTTP 200 OK with the locally registered user
+                    return Mono.just(ResponseEntity.status(response.getStatusCode()).body(localUserDto));
                 })
                 .block();
     }
@@ -151,47 +162,20 @@ public class AuthController {
      * The login process is handled by the spring-auth application, which will manage the
      * authentication flow with Azure and redirect to redirectUrl after successful login.
      * 
-     * @param redirectUrl  The URL to redirect to after successful authentication (optional).
-     *                     If not provided, uses the Referer header. If neither is available,
-     *                     no redirect URL is used.
      * @param request      The HTTP request object
      *
      * @return ResponseEntity<Void> with redirect to the spring-auth Azure login endpoint
      *         or an error response if the redirection fails.
      */
     @GetMapping("/login/azure")
-    public ResponseEntity<Void> OAuth2AzureLogin(@RequestParam(required = false) String redirectUrl,
-                                                 HttpServletRequest request) {
-
-        HttpSession session = request.getSession(true);
-
-        // Store redirect URL in session if provided, otherwise store the referer header
-        if (redirectUrl != null && !redirectUrl.isEmpty()) {
-            session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, redirectUrl);
-            log.debug("Stored redirect URL from parameter: {}", redirectUrl);
-        } else {
-            String referer = request.getHeader("Referer");
-            if (referer != null && !referer.isEmpty()) {
-                session.setAttribute(FRONTEND_REDIRECT_SESSION_KEY, referer);
-                log.debug("Stored redirect URL from Referer header: {}", referer);
-            } else {
-                log.debug("No redirect URL provided");
-            }
-        }
-
-        ResponseCookie cookie = ResponseCookie.from("redirect_url", redirectUrl)
-        .httpOnly(true)
-        .path("/")
-        .sameSite("None")
-        .secure(true)
-        .build();
+    public ResponseEntity<Void> OAuth2AzureLogin(HttpServletRequest request) {
 
         // Build the login URI for the spring-auth Azure login endpoint
         URI loginUri = authClient.buildAzureLoginUri();
 
         // Redirect to the spring-auth Azure login endpoint
         log.debug("Redirecting to spring-auth Azure login endpoint: {}", loginUri);
-        return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.SET_COOKIE, cookie.toString()).location(loginUri).build();
+        return ResponseEntity.status(HttpStatus.FOUND).location(loginUri).build();
     }
 
     /**
@@ -209,11 +193,10 @@ public class AuthController {
      * @param authCode the authorization code received from the spring-auth application
      * @param userId the ID of the user for whom to exchange the authorization code
      * @param request the HTTP request object
-     * @param redirectUrl the URL to redirect to after successful authentication
      * @return ResponseEntity redirecting to the frontend 
      */
     @GetMapping("/auth-code")
-    public ResponseEntity<?> authCode(@RequestParam String authCode, @RequestParam Long userId, HttpServletRequest request, @CookieValue(name="redirect_url") String redirectUrl) {
+    public ResponseEntity<?> authCode(@RequestParam String authCode, @RequestParam Long userId, HttpServletRequest request) {
         
         log.debug("OAuth2 login successful, using authcode to get tokens");
 
@@ -246,10 +229,10 @@ public class AuthController {
         loggedUser.setToken(user.getToken());
         session.setAttribute("loggedUser", loggedUser);
 
-        log.debug("Redirecting to: {}", redirectUrl);
+        log.debug("Redirecting to: {}", afterOauth2LoginFrontendCallback);
         return ResponseEntity
             .status(HttpStatus.FOUND)
-            .location(URI.create(redirectUrl))
+            .location(URI.create(afterOauth2LoginFrontendCallback))
             .build(); 
     }
 

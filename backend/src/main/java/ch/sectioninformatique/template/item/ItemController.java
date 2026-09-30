@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
+import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 
@@ -41,17 +42,19 @@ public class ItemController {
     }
 
     /**
-     * Retrieves all items in the system.
+     * Retrieves items in the system, filtered by their soft-delete state.
      * Requires the 'item:read' authority to access.
      *
-     * @return An Iterable containing all items
+     * @param state which subset of items to return: {@code active} (default),
+     *              {@code deleted}, or {@code all}
+     * @return the matching list of items
      */
     @PreAuthorize("hasAuthority('item:read')")
     @GetMapping
-    public List<ItemsDTO> getItems(@RequestParam(defaultValue = "false") boolean includeDeleted)
+    public List<ItemsDTO> getItems(@RequestParam(defaultValue = "active") DeletionFilter state)
     {
             List<ItemsDTO> items = new ArrayList<>();
-            itemService.getItems(includeDeleted).forEach(item -> items.add(new ItemsDTO(item)));
+            itemService.getItems(state).forEach(item -> items.add(new ItemsDTO(item)));
             return items;
     }
 
