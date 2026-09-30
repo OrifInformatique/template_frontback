@@ -59,7 +59,7 @@ public class User {
     private String firstName;
 
     /** Last name of the user */
-    @Column(nullable = false, name = "last_name")
+    @Column(nullable = true, name = "last_name")
     private String lastName;
 
     /** Login username of the user */

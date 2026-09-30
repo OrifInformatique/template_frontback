@@ -34,6 +34,9 @@ AZURE_LOGIN_URL=http://localhost:8080/oauth2/login/azure
 # This URL should point to the backend endpoint that handles the temporary authentication code.
 AFTER_OAUTH2_LOGIN_URL=http://localhost:8081/auth/auth-code
 
+# URL to redirect to the frontend after Azure login
+AFTER_OAUTH2_LOGIN_FRONTEND_CALLBACK = http://localhost:4000/azure
+
 # JWT Token Configuration
 SECURITY_JWT_TOKEN_SECRET_KEY=your-secret-access-key-here-change-in-production
 SECURITY_JWT_TOKEN_ACCESS_TOKEN_LIFETIME=5m
