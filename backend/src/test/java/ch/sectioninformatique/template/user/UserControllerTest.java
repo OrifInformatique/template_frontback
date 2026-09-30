@@ -491,7 +491,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: PUT /users/{userId}/promote-local-app-role
+     * Test: PUT /users/{userId}/promote-local-manager-role
      * Exception: UserPromotionException (400 Bad Request)
      *
      * Documents:
@@ -513,7 +513,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -522,14 +522,14 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: PUT /users/{userId}/promote-local-app-role
+     * Test: PUT /users/{userId}/promote-local-manager-role
      * Exception: UserAlreadyHasRoleException (409 Conflict)
      *
      * Documents:
      * - Exception: UserAlreadyHasRoleException
      * - HTTP Status: 409 CONFLICT
      * - When thrown: When attempting to promote a user to a role they already have
-     * - Use case: Administrator tries to promote a user to LOCAL_APP_ROLE but they
+     * - Use case: Administrator tries to promote a user to LOCAL_MANAGER but they
      * already have it
      * - Related exception: UserPromotionException - General promotion failures
      * - Response: JSON error message indicating role conflict
@@ -544,7 +544,7 @@ public class UserControllerTest {
         // First promotion should succeed
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -557,7 +557,7 @@ public class UserControllerTest {
         // Second promotion attempt should fail with 409 Conflict
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-app-role",
+                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 409,
@@ -787,22 +787,22 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== PUT /users/{userId}/promote-local-app-role ====================
+    // ==================== PUT /users/{userId}/promote-local-manager-role ====================
 
     /**
-     * Test: PUT /users/{userId}/promote-local-app-role - 401 Unauthorized
+     * Test: PUT /users/{userId}/promote-local-manager-role - 401 Unauthorized
      *
      * Test promoting a user to local app role without proper authorization.
      */
     @Test
-    public void promoteToLocalAppRole_withoutToken_shouldReturnUnauthorized() throws Exception {
+    public void promoteToLocalManagerRole_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/1/promote-local-app-role",
+                "/users/1/promote-local-manager-role",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
-                "promote-local-app-role-unauthorized-missing-token",
+                "promote-local-manager-role-unauthorized-missing-token",
                 response -> {
                     try {
                         response.andExpect(status().isUnauthorized());

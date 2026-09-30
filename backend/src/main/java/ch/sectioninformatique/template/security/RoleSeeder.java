@@ -42,7 +42,7 @@ public class RoleSeeder implements ApplicationListener<ContextRefreshedEvent> {
 
     /**
      * Loads the default local roles into the database.
-     * Creates every {@link LocalRoleEnum} constant (e.g. LOCAL_APP_ROLE) that does
+     * Creates every {@link LocalRoleEnum} constant (e.g. LOCAL_MANAGER) that does
      * not already exist, using the description carried by the enum constant.
      */
     private void loadRoles() {

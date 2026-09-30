@@ -192,14 +192,14 @@ It contains :
 * `USER`,
 * `MANAGER`,
 * `ADMIN`,
-* `LOCAL_APP_ROLE`
+* `LOCAL_MANAGER`
 
 Each role has a predefined set of `PermissionEnum` permissions.
 
 * `USER` → can read users and items.
 * `MANAGER` → can read, create, and update users and items.
 * `ADMIN` → has all available permissions, including deletion.
-* `LOCAL_APP_ROLE` → provides application-specific permissions and is not transmitted from the `spring-auth` application.
+* `LOCAL_MANAGER` → provides application-specific permissions and is not transmitted from the `spring-auth` application.
 
 The `getPermissions()` method returns the permissions associated with a role.
 
@@ -252,7 +252,7 @@ It creates the following roles if they do not exist :
 * `USER` → default user role,
 * `MANAGER` → manager role,
 * `ADMIN` → administrator role,
-* `LOCAL_APP_ROLE` → role specific to the application.
+* `LOCAL_MANAGER` → role specific to the application.
 
 Each newly created role is given its corresponding `RoleEnum` value and description before being saved using `RoleRepository`.
 

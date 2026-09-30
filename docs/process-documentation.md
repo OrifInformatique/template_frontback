@@ -345,10 +345,10 @@ sequenceDiagram
     AuthClient->>UserService: Response from spring-auth
     UserController->>Client: Response "User promoted to admin successfully"
 
-    Client->>SecurityLayer: /users/{userId}/promote-local-app-role
+    Client->>SecurityLayer: /users/{userId}/promote-local-manager-role
     SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
     note right of UserController: Local app-specific role promotion (local database)
-    UserController->>UserService: UserService.promoteToLocalAppRole(userId)
+    UserController->>UserService: UserService.promoteToLocalManagerRole(userId)
     UserService->>UserRepository: UserRepository.findById(userId)
     UserRepository->>UserService: Found User
     UserService->>UserRepository: UserRepository.save(user) with updated app-specific role
@@ -434,7 +434,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 | `JwtAuthFilter.java`                | Authentication filter that processes tokens for incoming requests. |
 | `PermissionEnum.java`               | Enumeration defining available permissions.                        |
 | `MainRoleEnum.java`                 | Read-only mirror of the main roles (USER, MANAGER, ADMIN) owned by `spring-auth`; not persisted, used to resolve authorities from the JWT `mainRole` claim. |
-| `LocalRoleEnum.java`                | Enumeration of the local roles defined only in this app (e.g. LOCAL_APP_ROLE) and their permissions. |
+| `LocalRoleEnum.java`                | Enumeration of the local roles defined only in this app (e.g. LOCAL_MANAGER) and their permissions. |
 | `Role.java`                         | Entity for a **local** role row (`roles` table); its `name` is a `LocalRoleEnum`. |
 | `RoleRepository.java`               | Interface for database operations related to local roles.          |
 | `RoleSeeder.java`                   | Seeds the database with every `LocalRoleEnum` role on startup.     |

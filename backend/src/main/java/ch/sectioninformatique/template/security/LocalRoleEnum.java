@@ -6,13 +6,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_READ;
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_WRITE;
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_UPDATE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_READ;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_WRITE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_UPDATE;
-import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_DELETE;
 
 /**
  * Enumeration of the <b>local roles</b>, which are defined only in this
@@ -32,14 +28,10 @@ public enum LocalRoleEnum {
      * Example of a local application role which is specific to this app and is not
      * transmitted from the spring-auth application.
      */
-    LOCAL_APP_ROLE("Example of local application role", EnumSet.of(
-            USER_READ,
-            USER_WRITE,
-            USER_UPDATE,
+    LOCAL_MANAGER("Example of local application role", EnumSet.of(
             ITEM_READ,
             ITEM_WRITE,
-            ITEM_UPDATE,
-            ITEM_DELETE));
+            ITEM_UPDATE));
 
     /** Human-readable description, used when seeding the role into the database */
     private final String description;
@@ -80,7 +72,7 @@ public enum LocalRoleEnum {
      * Converts the role's permissions into Spring Security GrantedAuthority
      * objects.
      * This method creates SimpleGrantedAuthority objects for each permission and
-     * adds a role-based authority (e.g., "ROLE_LOCAL_APP_ROLE").
+     * adds a role-based authority (e.g., "ROLE_LOCAL_MANAGER").
      *
      * @return Set of SimpleGrantedAuthority objects representing the role's
      *         permissions

@@ -374,7 +374,7 @@ public class TestControllerTest {
      *
      * Ensures that an admin user can promote another user to a "test admin" role.
      * Verifies the response contains a "message" field and that the User did get
-     * the LOCAL_APP_ROLE role.
+     * the LOCAL_MANAGER role.
      * 
      * @throws Exception
      */
@@ -401,7 +401,7 @@ public class TestControllerTest {
 
                         UserDto updatedUser = userService.findByLogin("test.user@test.com");
 
-                        assertTrue(updatedUser.getAppSpecificRoles().stream().anyMatch(e -> e == "LOCAL_APP_ROLE"));
+                        assertTrue(updatedUser.getAppSpecificRoles().stream().anyMatch(e -> e == "LOCAL_MANAGER"));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
