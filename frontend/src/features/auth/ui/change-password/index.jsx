@@ -41,14 +41,8 @@ const ChangePassword = () =>
             console.error("Change password failed:", error);
 
             const status = error.response?.status;
-            const message = error.response?.data?.message ?? "";
 
             if (status === 401 || status === 403)
-            {
-                setErrorKey("wrong_current_password");
-            }
-            // The upstream detail is localized (EN "Invalid credentials" / FR "Identifiants invalides").
-            else if (status === 400 && /invalid credentials|identifiants invalides/i.test(message))
             {
                 setErrorKey("wrong_current_password");
             }
