@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template.test;
 
 // Import statements for testing, Spring Boot, JSON handling, and REST Docs
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.ResultActions;
@@ -27,6 +28,7 @@ import org.springframework.http.MediaType;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static ch.sectioninformatique.template.RestDocsSensitiveDataMasking.maskSensitiveData;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import java.time.Instant;
@@ -40,6 +42,10 @@ import java.util.stream.Collectors;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import org.springframework.restdocs.snippet.Snippet;
+
+import ch.sectioninformatique.template.RestDocsSnippets;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * Integration tests for the "TestController" REST endpoints.
@@ -74,6 +80,11 @@ public class TestControllerTest {
     @MockitoBean
     private AuthClient authClient;
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     /**
      * Helper method for performing and documenting HTTP requests in tests.
      * This reduces repetition by centralizing the request execution and REST Docs
@@ -97,7 +108,8 @@ public class TestControllerTest {
             MediaType contentType,
             int expectedStatus,
             String docsFileName,
-            Consumer<ResultActions> script) throws Exception {
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
 
         // Execute the HTTP request using a helper class
         ResultActions request = TestControllerHelper.performTest(
@@ -114,9 +126,8 @@ public class TestControllerTest {
             script.accept(request);
         }
 
-        // Generate a REST Docs snippet for the request/response pair
-        request.andDo(document("tests/" + docsFileName, preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())));
+        request.andDo(document("tests/" + docsFileName, preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()), snippets));
 
     }
 
@@ -267,7 +278,8 @@ public class TestControllerTest {
                         throw new RuntimeException(e);
                     }
 
-                });
+                },
+                RestDocsSnippets.userResponse());
     }
 
     /**
