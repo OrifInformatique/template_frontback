@@ -13,7 +13,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
@@ -36,7 +36,8 @@ import ch.sectioninformatique.template.user.UserExceptions.UserValidationExcepti
 import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,6 +56,9 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("null")
 public class UserService {
 
+    /** EntityManager for database operations */
+    @PersistenceContext
+    private EntityManager entityManager;
     private final MessageSource messageSource;
 
     /** Repository for user data access */

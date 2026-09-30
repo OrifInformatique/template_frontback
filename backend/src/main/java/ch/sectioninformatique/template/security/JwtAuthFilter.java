@@ -14,7 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 
 import org.springframework.stereotype.Component;
