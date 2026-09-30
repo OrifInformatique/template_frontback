@@ -72,7 +72,7 @@ public enum LocalRoleEnum {
      * Converts the role's permissions into Spring Security GrantedAuthority
      * objects.
      * This method creates SimpleGrantedAuthority objects for each permission and
-     * adds a role-based authority (e.g., "ROLE_LOCAL_APP_ROLE").
+     * adds a role-based authority (e.g., "ROLE_LOCAL_MANAGER").
      *
      * @return Set of SimpleGrantedAuthority objects representing the role's
      *         permissions

@@ -529,7 +529,7 @@ public class UserControllerTest {
      * - Exception: UserAlreadyHasRoleException
      * - HTTP Status: 409 CONFLICT
      * - When thrown: When attempting to promote a user to a role they already have
-     * - Use case: Administrator tries to promote a user to LOCAL_APP_ROLE but they
+     * - Use case: Administrator tries to promote a user to LOCAL_MANAGER but they
      * already have it
      * - Related exception: UserPromotionException - General promotion failures
      * - Response: JSON error message indicating role conflict
@@ -795,7 +795,7 @@ public class UserControllerTest {
      * Test promoting a user to local app role without proper authorization.
      */
     @Test
-    public void promoteToLocalAppRole_withoutToken_shouldReturnUnauthorized() throws Exception {
+    public void promoteToLocalManagerRole_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
                 "/users/1/promote-local-manager-role",

@@ -97,7 +97,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> promoteToTestAdmin(@PathVariable String userLogin) {
 
-            userService.promoteToLocalAppRole(userLogin);
+            userService.promoteToLocalManagerRole(userLogin);
             String message = messageSource.getMessage(
                 "user.promoted.local",
                 null,

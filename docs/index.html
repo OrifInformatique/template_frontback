@@ -592,7 +592,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_3_7_4_error_401_missing_token">3.7.4 Error 401 - Missing Token</a></li>
 </ul>
 </li>
-<li><a href="#_3_8_promote_local_app_role">3.8 Promote Local App Role</a>
+<li><a href="#_3_8_promote_local_manager_role">3.8 Promote Local App Role</a>
 <ul class="sectlevel3">
 <li><a href="#_3_8_1_error_401_missing_token">3.8.1 Error 401 - Missing Token</a></li>
 </ul>
@@ -3186,7 +3186,7 @@ X-Frame-Options: DENY
 Content-Length: 162
 
 {
-  "message" : "The user already has the LOCAL_APP_ROLE role",
+  "message" : "The user already has the LOCAL_MANAGER role",
   "timestamp" : [ 2026, 9, 22, 11, 50, 55, 686045642 ],
   "status" : 409,
   "error" : "Conflict"
@@ -3635,7 +3635,7 @@ Content-Length: 59
 </div>
 </div>
 <div class="sect2">
-<h3 id="_3_8_promote_local_app_role">3.8 Promote Local App Role</h3>
+<h3 id="_3_8_promote_local_manager_role">3.8 Promote Local App Role</h3>
 <div class="paragraph">
 <p>This is an example output for the <code>PUT /users/{userId}/promote-local-manager-role</code> endpoint.</p>
 </div>
@@ -4542,7 +4542,7 @@ Content-Length: 243
 
 [ {
   "id" : 1,
-  "name" : "LOCAL_APP_ROLE",
+  "name" : "LOCAL_MANAGER",
   "description" : "Example of local application role",
   "type" : "LOCAL",
   "permissions" : [ "item:delete", "item:read", "item:update", "item:write", "user:read", "user:update", "user:write" ]
@@ -4658,7 +4658,7 @@ Content-Length: 913
   "permissions" : [ "item:delete", "item:read", "item:update", "item:write", "user:delete", "user:read", "user:update", "user:write" ]
 }, {
   "id" : 1,
-  "name" : "LOCAL_APP_ROLE",
+  "name" : "LOCAL_MANAGER",
   "description" : "Example of local application role",
   "type" : "LOCAL",
   "permissions" : [ "item:delete", "item:read", "item:update", "item:write", "user:read", "user:update", "user:write" ]
