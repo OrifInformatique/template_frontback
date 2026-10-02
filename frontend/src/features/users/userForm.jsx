@@ -62,7 +62,8 @@ const handleSave = async () => {
                 "firstName" : firstName,
                 "lastName" : lastName,
                 "login" : login,
-                    "mainRole": userRoles,
+                "deleted": Boolean(user.deleted ?? false),
+                "mainRole": userRoles,
                 "appSpecificRoles" : userAppSpefRole
             });
         } else {
