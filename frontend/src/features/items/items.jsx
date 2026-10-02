@@ -92,7 +92,7 @@ const Items = () => {
                     updatedAt: new Date(item.updatedAt).toLocaleString(),
                 }))}
                 columns={["id", "name", "author", "description", "createdAt", "updatedAt"]}
-                columnLabels={{
+                columnsLabels={{
                     id: "#",
                     name: t("name", "Name"),
                     author: t("author", "Author"),
