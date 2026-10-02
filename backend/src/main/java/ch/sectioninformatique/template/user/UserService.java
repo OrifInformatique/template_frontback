@@ -7,15 +7,20 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.auth.RegisterDto;
+import ch.sectioninformatique.template.security.LocalRoleEnum;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
 import ch.sectioninformatique.template.security.RoleRepository;
 import ch.sectioninformatique.template.user.UserExceptions.DefaultRoleNotFoundException;
 import ch.sectioninformatique.template.user.UserExceptions.DuplicateUserException;
@@ -32,10 +37,9 @@ import ch.sectioninformatique.template.user.UserExceptions.PermanentUserDeletion
 import ch.sectioninformatique.template.user.UserExceptions.UserRetrievalException;
 import ch.sectioninformatique.template.user.UserExceptions.InactiveUserException;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.hibernate.Session;
 
 /**
  * Service class for managing user-related operations.
@@ -49,11 +53,13 @@ import org.hibernate.Session;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-
+@SuppressWarnings("null")
 public class UserService {
 
     /** EntityManager for database operations */
-    private final EntityManager entityManager;
+    @PersistenceContext
+    private EntityManager entityManager;
+    private final MessageSource messageSource;
 
     /** Repository for user data access */
     private final UserRepository userRepository;
@@ -69,11 +75,11 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to a local app role.
+     * Promotes a user to the local manager role.
      * This operation:
      * - Verifies the user exists
-     * - Checks if the user already has the local app role
-     * - Removes existing roles and assigns the local app role
+     * - Checks if the user already has the local manager role
+     * - Removes existing roles and assigns the local manager role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
@@ -82,19 +88,19 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalAppRole(@NonNull String userLogin) {
+    public UserDto promoteToLocalManagerRole(@NonNull String userLogin) {
         try {
             User user = userRepository.findByLogin(userLogin)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
-                if (role.getName().equals(RoleEnum.LOCAL_APP_ROLE)) {
-                    throw new UserAlreadyHasRoleException(RoleEnum.LOCAL_APP_ROLE.name());
+                if (role.getName().equals(LocalRoleEnum.LOCAL_MANAGER)) {
+                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_MANAGER.name());
                 }
             }
 
-            Role testAdminRole = roleRepository.findByName(RoleEnum.LOCAL_APP_ROLE)
-                    .orElseThrow(() -> new RoleNotFoundException(RoleEnum.LOCAL_APP_ROLE.name()));
+            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER)
+                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_MANAGER.name()));
 
             user.getAppSpecificRoles().add(testAdminRole);
             userRepository.save(user);
@@ -109,13 +115,12 @@ public class UserService {
     /**
      * Retrieves all users in the system (not including soft-deleted users).
      *
-     * @return List of all User entities
+     * @return List of all users as UserDto
      */
     public List<UserDto> allUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", false);
         List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
+        users = userRepository.findAllByDeletedFalse();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -126,11 +131,12 @@ public class UserService {
     /**
      * Retrieves all users including soft-deleted ones.
      *
-     * @return List of all User entities including deleted
+     * @return List of all users as UserDto including deleted ones
      */
     public List<UserDto> allWithDeletedUsers() {
         List<User> users = new ArrayList<>();
-        userRepository.findAllIncludingDeleted().forEach(users::add);
+        users = userRepository.findAllIncludingDeleted();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -141,13 +147,12 @@ public class UserService {
     /**
      * Retrieves only soft-deleted users.
      *
-     * @return List of soft-deleted User entities
+     * @return List of soft-deleted users as UserDto
      */
-    public List<UserDto> deletedUsers() {
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("deletedFilter").setParameter("isDeleted", true);
+        public List<UserDto> deletedUsers() {
         List<User> users = new ArrayList<>();
-        userRepository.findAllDeleted().forEach(users::add);
+        users = userRepository.findAllDeleted();
+
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {
             usersDto.add(userMapper.toUserDto(user));
@@ -197,11 +202,27 @@ public class UserService {
 
             User user = userMapper.signUpToUser(registerDto);
 
-            // Add default USER role
-            Role userRole = roleRepository.findByName(RoleEnum.USER)
-                .orElseThrow(DefaultRoleNotFoundException::new);
-            user.setMainRole(userRole);
+            // Define the user's main role (owned by spring-auth, transversal for all
+            // applications) - stored locally as a plain enum value, no DB lookup.
+            if(registerDto.mainRole() == null || registerDto.mainRole().isBlank()){
+                // No role is provided, add default USER role
+                user.setMainRole(MainRoleEnum.USER);
+            }
+            else{
+                // Add the provided role
+                user.setMainRole(MainRoleEnum.valueOf(registerDto.mainRole()));
+            }
 
+            // Define the user's specific (local) role(s) for this application
+            if(registerDto.appSpecificRoles() != null ){
+
+                Set<Role> appSpecificRoles = new HashSet<>();
+                for (String role : registerDto.appSpecificRoles()) {
+                    appSpecificRoles.add(roleRepository.findByName(LocalRoleEnum.valueOf(role)).orElseThrow(RoleNotFoundException::new));
+                }
+                user.setAppSpecificRoles(appSpecificRoles);
+            }
+            
             User savedUser = userRepository.save(user);
             return savedUser;
         } catch (UserValidationException | DuplicateUserException | DefaultRoleNotFoundException e) {
@@ -236,13 +257,11 @@ public class UserService {
 
             if (localUser == null) {
                 RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                        userDto.getLogin(), null);
+                        userDto.getLogin(), null, null, null);
 
                 localUser = this.register(newUser);
             }
-            if (localUser.getMainRole().getName().equals(RoleEnum.ADMIN)){
-                localUser.setMainRole(roleRepository.findByName(RoleEnum.ADMIN).orElseThrow(RoleNotFoundException::new));
-            }
+            
             userRepository.save(localUser);
             return localUser;
         } catch (DuplicateUserException | DefaultRoleNotFoundException | UserCreationException e) {
@@ -267,46 +286,20 @@ public class UserService {
      */
     public void updateMainRole(User localUser, UserDto currentUser) {
         try {
-            String localMainRole = localUser.getMainRole().getName().name();
+            String localMainRole = localUser.getMainRole().name();
 
-            if (!localMainRole.contains(currentUser.getMainRole())) {
-                Role newMainRole = roleRepository.findByName(RoleEnum.valueOf(currentUser.getMainRole()))
-                        .orElseThrow(() -> new RoleNotFoundException(currentUser.getMainRole()));
-
-                localUser.setMainRole(newMainRole);
+            if (!localMainRole.equals(currentUser.getMainRole())) {
+                localUser.setMainRole(MainRoleEnum.valueOf(currentUser.getMainRole()));
                 userRepository.save(localUser);
             }
         }
         catch (RoleNotFoundException e) {
             throw e;
+        } catch (IllegalArgumentException e) {
+            throw new RoleNotFoundException(currentUser.getMainRole());
         } catch (Exception e) {
             throw new UserUpdateException(e.getMessage());
         }
-    }
-
-    /**
-     * get the list of roles attribuated to the user
-     * This method:
-     * - Test if the current user's has app specifique roles registered
-     * - add the app specifique roles to a list
-     * - add the main role of the user to the list
-     *
-     * @param localUser The local user's data
-     * @return list of roles
-     */
-    public List<String> getRolesList(User localUser) {
-
-        List<String> allRoles = new ArrayList<>();
-
-        if (localUser.getAppSpecificRoles() != null) {
-            for (String role : localUser.getAppSpecificRolesString()) {
-                allRoles.add(role);
-            }
-        }
-
-        allRoles.add(localUser.getMainRole().getName().name());
-
-        return allRoles;
     }
 
     /**
@@ -497,6 +490,7 @@ public class UserService {
      *
      * @param token  The authorization token
      * @param userId The ID of the user to permanently delete
+     * @param hardDelete A boolean for soft or hard delete (default: false)
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
@@ -514,26 +508,90 @@ public class UserService {
                 });
     }
 
-    public UserDto getOrCreateUser(UserDto userDto){
-        
-        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
-        
-        Role role = roleRepository.findByName(RoleEnum.valueOf(userDto.getMainRole()))
-        .orElseThrow(() -> new RoleNotFoundException());
+    /**
+     * Updates a user's informations.
+     * 
+     * @param login The login (username) of the user to update
+     * @param newUser The updated user information
+     * @param token The authorization token for the request
+     * @return ResponseEntity containing the update result
+     */
+    public ResponseEntity<?> updateUser(String login, UserDto newUser, String token) {
 
-        Set<Role> appSpecificRoles = new HashSet<Role>();
-        
-        appSpecificRoles.add(role);
+        // Retrieve the existing user from the database
+        User existingUser = userRepository.findByLogin(login)
+            .orElseThrow(() -> new UserNotFoundException(login));
+
+        // Resolve the new main role (owned by spring-auth) from its enum name
+        MainRoleEnum newMainRole;
+        try {
+            newMainRole = MainRoleEnum.valueOf(newUser.getMainRole());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new RoleNotFoundException(newUser.getMainRole());
+        }
+
+        // Call the AuthClient to update the user in the global auth service
+        // If the response is not successful, return an error response
+        ResponseEntity<?> response = authClient.updateUser(token, login, newUser).block();
+        if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());
+        }
+
+        // Update the existing user's information with the new data in the local database
+        if (newUser.getAppSpecificRoles() != null){
+            Set<Role> newAppSpecificRoles = new HashSet<>();
+            for (String role : newUser.getAppSpecificRoles()) {
+                Role newRole = roleRepository.findByName(LocalRoleEnum.valueOf(role))
+                .orElseThrow(() -> new RoleNotFoundException(role));
+                newAppSpecificRoles.add(newRole);
+            }
+
+            existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
+        }
+
+        existingUser.setFirstName(newUser.getFirstName());
+        existingUser.setLastName(newUser.getLastName());
+        existingUser.setLogin(newUser.getLogin());
+        existingUser.setMainRole(newMainRole);
+
+        // Save modified Entity
+        userRepository.save(existingUser);
+
+        return ResponseEntity.ok().body(messageSource.getMessage("user.update.success", null, LocaleContextHolder.getLocale()));
+    }
+
+    /**
+     * Restores a soft-deleted user.
+     * @param userLogin The login of the user to restore
+     */
+    public void restoreUser(String userLogin) {
+        User userToRestore = userRepository.findByLogin(userLogin)
+                .orElseThrow(() -> new UserNotFoundException(userLogin));
+
+        // Change deleted value in the Entity
+        userToRestore.setDeleted(false);
+
+        // Save modified Entity
+        userRepository.save(userToRestore);
+    }
+
+    public UserDto getOrCreateUser(UserDto userDto){
+
+        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
 
         if(optionalUser.isEmpty()){
-            appSpecificRoles.add(role);
-            
+            MainRoleEnum mainRole;
+            try {
+                mainRole = MainRoleEnum.valueOf(userDto.getMainRole());
+            } catch (IllegalArgumentException | NullPointerException e) {
+                throw new RoleNotFoundException();
+            }
+
             User newUser = User.builder()
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
                 .login(userDto.getLogin())
-                .mainRole(role)
-                .appSpecificRoles(appSpecificRoles)
+                .mainRole(mainRole)
                 .build();
 
             userRepository.save(newUser);

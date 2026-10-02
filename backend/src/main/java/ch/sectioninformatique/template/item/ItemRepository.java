@@ -18,6 +18,20 @@ import jakarta.transaction.Transactional;
 public interface ItemRepository extends CrudRepository<Item, Long> {
 
     /**
+     * Finds all items that are not soft deleted.
+     *
+     * @return a list of non-deleted items
+     */
+    List<Item> findAllByDeletedFalse();
+
+    /**
+     * Finds only the items that are soft deleted.
+     *
+     * @return a list of soft-deleted items
+     */
+    List<Item> findAllByDeletedTrue();
+
+    /**
      * Finds all items, including soft deleted ones.
      *
      * @return a list of all items
@@ -42,4 +56,12 @@ public interface ItemRepository extends CrudRepository<Item, Long> {
     @Transactional
     @Query("DELETE FROM Item i WHERE i.id = :id")
     void deletePermanentlyById(Long id);
+
+    /**
+     * Deletes all items permantently.
+     */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Item")
+    void deleteAllPermanently();
 }

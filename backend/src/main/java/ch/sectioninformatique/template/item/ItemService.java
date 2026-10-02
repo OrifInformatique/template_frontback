@@ -2,11 +2,9 @@ package ch.sectioninformatique.template.item;
 
 import jakarta.persistence.EntityManager;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
@@ -108,21 +107,18 @@ public class ItemService {
     }
 
     /**
-     * Retrieves all items in the system.
+     * Retrieves items in the system, filtered by their soft-delete state.
      *
-     * @return An Iterable containing all items
+     * @param filter which subset of items to return: {@link DeletionFilter#ACTIVE},
+     *               {@link DeletionFilter#DELETED} or {@link DeletionFilter#ALL}
+     * @return the matching list of items
      */
-    public Iterable<Item> getItems(boolean includeDeleted)
-    {
-        Session session = entityManager.unwrap(Session.class);
-        if(includeDeleted) {
-            session.disableFilter("delete");
-        } else {
-            session.enableFilter("delete").setParameter("deleted", false);
-        }
-        List<Item> items = new ArrayList<>();
-        itemRepository.findAll().forEach(items::add);
-        return items;
+    public List<Item> getItems(DeletionFilter filter) {
+        return switch (filter) {
+            case ACTIVE -> itemRepository.findAllByDeletedFalse();
+            case DELETED -> itemRepository.findAllByDeletedTrue();
+            case ALL -> itemRepository.findAllIncludingDeleted();
+        };
     }
 
     /**

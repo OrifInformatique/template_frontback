@@ -4,6 +4,7 @@ package ch.sectioninformatique.template.auth;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -11,8 +12,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -20,9 +21,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static ch.sectioninformatique.template.RestDocsSensitiveDataMasking.maskSensitiveData;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import org.springframework.restdocs.snippet.Snippet;
+
+import ch.sectioninformatique.template.RestDocsSnippets;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -40,9 +46,7 @@ import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
-import ch.sectioninformatique.template.security.Role;
-import ch.sectioninformatique.template.security.RoleEnum;
-import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
@@ -74,9 +78,6 @@ public class AuthControllerTest {
     private UserService userService;
 
     @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
     private UserMapper userMapper;
 
     /** Provider for creating JWT tokens */
@@ -92,6 +93,11 @@ public class AuthControllerTest {
 
     @MockitoBean
     private AuthClient authClient; // mock this instead of the controller
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     /**
      * Helper method to generate a valid JWT token for the test user.
@@ -136,7 +142,8 @@ public class AuthControllerTest {
             MediaType contentType,
             int expectedStatus,
             String docsFileName,
-            Consumer<ResultActions> script) throws Exception {
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
 
         var requestType = get(endpoint);
 
@@ -174,9 +181,8 @@ public class AuthControllerTest {
             script.accept(request);
         }
 
-        // Generate a REST Docs snippet for the request/response pair
-        request.andDo(document("auth/" + docsFileName, preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())));
+        request.andDo(document("auth/" + docsFileName, preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()), snippets));
 
     }
 
@@ -198,7 +204,8 @@ public class AuthControllerTest {
             int expectedStatus,
             String docsFileName,
             Cookie cookie,
-            Consumer<ResultActions> script) throws Exception {
+            Consumer<ResultActions> script,
+            Snippet... snippets) throws Exception {
 
         var requestType = get(endpoint);
 
@@ -240,9 +247,8 @@ public class AuthControllerTest {
             script.accept(request);
         }
 
-        // Generate a REST Docs snippet for the request/response pair
-        request.andDo(document("auth/" + docsFileName, preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())));
+        request.andDo(document("auth/" + docsFileName, preprocessRequest(maskSensitiveData(), prettyPrint()),
+                preprocessResponse(maskSensitiveData(), prettyPrint()), snippets));
 
     }
 
@@ -288,7 +294,9 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.loginRequest(),
+                RestDocsSnippets.userResponse());
     }
 
     /**
@@ -331,8 +339,6 @@ public class AuthControllerTest {
     public void register_withValidData_shouldReturn200AndSaveUserToDatabase() throws Exception {
         // Create a new user DTO that doesn't exist yet in the database
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         
 
@@ -349,7 +355,7 @@ public class AuthControllerTest {
             .firstName("admin")
             .lastName("user")
             .login("admin.user@test.com")
-            .mainRole(adminRole)
+            .mainRole(MainRoleEnum.ADMIN)
             .build();
 
         
@@ -385,21 +391,20 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.registerRequest(),
+                RestDocsSnippets.userResponse());
     }
 
     @Transactional
     @Test
     public void register_withWrongPermission_shouldReturn403() throws Exception{
         
-        Role userRole =roleRepository.findByName(RoleEnum.USER)
-            .orElseThrow(() -> new RuntimeException("Role USER not found"));
-        
         User user = User.builder()
             .firstName("user")
             .lastName("test")
             .login("user.test@test.com")
-            .mainRole(userRole)
+            .mainRole(MainRoleEnum.USER)
             .build();
 
 
@@ -456,14 +461,12 @@ public class AuthControllerTest {
     @Transactional
     public void register_withExistingUser_shouldReturn409Conflict() throws Exception {
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         User adminUser = User.builder()
         .firstName("admin")
         .lastName("User")
         .login("admin.user@test.com")
-        .mainRole(adminRole)
+        .mainRole(MainRoleEnum.ADMIN)
         .build();
 
         UserDto adminDto = userMapper.toUserDto(adminUser);
@@ -529,7 +532,8 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.refreshResponse());
     }
 
     /**
@@ -593,7 +597,9 @@ public class AuthControllerTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                });
+                },
+                RestDocsSnippets.passwordUpdateRequest(),
+                RestDocsSnippets.messageResponse());
     }
 
     /**
@@ -703,14 +709,12 @@ public class AuthControllerTest {
     @Transactional
     public void register_withValidationError_shouldReturn400RegistrationFailed() throws Exception {
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         User newUser = User.builder()
         .firstName("test")
         .lastName("user")
         .login("invalid-email")
-        .mainRole(adminRole)
+        .mainRole(MainRoleEnum.ADMIN)
         .build();
 
         UserDto userDto = userMapper.toUserDto(newUser);
@@ -953,14 +957,12 @@ public class AuthControllerTest {
     @Transactional
     public void register_withDuplicateLogin_shouldReturn409Conflict() throws Exception {
 
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-			.orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
         User admin = User.builder()
         .firstName("admin")
         .lastName("user")
         .login("admin.user@test.com")
-        .mainRole(adminRole)
+        .mainRole(MainRoleEnum.ADMIN)
         .build();
 
         UserDto adminDto = userMapper.toUserDto(admin);
