@@ -71,7 +71,7 @@ public class UserAuthenticationProvider {
      * The token includes:
      * - User login as subject
      * - First name and last name as claims
-     * - Roles
+     * - Main role and permissions as claims, like a spring-auth token
      * - Issue time and expiration time (1 hour validity)
      *
      * @param user The user to create a token for
@@ -89,7 +89,6 @@ public class UserAuthenticationProvider {
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
-                .withClaim("appSpecificRoles", user.getAppSpecificRoles())
                 .withClaim("permissions", user.getPermissions())
                 .sign(algorithm);
     }
@@ -118,7 +117,6 @@ public class UserAuthenticationProvider {
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
-                .withClaim("appSpecificRoles", user.getAppSpecificRoles())
                 .withClaim("permissions", user.getPermissions())
                 .sign(algorithm);
     }
@@ -171,7 +169,6 @@ public class UserAuthenticationProvider {
                     .firstName(decoded.getClaim("firstName").asString())
                     .lastName(decoded.getClaim("lastName").asString())
                     .mainRole(decoded.getClaim("mainRole").asString())
-                    .appSpecificRoles(decoded.getClaim("appSpecificRoles").asList(String.class))
                     .permissions(decoded.getClaim("permissions").asList(String.class))
                     .build();
 
