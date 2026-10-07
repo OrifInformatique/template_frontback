@@ -1397,7 +1397,7 @@ public void restoreUser(String userLogin, String token)
 
 Restores a soft-deleted user.
 
-It first calls `authClient.restoreGlobalUser()` (`PUT /users/{login}/restore` on spring-auth) to restore the global user. spring-auth answers 404 when the global user is not soft-deleted, which is ignored; any other error is thrown as a `UserUpdateException`.
+It first calls `authClient.restoreGlobalUser()` (`PUT /users/{login}/restore` on spring-auth) to restore the global user (no error if it was not soft-deleted). A 404 from spring-auth means the global user does not exist and is thrown as a `UserNotFoundException`; any other error is thrown as a `UserUpdateException`. In both cases the local user is left unchanged.
 
 It then finds the local user and changes:
 
