@@ -600,16 +600,17 @@ public class UserService {
     }
 
     /**
-     * Returns all the permissions of a user authenticated by spring-auth.
+     * Adds the local data to a user authenticated by spring-auth.
      * This method:
      * - Gets or creates the matching local user and syncs its main role
+     * - Sets the user's app-specific roles, which spring-auth does not know
      * - Merges the global permissions granted by spring-auth (in the given DTO)
      *   with the local permissions of the user's main role and app-specific roles
      *
-     * @param authUser The user as returned by spring-auth, with its global permissions
-     * @return The global and local permissions of the user
+     * @param authUser The user as returned by spring-auth, updated in place
+     * @return The same user, with its local roles and all its permissions
      */
-    public List<String> getGlobalAndLocalPermissions(UserDto authUser) {
+    public UserDto addLocalRolesAndPermissions(UserDto authUser) {
         User localUser = getOrCreateAuthenticatedUser(authUser);
         updateMainRole(localUser, authUser);
 
@@ -618,6 +619,9 @@ public class UserService {
             permissions.addAll(authUser.getPermissions());
         }
         localUser.getAuthorities().forEach(authority -> permissions.add(authority.getAuthority()));
-        return new ArrayList<>(permissions);
+
+        authUser.setAppSpecificRoles(localUser.getAppSpecificRolesString().stream().sorted().toList());
+        authUser.setPermissions(new ArrayList<>(permissions));
+        return authUser;
     }
 }

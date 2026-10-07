@@ -307,6 +307,34 @@ public class AuthControllerTest {
     /**
      * Test: POST /auth/login
      *
+     * Verify that a local manager gets its local roles and permissions added to
+     * the response of spring-auth, which does not know about them.
+     */
+    @Test
+    @Transactional
+    public void login_asLocalManager_shouldReturnLocalRolesAndPermissions() throws Exception {
+        userService.promoteToLocalManagerRole("test.user@test.com");
+
+        // spring-auth returns no app-specific roles
+        UserDto testUser = SpringAuthPermissions.grant(userService.findByLogin("test.user@test.com"));
+        testUser.setAppSpecificRoles(null);
+
+        when(authClient.login(any(CredentialsDto.class)))
+                .thenReturn(Mono.just(ResponseEntity.ok().body(testUser)));
+
+        mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"login\":\"test.user@test.com\", \"password\":\"Secure123@Pass\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appSpecificRoles").value(
+                        org.hamcrest.Matchers.contains("LOCAL_MANAGER")))
+                .andExpect(jsonPath("$.permissions").value(
+                        org.hamcrest.Matchers.hasItems("user:read", "item:write", "ROLE_LOCAL_MANAGER")));
+    }
+
+    /**
+     * Test: POST /auth/login
+     *
      * Mock login failure with invalid credentials and expect 401.
      */
     @Test
