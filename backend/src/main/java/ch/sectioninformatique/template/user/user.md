@@ -1392,12 +1392,14 @@ Finally, the modified `User` Entity is saved using `userRepository.save()`.
 ### restoreUser()
 
 ```java
-public void restoreUser(Long userId)
+public void restoreUser(String userLogin, String token)
 ```
 
 Restores a soft-deleted user.
 
-It finds the user and changes:
+It first calls `authClient.restoreGlobalUser()` (`PUT /users/{login}/restore` on spring-auth) to restore the global user. spring-auth answers 404 when the global user is not soft-deleted, which is ignored; any other error is thrown as a `UserUpdateException`.
+
+It then finds the local user and changes:
 
 ```text
 deleted = true

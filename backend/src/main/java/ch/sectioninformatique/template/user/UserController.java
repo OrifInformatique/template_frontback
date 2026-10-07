@@ -311,13 +311,14 @@ public class UserController {
      * - Returns success/error message
      *
      * @param userLogin The login of the user to restore
+     * @param token The authorization token (Bearer token) for authentication
      * @return ResponseEntity with success message or error details
      */
     @PutMapping("/{userLogin}/restore")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> restoreUser(@PathVariable String userLogin) {
+    public ResponseEntity<?> restoreUser(@PathVariable String userLogin, @RequestHeader("Authorization") String token) {
 
-        userService.restoreUser(userLogin);
+        userService.restoreUser(userLogin, token);
         return ResponseEntity.ok().body("User restored successfully.");
     }
 }

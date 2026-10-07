@@ -559,12 +559,20 @@ public class UserService {
     }
 
     /**
-     * Restores a soft-deleted user.
+     * Restores a soft-deleted user globally (via AuthClient) and locally.
+     * The global user is restored only if it was soft-deleted in spring-auth.
+     *
      * @param userLogin The login of the user to restore
+     * @param token The authorization token for the request
+     * @throws UserNotFoundException if the local user is not found
+     * @throws UserUpdateException if the global restoration fails
      */
-    public void restoreUser(String userLogin) {
+    public void restoreUser(String userLogin, String token) {
         User userToRestore = userRepository.findByLogin(userLogin)
                 .orElseThrow(() -> new UserNotFoundException(userLogin));
+
+        // Restore the user in the global auth service (404 = global user was not deleted)
+        authClient.restoreGlobalUser(token, userLogin).block();
 
         // Change deleted value in the Entity
         userToRestore.setDeleted(false);

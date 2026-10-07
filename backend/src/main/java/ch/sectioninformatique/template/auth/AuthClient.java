@@ -373,6 +373,34 @@ public class AuthClient {
         }
 
         /**
+         * Restores a soft-deleted user by sending a restore request to the
+         * authentication provider.
+         * A 404 response is not treated as an error: spring-auth only finds
+         * soft-deleted users, so it means the global user was not deleted.
+         *
+         * @param token     The access token
+         * @param userLogin The login of the user to restore
+         * @return A Mono<ResponseEntity<String>> containing the restore response
+         *         (status 404 if the global user was not deleted)
+         * @throws UserUpdateException if the authentication service returns
+         *                             another error status
+         */
+        public Mono<ResponseEntity<String>> restoreGlobalUser(String token, String userLogin) {
+                return webClient.put()
+                                .uri(uriWithOptionalLang("/users/" + userLogin + "/restore")) // restore user endpoint path in authentication provider
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                // Global user not deleted: let the 404 response through
+                                .onStatus(status -> status.isSameCodeAs(HttpStatus.NOT_FOUND),
+                                                response -> Mono.empty())
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new UserUpdateException(
+                                                                                error.message()))))
+                                .toEntity(String.class);
+        }
+
+        /**
          * Promotes a user to manager role by sending a PUT request to the
          * authentication service.
          * This method makes an asynchronous HTTP call and handles potential errors by
