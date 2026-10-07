@@ -31,6 +31,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import org.springframework.restdocs.snippet.Snippet;
 
+import ch.sectioninformatique.template.security.SpringAuthPermissions;
 import ch.sectioninformatique.template.RestDocsSnippets;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -117,7 +118,7 @@ public class UserControllerTest {
         }
 
         // Create and return a real JWT token
-        return userAuthenticationProvider.createToken(userDto);
+        return userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
     }
 
     private String getMessage(String key, Object... args) {

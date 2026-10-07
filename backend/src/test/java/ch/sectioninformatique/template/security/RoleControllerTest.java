@@ -51,7 +51,7 @@ public class RoleControllerTest {
     /** A valid access token for a seeded user (any authenticated user may list roles). */
     private String token() {
         UserDto user = userService.findByLogin("test.user@test.com");
-        return userAuthenticationProvider.createToken(user);
+        return userAuthenticationProvider.createToken(SpringAuthPermissions.grant(user));
     }
 
     private void performRequest(

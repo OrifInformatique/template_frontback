@@ -5,16 +5,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserService;
 
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Test class for {@link UserAuthenticationProvider}.
@@ -100,12 +106,45 @@ class UserAuthenticationProviderTest {
     }
 
     /**
+     * Tests the validation of a token issued by spring-auth.
+     * Verifies that the authorities merge:
+     * - The global permissions from the token "permissions" claim
+     * - The local permissions of the user's main role
+     */
+    @Test
+    void testValidateTokenMergesGlobalAndLocalPermissions() {
+        // Given
+        UserDto user = UserDto.builder()
+                .login(TEST_LOGIN)
+                .firstName(TEST_FIRST_NAME)
+                .lastName(TEST_LAST_NAME)
+                .mainRole("USER")
+                .permissions(SpringAuthPermissions.of("USER"))
+                .build();
+        User localUser = User.builder()
+                .login(TEST_LOGIN)
+                .mainRole(MainRoleEnum.USER)
+                .build();
+        when(userService.getOrCreateAuthenticatedUser(any(UserDto.class))).thenReturn(localUser);
+        String token = authenticationProvider.createToken(user);
+
+        // When
+        Authentication authentication = authenticationProvider.validateToken(token);
+
+        // Then
+        Set<String> authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of("ROLE_USER", "user:read", "item:read"), authorities);
+    }
+
+    /**
      * Tests the authority building for a main role.
-     * The provider now derives authorities from {@link MainRoleEnum#getGrantedAuthorities()}
-     * (main role) merged with the user's local app-specific roles. Verifies that:
+     * {@link MainRoleEnum} only holds the local permissions of a main role; the
+     * global ones come from spring-auth in the token. Verifies that:
      * - Role is properly prefixed with "ROLE_"
-     * - Permissions are correctly converted to authorities
-     * - All authorities are included in the result
+     * - Local permissions are correctly converted to authorities
+     * - Global spring-auth permissions are not included
      */
     @Test
     void testMainRoleGrantedAuthorities() {
@@ -121,6 +160,8 @@ class UserAuthenticationProviderTest {
         assertTrue(authorities.stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
         assertTrue(authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("user:read")));
+                .anyMatch(auth -> auth.getAuthority().equals("item:read")));
+        assertFalse(authorities.stream()
+                .anyMatch(auth -> auth.getAuthority().startsWith("user:")));
     }
 } 

@@ -27,6 +27,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import org.springframework.restdocs.snippet.Snippet;
 
+import ch.sectioninformatique.template.security.SpringAuthPermissions;
 import ch.sectioninformatique.template.RestDocsSnippets;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -116,7 +117,7 @@ public class AuthControllerTest {
         }
 
         // Create and return a real JWT token
-        return userAuthenticationProvider.createToken(userDto);
+        return userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
     }
 
     /**
@@ -360,7 +361,7 @@ public class AuthControllerTest {
 
         
         UserDto adminDto = userMapper.toUserDto(adminUser);
-        String adminToken = userAuthenticationProvider.createToken(adminDto);
+        String adminToken = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         adminDto.setToken(adminToken);
 
 
@@ -418,7 +419,7 @@ public class AuthControllerTest {
                 .build();
 
         UserDto userDto = userMapper.toUserDto(user);
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         userDto.setToken(token);
         
         HttpHeaders headers = new HttpHeaders();
@@ -470,7 +471,7 @@ public class AuthControllerTest {
         .build();
 
         UserDto adminDto = userMapper.toUserDto(adminUser);
-        String adminToken = userAuthenticationProvider.createToken(adminDto);
+        String adminToken = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         adminDto.setToken(adminToken);
 
         when(authClient.register(anyString(), any(RegisterDto.class)))
@@ -506,7 +507,7 @@ public class AuthControllerTest {
         
 
         UserDto testUser = userService.findByLogin("test.user@test.com");
-        String newAccessToken = userAuthenticationProvider.createToken(testUser);
+        String newAccessToken = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(testUser));
         TokenResponseDto tokenResponse = new TokenResponseDto(newAccessToken);
 
         HttpHeaders headers = new HttpHeaders();
@@ -718,7 +719,7 @@ public class AuthControllerTest {
         .build();
 
         UserDto userDto = userMapper.toUserDto(newUser);
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         userDto.setToken(token);
 
         String errorDetail = "Invalid email format";
@@ -966,7 +967,7 @@ public class AuthControllerTest {
         .build();
 
         UserDto adminDto = userMapper.toUserDto(admin);
-        String token = userAuthenticationProvider.createToken(adminDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         adminDto.setToken(token);
 
         when(authClient.register(anyString(), any(RegisterDto.class)))

@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import tools.jackson.databind.ObjectMapper;
 
+import ch.sectioninformatique.template.security.SpringAuthPermissions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.RestDocsSnippets;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
@@ -84,7 +85,7 @@ public class ItemControllerTest {
         if (userDto == null) {
             throw new IllegalStateException("User " + login + " not found. Ensure TestUserSeeder has run.");
         }
-        return userAuthenticationProvider.createToken(userDto);
+        return userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
     }
 
     private User userEntity(String login) {

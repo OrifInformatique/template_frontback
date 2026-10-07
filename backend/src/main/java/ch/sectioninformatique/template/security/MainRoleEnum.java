@@ -6,10 +6,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_DELETE;
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_READ;
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_UPDATE;
-import static ch.sectioninformatique.template.security.PermissionEnum.USER_WRITE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_READ;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_WRITE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_UPDATE;
@@ -22,46 +18,43 @@ import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_DELET
  * <p>These roles are <b>not</b> persisted or managed by this application: they
  * are transmitted in the {@code mainRole} claim of the JWT issued by spring-auth.
  * This enum is only a read-only mirror of that vocabulary, kept here so the
- * backend can translate the {@code mainRole} claim into Spring Security
- * authorities for {@code @PreAuthorize} checks.
+ * backend can grant <b>local</b> permissions to each main role.
+ *
+ * <p>The <b>global</b> permissions of a main role (e.g. {@code user:read}) are
+ * owned by spring-auth and arrive in the JWT {@code permissions} claim; they must
+ * <b>not</b> be repeated here. Each constant only lists the permissions specific
+ * to this application, which are added on top of the ones from the token
+ * (see {@link UserAuthenticationProvider#validateToken(String)}).
  *
  * <p>Roles local to this application live in {@link LocalRoleEnum} instead.
  *
  * The roles are hierarchical:
- * - USER: Basic access to resources
- * - MANAGER: Extended access to user management
- * - ADMIN: Full access to all system features
+ * - USER: Read access to resources
+ * - MANAGER: Resources management, without deletion
+ * - ADMIN: Full access to Resources
  */
 public enum MainRoleEnum {
     /**
-     * Basic user role with limited permissions.
-     * Can only read user and item information.
+     * Basic user role.
+     * Can only read items.
      */
     USER("Basic user role with read-only access", EnumSet.of(
-            USER_READ,
             ITEM_READ)),
 
     /**
      * Manager role with extended permissions.
-     * Can manage users, but cannot delete them.
+     * Can manage items, but cannot delete them.
      */
-    MANAGER("Manager role with user and item management, without deletion", EnumSet.of(
-            USER_READ,
-            USER_WRITE,
-            USER_UPDATE,
+    MANAGER("Manager role with item management, without deletion", EnumSet.of(
             ITEM_READ,
             ITEM_WRITE,
             ITEM_UPDATE)),
 
     /**
-     * Administrator role with full system access.
-     * Has all permissions including deletion of users.
+     * Administrator role with full access to resources.
+     * Has all item permissions including deletion.
      */
-    ADMIN("Administrator role with full system access", EnumSet.of(
-            USER_READ,
-            USER_WRITE,
-            USER_UPDATE,
-            USER_DELETE,
+    ADMIN("Administrator role with full access to resources", EnumSet.of(
             ITEM_READ,
             ITEM_WRITE,
             ITEM_UPDATE,
@@ -70,7 +63,7 @@ public enum MainRoleEnum {
     /** Human-readable description of the role */
     private final String description;
 
-    /** Set of permissions associated with this role */
+    /** Set of local permissions associated with this role */
     private final Set<PermissionEnum> permissions;
 
     /**
@@ -94,9 +87,10 @@ public enum MainRoleEnum {
     }
 
     /**
-     * Returns the set of permissions associated with this role.
+     * Returns the set of local permissions associated with this role.
+     * Global permissions granted by spring-auth are not included.
      *
-     * @return The set of permissions for this role
+     * @return The set of local permissions for this role
      */
     public Set<PermissionEnum> getPermissions() {
         return permissions;
