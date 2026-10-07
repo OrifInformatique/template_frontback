@@ -262,8 +262,8 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void login_withValidCredentials_shouldReturn200AndSetCookie() throws Exception {
-        // Get real test user from database
-        UserDto testUser = userService.findByLogin("test.user@test.com");
+        // Get real test user from database, with the permissions spring-auth would return
+        UserDto testUser = SpringAuthPermissions.grant(userService.findByLogin("test.user@test.com"));
         testUser.setToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...");
 
         HttpHeaders headers = new HttpHeaders();
@@ -288,6 +288,10 @@ public class AuthControllerTest {
                         // Assert response body fields
                         response.andExpect(jsonPath("$.firstName").value("Test"));
                         response.andExpect(jsonPath("$.login").value("test.user@test.com"));
+
+                        // Assert global (spring-auth) and local permissions are merged
+                        response.andExpect(jsonPath("$.permissions").value(
+                                org.hamcrest.Matchers.hasItems("user:read", "item:read")));
 
                         // Assert refresh token cookie
                         response.andExpect(header().string(HttpHeaders.SET_COOKIE,

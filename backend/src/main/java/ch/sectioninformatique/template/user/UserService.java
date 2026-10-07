@@ -2,6 +2,7 @@ package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -596,5 +597,27 @@ public class UserService {
         }
 
         return userMapper.toUserDto(optionalUser.get());
+    }
+
+    /**
+     * Returns all the permissions of a user authenticated by spring-auth.
+     * This method:
+     * - Gets or creates the matching local user and syncs its main role
+     * - Merges the global permissions granted by spring-auth (in the given DTO)
+     *   with the local permissions of the user's main role and app-specific roles
+     *
+     * @param authUser The user as returned by spring-auth, with its global permissions
+     * @return The global and local permissions of the user
+     */
+    public List<String> getGlobalAndLocalPermissions(UserDto authUser) {
+        User localUser = getOrCreateAuthenticatedUser(authUser);
+        updateMainRole(localUser, authUser);
+
+        Set<String> permissions = new LinkedHashSet<>();
+        if (authUser.getPermissions() != null) {
+            permissions.addAll(authUser.getPermissions());
+        }
+        localUser.getAuthorities().forEach(authority -> permissions.add(authority.getAuthority()));
+        return new ArrayList<>(permissions);
     }
 }

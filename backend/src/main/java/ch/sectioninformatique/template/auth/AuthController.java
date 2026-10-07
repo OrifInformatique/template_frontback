@@ -73,6 +73,7 @@ public class AuthController {
      * Accepts login credentials (login and password) as a request body, validated
      * for correctness
      * Calls the authentication client to perform login with provided credentials
+     * Adds the local permissions to the global ones returned by spring-auth
      * Returns a reactive Mono<ResponseEntity<UserDto>>containing the login response
      * (e.g., token or
      * status message)
@@ -82,9 +83,14 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-        return authClient.login(credentialsDto)
+        ResponseEntity<UserDto> response = authClient.login(credentialsDto)
                 .onErrorResume(ex -> Mono.error(ex))
                 .block();
+
+        // spring-auth only knows the global permissions: add the local ones
+        UserDto user = response.getBody();
+        user.setPermissions(userService.getGlobalAndLocalPermissions(user));
+        return response;
     }
 
     /**
@@ -227,6 +233,7 @@ public class AuthController {
         UserDto loggedUser = userService.getOrCreateUser(user);
        
         loggedUser.setToken(user.getToken());
+        loggedUser.setPermissions(userService.getGlobalAndLocalPermissions(user));
         session.setAttribute("loggedUser", loggedUser);
 
         log.debug("Redirecting to: {}", afterOauth2LoginFrontendCallback);
