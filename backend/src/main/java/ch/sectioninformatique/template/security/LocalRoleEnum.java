@@ -9,7 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_READ;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_WRITE;
 import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_UPDATE;
-
+import static ch.sectioninformatique.template.security.PermissionEnum.ITEM_DELETE;
 /**
  * Enumeration of the <b>local roles</b>, which are defined only in this
  * application.
@@ -31,7 +31,8 @@ public enum LocalRoleEnum {
     LOCAL_MANAGER("Example of local application role", EnumSet.of(
             ITEM_READ,
             ITEM_WRITE,
-            ITEM_UPDATE));
+            ITEM_UPDATE,
+            ITEM_DELETE));
 
     /** Human-readable description, used when seeding the role into the database */
     private final String description;
