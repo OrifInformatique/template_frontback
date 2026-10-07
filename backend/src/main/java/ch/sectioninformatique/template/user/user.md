@@ -108,7 +108,7 @@ It communicates with the internal or external authentication service to :
 - `PUT /users/{userId}/downgrade-admin` :
     - Downgrade an Admin -> Manager
 
-- `PUT /users/{userId}/promote-local-app-role` :
+- `PUT /users/{userId}/promote-local-manager-role` :
     - Add local role
 
 - `PUT /users/{id}` :
@@ -1193,13 +1193,13 @@ user       |
 
 ## Role management
 
-### promoteToLocalAppRole()
+### promoteToLocalManagerRole()
 
 ```java
-public UserDto promoteToLocalAppRole(Long userId)
+public UserDto promoteToLocalManagerRole(Long userId)
 ```
 
-Adds the `LOCAL_APP_ROLE` to a user.
+Adds the `LOCAL_MANAGER` to a user.
 
 The method:
 
@@ -1495,7 +1495,7 @@ It handles:
 | User retrieval                 | `allUsers()`, `allWithDeletedUsers()`, `deletedUsers()`, `findByLogin()` |
 | User creation                  | `register()`, `getOrCreateUser()`                                        |
 | Authentication synchronization | `getOrCreateAuthenticatedUser()`                                         |
-| Role management                | `promoteToLocalAppRole()`, `updateMainRole()`, `getRolesList()`          |
+| Role management                | `promoteToLocalManagerRole()`, `updateMainRole()`, `getRolesList()`          |
 | User update                    | `updateUser()`                                                           |
 | Soft deletion                  | `deleteUser()`, `deleteUserByLogin()`                                    |
 | Permanent deletion             | `deleteUserPermanent()`, `deleteUserPermanentByLogin()`                  |

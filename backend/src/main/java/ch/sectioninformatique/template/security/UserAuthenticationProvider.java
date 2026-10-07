@@ -2,10 +2,14 @@ package ch.sectioninformatique.template.security;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.auth0.jwt.JWT;
@@ -67,7 +71,7 @@ public class UserAuthenticationProvider {
      * The token includes:
      * - User login as subject
      * - First name and last name as claims
-     * - Roles
+     * - Main role and permissions as claims, like a spring-auth token
      * - Issue time and expiration time (1 hour validity)
      *
      * @param user The user to create a token for
@@ -85,7 +89,7 @@ public class UserAuthenticationProvider {
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
-                .withClaim("appSpecificRoles", user.getAppSpecificRoles())
+                .withClaim("permissions", user.getPermissions())
                 .sign(algorithm);
     }
 
@@ -113,7 +117,7 @@ public class UserAuthenticationProvider {
                 .withClaim("firstName", user.getFirstName())
                 .withClaim("lastName", user.getLastName())
                 .withClaim("mainRole", user.getMainRole())
-                .withClaim("appSpecificRoles", user.getAppSpecificRoles())
+                .withClaim("permissions", user.getPermissions())
                 .sign(algorithm);
     }
 
@@ -125,6 +129,11 @@ public class UserAuthenticationProvider {
      * - Token expiration
      * - Token claims (user information)
      * 
+     * The resulting authorities are the global permissions granted by spring-auth
+     * (token {@code permissions} claim) merged with the local permissions of the
+     * user's main role ({@link MainRoleEnum}) and app-specific roles
+     * ({@link LocalRoleEnum}).
+     *
      * It also modify the local informations based on the the validated token
      * informations
      * - It add new validated user
@@ -160,7 +169,6 @@ public class UserAuthenticationProvider {
                     .firstName(decoded.getClaim("firstName").asString())
                     .lastName(decoded.getClaim("lastName").asString())
                     .mainRole(decoded.getClaim("mainRole").asString())
-                    .appSpecificRoles(decoded.getClaim("appSpecificRoles").asList(String.class))
                     .permissions(decoded.getClaim("permissions").asList(String.class))
                     .build();
 
@@ -168,9 +176,15 @@ public class UserAuthenticationProvider {
 
             userService.updateMainRole(localUser, currentUser);
 
-            // Authorities come from the synced local user: its main role (mirrored
-            // from the spring-auth token) plus its locally-managed app-specific roles.
-            var authorities = localUser.getAuthorities();
+            // Global permissions are granted by spring-auth in the token "permissions"
+            // claim. Local permissions come from the synced local user: those of its
+            // main role (MainRoleEnum) plus those of its app-specific roles.
+            Set<GrantedAuthority> authorities = new HashSet<>(localUser.getAuthorities());
+            if (currentUser.getPermissions() != null) {
+                currentUser.getPermissions().stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .forEach(authorities::add);
+            }
 
             return new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
         } catch (TokenExpiredException e) {

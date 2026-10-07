@@ -20,19 +20,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Entity class representing an item in the system.
  * This class maps to the 'items' table in the database and contains information
  * about items including their name, description, author, and timestamps.
  */
-@Data
+@Getter 
+@Setter 
 @Table(name = "items")
 @Entity
-@Builder
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE items SET deleted = true WHERE id = ?")
 public class Item {
@@ -82,30 +82,7 @@ public class Item {
     private Date updatedAt;
 
     @Column(nullable = false)
-    @Builder.Default
     private boolean deleted = false;
-
-    /**
-     * Default constructor for JPA.
-     */
-    public Item(
-        long id,
-        String name,
-        String description,
-        User author,
-        Date createdAt,
-        Date updatedAt,
-        boolean deleted
-    ) {
-        super();
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.author = author;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.deleted = deleted;
-    }
     
     /**
      * Creates a new item with the specified details.

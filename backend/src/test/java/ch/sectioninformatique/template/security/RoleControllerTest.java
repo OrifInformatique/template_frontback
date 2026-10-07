@@ -51,7 +51,7 @@ public class RoleControllerTest {
     /** A valid access token for a seeded user (any authenticated user may list roles). */
     private String token() {
         UserDto user = userService.findByLogin("test.user@test.com");
-        return userAuthenticationProvider.createToken(user);
+        return userAuthenticationProvider.createToken(SpringAuthPermissions.grant(user));
     }
 
     private void performRequest(
@@ -84,7 +84,7 @@ public class RoleControllerTest {
                 response -> {
                     try {
                         response.andExpect(jsonPath("$[*].type", Matchers.everyItem(Matchers.is("LOCAL"))));
-                        response.andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_APP_ROLE")));
+                        response.andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_MANAGER")));
                         response.andExpect(jsonPath("$[*].name", Matchers.not(Matchers.hasItem("ADMIN"))));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -122,7 +122,7 @@ public class RoleControllerTest {
                 response -> {
                     try {
                         response.andExpect(jsonPath("$[*].name", Matchers.hasItem("ADMIN")));
-                        response.andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_APP_ROLE")));
+                        response.andExpect(jsonPath("$[*].name", Matchers.hasItem("LOCAL_MANAGER")));
                         response.andExpect(jsonPath("$[*].type", Matchers.hasItems("MAIN", "LOCAL")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);

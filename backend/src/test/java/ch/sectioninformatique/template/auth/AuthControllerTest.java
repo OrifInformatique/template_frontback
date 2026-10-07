@@ -27,6 +27,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import org.springframework.restdocs.snippet.Snippet;
 
+import ch.sectioninformatique.template.security.SpringAuthPermissions;
 import ch.sectioninformatique.template.RestDocsSnippets;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -116,7 +117,7 @@ public class AuthControllerTest {
         }
 
         // Create and return a real JWT token
-        return userAuthenticationProvider.createToken(userDto);
+        return userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
     }
 
     /**
@@ -261,8 +262,8 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void login_withValidCredentials_shouldReturn200AndSetCookie() throws Exception {
-        // Get real test user from database
-        UserDto testUser = userService.findByLogin("test.user@test.com");
+        // Get real test user from database, with the permissions spring-auth would return
+        UserDto testUser = SpringAuthPermissions.grant(userService.findByLogin("test.user@test.com"));
         testUser.setToken("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...");
 
         HttpHeaders headers = new HttpHeaders();
@@ -288,6 +289,10 @@ public class AuthControllerTest {
                         response.andExpect(jsonPath("$.firstName").value("Test"));
                         response.andExpect(jsonPath("$.login").value("test.user@test.com"));
 
+                        // Assert global (spring-auth) and local permissions are merged
+                        response.andExpect(jsonPath("$.permissions").value(
+                                org.hamcrest.Matchers.hasItems("user:read", "item:read")));
+
                         // Assert refresh token cookie
                         response.andExpect(header().string(HttpHeaders.SET_COOKIE,
                                 org.hamcrest.Matchers.containsString("refresh_token=fakeToken123")));
@@ -297,6 +302,34 @@ public class AuthControllerTest {
                 },
                 RestDocsSnippets.loginRequest(),
                 RestDocsSnippets.userResponse());
+    }
+
+    /**
+     * Test: POST /auth/login
+     *
+     * Verify that a local manager gets its local roles and permissions added to
+     * the response of spring-auth, which does not know about them.
+     */
+    @Test
+    @Transactional
+    public void login_asLocalManager_shouldReturnLocalRolesAndPermissions() throws Exception {
+        userService.promoteToLocalManagerRole("test.user@test.com");
+
+        // spring-auth returns no app-specific roles
+        UserDto testUser = SpringAuthPermissions.grant(userService.findByLogin("test.user@test.com"));
+        testUser.setAppSpecificRoles(null);
+
+        when(authClient.login(any(CredentialsDto.class)))
+                .thenReturn(Mono.just(ResponseEntity.ok().body(testUser)));
+
+        mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"login\":\"test.user@test.com\", \"password\":\"Secure123@Pass\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.appSpecificRoles").value(
+                        org.hamcrest.Matchers.contains("LOCAL_MANAGER")))
+                .andExpect(jsonPath("$.permissions").value(
+                        org.hamcrest.Matchers.hasItems("user:read", "item:write", "ROLE_LOCAL_MANAGER")));
     }
 
     /**
@@ -360,7 +393,7 @@ public class AuthControllerTest {
 
         
         UserDto adminDto = userMapper.toUserDto(adminUser);
-        String adminToken = userAuthenticationProvider.createToken(adminDto);
+        String adminToken = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         adminDto.setToken(adminToken);
 
 
@@ -418,7 +451,7 @@ public class AuthControllerTest {
                 .build();
 
         UserDto userDto = userMapper.toUserDto(user);
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         userDto.setToken(token);
         
         HttpHeaders headers = new HttpHeaders();
@@ -470,7 +503,7 @@ public class AuthControllerTest {
         .build();
 
         UserDto adminDto = userMapper.toUserDto(adminUser);
-        String adminToken = userAuthenticationProvider.createToken(adminDto);
+        String adminToken = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         adminDto.setToken(adminToken);
 
         when(authClient.register(anyString(), any(RegisterDto.class)))
@@ -506,7 +539,7 @@ public class AuthControllerTest {
         
 
         UserDto testUser = userService.findByLogin("test.user@test.com");
-        String newAccessToken = userAuthenticationProvider.createToken(testUser);
+        String newAccessToken = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(testUser));
         TokenResponseDto tokenResponse = new TokenResponseDto(newAccessToken);
 
         HttpHeaders headers = new HttpHeaders();
@@ -718,7 +751,7 @@ public class AuthControllerTest {
         .build();
 
         UserDto userDto = userMapper.toUserDto(newUser);
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         userDto.setToken(token);
 
         String errorDetail = "Invalid email format";
@@ -966,7 +999,7 @@ public class AuthControllerTest {
         .build();
 
         UserDto adminDto = userMapper.toUserDto(admin);
-        String token = userAuthenticationProvider.createToken(adminDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         adminDto.setToken(token);
 
         when(authClient.register(anyString(), any(RegisterDto.class)))

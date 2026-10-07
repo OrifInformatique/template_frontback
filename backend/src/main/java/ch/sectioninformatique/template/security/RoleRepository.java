@@ -3,7 +3,6 @@ package ch.sectioninformatique.template.security;
 import java.util.Optional;
 
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 
 /**
  * Repository interface for Role entity operations.
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Repository;
  * - Perform role-based queries
  * - Support role management operations
  */
-@Repository
 public interface RoleRepository extends CrudRepository<Role, Long> {
     /**
      * Finds a local role by its name.

@@ -1,14 +1,13 @@
 package ch.sectioninformatique.template.user;
 
+import java.util.Arrays;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import ch.sectioninformatique.template.security.MainRoleEnum;
-
-import org.springframework.core.annotation.Order;
-
-import java.util.Arrays;
 
 /**
  * Seeder class for initializing the database with default user data.

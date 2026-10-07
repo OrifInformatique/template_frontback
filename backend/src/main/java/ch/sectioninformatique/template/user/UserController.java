@@ -263,7 +263,7 @@ public class UserController {
     }
 
     /**
-     * Promotes a user to a local app role.
+     * Promotes a user to the local manager role.
      * This endpoint:
      * - Requires the 'user:update' authority
      * - Validates the user exists and has not already the role
@@ -272,10 +272,10 @@ public class UserController {
      * @param userId The ID of the user to promote
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userLogin}/promote-local-app-role")
+    @PutMapping("/{userLogin}/promote-local-manager-role")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToLocalAppRole(@PathVariable String userLogin) {
-            userService.promoteToLocalAppRole(userLogin);
+    public ResponseEntity<?> promoteToLocalManagerRole(@PathVariable String userLogin) {
+            userService.promoteToLocalManagerRole(userLogin);
             String message = messageSource.getMessage(
                 "user.promoted.local",
                 null,
@@ -299,7 +299,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:update')")
     public ResponseEntity<?> updateUser(@PathVariable String userLogin, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
 
-        ResponseEntity<?> reponse = userService.updateUser(userLogin, user, token);
+        ResponseEntity<?> reponse = userService.updateUser(userLogin,user, token);
         return reponse;
     }
 

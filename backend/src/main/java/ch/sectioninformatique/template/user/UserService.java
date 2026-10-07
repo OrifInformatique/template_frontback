@@ -2,13 +2,12 @@ package ch.sectioninformatique.template.user;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -68,18 +67,17 @@ public class UserService {
     private final RoleRepository roleRepository;
 
     /** Client for authentication operations */
-    @Autowired
-    private @Lazy AuthClient authClient;
+    private final AuthClient authClient;
 
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to a local app role.
+     * Promotes a user to the local manager role.
      * This operation:
      * - Verifies the user exists
-     * - Checks if the user already has the local app role
-     * - Removes existing roles and assigns the local app role
+     * - Checks if the user already has the local manager role
+     * - Removes existing roles and assigns the local manager role
      *
      * @param userId The ID of the user to promote
      * @return UserDto containing the updated user's information
@@ -88,19 +86,19 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalAppRole(@NonNull String userLogin) {
+    public UserDto promoteToLocalManagerRole(@NonNull String userLogin) {
         try {
             User user = userRepository.findByLogin(userLogin)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
-                if (role.getName().equals(LocalRoleEnum.LOCAL_APP_ROLE)) {
-                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_APP_ROLE.name());
+                if (role.getName().equals(LocalRoleEnum.LOCAL_MANAGER)) {
+                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_MANAGER.name());
                 }
             }
 
-            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_APP_ROLE)
-                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_APP_ROLE.name()));
+            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER)
+                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_MANAGER.name()));
 
             user.getAppSpecificRoles().add(testAdminRole);
             userRepository.save(user);
@@ -261,11 +259,13 @@ public class UserService {
 
                 localUser = this.register(newUser);
             }
-
+            
+            userRepository.save(localUser);
             return localUser;
         } catch (DuplicateUserException | DefaultRoleNotFoundException | UserCreationException e) {
             throw e;
         } catch (Exception e) {
+            log.error("ERROR : {} | Message : {} | StackTrace : {}", e.getClass(), e.getMessage(), e.getStackTrace());
             throw new UserCreationException(e.getMessage());
         }
     }
@@ -290,6 +290,9 @@ public class UserService {
                 localUser.setMainRole(MainRoleEnum.valueOf(currentUser.getMainRole()));
                 userRepository.save(localUser);
             }
+        }
+        catch (RoleNotFoundException e) {
+            throw e;
         } catch (IllegalArgumentException e) {
             throw new RoleNotFoundException(currentUser.getMainRole());
         } catch (Exception e) {
@@ -594,5 +597,31 @@ public class UserService {
         }
 
         return userMapper.toUserDto(optionalUser.get());
+    }
+
+    /**
+     * Adds the local data to a user authenticated by spring-auth.
+     * This method:
+     * - Gets or creates the matching local user and syncs its main role
+     * - Sets the user's app-specific roles, which spring-auth does not know
+     * - Merges the global permissions granted by spring-auth (in the given DTO)
+     *   with the local permissions of the user's main role and app-specific roles
+     *
+     * @param authUser The user as returned by spring-auth, updated in place
+     * @return The same user, with its local roles and all its permissions
+     */
+    public UserDto addLocalRolesAndPermissions(UserDto authUser) {
+        User localUser = getOrCreateAuthenticatedUser(authUser);
+        updateMainRole(localUser, authUser);
+
+        Set<String> permissions = new LinkedHashSet<>();
+        if (authUser.getPermissions() != null) {
+            permissions.addAll(authUser.getPermissions());
+        }
+        localUser.getAuthorities().forEach(authority -> permissions.add(authority.getAuthority()));
+
+        authUser.setAppSpecificRoles(localUser.getAppSpecificRolesString().stream().sorted().toList());
+        authUser.setPermissions(new ArrayList<>(permissions));
+        return authUser;
     }
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.ResultActions;
+import ch.sectioninformatique.template.security.SpringAuthPermissions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthClient;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
@@ -148,7 +149,7 @@ public class TestControllerTest {
     public void getHello_withRealData_shouldReturnSuccess() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         performRequest(
                 "GET",
                 "/tests/",
@@ -227,7 +228,7 @@ public class TestControllerTest {
     public void getHello_withExpiredToken_shouldReturnUnauthorized() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
-        String token = userAuthenticationProvider.createToken(userDto, Date.from(
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto), Date.from(
                 Instant.now().minus(2, ChronoUnit.HOURS)));
         performRequest(
                 "GET",
@@ -260,7 +261,7 @@ public class TestControllerTest {
     public void me_withRealData_shouldReturnSuccess() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         performRequest(
                 "GET",
                 "/tests/me",
@@ -349,7 +350,7 @@ public class TestControllerTest {
     public void me_withExpiredToken_shouldReturnUnauthorized() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
-        String token = userAuthenticationProvider.createToken(userDto, Date.from(
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto), Date.from(
                 Instant.now().minus(2, ChronoUnit.HOURS)));
         performRequest(
                 "GET",
@@ -374,7 +375,7 @@ public class TestControllerTest {
      *
      * Ensures that an admin user can promote another user to a "test admin" role.
      * Verifies the response contains a "message" field and that the User did get
-     * the LOCAL_APP_ROLE role.
+     * the LOCAL_MANAGER role.
      * 
      * @throws Exception
      */
@@ -385,7 +386,7 @@ public class TestControllerTest {
 
         UserDto adminDto = userService.findByLogin("test.admin@test.com");
 
-        String token = userAuthenticationProvider.createToken(adminDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         performRequest(
                 "PUT",
                 "/tests/" + userDto.getLogin() + "/promote-test",
@@ -401,7 +402,7 @@ public class TestControllerTest {
 
                         UserDto updatedUser = userService.findByLogin("test.user@test.com");
 
-                        assertTrue(updatedUser.getAppSpecificRoles().stream().anyMatch(e -> e == "LOCAL_APP_ROLE"));
+                        assertTrue(updatedUser.getAppSpecificRoles().stream().anyMatch(e -> e == "LOCAL_MANAGER"));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -480,7 +481,7 @@ public class TestControllerTest {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
         UserDto adminDto = userService.findByLogin("test.admin@test.com");
-        String token = userAuthenticationProvider.createToken(adminDto, Date.from(
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto), Date.from(
                 Instant.now().minus(2, ChronoUnit.HOURS)));
         performRequest(
                 "PUT",
@@ -512,7 +513,7 @@ public class TestControllerTest {
     public void promoteToTestAdmin_asNonAdmin_shouldReturnForbidden() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         performRequest(
                 "PUT",
                 "/tests/" + userDto.getId() + "/promote-test",
@@ -543,7 +544,7 @@ public class TestControllerTest {
     public void promoteToTestAdmin_userNotFound_shouldReturnNotFound() throws Exception {
         UserDto adminDto = userService.findByLogin("test.admin@test.com");
 
-        String token = userAuthenticationProvider.createToken(adminDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
 
         String fakeUserId = "9999";
 
@@ -576,7 +577,7 @@ public class TestControllerTest {
     public void all_withRealData_shouldReturnSuccess() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
-        String token = userAuthenticationProvider.createToken(userDto);
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto));
         performRequest(
                 "GET",
                 "/tests/all",
@@ -659,7 +660,7 @@ public class TestControllerTest {
     public void all_withExpiredToken_shouldReturnUnauthorized() throws Exception {
         UserDto userDto = userService.findByLogin("test.user@test.com");
 
-        String token = userAuthenticationProvider.createToken(userDto, Date.from(
+        String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(userDto), Date.from(
                 Instant.now().minus(2, ChronoUnit.HOURS)));
         performRequest(
                 "GET",

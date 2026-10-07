@@ -183,25 +183,19 @@ Both user collections use `@JsonIgnore` to prevent the users from being included
 
 ---
 
-## *RoleEnum.java*
+## *MainRoleEnum.java* and *LocalRoleEnum.java*
 
-`RoleEnum` is an enumeration that defines the roles available in the application and the permissions associated with each role.
+Roles come in two kinds, each with its own enumeration.
 
-It contains :
+`MainRoleEnum` mirrors the **main roles** owned by the `spring-auth` application (`USER`, `MANAGER`, `ADMIN`). The global permissions of these roles (e.g. `user:read`) are granted by `spring-auth` and arrive in the JWT `permissions` claim, so they are **not** repeated here. Each main role only lists the **local** permissions this application adds on top of them:
 
-* `USER`,
-* `MANAGER`,
-* `ADMIN`,
-* `LOCAL_APP_ROLE`
+* `USER` → can read items.
+* `MANAGER` → can read, create, and update items.
+* `ADMIN` → has all item permissions, including deletion.
 
-Each role has a predefined set of `PermissionEnum` permissions.
+`LocalRoleEnum` defines the **local roles** (e.g. `LOCAL_MANAGER`), which exist only in this application, are persisted in the `roles` table and are never transmitted from the `spring-auth` application.
 
-* `USER` → can read users and items.
-* `MANAGER` → can read, create, and update users and items.
-* `ADMIN` → has all available permissions, including deletion.
-* `LOCAL_APP_ROLE` → provides application-specific permissions and is not transmitted from the `spring-auth` application.
-
-The `getPermissions()` method returns the permissions associated with a role.
+The `getPermissions()` method returns the local permissions associated with a role.
 
 The `getGrantedAuthorities()` method converts these permissions into Spring Security `SimpleGrantedAuthority` objects and also adds the role itself as a `ROLE_*` authority.
 
@@ -252,7 +246,7 @@ It creates the following roles if they do not exist :
 * `USER` → default user role,
 * `MANAGER` → manager role,
 * `ADMIN` → administrator role,
-* `LOCAL_APP_ROLE` → role specific to the application.
+* `LOCAL_MANAGER` → role specific to the application.
 
 Each newly created role is given its corresponding `RoleEnum` value and description before being saved using `RoleRepository`.
 
@@ -444,11 +438,13 @@ The token contains :
 
 The token is valid for **1 hour** and is signed using the configured secret key.
 
-### `buildAuthorities()`
+### Authorities
 
-Converts the user's roles into Spring Security authorities.
+The authorities of an authenticated user are the union of:
 
-Each role is converted using `RoleEnum.getGrantedAuthorities()`, which provides both the role authority and its associated permissions.
+* the global permissions granted by `spring-auth` in the token `permissions` claim,
+* the local permissions of the user's main role (`MainRoleEnum.getGrantedAuthorities()`),
+* the permissions of the user's app-specific roles (`LocalRoleEnum.getGrantedAuthorities()`).
 
 ### `validateToken()`
 

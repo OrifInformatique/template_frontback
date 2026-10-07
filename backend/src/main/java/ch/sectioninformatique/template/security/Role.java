@@ -62,7 +62,7 @@ public class Role {
      * - Is unique across all roles
      * - Cannot be null
      * - Is stored as a string in the database
-     * - Maps to predefined local role types (e.g. LOCAL_APP_ROLE)
+     * - Maps to predefined local role types (e.g. LOCAL_MANAGER)
      */
     @Column(unique = true, nullable = false)
     @Enumerated(EnumType.STRING)
