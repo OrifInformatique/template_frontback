@@ -387,7 +387,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getLogin() + "?global=false&hard=false",
+                "/users/" + userToDelete.getId() + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -432,7 +432,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + admin2User.getLogin() + "?global=true&hard=false",
+                "/users/" + admin2User.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -475,7 +475,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + managerUser.getLogin() + "?global=true&hard=false",
+                "/users/" + managerUser.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -514,7 +514,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
+                "/users/" + userToPromote.getId() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -545,7 +545,7 @@ public class UserControllerTest {
         // First promotion should succeed
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
+                "/users/" + userToPromote.getId() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -558,7 +558,7 @@ public class UserControllerTest {
         // Second promotion attempt should fail with 409 Conflict
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
+                "/users/" + userToPromote.getId() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 409,
@@ -596,7 +596,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
+                "/users/" + userToDelete.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -865,7 +865,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-            "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
+            "/users/" + userToDelete.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -923,7 +923,7 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Temporary user should exist");
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getLogin() + "?global=false&hard=true",
+                "/users/" + userToDelete.getId() + "?global=false&hard=true",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -988,7 +988,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-            "/users/" + userToDelete.getLogin() + "?global=true&hard=true",
+            "/users/" + userToDelete.getId() + "?global=true&hard=true",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1050,7 +1050,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-            "/users/" + userToPromote.getLogin() + "/promote-manager",
+            "/users/" + userToPromote.getId() + "/promote-manager",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1075,7 +1075,7 @@ public class UserControllerTest {
     public void promoteToManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.user@test.com/promote-manager",
+                "/users/1/promote-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1109,7 +1109,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-            "/users/" + userToRevoke.getLogin() + "/revoke-manager",
+            "/users/" + userToRevoke.getId() + "/revoke-manager",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1134,7 +1134,7 @@ public class UserControllerTest {
     public void revokeManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.user@test.com/revoke-manager",
+                "/users/1/revoke-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1168,7 +1168,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-            "/users/" + userToPromote.getLogin() + "/promote-admin",
+            "/users/" + userToPromote.getId() + "/promote-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1193,7 +1193,7 @@ public class UserControllerTest {
     public void promoteToAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.user@test.com/promote-admin",
+                "/users/1/promote-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1227,7 +1227,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-            "/users/" + userToRevoke.getLogin() + "/revoke-admin",
+            "/users/" + userToRevoke.getId() + "/revoke-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1286,7 +1286,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-            "/users/" + userToDowngrade.getLogin() + "/downgrade-admin",
+            "/users/" + userToDowngrade.getId() + "/downgrade-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1311,7 +1311,7 @@ public class UserControllerTest {
     public void downgradeAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.admin@test.com/downgrade-admin",
+                "/users/1/downgrade-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1339,7 +1339,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + targetUser.getLogin() + "?global=false&hard=false",
+                "/users/" + targetUser.getId() + "?global=false&hard=false",
                 userToken,
                 MediaType.APPLICATION_JSON,
                 403,

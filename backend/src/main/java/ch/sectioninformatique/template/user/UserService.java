@@ -86,9 +86,9 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalManagerRole(@NonNull String userLogin) {
+    public UserDto promoteToLocalManagerRole(@NonNull Long userId) {
         try {
-            User user = userRepository.findByLogin(userLogin)
+            User user = userRepository.findById(userId)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
@@ -311,10 +311,10 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUser(@NonNull String userLogin) {
+    public UserDto deleteUser(@NonNull Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(userLogin)
+            User userToDelete = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
@@ -338,10 +338,10 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
-    public UserDto deleteUserPermanent(@NonNull String userLogin) {
+    public UserDto deleteUserPermanent(@NonNull Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(userLogin)
+            User userToDelete = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
@@ -365,11 +365,11 @@ public class UserService {
      * @throws UserNotFoundByLoginException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUserByLogin(String login) {
+    public UserDto deleteUserById(Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new UserNotFoundByLoginException(login));
+            User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundByLoginException(userId.toString()));
 
             // Delete the user
             userRepository.deleteById(userToDelete.getId());
@@ -392,11 +392,11 @@ public class UserService {
      * @throws UserNotFoundByLoginException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
-    public UserDto deleteUserPermanentByLogin(String login) {
+    public UserDto deletePermanentById(Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new UserNotFoundByLoginException(login));
+            User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundByLoginException(userId.toString()));
 
             // Delete the user
             userRepository.deletePermanentlyById(userToDelete.getId());
@@ -417,6 +417,48 @@ public class UserService {
      *
      * @param login The login of the user to find
      * @return UserDto containing the user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto findById(Long userId) {
+        log.debug("Searching for user with login: {}", userId);
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            log.debug("User found in database: {}", userOptional.isPresent());
+
+            User user = userOptional
+                    .orElseThrow(() -> {
+                        log.error("User not found with login: {}", userId);
+                        return new UserNotFoundByLoginException(userId.toString());
+                    });
+
+            if (user.isDeleted()) {
+                throw new InactiveUserException("user.inactive.orDeleted");
+            }
+
+            log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
+                    user.getId(), user.getFirstName(), user.getLastName(),
+                    user.getMainRole());
+
+            UserDto userDto = userMapper.toUserDto(user);
+            log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
+                    userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
+
+            return userDto;
+        } catch (UserNotFoundByLoginException | InactiveUserException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserRetrievalException(e.getMessage());
+        }
+    }
+
+    /**
+     * Find a user by their login.
+     * This method:
+     * - Searches the database for a user with the specified login
+     * - Throws an exception if the user is not found
+     * 
+     * @param userLogin
+     * @return a UserDto containing the user's information
      * @throws AppException if the user is not found
      */
     public UserDto findByLogin(String login) {
@@ -464,12 +506,12 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, String userLogin) {
-        return authClient.deleteGlobalUser(token, userLogin)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
+        return authClient.deleteGlobalUser(token, userId)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserByLogin(body.get("deletedUserLogin"));
+                        deleteUserByLogin(Long.valueOf(body.get("deletedUserLogin")));
                         return reactor.core.publisher.Mono.just(body.get("message"));
                     } else {
                         return reactor.core.publisher.Mono.error(
@@ -492,12 +534,12 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, String userLogin) {
-        return authClient.deleteGlobalUserPermanent(token, userLogin)
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
+        return authClient.deleteGlobalUserPermanent(token, userId)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserPermanentByLogin(body.get("deletedUserLogin"));
+                        deletePermanentById(Long.valueOf(body.get("deletedUserLogin")));
                         return reactor.core.publisher.Mono.just(body.get("message"));
                     } else {
                         return reactor.core.publisher.Mono.error(
@@ -514,11 +556,11 @@ public class UserService {
      * @param token The authorization token for the request
      * @return ResponseEntity containing the update result
      */
-    public ResponseEntity<?> updateUser(String login, UserDto newUser, String token) {
+    public ResponseEntity<?> updateUser(Long userId, UserDto newUser, String token) {
 
         // Retrieve the existing user from the database
-        User existingUser = userRepository.findByLogin(login)
-            .orElseThrow(() -> new UserNotFoundException(login));
+        User existingUser = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException(userId.toString()));
 
         // Resolve the new main role (owned by spring-auth) from its enum name
         MainRoleEnum newMainRole;
@@ -530,7 +572,7 @@ public class UserService {
 
         // Call the AuthClient to update the user in the global auth service
         // If the response is not successful, return an error response
-        ResponseEntity<?> response = authClient.updateUser(token, login, newUser).block();
+        ResponseEntity<?> response = authClient.updateUser(token, userId, newUser).block();
         if (response == null || !response.getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());
         }
@@ -568,12 +610,12 @@ public class UserService {
      *         if the global user is not found
      * @throws UserUpdateException if the global restoration fails
      */
-    public void restoreUser(String userLogin, String token) {
-        User userToRestore = userRepository.findByLogin(userLogin)
-                .orElseThrow(() -> new UserNotFoundException(userLogin));
+    public void restoreUser(Long userId, String token) {
+        User userToRestore = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
 
         // Restore the user in the global auth service
-        authClient.restoreGlobalUser(token, userLogin).block();
+        authClient.restoreGlobalUser(token, userId).block();
 
         // Change deleted value in the Entity
         userToRestore.setDeleted(false);
