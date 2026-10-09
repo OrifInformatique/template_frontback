@@ -30,10 +30,10 @@ const ItemDetail = ({ item, onClose }) => {
                         </span>
                     </span>
 
-                    <span className="text-sm font-medium text-gray-500">{t("created_at", "Created At")}</span>
+                    <span className="text-sm font-medium text-gray-500">{t("createdAt", "Created At")}</span>
                     <span className="text-sm text-gray-900">{new Date(item.createdAt).toLocaleString()}</span>
 
-                    <span className="text-sm font-medium text-gray-500">{t("updated_at", "Updated At")}</span>
+                    <span className="text-sm font-medium text-gray-500">{t("updatedAt", "Updated At")}</span>
                     <span className="text-sm text-gray-900">{new Date(item.updatedAt).toLocaleString()}</span>
                 </div>
             </div>
