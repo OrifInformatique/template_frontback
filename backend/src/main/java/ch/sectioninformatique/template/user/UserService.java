@@ -511,7 +511,7 @@ public class UserService {
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserByLogin(Long.valueOf(body.get("deletedUserLogin")));
+                        deleteUserById(Long.valueOf(body.get("deletedUserLogin")));
                         return reactor.core.publisher.Mono.just(body.get("message"));
                     } else {
                         return reactor.core.publisher.Mono.error(
