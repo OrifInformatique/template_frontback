@@ -162,9 +162,8 @@ public class UserController {
     public Mono<ResponseEntity<String>> promoteToManager(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to promote user to manager globally
-        UserDto user = userService.findById(userId); //!!! A supprimer quand AuthClient sera modifié !!!
 
-        return authClient.promoteToManager(token, user.getLogin())
+        return authClient.promoteToManager(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -187,9 +186,8 @@ public class UserController {
     public Mono<ResponseEntity<String>> revokeManager(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
         // Call auth service to revoke manager role from user globally
-        UserDto user = userService.findById(userId); //!!! A supprimer quand AuthClient sera modifié !!!
 
-        return authClient.revokeManager(token, user.getLogin())
+        return authClient.revokeManager(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -211,11 +209,9 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:update')")
     public Mono<ResponseEntity<String>> promoteToAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
-
-        UserDto user = userService.findById(userId); //!!! A supprimer quand AuthClient sera modifié !!!
             
         // Call auth service to promote user to admin globally
-        return authClient.promoteToAdmin(token, user.getLogin())
+        return authClient.promoteToAdmin(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -239,9 +235,8 @@ public class UserController {
             @PathVariable Long userId) {
         // Call auth service to revoke admin role from user globally
 
-        UserDto user = userService.findById(userId); //!!! A supprimer quand AuthClient sera modifié !!!
 
-        return authClient.revokeAdmin(token, user.getLogin())
+        return authClient.revokeAdmin(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });
@@ -265,10 +260,8 @@ public class UserController {
     public Mono<ResponseEntity<String>> downgradeAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
 
-                UserDto user = userService.findById(userId); //!!! A supprimer quand AuthClient sera modifié !!!
-
         // Call auth service to downgrade admin to manager globally
-        return authClient.downgradeAdmin(token, user.getLogin())
+        return authClient.downgradeAdmin(token, userId)
                 .flatMap(response -> {
                     return Mono.just(response);
                 });

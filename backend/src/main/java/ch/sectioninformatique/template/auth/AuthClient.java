@@ -333,9 +333,9 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
          *         response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, String userLogin) {
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
                 return webClient.delete()
-                                .uri(uriWithOptionalLang("/users/" + userLogin  + "/false")) // soft delete user endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/users/" + userId  + "/false")) // soft delete user endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
@@ -357,9 +357,9 @@ public class AuthClient {
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
          *         deletion response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, String userLogin) {
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
                 return webClient.delete()
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/true")) // permanent delete user endpoint path in
+                                .uri(uriWithOptionalLang("/users/" + userId + "/true")) // permanent delete user endpoint path in
                                                                         // authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
@@ -378,15 +378,15 @@ public class AuthClient {
          * Restoring a global user that was not soft-deleted is not an error.
          *
          * @param token     The access token
-         * @param userLogin The login of the user to restore
+         * @param userId The login of the user to restore
          * @return A Mono<ResponseEntity<String>> containing the restore response
          * @throws UserNotFoundException if the global user does not exist
          * @throws UserUpdateException if the authentication service returns
          *                             another error status
          */
-        public Mono<ResponseEntity<String>> restoreGlobalUser(String token, String userLogin) {
+        public Mono<ResponseEntity<String>> restoreGlobalUser(String token, Long userId) {
                 return webClient.put()
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/restore")) // restore user endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/users/" + userId + "/restore")) // restore user endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.isSameCodeAs(HttpStatus.NOT_FOUND),
@@ -412,10 +412,10 @@ public class AuthClient {
          * @throws AppException if the authentication service returns an error status
          *                      (4xx or 5xx)
          */
-        public Mono<ResponseEntity<String>> promoteToManager(String token, String userLogin) {
+        public Mono<ResponseEntity<String>> promoteToManager(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/promote-manager"))
+                                .uri(uriWithOptionalLang("/users/" + userId + "/promote-manager"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -449,10 +449,10 @@ public class AuthClient {
          * @throws AppException if the authentication service returns an error status
          *                      (4xx or 5xx)
          */
-        public Mono<ResponseEntity<String>> revokeManager(String token, String userLogin) {
+        public Mono<ResponseEntity<String>> revokeManager(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/revoke-manager"))
+                                .uri(uriWithOptionalLang("/users/" + userId + "/revoke-manager"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -486,10 +486,10 @@ public class AuthClient {
          * @throws AppException if the authentication service returns an error status
          *                      (4xx or 5xx)
          */
-        public Mono<ResponseEntity<String>> promoteToAdmin(String token, String userLogin) {
+        public Mono<ResponseEntity<String>> promoteToAdmin(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/promote-admin"))
+                                .uri(uriWithOptionalLang("/users/" + userId + "/promote-admin"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -523,10 +523,10 @@ public class AuthClient {
          * @throws AppException if the authentication service returns an error status
          *                      (4xx or 5xx)
          */
-        public Mono<ResponseEntity<String>> revokeAdmin(String token, String userLogin) {
+        public Mono<ResponseEntity<String>> revokeAdmin(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/revoke-admin"))
+                                .uri(uriWithOptionalLang("/users/" + userId + "/revoke-admin"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -561,10 +561,10 @@ public class AuthClient {
          * @throws AppException if the authentication service returns an error status
          *                      (4xx or 5xx)
          */
-        public Mono<ResponseEntity<String>> downgradeAdmin(String token, String userLogin) {
+        public Mono<ResponseEntity<String>> downgradeAdmin(String token, Long userId) {
                 return webClient.put()
                                 // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/downgrade-admin"))
+                                .uri(uriWithOptionalLang("/users/" + userId + "/downgrade-admin"))
                                 // Add the authorization token to the request headers
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 // Execute the HTTP request
@@ -629,13 +629,13 @@ public class AuthClient {
 /**
  * Method for updating users
  * @param token the access token
- * @param login the user's email
+ * @param userId the user's email
  * @param userDto the user's DTO
  */
 
-public Mono<ResponseEntity<String>> updateUser(String token, String login, UserDto userDto){
+public Mono<ResponseEntity<String>> updateUser(String token, Long userId, UserDto userDto){
         return webClient.put()
-        .uri(uriWithOptionalLang("/users/" + login))
+        .uri(uriWithOptionalLang("/users/" + userId))
         .header(HttpHeaders.AUTHORIZATION, token)
         .bodyValue(userDto)
         .retrieve()
