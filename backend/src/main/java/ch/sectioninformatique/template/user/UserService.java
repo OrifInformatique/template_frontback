@@ -507,11 +507,12 @@ public class UserService {
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
     public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
+
         return authClient.deleteGlobalUser(token, userId)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserByLogin(Long.valueOf(body.get("deletedUserLogin")));
+                        deletePermanentById(Long.valueOf(body.get("deletedUserLogin")));
                         return reactor.core.publisher.Mono.just(body.get("message"));
                     } else {
                         return reactor.core.publisher.Mono.error(
@@ -535,6 +536,7 @@ public class UserService {
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
     public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
+
         return authClient.deleteGlobalUserPermanent(token, userId)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
@@ -572,6 +574,8 @@ public class UserService {
 
         // Call the AuthClient to update the user in the global auth service
         // If the response is not successful, return an error response
+
+
         ResponseEntity<?> response = authClient.updateUser(token, userId, newUser).block();
         if (response == null || !response.getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());

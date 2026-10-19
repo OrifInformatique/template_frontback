@@ -313,7 +313,9 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void login_asLocalManager_shouldReturnLocalRolesAndPermissions() throws Exception {
-        userService.promoteToLocalManagerRole("test.user@test.com");
+        UserDto user = userService.findByLogin("test.user@test.com");
+        
+        userService.promoteToLocalManagerRole(user.getId());
 
         // spring-auth returns no app-specific roles
         UserDto testUser = SpringAuthPermissions.grant(userService.findByLogin("test.user@test.com"));
@@ -324,7 +326,7 @@ public class AuthControllerTest {
 
         mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"login\":\"test.user@test.com\", \"password\":\"Secure123@Pass\"}"))
+                .content("{\"login\": \"" + user.getLogin() + "\", \"password\":\"Secure123@Pass\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.appSpecificRoles").value(
                         org.hamcrest.Matchers.contains("LOCAL_MANAGER")))
