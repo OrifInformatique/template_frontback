@@ -10,14 +10,14 @@ import MainLayout from './common/layouts/MainLayout';
 
 // Modules
 import Home from './features/home';
-import Contact from './features/contact';
-import Login from './features/auth/ui/login';
-import AzureCallback from './features/auth/ui/login/AzureCallback';
-import ChangePassword from './features/auth/ui/change-password';
-import ResetPassword from './features/auth/ui/reset-password';
-import ApiAuthCall from './features/auth';
+import Contact from './template/contact';
+import Login from './template/auth/ui/login';
+import AzureCallback from './template/auth/ui/login/AzureCallback';
+import ChangePassword from './template/auth/ui/change-password';
+import ResetPassword from './template/auth/ui/reset-password';
+import ApiAuthCall from './template/auth';
 import Admin from './features/admin';
-import UserList from './features/users';
+import UserList from './template/users';
 
 // Utils
 import Redirect from './common/utils/Redirect'

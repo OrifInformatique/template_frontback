@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logOut from "../../features/auth/ui/api/logOut";
+import logOut from "./ui/api/logOut";
 
-import useAuthStore from "../../features/auth/authStore";
+import useAuthStore from "./authStore";
 
 const readStoredUser = () => {
   try {

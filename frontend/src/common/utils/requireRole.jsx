@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import useAuthStore from '../../features/auth/authStore';
-import {SnackBar} from "@orif-informatique/react-components-library";
+import useAuthStore from '../../template/auth/authStore';
 
 
 const RequireRole = ({ role, children }) => {
