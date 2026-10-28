@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, InputText, MultiSelect  } from '@orif-informatique/react-components-library';
+import { Button, InputPassword, InputText, MultiSelect  } from '@orif-informatique/react-components-library';
 
 import { createUser, updateUser, getRoles } from "./api/api";
 
@@ -89,7 +89,7 @@ return (
         <InputText id="user-first-name" name="firstName" label="First Name" value={firstName} onChangeFunction={(e) => setFirstName(e.target.value)} />
         <InputText id="user-last-name" name="lastName" label="Last Name" value={lastName} onChangeFunction={(e) => setLastName(e.target.value)} />
         <InputText id="user-login" name="login" label="Login" value={login} onChangeFunction={(e) => setLogin(e.target.value)} />
-        <InputText id="user-password" name="password" label="Password" type="password" value={password} onChangeFunction={(e) => setPassword(e.target.value)} />
+        <InputPassword id="user-password" name="password" label="Password" type="password" value={password} onChangeFunction={(e) => setPassword(e.target.value)} />
         <div>
             <label htmlFor="user-roles" className="block text-sm font-medium text-gray-700 mt-4">Main Role</label>
         <select id="user-roles" name="roles" label="Main Role" value={userRoles} onChange={(e) => setUserRoles(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
