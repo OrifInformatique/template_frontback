@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import useAuthStore from '../../template/auth/authStore';
+import useAuthStore from './authStore';
 
 
 const RequireRole = ({ role, children }) => {

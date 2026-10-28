@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Title from '../../common/ui/title';
-import RequireRole from '../../common/utils/requireRole';
+import RequireRole from '../../template/auth/requireRole';
 import { NavBar } from '@orif-informatique/react-components-library';
 import { Outlet } from 'react-router-dom';
 

@@ -1,12 +1,12 @@
 import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Initialize translations before rendering the app
 import './i18n';
 
 // Layouts
-import MainLayout from './common/layouts/MainLayout';
+import MainLayout from './features/layouts/MainLayout';
 
 // Modules
 import Home from './features/home';
@@ -18,9 +18,6 @@ import ResetPassword from './template/auth/ui/reset-password';
 import ApiAuthCall from './template/auth';
 import Admin from './features/admin';
 import UserList from './template/users';
-
-// Utils
-import Redirect from './common/utils/Redirect'
 
 // Styles
 import '@orif-informatique/react-components-library/styles.css';
@@ -60,7 +57,7 @@ root.render(
 
                     <Route
                         path="*"
-                        element={<Redirect to="/" />}
+                        element={<Navigate to="/" replace />}
                     />
 
                     <Route
