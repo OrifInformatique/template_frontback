@@ -62,7 +62,9 @@ export const hardDeleteItem = async (id) =>
 {
     try
     {
-        const response = await api.delete(`/items/${id}/hard`);
+        const response = await api.delete(`/items/${id}`, {
+            params: { softDelete: false },
+        });
         return response.data;
     }
     catch(error)
