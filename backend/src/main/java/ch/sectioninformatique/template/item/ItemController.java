@@ -1,5 +1,8 @@
 package ch.sectioninformatique.template.item;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,9 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
@@ -109,8 +109,8 @@ public class ItemController {
      * @param id The unique identifier of the item to restore
      * @return The restored item
      */
-    @PreAuthorize("hasAuthority('item:write')")
-    @PutMapping("/restore/{id}")
+    @PreAuthorize("hasAuthority('item:update')")
+    @PutMapping("/{id}/restore")
     public Item restoreItem(@PathVariable Long id) {
         return itemService.restoreItem(id);
     }
