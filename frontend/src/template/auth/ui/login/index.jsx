@@ -10,8 +10,8 @@ import {
     Image,
     InputText,
     InputPassword,
+    Link
 } from '@orif-informatique/react-components-library';
-import Link from '../../../../common/ui/link';
 import { handleOAuth2Login } from '../api/azureLogin';
 
 const Login = () => {

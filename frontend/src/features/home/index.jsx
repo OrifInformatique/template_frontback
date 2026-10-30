@@ -1,7 +1,9 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import Title from '../../common/ui/title'
 import Items from '../../template/items/items'
+import {
+    Title
+} from '@orif-informatique/react-components-library';
 
 const Home = () => {
   const { t } = useTranslation("home", "common");
