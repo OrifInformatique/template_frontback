@@ -49,7 +49,7 @@ export const restoreItem = async (id) =>
 {
     try
     {
-        const response = await api.post(`/items/${id}/restore`);
+        const response = await api.put(`/items/${id}/restore`);
         return response.data;
     }
     catch(error)
