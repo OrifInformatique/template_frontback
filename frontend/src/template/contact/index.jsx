@@ -1,7 +1,9 @@
 import React from 'react'
 
-import Link from '../../common/ui/link'
-import Title from '../../common/ui/title'
+import {
+    Link,
+    Title
+} from '@orif-informatique/react-components-library';
 
 const Home = () => {
   return (<>

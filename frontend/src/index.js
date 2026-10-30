@@ -1,26 +1,23 @@
 import React, { Suspense } from 'react';
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Initialize translations before rendering the app
 import './i18n';
 
 // Layouts
-import MainLayout from './common/layouts/MainLayout';
+import MainLayout from './features/layouts/MainLayout';
 
 // Modules
 import Home from './features/home';
-import Contact from './features/contact';
-import Login from './features/auth/ui/login';
-import AzureCallback from './features/auth/ui/login/AzureCallback';
-import ChangePassword from './features/auth/ui/change-password';
-import ResetPassword from './features/auth/ui/reset-password';
-import ApiAuthCall from './features/auth';
+import Contact from './template/contact';
+import Login from './template/auth/ui/login';
+import AzureCallback from './template/auth/ui/login/AzureCallback';
+import ChangePassword from './template/auth/ui/change-password';
+import ResetPassword from './template/auth/ui/reset-password';
+import ApiAuthCall from './template/auth';
 import Admin from './features/admin';
-import UserList from './features/users';
-
-// Utils
-import Redirect from './common/utils/Redirect'
+import UserList from './template/users';
 
 // Styles
 import '@orif-informatique/react-components-library/styles.css';
@@ -60,7 +57,7 @@ root.render(
 
                     <Route
                         path="*"
-                        element={<Redirect to="/" />}
+                        element={<Navigate to="/" replace />}
                     />
 
                     <Route

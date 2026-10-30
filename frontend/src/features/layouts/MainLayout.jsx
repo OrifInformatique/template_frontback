@@ -7,7 +7,7 @@ import { Header,
          ScrollToTopButton,
          SnackBar
        } from "@orif-informatique/react-components-library";
-import useLayoutAuth from "../hooks/useLayoutAuth";
+import useLayoutAuth from "../../template/auth/useLayoutAuth";
 
 const MainLayout = () => {
   const { t } = useTranslation("common");

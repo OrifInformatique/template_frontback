@@ -4,15 +4,14 @@ import { useLogin } from '../api/loginService';
 import api from '../api/apiClient';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../authStore';
-import useLayoutAuth from '../../../../common/hooks/useLayoutAuth';
+import useLayoutAuth from '../../useLayoutAuth';
 import {
     Button,
     Image,
     InputText,
     InputPassword,
+    Link
 } from '@orif-informatique/react-components-library';
-import Link from '../../../../common/ui/link';
-import LoginTestIndicator from '../../../../common/ui/tests/loginTestIndicator';
 import { handleOAuth2Login } from '../api/azureLogin';
 
 const Login = () => {
@@ -75,7 +74,6 @@ const Login = () => {
     return (
         <div className="flex flex-wrap place-content-center text-center w-full h-full">
             <div className="flex flex-col gap-4 w-full sm:w-[350px] h-fit p-8 border border-black sm:rounded-lg">
-                <LoginTestIndicator/>
                 <h1>{t("sign_in")}</h1>
 
                 {accessToken ? (
