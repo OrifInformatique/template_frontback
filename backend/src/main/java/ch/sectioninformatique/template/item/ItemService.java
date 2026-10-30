@@ -50,6 +50,22 @@ public class ItemService {
         this.entityManager = entityManager;
     }
 
+
+
+    /**
+     * Restore a soft-deleted item by its ID.
+     * @param id The unique identifier of the item to restore
+     * @throws ItemNotFoundException if the item is not found
+     * @return the restored item
+     */
+    public Item restoreItem(Long id) {
+        Item item = itemRepository.findById(id)
+            .orElseThrow(() -> new ItemNotFoundException(id));
+        
+        item.setDeleted(false);
+        return itemRepository.save(item);
+    }
+
     /**
      * Extracts the current user's email from the authentication principal.
      * This method is used to identify the currently authenticated user.
