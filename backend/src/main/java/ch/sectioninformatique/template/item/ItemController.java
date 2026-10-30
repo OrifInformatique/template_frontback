@@ -104,6 +104,18 @@ public class ItemController {
     }
 
     /**
+     * Restore a soft-deleted item in the system.
+     * Requires the 'item:write' authority to access.
+     * @param id The unique identifier of the item to restore
+     * @return The restored item
+     */
+    @PreAuthorize("hasAuthority('item:write')")
+    @PutMapping("/restore/{id}")
+    public Item restoreItem(@PathVariable Long id) {
+        return itemService.restoreItem(id);
+    }
+
+    /**
      * Deletes an item from the system.
      * Requires either the 'item:delete' authority or a combination of
      * 'item:write' authority and appropriate role (ROLE_USER or ROLE_ADMIN).
