@@ -84,7 +84,7 @@ const Items = () => {
 
             {isLoading && <p className="text-center text-gray-500 py-4">{t("loading", "Loading...")}</p>}
             {error && <p className="text-center text-red-500 py-4">{error}</p>}
-            {hasPermission("user:write") && <Button label={t("create_item", "Create Item")} variant="primary" className="mb-4" onClick={() => { setSelectedItem(null); setFormOpen(true); }} />}
+            {hasPermission("item:write") && <Button label={t("create_item", "Create Item")} variant="primary" className="mb-4" onClick={() => { setSelectedItem(null); setFormOpen(true); }} />}
             <List
                 items={items.map((item) => ({
                     ...item,
