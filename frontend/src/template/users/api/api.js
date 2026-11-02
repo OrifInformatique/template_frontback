@@ -1,4 +1,4 @@
-import api from "../../auth/ui/api/apiClient";
+import api from "../../auth/apiClient";
 
 /**
  * Gets users filtered by soft-delete state.

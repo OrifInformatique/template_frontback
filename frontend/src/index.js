@@ -15,7 +15,6 @@ import Login from './template/auth/ui/login';
 import AzureCallback from './template/auth/ui/login/AzureCallback';
 import ChangePassword from './template/auth/ui/change-password';
 import ResetPassword from './template/auth/ui/reset-password';
-import ApiAuthCall from './template/auth';
 import Admin from './features/admin';
 import UserList from './template/users';
 

@@ -1,5 +1,5 @@
 import useAuthStore from '../../authStore';
-import api from './apiClient';
+import api from '../../apiClient';
 
 const BACKEND_API_URL = process.env.BACKEND_API_URL;
 const AZURE_CALLBACK_PATH = '/azure';

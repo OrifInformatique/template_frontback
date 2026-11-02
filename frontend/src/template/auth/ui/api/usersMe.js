@@ -1,4 +1,4 @@
-import api from './apiClient';
+import api from '../../apiClient';
 
 /**
  * Call protected API to get current user information.

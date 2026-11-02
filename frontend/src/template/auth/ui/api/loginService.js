@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../authStore';
-import api from './apiClient';
+import api from '../../apiClient';
 
 export const useLogin = () => {
     const [showError, setShowError] = useState(false);

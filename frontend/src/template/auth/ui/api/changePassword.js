@@ -1,4 +1,4 @@
-import api from './apiClient';
+import api from '../../apiClient';
 
 export const changePassword = async (oldPassword, newPassword) => {
     const response = await api.put('/auth/update-password', {
