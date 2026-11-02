@@ -30,12 +30,6 @@ root.render(
     <Suspense fallback={null}>
         <BrowserRouter basename={process.env.APP_ROOT}>
             <Routes>
-                {/* Standalone routes, not using a specific layout */}
-				<Route
-					path="/testAPI"
-					element={<ApiAuthCall />}
-				/>
-
                 {/* 
                 Routes nested to the Main layout.
                 For each route, the React module specified in "element" is rendered at the place of the
