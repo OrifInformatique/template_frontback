@@ -33,7 +33,7 @@ export default {
         historyApiFallback: true,
         proxy: [
             {
-                pathFilter: ['/auth', '/users', '/roles', '/tests'],
+                pathFilter: ['/auth', '/users', '/items', '/roles', '/tests'],
                 target: process.env.BACKEND_API_URL || "http://localhost:8081",
                 changeOrigin: true,
                 secure: false,

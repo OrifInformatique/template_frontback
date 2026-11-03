@@ -38,7 +38,7 @@ Setup: copy `env-dist` → `.env` and `application.properties-dist` → `applica
 
 ```bash
 npm install
-npm run serve             # webpack-dev-server on PORT from .env (default 4000), proxies /auth, /users, /tests to BACKEND_API_URL
+npm run serve             # webpack-dev-server on PORT from .env (default 4000), proxies /auth, /users, /items, /roles, /tests to BACKEND_API_URL
 npm run build              # production build
 npm run storybook          # Storybook on :6006
 npm run build-storybook
@@ -100,7 +100,7 @@ Routing is centralized in `src/index.js` (React Router v7); all routes are neste
 
 State: `zustand` is used for feature-local stores (e.g. `template/auth/authStore.jsx` holds the authenticated user/tokens). No global app-wide store — keep new stores scoped to their module.
 
-The dev server proxies `/auth`, `/users`, `/roles`, `/tests` requests to `BACKEND_API_URL` (`pathFilter` in `webpack.config.js`) — when adding a new backend module with its own top-level path, add it there too.
+The dev server proxies `/auth`, `/users`, `/items`, `/roles`, `/tests` requests to `BACKEND_API_URL` (`pathFilter` in `webpack.config.js`) — when adding a new backend module with its own top-level path, add it there too.
 
 ## Notes
 
