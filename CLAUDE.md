@@ -38,7 +38,7 @@ Setup: copy `env-dist` → `.env` and `application.properties-dist` → `applica
 
 ```bash
 npm install
-npm run serve             # webpack-dev-server on PORT from .env (default 4000), proxies /auth, /users, /tests to BACKEND_API_URL
+npm run serve             # webpack-dev-server on PORT from .env (default 4000), proxies /auth, /users, /items, /roles, /tests to BACKEND_API_URL
 npm run build              # production build
 npm run storybook          # Storybook on :6006
 npm run build-storybook
@@ -87,15 +87,20 @@ Domain exceptions extend `app/exceptions/AppException` (carries an HTTP status) 
 
 Message bundles are split per domain: `resources/messages/{app,auth,item,security,user}/messages_{en,fr}.properties`. When adding a new exception, add message keys to the matching domain bundle in both languages rather than inlining a string. Locale is resolved by `config/LocaleConfig` (default `fr-FR`, overridable via a `lang` query param).
 
-### Frontend: feature-based structure
+### Frontend: `template/` vs `features/`
 
-`frontend/src/features/<name>/` groups everything for a feature: `index.jsx` (entry component), `ui/` (subviews), `api/` (HTTP calls), `locales/{en,fr}/<name>.json` (i18n namespace), and optionally `mocks/`. `frontend/src/common/` holds cross-feature layouts (`MainLayout`), reusable UI (`ui/`), hooks, and utils (`useLocalStorage`, `Redirect`, `fileUtils`).
+`frontend/src/` is split in two folders with different ownership:
 
-Routing is centralized in `src/index.js` (React Router v7), nested under `MainLayout` except for standalone routes like `/testAPI`. `i18n.js` auto-discovers **every** `locales/<lang>/<namespace>.json` file across `common/` and `features/**` via `require.context` — dropping a new `locales/en/foo.json` + `locales/fr/foo.json` pair under a feature is enough to register a new i18n namespace, no manual wiring needed.
+- `template/` — modules shared by every application forked from this template, **never modified in client apps**: `auth/` (zustand `authStore`, `apiClient.js` axios instance with JWT refresh interceptors, `requireRole`, `useLayoutAuth`, login / Azure callback / change-password / reset-password screens and their `ui/api/` calls), `users/` (user administration) and `items/` (CRUD example). Every user-visible string in `template/` must go through i18n so client apps never have to edit it.
+- `features/` — everything each application customizes: `layouts/MainLayout` (header, logo, footer), `home/`, `admin/` (admin shell with its NavBar, nests `template/users`), and the `common` i18n namespace (`features/locales/`).
 
-State: `zustand` is used for feature-local stores (e.g. `features/auth/authStore.jsx` holds the authenticated user/tokens). No global app-wide store — keep new stores scoped to their feature.
+Imports only go `features → template`, never the other way. A feature folder groups `index.jsx` (entry component), optional `ui/` and `api/` subfolders, and `locales/{en,fr}/<name>.json` (i18n namespace). Backend calls go through `template/auth/apiClient.js`.
 
-The dev server proxies `/auth`, `/users`, `/tests` requests to `BACKEND_API_URL` (`webpack.config.js`) — when adding a new backend module with its own top-level path, add it to that proxy `context` array or frontend API calls will hit webpack-dev-server instead of the backend.
+Routing is centralized in `src/index.js` (React Router v7); all routes are nested under `MainLayout`. `i18n.js` auto-discovers **every** `locales/<lang>/<namespace>.json` file under `src/` via `import.meta.webpackContext` — dropping a new `locales/en/foo.json` + `locales/fr/foo.json` pair is enough to register a new i18n namespace, no manual wiring needed.
+
+State: `zustand` is used for feature-local stores (e.g. `template/auth/authStore.jsx` holds the authenticated user/tokens). No global app-wide store — keep new stores scoped to their module.
+
+The dev server proxies `/auth`, `/users`, `/items`, `/roles`, `/tests` requests to `BACKEND_API_URL` (`pathFilter` in `webpack.config.js`) — when adding a new backend module with its own top-level path, add it there too.
 
 ## Notes
 
