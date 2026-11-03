@@ -12,5 +12,7 @@
     "updatedAt": "Mis à jour le",
     "confirm_hard_delete": "Confirmer la suppression permanente",
     "confirm_hard_delete_text": "Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ?",
-    "no_user_found" : "Aucun utilisateur trouvé"
+    "no_user_found" : "Aucun utilisateur trouvé",
+    "create_user": "Créer un utilisateur",
+    "edit_user": "Modifier l'utilisateur"
 }

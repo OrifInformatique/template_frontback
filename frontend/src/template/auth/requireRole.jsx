@@ -1,9 +1,11 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useAuthStore from './authStore';
 
 
 const RequireRole = ({ role, children }) => {
+  const { t } = useTranslation('auth');
   const user = useAuthStore((s) => s.user);
 
     if (!user) {
@@ -16,7 +18,7 @@ const RequireRole = ({ role, children }) => {
         return (
             <Navigate to="/" replace state={{ 
                 snackbar: {
-                    message: "You do not have permission to access this page.",
+                    message: t("access_denied"),
                     type: "error",
                     autoHideDuration: 3000,
                 } 

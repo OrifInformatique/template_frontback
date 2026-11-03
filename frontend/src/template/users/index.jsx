@@ -67,18 +67,18 @@ function UserList() {
                 {formOpen ? (
                 <PopUp
                     onClose={closeForm}
-                    title={selectedUser ? "Edit User" : "Create User"}
+                    title={selectedUser ? t("edit_user", "Edit User") : t("create_user", "Create User")}
                     children={<UserForm user={selectedUser} onClose={closeForm} onSaved={handleUserSaved} />}
                 />
                 ) : null}
                 {user?.permissions?.includes("user:write") && (
-                    <Button label="Create User" variant="primary" className="mb-4" onClick={() => { setSelectedUser(null); setFormOpen(true); }} />
+                    <Button label={t("create_user", "Create User")} variant="primary" className="mb-4" onClick={() => { setSelectedUser(null); setFormOpen(true); }} />
                 )}
 
                 <List
                     items={users}
                     actions={allowedAction}
-                    actionsLabel="Actions"
+                    actionsLabel={t("actions", "Actions")}
                     columns={['id', 'firstName', 'lastName', 'login', 'mainRole', 'appSpecificRoles']}
                     columnsLabels={{
                         id: '#',

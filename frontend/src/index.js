@@ -10,7 +10,6 @@ import MainLayout from './features/layouts/MainLayout';
 
 // Modules
 import Home from './features/home';
-import Contact from './template/contact';
 import Login from './template/auth/ui/login';
 import AzureCallback from './template/auth/ui/login/AzureCallback';
 import ChangePassword from './template/auth/ui/change-password';
@@ -41,11 +40,6 @@ root.render(
                     <Route
                         index
                         element={<Home />}
-                    />
-
-                    <Route
-                        path="contact"
-                        element={<Contact />}
                     />
 
                     <Route
