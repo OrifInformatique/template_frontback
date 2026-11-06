@@ -183,7 +183,7 @@ public class UserService {
      * @throws DefaultRoleNotFoundException if the default role is not found
      * @throws UserCreationException if user creation fails
      */
-    public User register(RegisterDto registerDto) {
+    public User register(RegisterDto registerDto, Long userId) {
         try {
             // Basic validation before persisting
             if (registerDto.login() == null || registerDto.login().isBlank()
@@ -198,7 +198,7 @@ public class UserService {
                 throw new DuplicateUserException(registerDto.login());
             }
 
-            User user = userMapper.signUpToUser(registerDto);
+            User user = userMapper.signUpToUser(registerDto, userId);
 
             // Define the user's main role (owned by spring-auth, transversal for all
             // applications) - stored locally as a plain enum value, no DB lookup.
@@ -241,7 +241,7 @@ public class UserService {
      * @return Found or created user
      * @throws UserCreationException if user creation fails
      */
-    public User getOrCreateAuthenticatedUser(UserDto userDto) {
+    public User getOrCreateAuthenticatedUser(UserDto userDto, Long userId) {
         try {
             List<User> users = userRepository.findAll();
 
@@ -257,7 +257,7 @@ public class UserService {
                 RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
                         userDto.getLogin(), null, null, null);
 
-                localUser = this.register(newUser);
+                localUser = this.register(newUser, userId);
             }
             
             userRepository.save(localUser);
@@ -641,6 +641,7 @@ public class UserService {
             }
 
             User newUser = User.builder()
+                .id(userDto.getId())
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
                 .login(userDto.getLogin())
@@ -665,8 +666,8 @@ public class UserService {
      * @param authUser The user as returned by spring-auth, updated in place
      * @return The same user, with its local roles and all its permissions
      */
-    public UserDto addLocalRolesAndPermissions(UserDto authUser) {
-        User localUser = getOrCreateAuthenticatedUser(authUser);
+    public UserDto addLocalRolesAndPermissions(UserDto authUser, Long userId) {
+        User localUser = getOrCreateAuthenticatedUser(authUser, userId);
         updateMainRole(localUser, authUser);
 
         Set<String> permissions = new LinkedHashSet<>();

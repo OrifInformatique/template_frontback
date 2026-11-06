@@ -172,7 +172,7 @@ public class UserAuthenticationProvider {
                     .permissions(decoded.getClaim("permissions").asList(String.class))
                     .build();
 
-            User localUser = userService.getOrCreateAuthenticatedUser(currentUser);
+            User localUser = userService.getOrCreateAuthenticatedUser(currentUser, currentUser.getId());
 
             userService.updateMainRole(localUser, currentUser);
 
