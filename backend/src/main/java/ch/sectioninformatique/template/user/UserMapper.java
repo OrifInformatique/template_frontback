@@ -65,10 +65,10 @@ public interface UserMapper {
     @Mapping(target = "mainRole", ignore = true)
     @Mapping(target = "appSpecificRoles", ignore = true)
     @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", source = "userId")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    User signUpToUser(RegisterDto registerDto);
+    User signUpToUser(RegisterDto registerDto, Long userId);
 
     /**
      * Converts a collection of GrantedAuthority objects to a list of permission

@@ -88,7 +88,7 @@ public class AuthController {
                 .block();
 
         // spring-auth only knows the global roles and permissions: add the local ones
-        userService.addLocalRolesAndPermissions(response.getBody());
+        userService.addLocalRolesAndPermissions(response.getBody(), response.getBody().getId());
         return response;
     }
 
@@ -112,7 +112,7 @@ public class AuthController {
         return authClient.register(token, user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
-                    User localUser = userService.register(user);
+                    User localUser = userService.register(user, response.getBody().getId());
                     UserDto localUserDto = userMapper.toUserDto(localUser);
 
                     // Return HTTP 200 OK with the locally registered user
@@ -232,7 +232,7 @@ public class AuthController {
         UserDto loggedUser = userService.getOrCreateUser(user);
        
         loggedUser.setToken(user.getToken());
-        loggedUser.setPermissions(userService.addLocalRolesAndPermissions(user).getPermissions());
+        loggedUser.setPermissions(userService.addLocalRolesAndPermissions(user, userId).getPermissions());
         session.setAttribute("loggedUser", loggedUser);
 
         log.debug("Redirecting to: {}", afterOauth2LoginFrontendCallback);
