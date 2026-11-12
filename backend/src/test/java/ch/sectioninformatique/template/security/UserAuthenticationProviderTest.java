@@ -125,7 +125,7 @@ class UserAuthenticationProviderTest {
                 .login(TEST_LOGIN)
                 .mainRole(MainRoleEnum.USER)
                 .build();
-        when(userService.getOrCreateAuthenticatedUser(any(UserDto.class))).thenReturn(localUser);
+        when(userService.getOrCreateAuthenticatedUser(any(UserDto.class), any(Long.class))).thenReturn(localUser);
         String token = authenticationProvider.createToken(user);
 
         // When
