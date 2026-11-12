@@ -176,7 +176,7 @@ public class AuthClient {
         public Mono<ResponseEntity<UserDto>> register(String token, RegisterDto user) {
 
                 return webClient.post()
-                                .uri(uriWithOptionalLang("/auth/register")) // the registration endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/users")) // the registration endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(user)
@@ -325,42 +325,18 @@ public class AuthClient {
         }
 
         /**
-         * Soft deletes a user by sending a delete request to the authentication
+         * deletes a user by sending a delete request to the authentication
          * provider.
          * 
          * @param token  The access token
          * @param userId The ID of the user to delete
+         * @param permanent control the type of delete (soft = false, hard = true)
          * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
          *         response (e.g., token or status message)
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId) {
+        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId, boolean permanent) {
                 return webClient.delete()
-                                .uri(uriWithOptionalLang("/users/" + userId  + "/false")) // soft delete user endpoint path in authentication provider
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserDeletionException(
-                                                                                error.message()))))
-                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
-                                })
-                                .map(body -> ResponseEntity.ok(body));
-        }
-
-        /**
-         * Permanently deletes a user by sending a delete request to the authentication
-         * provider.
-         * 
-         * @param token  The access token
-         * @param userId The ID of the user to delete permanently
-         * @param hardDelete A boolean for soft or hard delete (default: false)
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
-         *         deletion response (e.g., token or status message)
-         */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, Long userId) {
-                return webClient.delete()
-                                .uri(uriWithOptionalLang("/users/" + userId + "/true")) // permanent delete user endpoint path in
-                                                                        // authentication provider
+                                .uri(uriWithOptionalLang("/users/" + userId + "?permanent=" + permanent))
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
