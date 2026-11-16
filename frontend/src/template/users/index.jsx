@@ -88,11 +88,9 @@ function UserList() {
                         mainRole: t("mainRole", "Main Role"),
                         appSpecificRoles: t("appSpecificRoles", "App Specific Roles")
                     }}
-
                     onToggleShowDeleted={setShowDeleted}
-
+                    showDeletedLabel={t("show_deleted", "Show deleted items")}
                     showDeleted={showDeleted}
-
                     noItemsLabel={t("no_user_found", "No user found")}
                     confirmHardDeleteTitle={t("confirm_hard_delete", "Confirm Permanent Deletion")}
                     confirmHardDeleteText={t("confirm_hard_delete_text", "Are you sure you want to permanently delete this user ? This action cannot be undone.")}

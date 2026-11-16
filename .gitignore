@@ -6,3 +6,4 @@ application.properties
 
 ### Cursor ###
 .cursor/
+backend/docker-compose.override.yml
