@@ -377,7 +377,9 @@ public class AuthControllerTest {
 
         
 
+        // Ids come from spring-auth: set them explicitly, distinct from TestUserSeeder (1-4)
         UserDto newUser = UserDto.builder()
+                .id(101L)
                 .firstName("NewTest")
                 .lastName("Register")
                 .login("newtest.register@test.com")
@@ -387,6 +389,7 @@ public class AuthControllerTest {
                 .build();
 
         User adminUser = User.builder()
+            .id(100L)
             .firstName("admin")
             .lastName("user")
             .login("admin.user@test.com")

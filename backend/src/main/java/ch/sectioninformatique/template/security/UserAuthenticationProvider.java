@@ -84,6 +84,7 @@ public class UserAuthenticationProvider {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
                 .withSubject(user.getLogin())
+                .withClaim("id", user.getId())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
                 .withClaim("firstName", user.getFirstName())
@@ -111,6 +112,7 @@ public class UserAuthenticationProvider {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
                 .withSubject(user.getLogin())
+                .withClaim("id", user.getId())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
                 .withClaim("typ", "access")
@@ -152,7 +154,10 @@ public class UserAuthenticationProvider {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
 
+            // The "id" claim (spring-auth user id) is mandatory: it is the local user id,
+            // which is no longer generated. Same check as spring-auth's JwtService.
             JWTVerifier verifier = JWT.require(algorithm)
+                    .withClaim("id", (claim, jwt) -> claim.asLong() != null)
                     .build();
 
             DecodedJWT decoded = verifier.verify(token);
@@ -165,6 +170,8 @@ public class UserAuthenticationProvider {
             }
 
             UserDto currentUser = UserDto.builder()
+                    // spring-auth user id, also used as the local user id
+                    .id(decoded.getClaim("id").asLong())
                     .login(decoded.getSubject())
                     .firstName(decoded.getClaim("firstName").asString())
                     .lastName(decoded.getClaim("lastName").asString())

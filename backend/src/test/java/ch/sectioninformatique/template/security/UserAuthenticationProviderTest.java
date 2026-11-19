@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -36,6 +38,7 @@ class UserAuthenticationProviderTest {
     private UserAuthenticationProvider authenticationProvider;
 
     private static final String TEST_SECRET_KEY = "test-secret-key";
+    private static final Long TEST_ID = 42L;
     private static final String TEST_LOGIN = "test@example.com";
     private static final String TEST_FIRST_NAME = "John";
     private static final String TEST_LAST_NAME = "Doe";
@@ -115,6 +118,7 @@ class UserAuthenticationProviderTest {
     void testValidateTokenMergesGlobalAndLocalPermissions() {
         // Given
         UserDto user = UserDto.builder()
+                .id(TEST_ID)
                 .login(TEST_LOGIN)
                 .firstName(TEST_FIRST_NAME)
                 .lastName(TEST_LAST_NAME)
@@ -122,10 +126,11 @@ class UserAuthenticationProviderTest {
                 .permissions(SpringAuthPermissions.of("USER"))
                 .build();
         User localUser = User.builder()
+                .id(TEST_ID)
                 .login(TEST_LOGIN)
                 .mainRole(MainRoleEnum.USER)
                 .build();
-        when(userService.getOrCreateAuthenticatedUser(any(UserDto.class), any(Long.class))).thenReturn(localUser);
+        when(userService.getOrCreateAuthenticatedUser(any(UserDto.class), eq(TEST_ID))).thenReturn(localUser);
         String token = authenticationProvider.createToken(user);
 
         // When
@@ -136,6 +141,29 @@ class UserAuthenticationProviderTest {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
         assertEquals(Set.of("ROLE_USER", "user:read", "item:read"), authorities);
+    }
+
+    /**
+     * Tests that a token without the "id" claim is rejected.
+     * The id is the spring-auth user id, used as the local user id (no longer
+     * generated): without it, no local user may be looked up or created.
+     */
+    @Test
+    void testValidateTokenWithoutIdIsRejected() {
+        // Given
+        UserDto user = UserDto.builder()
+                .login(TEST_LOGIN)
+                .firstName(TEST_FIRST_NAME)
+                .lastName(TEST_LAST_NAME)
+                .mainRole("USER")
+                .permissions(SpringAuthPermissions.of("USER"))
+                .build();
+        String token = authenticationProvider.createToken(user);
+
+        // When / Then
+        assertThrows(SecurityExceptions.JwtVerificationException.class,
+                () -> authenticationProvider.validateToken(token));
+        verifyNoInteractions(userService);
     }
 
     /**

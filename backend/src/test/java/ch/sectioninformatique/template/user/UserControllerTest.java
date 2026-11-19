@@ -126,7 +126,8 @@ public class UserControllerTest {
 
     private UserDto createTemporaryUser() {
         String uniqueLogin = "temp.permanent." + System.currentTimeMillis() + "@test.com";
-        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null, null, null), 1L);
+        // Explicit id (no longer generated) that does not collide with TestUserSeeder (1-4)
+        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null, null, null), 1000L);
         return userService.findByLogin(uniqueLogin);
     }
 
@@ -625,11 +626,11 @@ public class UserControllerTest {
     @Transactional
     public void deleteUser_withNonExistentId_shouldReturn404UserNotFound() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
-        String nonExistentUserLogin = "Non-login";
+        long nonExistentUserId = 999_999L;
 
         performRequest(
                 "DELETE",
-                "/users/" + nonExistentUserLogin + "?global=false&hard=false",
+                "/users/" + nonExistentUserId + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 404,

@@ -389,7 +389,7 @@ public class TestControllerTest {
         String token = userAuthenticationProvider.createToken(SpringAuthPermissions.grant(adminDto));
         performRequest(
                 "PUT",
-                "/tests/" + userDto.getLogin() + "/promote-test",
+                "/tests/" + userDto.getId() + "/promote-test",
                 null,
                 token,
                 MediaType.APPLICATION_JSON,
