@@ -506,42 +506,13 @@ public class UserService {
      * @return Message from the global deletion response
      * @throws UserDeletionException if the deletion fails or response is invalid
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId) {
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId, boolean hardDelete) {
 
-        return authClient.deleteGlobalUser(token, userId)
+        return authClient.deleteGlobalUser(token, userId, hardDelete)
                 .flatMap(response -> {
                     java.util.Map<String, String> body = response.getBody();
                     if (body != null && body.containsKey("deletedUserLogin")) {
                         deleteUserById(Long.valueOf(body.get("deletedUserLogin")));
-                        return reactor.core.publisher.Mono.just(body.get("message"));
-                    } else {
-                        return reactor.core.publisher.Mono.error(
-                            new UserDeletionException("user.delete.failed.missingResponse", true));
-                    }
-                });
-    }
-
-    /**
-     * Permanently deletes a user globally (via AuthClient) and locally.
-     * This method:
-     * - Calls the AuthClient to permanently delete user from the global auth service
-     * - Validates the response contains the deleted user login
-     * - Permanently deletes the user locally by login
-     * - Returns the deletion message
-     *
-     * @param token  The authorization token
-     * @param userId The ID of the user to permanently delete
-     * @param hardDelete A boolean for soft or hard delete (default: false)
-     * @return Message from the global deletion response
-     * @throws UserDeletionException if the deletion fails or response is invalid
-     */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, Long userId) {
-
-        return authClient.deleteGlobalUserPermanent(token, userId)
-                .flatMap(response -> {
-                    java.util.Map<String, String> body = response.getBody();
-                    if (body != null && body.containsKey("deletedUserLogin")) {
-                        deletePermanentById(Long.valueOf(body.get("deletedUserLogin")));
                         return reactor.core.publisher.Mono.just(body.get("message"));
                     } else {
                         return reactor.core.publisher.Mono.error(

@@ -116,14 +116,9 @@ public class UserController {
             @RequestParam (required = true) Boolean hard) {
         // Determine permanent deletion scope based on global flag
         if (global) {
-            if (hard){
-                return userService.deleteGlobalAndLocalPermanent(token, userId)
-                        .map(message -> ResponseEntity.ok(Map.of("message", message)));
-            }
-            else{
-                return userService.deleteGlobalAndLocal(token, userId)
-                        .map(message -> ResponseEntity.ok(Map.of("message", message)));
-            }
+            return userService.deleteGlobalAndLocal(token, userId, hard)
+                    .map(message -> ResponseEntity.ok(Map.of("message", message)));
+                    
         } else {
             if (hard){
                 // Permanently delete user from local database only
