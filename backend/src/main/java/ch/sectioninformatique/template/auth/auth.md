@@ -36,7 +36,6 @@ It contains :
 * `updatePassword()`,
 * `logout()`,
 * `deleteGlobalUser()`,
-* `deleteGlobalUserPermanent()`,
 * `promoteToManager()`,
 * `revokeManager()`,
 * `promoteToAdmin()`,
@@ -60,11 +59,7 @@ It contains :
 
 ### User management
 
-`deleteGlobalUser()` performs a soft deletion of a user in the authentication service.
-
-`deleteGlobalUserPermanent()` permanently deletes a user.
-
-Both methods send the user's authentication token and convert authentication-service errors into application exceptions.
+`deleteGlobalUser()` deletes a user by id in the authentication service (`DELETE /users/{id}?permanent=...`): a soft deletion when `permanent` is `false`, a permanent one when it is `true`. The authentication service answers `204 No Content`, so the method returns a bodiless `ResponseEntity<Void>`; it sends the user's authentication token and converts authentication-service errors into application exceptions.
 
 ### Role management
 

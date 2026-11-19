@@ -1,6 +1,5 @@
 package ch.sectioninformatique.template.user;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -423,12 +422,9 @@ public class UserControllerTest {
         UserDto admin2User = userService.findByLogin("test.admin2@test.com");
         assertNotNull(admin2User, "Test admin2 user should exist");
 
-        // Mock the external auth service response
-        Map<String, String> authServiceResponse = Map.of(
-                "deletedUserLogin", "test.admin2@test.com",
-                "message", "User deleted from auth service");
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId())))
-                .thenReturn(Mono.just(ResponseEntity.ok(authServiceResponse)));
+        // Mock the external auth service response (204 No Content)
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), eq(false)))
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         performRequest(
                 "DELETE",
@@ -441,7 +437,7 @@ public class UserControllerTest {
                 null);
 
         // Verify the auth client was called
-        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()));
+        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), eq(false));
         // Verify DB side effect (soft or hard delete)
         assertUserDeleted(admin2User);
     }
@@ -470,7 +466,7 @@ public class UserControllerTest {
         assertNotNull(managerUser, "Test manager user should exist");
 
         // Mock the external auth service to return an error
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId()), eq(false)))
                 .thenReturn(Mono.error(new UserDeletionException("Failed to delete user from auth service")));
 
         performRequest(
@@ -591,7 +587,7 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Test manager user should exist");
 
         // Mock auth client to return error for global delete
-        when(authClient.deleteGlobalUser(any(String.class), any(Long.class)))
+        when(authClient.deleteGlobalUser(any(String.class), any(Long.class), eq(false)))
             .thenReturn(Mono.error(new UserDeletionException("Database constraint violation")));
 
         performRequest(
@@ -856,12 +852,9 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDelete = userService.findByLogin("test.user@test.com");
         assertNotNull(userToDelete, "Test user should exist");
-        Map<String, String> mockedResponse = Map.of(
-                "message", "User deleted successfully",
-            "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUser(anyString(), anyLong()))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
+        when(authClient.deleteGlobalUser(anyString(), anyLong(), eq(false)))
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         performRequest(
                 "DELETE",
@@ -875,7 +868,7 @@ public class UserControllerTest {
                     try {
                         response.andExpect(status().isOk());
                         response.andExpect(jsonPath("$.message")
-                            .value("User deleted successfully"));
+                            .value(getMessage("user.deleted.global")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -979,12 +972,9 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDelete = createTemporaryUser();
         assertNotNull(userToDelete, "Temporary user should exist");
-        Map<String, String> mockedResponse = Map.of(
-                "message", "User deleted permanently",
-            "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUserPermanent(anyString(), anyLong()))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
+        when(authClient.deleteGlobalUser(anyString(), anyLong(), eq(true)))
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         performRequest(
                 "DELETE",
@@ -999,11 +989,17 @@ public class UserControllerTest {
                         response.andDo(print());
                         response.andExpect(status().isOk());
                         response.andExpect(jsonPath("$.message")
-                            .value("User deleted permanently"));
+                            .value(getMessage("user.deleted.global")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // Hard delete: the row must be gone, not just flagged as deleted.
+        // JPQL query (not findById) so the first-level cache can't hide the result.
+        assertTrue(userRepository.findAllIncludingDeleted().stream()
+                .noneMatch(u -> userToDelete.getId().equals(u.getId())),
+                "User should be permanently removed from the database");
     }
 
     /**

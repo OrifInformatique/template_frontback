@@ -497,28 +497,34 @@ public class UserService {
      * Deletes a user globally (via AuthClient) and locally.
      * This method:
      * - Calls the AuthClient to delete user from the global auth service
-     * - Validates the response contains the deleted user login
-     * - Deletes the user locally by login
-     * - Returns the deletion message
+     * - Once the auth service confirmed the deletion (204 No Content), deletes
+     *   the user locally by id (the local id is the spring-auth id), permanently
+     *   if {@code hardDelete} is true, softly otherwise
+     * - Returns a localized deletion message
      *
-     * @param token  The authorization token
-     * @param userId The ID of the user to delete
-     * @return Message from the global deletion response
-     * @throws UserDeletionException if the deletion fails or response is invalid
+     * @param token      The authorization token
+     * @param userId     The ID of the user to delete
+     * @param hardDelete Whether the global deletion is permanent
+     * @return Localized deletion message
+     * @throws UserDeletionException if the global deletion fails
      */
     public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId, boolean hardDelete) {
 
+        // Resolve the locale now: the reactive callback may run outside the request thread
+        java.util.Locale locale = LocaleContextHolder.getLocale();
+
+        // spring-auth answers 204 No Content on success and errors are mapped by AuthClient
         return authClient.deleteGlobalUser(token, userId, hardDelete)
-                .flatMap(response -> {
-                    java.util.Map<String, String> body = response.getBody();
-                    if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserById(Long.valueOf(body.get("deletedUserLogin")));
-                        return reactor.core.publisher.Mono.just(body.get("message"));
+                .then(reactor.core.publisher.Mono.fromCallable(() -> {
+                    // Local id is the spring-auth id: delete locally by the same id,
+                    // with the same scope (soft or permanent) as the global deletion
+                    if (hardDelete) {
+                        deletePermanentById(userId);
                     } else {
-                        return reactor.core.publisher.Mono.error(
-                            new UserDeletionException("user.delete.failed.missingResponse", true));
+                        deleteUserById(userId);
                     }
-                });
+                    return messageSource.getMessage("user.deleted.global", null, locale);
+                }));
     }
 
     /**

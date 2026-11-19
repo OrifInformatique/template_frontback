@@ -331,10 +331,10 @@ public class AuthClient {
          * @param token  The access token
          * @param userId The ID of the user to delete
          * @param permanent control the type of delete (soft = false, hard = true)
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
-         *         response (e.g., token or status message)
+         * @return A Mono<ResponseEntity<Void>> completing with the bodiless
+         *         response (204 No Content) of the authentication provider
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, Long userId, boolean permanent) {
+        public Mono<ResponseEntity<Void>> deleteGlobalUser(String token, Long userId, boolean permanent) {
                 return webClient.delete()
                                 .uri(uriWithOptionalLang("/users/" + userId + "?permanent=" + permanent))
                                 .header(HttpHeaders.AUTHORIZATION, token)
@@ -343,9 +343,7 @@ public class AuthClient {
                                                 response -> response.bodyToMono(ErrorDto.class)
                                                                 .flatMap(error -> Mono.error(new UserDeletionException(
                                                                                 error.message()))))
-                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
-                                })
-                                .map(body -> ResponseEntity.ok(body));
+                                .toBodilessEntity();
         }
 
         /**
