@@ -165,8 +165,8 @@ public class UserService {
      * @return UserDto containing the current user's information
      */
     public UserDto me(UserDto currentUser) {
-        User user = userRepository.findByLogin(currentUser.getLogin())
-                .orElseThrow(() -> new UserNotFoundByLoginException(currentUser.getLogin()));
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new UserNotFoundException(currentUser.getId()));
         UserDto userMapped = userMapper.toUserDto(user);
         return userMapped;
     }
