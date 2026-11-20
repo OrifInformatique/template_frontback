@@ -2,6 +2,8 @@ package ch.sectioninformatique.template.item;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,6 +39,8 @@ import ch.sectioninformatique.template.security.SpringAuthPermissions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.RestDocsSnippets;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
+import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.security.LocalRoleEnum;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserRepository;
@@ -66,6 +70,9 @@ public class ItemControllerTest {
 
     @Autowired
     private ItemRepository itemRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private UserAuthenticationProvider userAuthenticationProvider;
@@ -667,6 +674,83 @@ public class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\" \",\"description\":\"x\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ==================== Ownership: permanent delete and restore ====================
+
+    /** Gives test.user the LOCAL_MANAGER role (item:delete, not admin), rolled back with the test */
+    private void grantLocalManagerToTestUser() {
+        User user = userEntity(USER_LOGIN);
+        user.getAppSpecificRoles().add(roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER).orElseThrow());
+        userRepository.save(user);
+    }
+
+    /**
+     * A non-admin allowed to delete items can't permanently delete another
+     * user's item.
+     */
+    @Test
+    @Transactional
+    public void deleteItemPermanently_asNonAuthor_returns403AndKeepsItem() throws Exception {
+        clearItems();
+        grantLocalManagerToTestUser();
+        Item item = saveDocItem(userEntity(ADMIN_LOGIN), "Admin item", "Owned by admin");
+
+        mockMvc.perform(delete("/items/" + item.getId() + "?softDelete=false")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(USER_LOGIN)))
+                .andExpect(status().isForbidden());
+
+        assertTrue(itemRepository.findById(item.getId()).isPresent(), "Item must not be deleted");
+    }
+
+    /**
+     * The author can permanently delete their own item.
+     */
+    @Test
+    @Transactional
+    public void deleteItemPermanently_asAuthor_deletesItem() throws Exception {
+        clearItems();
+        grantLocalManagerToTestUser();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
+
+        mockMvc.perform(delete("/items/" + item.getId() + "?softDelete=false")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(USER_LOGIN)))
+                .andExpect(status().isOk());
+
+        assertTrue(itemRepository.findById(item.getId()).isEmpty(), "Item must be deleted");
+    }
+
+    /**
+     * Permanently deleting an unknown item is answered 404.
+     */
+    @Test
+    @Transactional
+    public void deleteItemPermanently_unknownItem_returns404() throws Exception {
+        mockMvc.perform(delete("/items/999999?softDelete=false")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(ADMIN_LOGIN)))
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * A non-admin can't restore another user's deleted item; an admin can.
+     */
+    @Test
+    @Transactional
+    public void restoreItem_asNonAuthor_returns403_asAdmin_restores() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
+        item.setDeleted(true);
+        itemRepository.save(item);
+
+        mockMvc.perform(put("/items/" + item.getId() + "/restore")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN)))
+                .andExpect(status().isForbidden());
+        assertTrue(itemRepository.findById(item.getId()).orElseThrow().isDeleted(), "Item stays deleted");
+
+        mockMvc.perform(put("/items/" + item.getId() + "/restore")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(ADMIN_LOGIN)))
+                .andExpect(status().isOk());
+        assertFalse(itemRepository.findById(item.getId()).orElseThrow().isDeleted(), "Item restored");
     }
 
     // ==================== Items without author ====================

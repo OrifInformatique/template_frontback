@@ -286,7 +286,10 @@ Permanently deletes an item from the database.
 
 Unlike `deleteItem()`, this does not use soft deletion.
 
-If the operation fails, an `ItemNotFoundException` is thrown.
+Like `updateItem()`, `deleteItem()` and `restoreItem()`, it goes through
+`findModifiableItem()`: only the item's author or an administrator can do it.
+If the item does not exist, an `ItemNotFoundException` (404) is thrown; if the
+user is not allowed, an `UnauthorizedItemException` (403).
 
 ### `updateItem()`
 

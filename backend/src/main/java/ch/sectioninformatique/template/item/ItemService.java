@@ -55,14 +55,15 @@ public class ItemService {
 
     /**
      * Restore a soft-deleted item by its ID.
+     * Only the item's author or users with admin privileges can restore an item.
      * @param id The unique identifier of the item to restore
      * @throws ItemNotFoundException if the item is not found
+     * @throws UnauthorizedItemException if the current user is not authorized to restore the item
      * @return the restored item
      */
     public Item restoreItem(Long id) {
-        Item item = itemRepository.findById(id)
-            .orElseThrow(() -> new ItemNotFoundException(id));
-        
+        Item item = findModifiableItem(id, "restore");
+
         item.setDeleted(false);
         return itemRepository.save(item);
     }
@@ -92,6 +93,41 @@ public class ItemService {
      */
     private boolean isAuthor(Item item, User user) {
         return item.getAuthor() != null && item.getAuthor().getId() == user.getId();
+    }
+
+    /**
+     * Checks whether the authenticated user is an administrator, who may modify
+     * any item.
+     *
+     * @return true if the user has the ROLE_ADMIN or ROLE_SUPER_ADMIN authority
+     */
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+            || authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+    }
+
+    /**
+     * Finds an item the authenticated user may modify (update, delete, restore):
+     * an administrator may modify any item, other users only their own items.
+     * Soft-deleted items are found too.
+     *
+     * @param id        The id of the item
+     * @param operation The attempted operation, for the error
+     * @return The item
+     * @throws ItemNotFoundException if no item has this id
+     * @throws UnauthorizedItemException if the user is neither an administrator
+     *                                   nor the author of the item
+     */
+    private Item findModifiableItem(Long id, String operation) {
+        Item item = itemRepository.findById(id)
+            .orElseThrow(() -> new ItemNotFoundException(id));
+
+        if (!isAdmin() && !isAuthor(item, getCurrentUser())) {
+            logger.debug("Authorization failed - User is not the author of item {}", id);
+            throw new UnauthorizedItemException(operation);
+        }
+        return item;
     }
 
     /**
@@ -143,34 +179,23 @@ public class ItemService {
      * @throws UnauthorizedItemException if the current user is not authorized to delete the item
      */
     public void deleteItem(final Long id) {
-        User currentUser = getCurrentUser();
-        
-        Item item = itemRepository.findById(id)
-            .orElseThrow(() -> new ItemNotFoundException(id));
-        
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
-        
-        if (!isAdmin && !isSuperAdmin) {
-            if (!isAuthor(item, currentUser)) {
-                throw new UnauthorizedItemException("delete");
-            }
-        }
-        
+        findModifiableItem(id, "delete");
+
         itemRepository.deleteById(id);
     }
 
-    public void deletePermanentById(Long id)
-    {
-        try {
-            itemRepository.deletePermanentlyById(id);
+    /**
+     * Permanently deletes an item from the system.
+     * Only the item's author or users with admin privileges can delete an item.
+     *
+     * @param id The unique identifier of the item to delete
+     * @throws ItemNotFoundException if the item is not found
+     * @throws UnauthorizedItemException if the current user is not authorized to delete the item
+     */
+    public void deletePermanentById(Long id) {
+        findModifiableItem(id, "delete");
 
-        } catch (Exception e) {
-            throw new ItemNotFoundException(id);
-        }
-        
-
+        itemRepository.deletePermanentlyById(id);
     }
 
     /**
@@ -184,30 +209,13 @@ public class ItemService {
      * @throws UnauthorizedItemException if the current user is not authorized to update the item
      */
     public Item updateItem(Long id, Item newItem) {
-        User currentUser = getCurrentUser();
-        logger.debug("Found user with ID: {}", currentUser.getId());
-        
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return itemRepository.findById(id)
-            .map(item -> {
-                boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
-                logger.debug("User roles - isAdmin: {}, isSuperAdmin: {}", isAdmin, isSuperAdmin);
+        Item item = findModifiableItem(id, "update");
 
-                if (!isAdmin && !isSuperAdmin) {
-                    if (!isAuthor(item, currentUser)) {
-                        logger.debug("Authorization failed - User is not the author of the item");
-                        throw new UnauthorizedItemException("update");
-                    }
-                } 
-                
-                // Only the content changes: the author stays the item's creator,
-                // even when an admin updates someone else's item
-                item.setName(newItem.getName());
-                item.setDescription(newItem.getDescription());
-                logger.debug("Item updated successfully - ID: {}, New name: {}", id, newItem.getName());
-                return itemRepository.save(item);
-            })
-            .orElseThrow(() -> new ItemNotFoundException(id));
+        // Only the content changes: the author stays the item's creator,
+        // even when an admin updates someone else's item
+        item.setName(newItem.getName());
+        item.setDescription(newItem.getDescription());
+        logger.debug("Item updated successfully - ID: {}, New name: {}", id, newItem.getName());
+        return itemRepository.save(item);
     }
 }
