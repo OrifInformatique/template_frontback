@@ -610,6 +610,65 @@ public class ItemControllerTest {
         assertEquals(USER_LOGIN, itemRepository.findById(item.getId()).orElseThrow().getAuthor().getLogin());
     }
 
+    // ==================== Request body: client-settable fields only ====================
+
+    /**
+     * A create request carrying the id of an existing item creates a new item:
+     * the existing item (of another user) is not overwritten.
+     */
+    @Test
+    @Transactional
+    public void createItem_withIdOfExistingItem_createsNewItemAndKeepsExistingOne() throws Exception {
+        clearItems();
+        Item existing = saveDocItem(userEntity(ADMIN_LOGIN), "Admin item", "Owned by admin");
+
+        mockMvc.perform(post("/items/")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":" + existing.getId() + ",\"name\":\"Hijacked\",\"description\":\"x\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.not(existing.getId().intValue())))
+                .andExpect(jsonPath("$.author.login").value(MANAGER_LOGIN));
+
+        Item unchanged = itemRepository.findById(existing.getId()).orElseThrow();
+        assertEquals("Admin item", unchanged.getName());
+        assertEquals(ADMIN_LOGIN, unchanged.getAuthor().getLogin());
+    }
+
+    /**
+     * The author and deletion state can't be set through an update request.
+     */
+    @Test
+    @Transactional
+    public void updateItem_withAuthorAndDeletedFields_ignoresThem() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(MANAGER_LOGIN), "Manager item", "Owned by manager");
+        long adminId = userEntity(ADMIN_LOGIN).getId();
+
+        mockMvc.perform(put("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Renamed\",\"description\":\"x\",\"deleted\":true,"
+                                + "\"author\":{\"id\":" + adminId + "}}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Renamed"))
+                .andExpect(jsonPath("$.deleted").value(false))
+                .andExpect(jsonPath("$.author.login").value(MANAGER_LOGIN));
+    }
+
+    /**
+     * An item without name is refused with 400 and the invalid field.
+     */
+    @Test
+    @Transactional
+    public void createItem_withBlankName_returns400() throws Exception {
+        mockMvc.perform(post("/items/")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\" \",\"description\":\"x\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
     // ==================== Items without author ====================
 
     /**

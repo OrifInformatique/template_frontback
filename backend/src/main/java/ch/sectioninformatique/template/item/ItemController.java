@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -83,8 +84,10 @@ public class ItemController {
      */
     @PreAuthorize("hasAuthority('item:write')")
     @PostMapping("/")
-    public Item createItem(@RequestBody Item item) {
-        return itemService.createItem(item);
+    public Item createItem(@RequestBody @Valid ItemRequestDto item) {
+        // A new entity built from the allowed fields only: a client can't choose
+        // the id (which would overwrite an existing item), author or deletion state
+        return itemService.createItem(item.toItem());
     }
 
     /**
@@ -99,8 +102,8 @@ public class ItemController {
      */
     @PreAuthorize("hasAuthority('item:update')")
     @PutMapping("/{id}")
-    public Item updateItem(@PathVariable Long id, @RequestBody Item item) {
-        return itemService.updateItem(id, item);
+    public Item updateItem(@PathVariable Long id, @RequestBody @Valid ItemRequestDto item) {
+        return itemService.updateItem(id, item.toItem());
     }
 
     /**
