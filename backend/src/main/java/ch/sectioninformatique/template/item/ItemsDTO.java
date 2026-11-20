@@ -22,8 +22,11 @@ public class ItemsDTO {
         this.id = item.getId();
         this.name = item.getName();
         this.description = item.getDescription();
-        this.authorFirstName = item.getAuthor().getFirstName();
-        this.authorLastName = item.getAuthor().getLastName();
+        // The author is null once permanently deleted (@OnDelete SET_NULL)
+        if (item.getAuthor() != null) {
+            this.authorFirstName = item.getAuthor().getFirstName();
+            this.authorLastName = item.getAuthor().getLastName();
+        }
         this.createdAt = item.getCreatedAt();
         this.updatedAt = item.getUpdatedAt();
         this.deleted = item.isDeleted();

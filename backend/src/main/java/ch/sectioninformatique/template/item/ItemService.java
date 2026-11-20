@@ -67,6 +67,18 @@ public class ItemService {
     }
 
     /**
+     * Checks whether a user is the author of an item. An item whose author was
+     * permanently deleted (author set to null) has no author anymore.
+     *
+     * @param item The item
+     * @param user The user
+     * @return true if the user is the item's author
+     */
+    private boolean isAuthor(Item item, User user) {
+        return item.getAuthor() != null && item.getAuthor().getId() == user.getId();
+    }
+
+    /**
      * Creates a new item in the system.
      * The item is associated with the current user as its author.
      *
@@ -125,7 +137,7 @@ public class ItemService {
         boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
         
         if (!isAdmin && !isSuperAdmin) {
-            if (item.getAuthor().getId() != currentUser.getId()) {
+            if (!isAuthor(item, currentUser)) {
                 throw new UnauthorizedItemException("delete");
             }
         }
@@ -167,9 +179,7 @@ public class ItemService {
                 logger.debug("User roles - isAdmin: {}, isSuperAdmin: {}", isAdmin, isSuperAdmin);
 
                 if (!isAdmin && !isSuperAdmin) {
-                    logger.debug("Checking authorization - Item author ID: {}, Current user ID: {}", 
-                        item.getAuthor().getId(), currentUser.getId());
-                    if (item.getAuthor().getId() != currentUser.getId()) {
+                    if (!isAuthor(item, currentUser)) {
                         logger.debug("Authorization failed - User is not the author of the item");
                         throw new UnauthorizedItemException("update");
                     }

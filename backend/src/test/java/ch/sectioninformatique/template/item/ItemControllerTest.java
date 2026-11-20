@@ -586,4 +586,43 @@ public class ItemControllerTest {
                     }
                 });
     }
+
+    // ==================== Items without author ====================
+
+    /**
+     * An item whose author was permanently deleted (author set to null) does not
+     * break the item list.
+     */
+    @Test
+    @Transactional
+    public void getItems_withItemWithoutAuthor_returns200() throws Exception {
+        clearItems();
+        saveDocItem(null, "Orphan item", "Author permanently deleted");
+
+        mockMvc.perform(get("/items").header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(USER_LOGIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Orphan item"))
+                .andExpect(jsonPath("$[0].authorFirstName").doesNotExist());
+    }
+
+    /**
+     * Nobody is the author of an item without author: a non-admin can't update
+     * or delete it (403, not a 500).
+     */
+    @Test
+    @Transactional
+    public void updateAndDeleteItem_withoutAuthor_asNonAdmin_returns403() throws Exception {
+        clearItems();
+        Item item = saveDocItem(null, "Orphan item", "Author permanently deleted");
+        String managerToken = tokenFor(MANAGER_LOGIN);
+
+        mockMvc.perform(put("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(itemJson("Taken over", "Not allowed")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken))
+                .andExpect(status().isForbidden());
+    }
 }
