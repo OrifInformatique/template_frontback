@@ -53,6 +53,19 @@ public final class RestDocsSnippets {
                         .description("App-specific roles assigned at registration"));
     }
 
+    /** Matches {@code UserUpdateDto} (PUT /users/{id}). */
+    public static Snippet userUpdateRequest() {
+        return requestFields(
+                fieldWithPath("firstName").description("First name"),
+                fieldWithPath("lastName").optional().type(JsonFieldType.STRING)
+                        .description("Last name (optional: some Azure accounts have none)"),
+                fieldWithPath("login").description("Email used as login"),
+                fieldWithPath("mainRole").optional().type(JsonFieldType.STRING)
+                        .description("New main role (USER, MANAGER or ADMIN), changed in spring-auth; omit to keep it"),
+                fieldWithPath("appSpecificRoles").optional().type(JsonFieldType.ARRAY)
+                        .description("New app-specific (local) roles, replacing the current ones; omit to keep them"));
+    }
+
     /** Matches {@code TokenResponseDto} ({@code accessToken} only). */
     public static Snippet refreshResponse() {
         return responseFields(

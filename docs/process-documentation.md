@@ -317,10 +317,11 @@ sequenceDiagram
     Note over Client,UserController: Get Current User
     Client->>JwtAuthFilter: GET /users/me with JWT token
     JwtAuthFilter->>UserController: Authorized UserDto from SecurityContext
-    UserController->>Client: UserDto in response
+    UserController->>UserService: addLocalRolesAndPermissions(currentUser, id)
+    UserController->>Client: UserDto with local roles and all permissions
 
-    Note over Client,UserController: Get Users (state = active | deleted | all)
-    Client->>JwtAuthFilter: GET /users?state=active with JWT token
+    Note over Client,UserController: Get Users (status = ACTIVE | DELETED | ALL)
+    Client->>JwtAuthFilter: GET /users?status=ACTIVE with JWT token
     JwtAuthFilter->>UserController: Authorized (requires user:read)
     UserController->>UserService: allUsers() / deletedUsers() / allWithDeletedUsers()
     UserService->>UserRepository: findAllByDeletedFalse() / findAllDeleted() / findAllIncludingDeleted()
@@ -328,36 +329,19 @@ sequenceDiagram
     UserService-->>UserController: List<User>
     UserController->>Client: List of Users
 
-    Client->>SecurityLayer: /users/{userId}/promote-admin
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    UserController->>UserService: UserService.promoteToAdmin(userId)
-    UserService->>UserRepository: UserRepository.findById(userId)
-    UserRepository->>UserService: Found User
-    UserService->>UserRepository: UserRepository.save(user) with updated role
-    UserService->>UserMapper: UserMapper.toUserDto(user)
-    UserMapper->>UserController: UserDto
-    UserController->>Client: Response "User promoted to admin successfully"
-    Client->>SecurityLayer: /users/{userId}/promote-admin
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    note right of UserController: Global admin role promotion via spring-auth
-    UserController->>UserService: UserService.promoteToAdmin(userId, token)
-    UserService->>AuthClient: authClient.promoteToAdmin(userId, token)
-    AuthClient->>UserService: Response from spring-auth
-    UserController->>Client: Response "User promoted to admin successfully"
-
-    Client->>SecurityLayer: /users/{userId}/promote-local-manager-role
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    note right of UserController: Local app-specific role promotion (local database)
-    UserController->>UserService: UserService.promoteToLocalManagerRole(userId)
-    UserService->>UserRepository: UserRepository.findById(userId)
-    UserRepository->>UserService: Found User
-    UserService->>UserRepository: UserRepository.save(user) with updated app-specific role
-    UserService->>UserMapper: UserMapper.toUserDto(user)
-    UserMapper->>UserController: UserDto
-    UserController->>Client: Response "User promoted to local app role successfully"
+    Note over Client,AuthClient: Update User (profile, main role, app-specific roles)
+    Client->>SecurityLayer: PUT /users/{userId}
+    SecurityLayer->>UserController: Authorized (requires user:update)
+    UserController->>UserService: updateUser(userId, UserUpdateDto, token)
+    UserService->>AuthClient: updateUser(token, userId, profile)
+    AuthClient-->>UserService: Global user from spring-auth
+    note right of UserService: Main role changed in spring-auth only if given and different
+    UserService->>AuthClient: changeMainRole(token, userId, role)
+    UserService->>UserRepository: save(user) with global data and app-specific roles
+    UserController->>Client: 200 with the updated UserDto
 
     Note over Client,UserRepositoryImpl: Permanent Local Deletion (hard delete)
-    Client->>UserController: DELETE /users/{userId}?global=false&hard=true
+    Client->>UserController: DELETE /users/{userId}?permanent=true
     UserController->>UserService: deleteUserPermanent(userId)
     UserService->>UserRepositoryImpl: deletePermanentlyById(userId)
     UserRepositoryImpl->>UserRepositoryImpl: delete users_app_specific_roles links first

@@ -57,65 +57,26 @@ It also uses `AuthService` to communicate with the authentication service.
 - `UserService` :\
 UserService is used to do user related operations :
     - Get users
-    - Update users
-    - Delete users (Soft or not)
+    - Update users (profile and main role in spring-auth, app-specific roles locally)
+    - Delete users (soft or permanent, local or global)
     - Restore users
-    - Manage user roles
 
-- `MessageSource` :\
-MessageSource is used to get translated text and avoid hardcoding it.
-
-- `AuthClient` :\
-It communicates with the internal or external authentication service to :
-    - Promote a user to manager
-    - Remove manager privileges
-    - Promote a user to administrator
-    - Remove administrator privileges
-    - Downgrade an administrator to manager
+The access token used to call spring-auth on behalf of the user is read from the
+authentication (`BearerToken.current()`), not from a header parameter.
 
 ### Endpoints
 
-- `GET /users/me` :
-    - Get current local user
+Users are always identified by their ID (the spring-auth user ID). Errors use the
+standard `ErrorResponse` body.
 
-- `GET /users/all` :
-    - Get all users
-
-- `GET /users/all-with-deleted` :
-    - Get all users, soft deleted included
-
-- `GET /users/deleted` :
-    - Get soft deleted users
-
-- `DELETE /users/{userId}/{global}` :
-    - Soft delete user
-
-- `DELETE /users/{userId}/{global}/{hardDelete}` :
-    - Soft or hard delete user
-
-- `PUT /users/{userId}/promote-manager` :
-    - Promote manager
-
-- `PUT /users/{userId}/revoke-manager` :
-    - Revoke manager privileges
-
-- `PUT /users/{userId}/promote-admin` :
-    - Promote an admin
-
-- `PUT /users/{userId}/revoke-admin` :
-    - Revoke administrator privileges
-
-- `PUT /users/{userId}/downgrade-admin` :
-    - Downgrade an Admin -> Manager
-
-- `PUT /users/{userId}/promote-local-manager-role` :
-    - Add local role
-
-- `PUT /users/{id}` :
-    - Update user
-
-- `PUT /users/{id}/restore` :
-    - Restore soft deleted user (hard deleted users cannot be restored)
+| Endpoint | Authority | Response |
+|---|---|---|
+| `GET /users/me` | authenticated | `200`, the authenticated user with its local roles and all its permissions (global and local) |
+| `GET /users?status=ACTIVE\|DELETED\|ALL` | `user:read` | `200`, the users (`ACTIVE` by default, case-insensitive) |
+| `GET /users/{id}` | `user:read` | `200`, the user, soft-deleted or not; `404` if unknown |
+| `PUT /users/{id}` | `user:update` | `200`, the updated user (profile, main role, app-specific roles) |
+| `DELETE /users/{id}?permanent=false&scope=LOCAL` | `user:delete` | `204`; `permanent=true` removes the user, `scope=GLOBAL` deletes it in spring-auth too |
+| `POST /users/{id}/restore` | `user:update` | `200`, the restored user (permanently deleted users cannot be restored) |
 
 ---
 
