@@ -1117,7 +1117,7 @@ The method performs several checks before saving the user.
 
 #### 1. Validate required fields
 
-The login, first name, and last name must not be empty.
+The login and first name must not be empty. The last name is optional, as in spring-auth (some Azure accounts have none).
 
 If a required field is missing, a `UserValidationException` is thrown.
 
@@ -1166,27 +1166,39 @@ The new user is then saved to the database.
 ### getOrCreateAuthenticatedUser()
 
 ```java
-public User getOrCreateAuthenticatedUser(UserDto userDto)
+public User getOrCreateAuthenticatedUser(UserDto userDto, Long userId)
 ```
 
-Checks whether an authenticated user already exists in the local database.
+Finds the local user matching a user authenticated by spring-auth, **by its id**
+(the spring-auth user id is also the local user id). The login is never used to
+find the user: it can change in spring-auth, and several logins can share a
+common part.
 
-If the user exists, the existing user is returned.
+If the user exists, its login, first name and last name are synced with
+spring-auth, and it is returned. This includes a user soft-deleted locally: the
+local soft delete only hides the user from the user lists, it does not prevent
+the user from using the application (and the user is not re-created).
 
-If the user does not exist, a `RegisterDto` is created from the authenticated user's information and the user is registered locally.
+If the user does not exist, a `RegisterDto` is created from the authenticated user's
+information and the user is registered locally with the spring-auth id. If another
+local user already has the same login, `DuplicateUserException` is thrown.
+
+It is used on every authenticated request (`UserAuthenticationProvider`), at login
+and at the end of the Azure OAuth2 login (`addLocalRolesAndPermissions()`).
 
 ```text
-Authenticated user
+Authenticated user (id from spring-auth)
        |
-Check local database
+Find local user by id
        |
    Exists?
    /     \
  YES      NO
  |        |
-Return   Register
-user       |
-         Save user
+Sync      Register with
+login/    the same id
+names,
+return user
 ```
 
 ---
@@ -1417,32 +1429,6 @@ A permanently deleted user cannot be restored because its database record no lon
 
 ---
 
-# Get or create user
-
-### getOrCreateUser()
-
-```java
-public UserDto getOrCreateUser(UserDto userDto)
-```
-
-Checks whether a user already exists using their login.
-
-It also retrieves the user's main role from the database.
-
-If the user does not exist, a new `User` is created using:
-
-* first name
-* last name
-* login
-* main role
-* app-specific roles
-
-The new user is saved and converted into a `UserDto`.
-
-If the user already exists, the existing user is simply converted into a `UserDto`.
-
----
-
 # Exception handling
 
 `UserService` uses the custom exceptions defined in `UserExceptions.java`.
@@ -1495,7 +1481,7 @@ It handles:
 | Function                       | Main methods                                                             |
 | ------------------------------ | ------------------------------------------------------------------------ |
 | User retrieval                 | `allUsers()`, `allWithDeletedUsers()`, `deletedUsers()`, `findByLogin()` |
-| User creation                  | `register()`, `getOrCreateUser()`                                        |
+| User creation                  | `register()`                                                             |
 | Authentication synchronization | `getOrCreateAuthenticatedUser()`                                         |
 | Role management                | `promoteToLocalManagerRole()`, `updateMainRole()`, `getRolesList()`          |
 | User update                    | `updateUser()`                                                           |

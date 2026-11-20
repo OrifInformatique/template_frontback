@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -185,10 +186,10 @@ public class UserService {
      */
     public User register(RegisterDto registerDto, Long userId) {
         try {
-            // Basic validation before persisting
+            // Basic validation before persisting. The last name is optional, as in
+            // spring-auth: some Azure accounts have none.
             if (registerDto.login() == null || registerDto.login().isBlank()
-                    || registerDto.firstName() == null || registerDto.firstName().isBlank()
-                    || registerDto.lastName() == null || registerDto.lastName().isBlank()) {
+                    || registerDto.firstName() == null || registerDto.firstName().isBlank()) {
                 throw new UserValidationException("user.validation.missingFields", true);
             }
 
@@ -231,41 +232,48 @@ public class UserService {
     }
 
     /**
-     * Get or create an authenticated user.
+     * Gets or creates the local user matching a user authenticated by spring-auth.
      * This method:
-     * - Get the list of user in the database
-     * - test the existence of the cureent user
-     * - Register the current user if not in the database
+     * - Looks the local user up by its id, which is the spring-auth user id
+     * - Keeps a user soft-deleted locally as is: the soft delete only hides it
+     *   from the user lists, it can still use the application
+     * - Keeps the local login and names in sync with spring-auth
+     * - Registers the user locally if it has no local row yet
      *
-     * @param userDto The user registration data
+     * @param userDto The user as authenticated by spring-auth
+     * @param userId  The spring-auth user id, also the local user id
      * @return Found or created user
+     * @throws DuplicateUserException if another local user already has this login
      * @throws UserCreationException if user creation fails
      */
     public User getOrCreateAuthenticatedUser(UserDto userDto, Long userId) {
         try {
-            List<User> users = userRepository.findAll();
+            Optional<User> optionalUser = userRepository.findById(userId);
 
-            User localUser = null;
-
-            for (User user : users) {
-                if (user.getUsername().contains(userDto.getLogin())) {
-                    localUser = user;
-                }
-            }
-
-            if (localUser == null) {
+            if (optionalUser.isEmpty()) {
                 RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                        userDto.getLogin(), null, null, null);
-
-                localUser = this.register(newUser, userId);
+                        userDto.getLogin(), null, userDto.getMainRole(), null);
+                return this.register(newUser, userId);
             }
-            
-            userRepository.save(localUser);
+
+            User localUser = optionalUser.get();
+
+            // spring-auth owns the login and names: mirror any change made there
+            if (!Objects.equals(localUser.getLogin(), userDto.getLogin())
+                    || !Objects.equals(localUser.getFirstName(), userDto.getFirstName())
+                    || !Objects.equals(localUser.getLastName(), userDto.getLastName())) {
+                localUser.setLogin(userDto.getLogin());
+                localUser.setFirstName(userDto.getFirstName());
+                localUser.setLastName(userDto.getLastName());
+                localUser = userRepository.save(localUser);
+            }
+
             return localUser;
-        } catch (DuplicateUserException | DefaultRoleNotFoundException | UserCreationException e) {
+        } catch (DuplicateUserException | DefaultRoleNotFoundException
+                | UserCreationException | UserValidationException e) {
             throw e;
         } catch (Exception e) {
-            log.error("ERROR : {} | Message : {} | StackTrace : {}", e.getClass(), e.getMessage(), e.getStackTrace());
+            log.error("ERROR : {} | Message : {}", e.getClass(), e.getMessage(), e);
             throw new UserCreationException(e.getMessage());
         }
     }
@@ -616,33 +624,6 @@ public class UserService {
 
         // Save modified Entity
         userRepository.save(userToRestore);
-    }
-
-    public UserDto getOrCreateUser(UserDto userDto){
-
-        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
-
-        if(optionalUser.isEmpty()){
-            MainRoleEnum mainRole;
-            try {
-                mainRole = MainRoleEnum.valueOf(userDto.getMainRole());
-            } catch (IllegalArgumentException | NullPointerException e) {
-                throw new RoleNotFoundException();
-            }
-
-            User newUser = User.builder()
-                .id(userDto.getId())
-                .firstName(userDto.getFirstName())
-                .lastName(userDto.getLastName())
-                .login(userDto.getLogin())
-                .mainRole(mainRole)
-                .build();
-
-            userRepository.save(newUser);
-            return userMapper.toUserDto(newUser);
-        }
-
-        return userMapper.toUserDto(optionalUser.get());
     }
 
     /**

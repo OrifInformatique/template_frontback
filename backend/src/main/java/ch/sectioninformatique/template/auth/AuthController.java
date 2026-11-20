@@ -235,10 +235,10 @@ public class AuthController {
 
         log.debug("Got tokens, get or create the logged user in local database");
 
-        UserDto loggedUser = userService.getOrCreateUser(user);
-       
-        loggedUser.setToken(user.getToken());
-        loggedUser.setPermissions(userService.addLocalRolesAndPermissions(user, userId).getPermissions());
+        // Same response as a standard login: the spring-auth user (with its token),
+        // completed with its local roles and permissions. The local user is found
+        // by its spring-auth id, or created.
+        UserDto loggedUser = userService.addLocalRolesAndPermissions(user, user.getId());
         session.setAttribute("loggedUser", loggedUser);
 
         log.debug("Redirecting to: {}", afterOauth2LoginFrontendCallback);
