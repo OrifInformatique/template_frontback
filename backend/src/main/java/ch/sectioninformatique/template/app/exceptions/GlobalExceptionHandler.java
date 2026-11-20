@@ -9,6 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestValueException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -182,6 +183,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Object> handleMissingParams(MissingServletRequestParameterException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /**
+     * Handles MissingRequestValueException - thrown when a required request
+     * value other than a query parameter is missing, such as a cookie
+     * ({@code @CookieValue}) or a header ({@code @RequestHeader}).
+     *
+     * Example: POST /auth/refresh without the 'refresh_token' cookie
+     *
+     * @param ex The MissingRequestValueException from Spring
+     * @return ResponseEntity with HTTP 400 and the missing value in the message
+     */
+    @ExceptionHandler(MissingRequestValueException.class)
+    public ResponseEntity<Object> handleMissingRequestValue(MissingRequestValueException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getBody().getDetail());
     }
 
     /**

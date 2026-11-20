@@ -138,6 +138,15 @@ public class UserExceptions {
             this.detail = null;
         }
 
+        /**
+         * @param status the status to answer, e.g. the one of spring-auth's error
+         * @param detail the error detail
+         */
+        public UserUpdateException(HttpStatus status, String detail) {
+            super(status);
+            this.detail = detail;
+        }
+
         @Override
         public String getMessageKey() {
             return "user.update.failed";
@@ -173,6 +182,16 @@ public class UserExceptions {
             super(HttpStatus.BAD_REQUEST);
             this.messageKey = "user.delete.failed";
             this.messageArgs = NO_ARGS;
+        }
+
+        /**
+         * @param status the status to answer, e.g. the one of spring-auth's error
+         * @param detail the error detail
+         */
+        public UserDeletionException(HttpStatus status, String detail) {
+            super(status);
+            this.messageKey = "user.delete.failed";
+            this.messageArgs = new Object[] { detail };
         }
 
         @Override

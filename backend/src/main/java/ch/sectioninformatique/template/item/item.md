@@ -127,7 +127,7 @@ It uses the HTTP status `404 NOT_FOUND` and the message key `item.notFound`.
 
 Thrown when a user tries to perform an operation on an item they are not authorized to access.
 
-It uses the HTTP status `401 UNAUTHORIZED` and the message key `item.unauthorized`.
+It uses the HTTP status `403 FORBIDDEN` (the user is authenticated, but not allowed on this item) and the message key `item.unauthorized`.
 
 Both exceptions implement `MessageKeyProvider` so that their error messages can be handled by the application's internationalization system.
 

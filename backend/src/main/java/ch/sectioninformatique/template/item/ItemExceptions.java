@@ -34,7 +34,8 @@ public class ItemExceptions {
         * @param message The operation that was attempted (e.g., "update", "delete")
         */
         public UnauthorizedItemException(String message) {
-            super(HttpStatus.UNAUTHORIZED);
+            // Authenticated, but not allowed on this item: 403, not 401
+            super(HttpStatus.FORBIDDEN);
             // The operation is encoded in the i18n bundle, so no args are passed here.
         }
 

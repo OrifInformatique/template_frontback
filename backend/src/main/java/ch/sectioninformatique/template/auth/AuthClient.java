@@ -2,6 +2,7 @@ package ch.sectioninformatique.template.auth;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -10,6 +11,7 @@ import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.AuthCodeNotFoundException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
@@ -115,6 +117,33 @@ public class AuthClient {
                         return servletAttributes.getRequest().getParameter("lang");
                 }
                 return null;
+        }
+
+        /**
+         * Status to answer for an error status of spring-auth: the same one for a
+         * client error (404, 403, 409...), 502 Bad Gateway for a server error,
+         * which is not the caller's fault but spring-auth's.
+         * @param status the error status answered by spring-auth
+         * @return the status to answer to the caller
+         */
+        private static HttpStatus springAuthStatus(HttpStatusCode status) {
+                HttpStatus resolved = HttpStatus.resolve(status.value());
+                return resolved != null && resolved.is4xxClientError() ? resolved : HttpStatus.BAD_GATEWAY;
+        }
+
+        /**
+         * Message of an error response of spring-auth. Never empty: an error
+         * response without (readable) body yields its status instead, so that
+         * the error is not mistaken for a success.
+         * @param response the error response of spring-auth
+         * @return the error message
+         */
+        private static Mono<String> errorMessage(ClientResponse response) {
+                String fallback = response.statusCode().toString();
+                return response.bodyToMono(ErrorDto.class)
+                                .mapNotNull(ErrorDto::message)
+                                .onErrorResume(e -> Mono.empty())
+                                .defaultIfEmpty(fallback);
         }
 
         /**
@@ -356,9 +385,10 @@ public class AuthClient {
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserDeletionException(
-                                                                                error.message()))))
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new UserDeletionException(
+                                                                                springAuthStatus(response.statusCode()),
+                                                                                message))))
                                 .toBodilessEntity();
         }
 
@@ -384,9 +414,10 @@ public class AuthClient {
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400
                                                 && !status.isSameCodeAs(HttpStatus.NOT_FOUND),
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserUpdateException(
-                                                                                error.message()))))
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new UserUpdateException(
+                                                                                springAuthStatus(response.statusCode()),
+                                                                                message))))
                                 .toBodilessEntity()
                                 // Not soft-deleted globally: nothing to restore on spring-auth side
                                 .onErrorResume(WebClientResponseException.NotFound.class,
@@ -438,15 +469,14 @@ public class AuthClient {
                 .bodyValue(authCodeDto)
                 .exchangeToMono(response ->{
                         if(response.statusCode().isError()){
-                                return response.bodyToMono(ErrorDto.class)
-                                .flatMap(error ->{
-                                        HttpStatusCode status = response.statusCode();
-                                        if(status.isSameCodeAs(HttpStatus.NOT_FOUND)){
-                                                return Mono.error(new AuthCodeNotFoundException());
-                                        }
-                                        return Mono.error(new RuntimeException(error.message()));
-
-                                });
+                                // Unknown or expired code: 404; any other error (e.g. invalid
+                                // request, code/user mismatch): the OAuth2 login failed, 401
+                                if(response.statusCode().isSameCodeAs(HttpStatus.NOT_FOUND)){
+                                        return response.releaseBody()
+                                                .then(Mono.error(new AuthCodeNotFoundException()));
+                                }
+                                return errorMessage(response)
+                                        .flatMap(message -> Mono.error(new OAuth2AuthenticationException(message)));
                         }
 
                         //Extract the body
@@ -487,9 +517,10 @@ public class AuthClient {
                                 .bodyValue(profile)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserUpdateException(
-                                                                                error.message()))))
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new UserUpdateException(
+                                                                                springAuthStatus(response.statusCode()),
+                                                                                message))))
                                 .toEntity(UserDto.class);
         }
 }

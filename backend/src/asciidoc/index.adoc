@@ -1150,15 +1150,15 @@ include::{snippets}/items/update-own/http-request.adoc[]
 .response
 include::{snippets}/items/update-own/http-response.adoc[]
 
-==== 5.6.1 Error 401 - Unauthorized (Not the Author)
+==== 5.6.1 Error 403 - Forbidden (Not the Author)
 
 .request
-include::{snippets}/items/update/401/unauthorized/http-request.adoc[]
+include::{snippets}/items/update/403/not-author/http-request.adoc[]
 
 .response
-include::{snippets}/items/update/401/unauthorized/http-response.adoc[]
+include::{snippets}/items/update/403/not-author/http-response.adoc[]
 
-==== 5.6.2 Error 403 - Forbidden
+==== 5.6.2 Error 403 - Forbidden (Missing Permission)
 
 .request
 include::{snippets}/items/update/403/forbidden/http-request.adoc[]

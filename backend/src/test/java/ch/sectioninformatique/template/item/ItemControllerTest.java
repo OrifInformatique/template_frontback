@@ -402,7 +402,7 @@ public class ItemControllerTest {
 
     @Test
     @Transactional
-    public void updateItem_asNonAuthor_returns401() throws Exception {
+    public void updateItem_asNonAuthor_returns403() throws Exception {
         clearItems();
         Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
 
@@ -411,8 +411,8 @@ public class ItemControllerTest {
                 "/items/" + item.getId(),
                 itemJson("Stolen update", "Not allowed"),
                 tokenFor(MANAGER_LOGIN),
-                401,
-                "update/401/unauthorized",
+                403,
+                "update/403/not-author",
                 response -> {
                     try {
                         response.andExpect(jsonPath("$.message").value(getMessage("item.unauthorized")));
