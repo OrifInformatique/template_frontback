@@ -155,4 +155,19 @@ public class AuthExceptions {
             return "auth.code.not.found";
         }
     }
+
+    /**
+     * Thrown when the frontend asks for the result of an Azure OAuth2 login
+     * ({@code GET /auth/tokens}) but none is waiting in its session.
+     */
+    public static class OAuth2LoginResultNotFoundException extends AppException implements MessageKeyProvider {
+        public OAuth2LoginResultNotFoundException() {
+            super(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Override
+        public String getMessageKey() {
+            return "auth.oauth2.result.notFound";
+        }
+    }
 }

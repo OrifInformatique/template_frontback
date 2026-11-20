@@ -408,7 +408,7 @@ sequenceDiagram
         JwtAuthFilter->>UserAuthenticationEntryPoint: commence(authException)
         UserAuthenticationEntryPoint->>MessageSource: Resolve auth message key
         MessageSource-->>UserAuthenticationEntryPoint: Localized auth message
-        UserAuthenticationEntryPoint-->>Client: 401 Unauthorized JSON ErrorDto
+        UserAuthenticationEntryPoint-->>Client: 401 Unauthorized JSON ErrorResponse
     else Token valid
         JwtAuthFilter-->>JwtAuthFilter: Set SecurityContext with Authentication
         JwtAuthFilter-->>UserController: Forward request
@@ -416,7 +416,7 @@ sequenceDiagram
             UserController->>CustomAccessDeniedHandler: AccessDeniedException
             CustomAccessDeniedHandler->>MessageSource: Resolve access denied key
             MessageSource-->>CustomAccessDeniedHandler: Localized forbidden message
-            CustomAccessDeniedHandler-->>Client: 403 Forbidden JSON ErrorDto
+            CustomAccessDeniedHandler-->>Client: 403 Forbidden JSON ErrorResponse
         else Authorized
             note right of UserController: Controller handles authorized request
             UserController->>UserService: Perform business logic
@@ -451,11 +451,12 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 | File                                   | Description                                                |
 | -------------------------------------- | ---------------------------------------------------------- |
-| `errors/ErrorDto.java`                 | Record serving as Data Transfer Object for errors.         |
+| `errors/ErrorResponse.java`            | Body of every error response: `timestamp`, `status`, `error`, `message`, `fieldErrors` (validation only); same as spring-auth. |
+| `errors/ErrorResponseWriter.java`      | Writes an `ErrorResponse` from the security components (filter, entry point, access denied handler), in the language of the request. |
 | `exceptions/AppException.java`         | Base exception carrying HTTP status for all application/domain exceptions. |
 | `exceptions/AppMessageKeyException.java` | Generic exception for explicit message-key based errors with optional args. |
 | `exceptions/MessageKeyProvider.java`   | Contract for exceptions exposing i18n message keys and formatting arguments. |
-| `exceptions/GlobalExceptionHandler.java` | Global REST exception handler resolving message keys through `MessageSource`; includes validation `fieldErrors`. |
+| `exceptions/GlobalExceptionHandler.java` | Global REST exception handler resolving message keys through `MessageSource` into an `ErrorResponse` (400/401/404/405/415/500 for Spring's own exceptions); includes validation `fieldErrors`. |
 
 ---
 

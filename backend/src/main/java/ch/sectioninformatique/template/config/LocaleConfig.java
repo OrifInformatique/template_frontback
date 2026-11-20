@@ -40,6 +40,9 @@ public class LocaleConfig implements WebMvcConfigurer {
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
         messageSource.setBasenames(resolveMessageBasenames());
         messageSource.setDefaultEncoding("UTF-8");
+        // Always apply MessageFormat, also to messages without arguments, so that
+        // the escaped apostrophes of the bundles ('') are rendered as one (')
+        messageSource.setAlwaysUseMessageFormat(true);
         messageSource.setCacheSeconds(3600);
         return messageSource;
     }

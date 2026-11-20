@@ -6,7 +6,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.AuthCodeNotFoundException;
@@ -140,8 +139,10 @@ public class AuthClient {
          */
         private static Mono<String> errorMessage(ClientResponse response) {
                 String fallback = response.statusCode().toString();
-                return response.bodyToMono(ErrorDto.class)
-                                .mapNotNull(ErrorDto::message)
+                // Read as a generic map: only "message" is needed, whatever the
+                // other fields of the body (spring-auth sends an ErrorResponse)
+                return response.bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() { })
+                                .mapNotNull(body -> body.get("message") instanceof String message ? message : null)
                                 .onErrorResume(e -> Mono.empty())
                                 .defaultIfEmpty(fallback);
         }
@@ -161,8 +162,8 @@ public class AuthClient {
                                 .bodyValue(credentialsDto)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> {
+                                                return errorMessage(response)
+                                                                .flatMap(message -> {
                                                                         HttpStatusCode status = response.statusCode();
                                                                         if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
                                                                                 return Mono.error(new UserNotFoundException());
@@ -228,17 +229,17 @@ public class AuthClient {
                                 .bodyValue(user)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> {
+                                                return errorMessage(response)
+                                                                .flatMap(message -> {
                                                                         if (response.statusCode().isSameCodeAs(
                                                                                         HttpStatus.CONFLICT)) {
                                                                                 return Mono.error(
                                                                                                 new LoginAlreadyExistsException(
-                                                                                                                error.message()));
+                                                                                                                message));
                                                                         }
                                                                         return Mono.error(
                                                                                         new RegistrationFailedException(
-                                                                                                        error.message()));
+                                                                                                        message));
                                                                 });
                                         }
 
@@ -275,10 +276,10 @@ public class AuthClient {
                                 .cookie("refresh_token", refreshToken)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
+                                                return errorMessage(response)
+                                                                .flatMap(message -> Mono.error(
                                                                                 new InvalidRefreshTokenException(
-                                                                                                error.message())));
+                                                                                                message)));
                                         }
 
                                         Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
@@ -316,10 +317,10 @@ public class AuthClient {
                                 .bodyValue(passwordUpdateDto)
                                 .retrieve()
                                 .onStatus(HttpStatusCode::isError,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(
                                                                                 new PasswordUpdateFailedException(
-                                                                                                error.message()))))
+                                                                                                message))))
                                 .toBodilessEntity();
         }
 
@@ -339,12 +340,12 @@ public class AuthClient {
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppMessageKeyException(
+                                                return errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new AppMessageKeyException(
                                                                                 HttpStatus.resolve(response
                                                                                                 .statusCode()
                                                                                                 .value()),
-                                                                                error.message())));
+                                                                                message)));
                                         }
 
                                         // Extract response body
@@ -447,13 +448,13 @@ public class AuthClient {
                                 .retrieve()
                                 // Convert error responses (4xx and 5xx) into AppException
                                 .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(
                                                                                 new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
                                                                                                                                 .value()),
-                                                                                                error.message()))))
+                                                                                                message))))
                                 .toEntity(UserDto.class);
         }
 

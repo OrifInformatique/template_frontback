@@ -2,37 +2,56 @@
 
 ## Table of Contents
 - [Errors](#errors)
-    - [ErrorDto.java](#errordtojava)
+    - [ErrorResponse.java](#errorresponsejava)
+    - [ErrorResponseWriter.java](#errorresponsewriterjava)
 - [Exceptions](#exceptions)
     - [AppException.java](#appexceptionjava)
     - [AppMessageKeyException.java](#appmessagekeyexceptionjava)
     - [GlobalExceptionHandler.java](#globalexceptionhandlerjava)
-        - [handleAppException()](#handleappexception)
-        - [handleAccessDenied()](#handleaccessdenied)
-        - [handleValidationErrors()](#handlevalidationerrors)
-        - [handleUnsupportedMediaType()](#handleunsupportedmediatype)
-        - [handleMissingParams()](#handlemissingparams)
-        - [handleMalformedJson()](#handlemalformedjson)
-        - [Error Response](#error-response)
     - [MessageKeyProvider.java](#messagekeyproviderjava)
         - [getMessageKey()](#getmessagekey)
         - [getMessageArgs()](#getmessageargs)
         - [NO_ARGS](#no_args)
 
 ## *Errors*
-### ErrorDto.java
+### ErrorResponse.java
 
-`ErrorDto` is a Data Transfer Object used to represent error responses in the REST API.
-
-It provides a standardized structure for returning error messages.
+`ErrorResponse` is the body of **every** error response of the API, whatever
+component produces it: `GlobalExceptionHandler`, the JWT filter, the
+authentication entry point and the access denied handler (through
+`ErrorResponseWriter`). It is the same structure as spring-auth's, so clients
+only have one error format to handle.
 
 It contains :
 
-* `message`
+* `timestamp` : when the error occurred (ISO-8601 UTC instant)
+* `status` : HTTP status code
+* `error` : HTTP reason phrase (e.g. `Unauthorized`)
+* `message` : localized, human-readable message
+* `fieldErrors` : validation messages keyed by field name, **only present on validation errors** (`@JsonInclude(NON_NULL)`)
 
-The `message` field contains a description of what went wrong.
+```json
+{
+  "timestamp": "2026-11-20T15:23:02.338Z",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Invalid or missing authentication token"
+}
+```
 
-Because `ErrorDto` is a Java `record`, it is immutable and automatically provides its constructor, getter, `equals()`, `hashCode()`, and `toString()` methods.
+Clients never receive a stack trace, a parser message or another
+implementation detail: messages always come from the i18n bundles.
+
+### ErrorResponseWriter.java
+
+`ErrorResponseWriter` writes an `ErrorResponse` directly to the servlet response.
+
+It is used by the components running before Spring MVC (`JwtAuthFilter`,
+`UserAuthenticationEntryPoint`, `CustomAccessDeniedHandler`), where
+`@ExceptionHandler` methods do not apply. Its `write(request, response, status,
+messageKey)` method resolves the message in the language of the request: the
+`lang` parameter if given, otherwise the application's `LocaleResolver`
+(`Accept-Language` header).
 
 ---
 ## *Exceptions*
@@ -80,70 +99,24 @@ The exception also inherits the HTTP status from `AppException`.
 
 `GlobalExceptionHandler` is a centralized exception handler for the application.
 
-It uses `@ControllerAdvice` to catch exceptions from all controllers and return consistent error responses.
+It uses `@ControllerAdvice` to catch exceptions from all controllers and answer
+them with an `ErrorResponse`. Messages are translated with `MessageSource`
+according to the current locale.
 
-It contains :
-
-* `handleAppException()`,
-* `handleAccessDenied()`,
-* `handleValidationErrors()`,
-* `handleUnsupportedMediaType()`,
-* `handleMissingParams()`,
-* `handleMalformedJson()`
-
-It also uses `MessageSource` to translate error messages according to the current locale.
-
-### `handleAppException()`
-
-Handles custom `AppException` errors.
-
-If the exception implements `MessageKeyProvider`, its message key and arguments are used to retrieve the translated error message.
-
-Otherwise, a generic `error.unexpected` message is returned.
-
-### `handleAccessDenied()`
-
-Handles `AccessDeniedException` when a user does not have permission to perform an action.
-
-It returns HTTP `403 FORBIDDEN` with a translated error message.
-
-### `handleValidationErrors()`
-
-Handles validation errors caused by `@Valid`.
-
-It collects all field validation errors and returns them in a `fieldErrors` map.
-
-It returns HTTP `400 BAD_REQUEST`.
-
-### `handleUnsupportedMediaType()`
-
-Handles requests using an unsupported media type, such as an unsupported `Content-Type`.
-
-It returns HTTP `415 UNSUPPORTED_MEDIA_TYPE`.
-
-### `handleMissingParams()`
-
-Handles requests where a required request parameter is missing.
-
-It returns HTTP `400 BAD_REQUEST`.
-
-### `handleMalformedJson()`
-
-Handles requests where the request body cannot be read or parsed, such as invalid JSON or incorrect data types.
-
-It returns HTTP `400 BAD_REQUEST`.
-
-### Error response
-
-The `errorResponse()` method creates a common response format containing :
-
-* `timestamp`,
-* `status`,
-* `error`,
-* `message`
-
-This ensures that errors returned by the API follow a consistent structure.
-
+| Exception | Status | Message |
+|---|---|---|
+| `AppException` | the exception's status | its message key and arguments (`MessageKeyProvider`), otherwise `error.unexpected` |
+| `AccessDeniedException` (`@PreAuthorize`) | `403` | `error.accessDenied` |
+| `MethodArgumentNotValidException` (`@Valid`) | `400` | `error.validation.failed`, plus `fieldErrors` |
+| `HttpMessageNotReadableException` (malformed JSON) | `400` | `error.json.malformed` (the parser's message is not exposed) |
+| `HttpMediaTypeNotSupportedException` | `415` | `error.mediaTypeNotSupported` |
+| `HttpRequestMethodNotSupportedException` | `405` | `error.methodNotSupported` |
+| `MissingServletRequestParameterException` | `400` | `error.missingParameter` |
+| `MissingRequestHeaderException` | `400` | `error.missingHeader` |
+| `MissingRequestCookieException` (refresh token) | `401` | `security.refresh.missing` |
+| `MethodArgumentTypeMismatchException` | `400` | `error.parameter.invalid` (with the accepted values of enum parameters) |
+| `NoHandlerFoundException`, `NoResourceFoundException` | `404` | `error.resourceNotFound` |
+| any other exception | `500` | `error.unexpected` (logged; authentication exceptions are rethrown to Spring Security) |
 
 ---
 

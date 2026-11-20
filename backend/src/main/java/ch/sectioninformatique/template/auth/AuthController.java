@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2LoginResultNotFoundException;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserMapper;
@@ -256,40 +257,32 @@ public class AuthController {
      */
     @GetMapping("/tokens")
     public ResponseEntity<?> getToken(HttpServletRequest request){
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(false);
 
-        if(session != null){
-            try{
-                UserDto userDto = (UserDto) session.getAttribute("loggedUser");
-                String cookies = (String) session.getAttribute("refresh_token");
-                log.debug("refresh_token : {}", cookies);
-                log.debug("UserDto : {}", userDto);
-
-                String refreshToken = cookies
-                    .substring("refresh_token=".length())
-                    .split(";")[0];
-
-                ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/auth/refresh")
-                    .maxAge(refreshTokenLifeTime)
-                    .sameSite("None")
-                    .build();
-
-                return ResponseEntity
-                    .status(200)
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(userDto);
-                    
-            }
-            catch (NullPointerException e){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        // The Azure login result is stored in the session by /auth/auth-code
+        UserDto userDto = session != null ? (UserDto) session.getAttribute("loggedUser") : null;
+        String cookies = session != null ? (String) session.getAttribute("refresh_token") : null;
+        if (userDto == null || cookies == null) {
+            throw new OAuth2LoginResultNotFoundException();
         }
-        
-        // No session provided, access is not authorized
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        log.debug("UserDto : {}", userDto);
+
+        String refreshToken = cookies
+            .substring("refresh_token=".length())
+            .split(";")[0];
+
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+            .httpOnly(true)
+            .secure(true)
+            .path("/auth/refresh")
+            .maxAge(refreshTokenLifeTime)
+            .sameSite("None")
+            .build();
+
+        return ResponseEntity
+            .status(200)
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(userDto);
     }
 
 
@@ -316,7 +309,7 @@ public class AuthController {
                 .map(response -> ResponseEntity.status(response.getStatusCode())
                         .headers(response.getHeaders())
                         .body(response.getBody()))
-                .onErrorResume(ex -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).build()))
+                // Errors of spring-auth are mapped by AuthClient, with its status
                 .block();
     }
 }
