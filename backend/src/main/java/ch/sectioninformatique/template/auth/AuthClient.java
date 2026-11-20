@@ -468,24 +468,28 @@ public class AuthClient {
                 });
         }
 
-/**
- * Method for updating users
- * @param token the access token
- * @param userId the user's email
- * @param userDto the user's DTO
- */
-
-public Mono<ResponseEntity<String>> updateUser(String token, Long userId, UserDto userDto){
-        return webClient.put()
-        .uri(uriWithOptionalLang("/users/" + userId))
-        .header(HttpHeaders.AUTHORIZATION, token)
-        .bodyValue(userDto)
-        .retrieve()
-        .onStatus(status -> status.value() >= 400,
-                response -> response.bodyToMono(ErrorDto.class)
-        .flatMap(error -> Mono.error(new UserUpdateException(error.message()))))
-
-        .toEntity(String.class);
-}
-
+        /**
+         * Updates the profile (first name, last name, login) of a user in the
+         * authentication service. The main role is changed separately
+         * ({@link #changeMainRole}).
+         *
+         * @param token   the access token
+         * @param userId  the ID of the user to update
+         * @param profile the new profile fields
+         * @return a Mono containing the ResponseEntity with the updated global user
+         * @throws UserUpdateException if the authentication service returns an error status
+         */
+        public Mono<ResponseEntity<UserDto>> updateUser(String token, Long userId, Map<String, String> profile) {
+                return webClient.put()
+                                .uri(uriWithOptionalLang("/users/" + userId))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .bodyValue(profile)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> response.bodyToMono(ErrorDto.class)
+                                                                .flatMap(error -> Mono.error(new UserUpdateException(
+                                                                                error.message()))))
+                                .toEntity(UserDto.class);
+        }
 }

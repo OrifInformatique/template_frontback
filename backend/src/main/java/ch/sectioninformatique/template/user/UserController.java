@@ -262,17 +262,18 @@ public class UserController {
      * Updates a user's information.
      * This endpoint:
      * - Requires the 'user:update' authority
-     * - Validates the user exists and updates their information
+     * - Updates the user's profile and main role in spring-auth, then locally,
+     *   with its app-specific roles (see UserService#updateUser)
      * - Returns success/error message
      *
-     * @param userLogin   The login of the user to update
+     * @param userId The ID of the user to update
      * @param user The updated user information
      * @param token The authorization token (Bearer token) for authentication
      * @return ResponseEntity with success message or error details
      */
     @PutMapping("/{userId}")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
+    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserUpdateDto user, @RequestHeader("Authorization") String token ) {
 
         ResponseEntity<?> reponse = userService.updateUser(userId, user, token);
         return reponse;

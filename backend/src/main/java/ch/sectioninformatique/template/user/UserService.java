@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.jspecify.annotations.NonNull;
@@ -549,52 +548,72 @@ public class UserService {
     }
 
     /**
-     * Updates a user's informations.
-     * 
-     * @param login The login (username) of the user to update
-     * @param newUser The updated user information
-     * @param token The authorization token for the request
-     * @return ResponseEntity containing the update result
+     * Updates a user, globally in spring-auth and locally.
+     * This method:
+     * - Validates the requested main role and app-specific roles first, so that
+     *   an unknown role fails before anything is changed
+     * - Updates the profile (first name, last name, login) in spring-auth
+     * - Changes the main role in spring-auth, if given and different from the
+     *   current one (spring-auth owns the main roles)
+     * - Mirrors the resulting global user locally, and replaces the local
+     *   app-specific roles if given
+     *
+     * @param userId  The ID of the user to update
+     * @param newUser The new user data
+     * @param token   The authorization token for the request
+     * @return ResponseEntity containing the update result message
+     * @throws UserNotFoundException if no local user has this id
+     * @throws RoleNotFoundException if a requested role does not exist
+     * @throws UserUpdateException if spring-auth refuses the profile update
      */
-    public ResponseEntity<?> updateUser(Long userId, UserDto newUser, String token) {
+    public ResponseEntity<?> updateUser(Long userId, UserUpdateDto newUser, String token) {
 
         // Retrieve the existing user from the database
         User existingUser = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+            .orElseThrow(() -> new UserNotFoundException(userId));
 
-        // Resolve the new main role (owned by spring-auth) from its enum name
-        MainRoleEnum newMainRole;
-        try {
-            newMainRole = MainRoleEnum.valueOf(newUser.getMainRole());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new RoleNotFoundException(newUser.getMainRole());
+        // Resolve the requested roles before changing anything
+        MainRoleEnum requestedMainRole = null;
+        if (newUser.mainRole() != null && !newUser.mainRole().isBlank()) {
+            try {
+                requestedMainRole = MainRoleEnum.valueOf(newUser.mainRole());
+            } catch (IllegalArgumentException e) {
+                throw new RoleNotFoundException(newUser.mainRole());
+            }
         }
 
-        // Call the AuthClient to update the user in the global auth service
-        // If the response is not successful, return an error response
-
-
-        ResponseEntity<?> response = authClient.updateUser(token, userId, newUser).block();
-        if (response == null || !response.getStatusCode().is2xxSuccessful()) {
-            return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());
-        }
-
-        // Update the existing user's information with the new data in the local database
-        if (newUser.getAppSpecificRoles() != null){
-            Set<Role> newAppSpecificRoles = new HashSet<>();
-            for (String role : newUser.getAppSpecificRoles()) {
-                Role newRole = roleRepository.findByName(LocalRoleEnum.valueOf(role))
-                .orElseThrow(() -> new RoleNotFoundException(role));
+        Set<Role> newAppSpecificRoles = null;
+        if (newUser.appSpecificRoles() != null) {
+            newAppSpecificRoles = new HashSet<>();
+            for (String role : newUser.appSpecificRoles()) {
+                Role newRole;
+                try {
+                    newRole = roleRepository.findByName(LocalRoleEnum.valueOf(role))
+                        .orElseThrow(() -> new RoleNotFoundException(role));
+                } catch (IllegalArgumentException | NullPointerException e) {
+                    throw new RoleNotFoundException(role);
+                }
                 newAppSpecificRoles.add(newRole);
             }
-
-            existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
         }
 
-        existingUser.setFirstName(newUser.getFirstName());
-        existingUser.setLastName(newUser.getLastName());
-        existingUser.setLogin(newUser.getLogin());
-        existingUser.setMainRole(newMainRole);
+        // Update the profile in spring-auth (errors are mapped by AuthClient)
+        UserDto globalUser = authClient.updateUser(token, userId, newUser.profile()).block().getBody();
+
+        // Change the main role in spring-auth if needed: it refuses a change to
+        // the current role, and checks that the actor may manage both roles
+        if (requestedMainRole != null && !requestedMainRole.name().equals(globalUser.getMainRole())) {
+            globalUser = authClient.changeMainRole(token, userId, requestedMainRole).block().getBody();
+        }
+
+        // Mirror the global user locally
+        existingUser.setFirstName(globalUser.getFirstName());
+        existingUser.setLastName(globalUser.getLastName());
+        existingUser.setLogin(globalUser.getLogin());
+        existingUser.setMainRole(MainRoleEnum.valueOf(globalUser.getMainRole()));
+        if (newAppSpecificRoles != null) {
+            existingUser.setAppSpecificRoles(newAppSpecificRoles);
+        }
 
         // Save modified Entity
         userRepository.save(existingUser);
