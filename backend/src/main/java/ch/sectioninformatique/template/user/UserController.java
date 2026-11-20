@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.auth.AuthClient;
 import lombok.RequiredArgsConstructor;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import reactor.core.publisher.Mono;
 
 /**
@@ -108,26 +109,21 @@ public class UserController {
      * @param hardDelete A boolean for soft or hard delete (default: false)
      * @return ResponseEntity with permanent deletion result message
      */
-    @DeleteMapping("/{userLogin}")
+    @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('user:delete')")
     public Mono<ResponseEntity<?>> deleteUser(@RequestHeader("Authorization") String token,
-            @PathVariable String userLogin,
+            @PathVariable Long userId,
             @RequestParam (required = true) Boolean global,
             @RequestParam (required = true) Boolean hard) {
         // Determine permanent deletion scope based on global flag
         if (global) {
-            if (hard){
-                return userService.deleteGlobalAndLocalPermanent(token, userLogin)
-                        .map(message -> ResponseEntity.ok(Map.of("message", message)));
-            }
-            else{
-                return userService.deleteGlobalAndLocal(token, userLogin)
-                        .map(message -> ResponseEntity.ok(Map.of("message", message)));
-            }
+            return userService.deleteGlobalAndLocal(token, userId, hard)
+                    .map(message -> ResponseEntity.ok(Map.of("message", message)));
+                    
         } else {
             if (hard){
                 // Permanently delete user from local database only
-                userService.deleteUserPermanent(userLogin);
+                userService.deleteUserPermanent(userId);
                 String message = messageSource.getMessage(
                         "user.deleted.local",
                         null,
@@ -135,7 +131,7 @@ public class UserController {
                 return Mono.just(ResponseEntity.ok(Map.of("message", message)));
             }
             else{
-                userService.deleteUser(userLogin);
+                userService.deleteUser(userId);
                 String message = messageSource.getMessage(
                     "user.deleted.local",
                     null, 
@@ -157,15 +153,11 @@ public class UserController {
      * @param userId The ID of the user to promote to manager role
      * @return Mono containing ResponseEntity with the promotion result
      */
-    @PutMapping(path = "/{userLogin}/promote-manager")
+    @PutMapping(path = "/{userId}/promote-manager")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> promoteToManager(@RequestHeader("Authorization") String token,
-            @PathVariable String userLogin) {
-        // Call auth service to promote user to manager globally
-        return authClient.promoteToManager(token, userLogin)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+    public Mono<ResponseEntity<UserDto>> promoteToManager(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        return changeMainRole(token, userId, MainRoleEnum.MANAGER);
     }
 
     /**
@@ -180,15 +172,11 @@ public class UserController {
      * @param userId The ID of the user whose manager role will be revoked
      * @return Mono containing ResponseEntity with the revocation result
      */
-    @PutMapping(path = "/{userLogin}/revoke-manager")
+    @PutMapping(path = "/{userId}/revoke-manager")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> revokeManager(@RequestHeader("Authorization") String token,
-            @PathVariable String userLogin) {
-        // Call auth service to revoke manager role from user globally
-        return authClient.revokeManager(token, userLogin)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+    public Mono<ResponseEntity<UserDto>> revokeManager(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        return changeMainRole(token, userId, MainRoleEnum.USER);
     }
 
     /**
@@ -203,15 +191,11 @@ public class UserController {
      * @param userId The ID of the user to promote to admin role
      * @return Mono containing ResponseEntity with the promotion result
      */
-    @PutMapping(path = "/{userLogin}/promote-admin")
+    @PutMapping(path = "/{userId}/promote-admin")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> promoteToAdmin(@RequestHeader("Authorization") String token,
-            @PathVariable String userLogin) {
-        // Call auth service to promote user to admin globally
-        return authClient.promoteToAdmin(token, userLogin)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+    public Mono<ResponseEntity<UserDto>> promoteToAdmin(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        return changeMainRole(token, userId, MainRoleEnum.ADMIN);
     }
 
     /**
@@ -226,15 +210,11 @@ public class UserController {
      * @param userId The ID of the user whose admin role will be revoked
      * @return Mono containing ResponseEntity with the revocation result
      */
-    @PutMapping(path = "/{userLogin}/revoke-admin")
+    @PutMapping(path = "/{userId}/revoke-admin")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> revokeAdmin(@RequestHeader("Authorization") String token,
-            @PathVariable String userLogin) {
-        // Call auth service to revoke admin role from user globally
-        return authClient.revokeAdmin(token, userLogin)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+    public Mono<ResponseEntity<UserDto>> revokeAdmin(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        return changeMainRole(token, userId, MainRoleEnum.USER);
     }
 
     /**
@@ -250,16 +230,11 @@ public class UserController {
      * @param userId The ID of the admin user to be downgraded to manager role
      * @return Mono containing ResponseEntity with the downgrade result
      */
-    @PutMapping(path = "/{userLogin}/downgrade-admin")
+    @PutMapping(path = "/{userId}/downgrade-admin")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> downgradeAdmin(@RequestHeader("Authorization") String token,
-            @PathVariable String userLogin) {
-
-        // Call auth service to downgrade admin to manager globally
-        return authClient.downgradeAdmin(token, userLogin)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+    public Mono<ResponseEntity<UserDto>> downgradeAdmin(@RequestHeader("Authorization") String token,
+            @PathVariable Long userId) {
+        return changeMainRole(token, userId, MainRoleEnum.MANAGER);
     }
 
     /**
@@ -272,10 +247,10 @@ public class UserController {
      * @param userId The ID of the user to promote
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userLogin}/promote-local-manager-role")
+    @PutMapping("/{userId}/promote-local-manager-role")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> promoteToLocalManagerRole(@PathVariable String userLogin) {
-            userService.promoteToLocalManagerRole(userLogin);
+    public ResponseEntity<?> promoteToLocalManagerRole(@PathVariable Long userId) {
+            userService.promoteToLocalManagerRole(userId);
             String message = messageSource.getMessage(
                 "user.promoted.local",
                 null,
@@ -287,19 +262,20 @@ public class UserController {
      * Updates a user's information.
      * This endpoint:
      * - Requires the 'user:update' authority
-     * - Validates the user exists and updates their information
+     * - Updates the user's profile and main role in spring-auth, then locally,
+     *   with its app-specific roles (see UserService#updateUser)
      * - Returns success/error message
      *
-     * @param userLogin   The login of the user to update
+     * @param userId The ID of the user to update
      * @param user The updated user information
      * @param token The authorization token (Bearer token) for authentication
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userLogin}")
+    @PutMapping("/{userId}")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> updateUser(@PathVariable String userLogin, @RequestBody UserDto user, @RequestHeader("Authorization") String token ) {
+    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserUpdateDto user, @RequestHeader("Authorization") String token ) {
 
-        ResponseEntity<?> reponse = userService.updateUser(userLogin,user, token);
+        ResponseEntity<?> reponse = userService.updateUser(userId, user, token);
         return reponse;
     }
 
@@ -310,15 +286,32 @@ public class UserController {
      * - Validates the user exists and is deleted
      * - Returns success/error message
      *
-     * @param userLogin The login of the user to restore
+     * @param userId The ID of the user to restore
      * @param token The authorization token (Bearer token) for authentication
      * @return ResponseEntity with success message or error details
      */
-    @PutMapping("/{userLogin}/restore")
+    @PutMapping("/{userId}/restore")
     @PreAuthorize("hasAuthority('user:update')")
-    public ResponseEntity<?> restoreUser(@PathVariable String userLogin, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> restoreUser(@PathVariable Long userId, @RequestHeader("Authorization") String token) {
 
-        userService.restoreUser(userLogin, token);
+        userService.restoreUser(userId, token);
         return ResponseEntity.ok().body("User restored successfully.");
+    }
+
+    /**
+     * Changes the global main role of a user in spring-auth, then mirrors it in
+     * the local database so that local and global main roles stay in sync.
+     *
+     * @param token   the authorization token of the authenticated user
+     * @param userId  the ID of the user whose main role changes
+     * @param newRole the new main role
+     * @return the user as updated by spring-auth
+     */
+    private Mono<ResponseEntity<UserDto>> changeMainRole(String token, Long userId, MainRoleEnum newRole) {
+        return authClient.changeMainRole(token, userId, newRole)
+                .map(response -> {
+                    userService.syncMainRole(userId, response.getBody());
+                    return ResponseEntity.ok(response.getBody());
+                });
     }
 }

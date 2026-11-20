@@ -357,7 +357,7 @@ sequenceDiagram
     UserController->>Client: Response "User promoted to local app role successfully"
 
     Note over Client,UserRepositoryImpl: Permanent Local Deletion (hard delete)
-    Client->>UserController: DELETE /users/{userId}/false/permanent
+    Client->>UserController: DELETE /users/{userId}?global=false&hard=true
     UserController->>UserService: deleteUserPermanent(userId)
     UserService->>UserRepositoryImpl: deletePermanentlyById(userId)
     UserRepositoryImpl->>UserRepositoryImpl: delete users_app_specific_roles links first

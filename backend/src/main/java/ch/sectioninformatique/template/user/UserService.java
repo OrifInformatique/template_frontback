@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.jspecify.annotations.NonNull;
@@ -86,9 +86,9 @@ public class UserService {
      * @throws RoleNotFoundException if the role is not found
      * @throws UserPromotionException if the promotion operation fails
      */
-    public UserDto promoteToLocalManagerRole(@NonNull String userLogin) {
+    public UserDto promoteToLocalManagerRole(@NonNull Long userId) {
         try {
-            User user = userRepository.findByLogin(userLogin)
+            User user = userRepository.findById(userId)
                     .orElseThrow(UserNotFoundException::new);
 
             for (Role role : user.getAppSpecificRoles()) {
@@ -164,8 +164,8 @@ public class UserService {
      * @return UserDto containing the current user's information
      */
     public UserDto me(UserDto currentUser) {
-        User user = userRepository.findByLogin(currentUser.getLogin())
-                .orElseThrow(() -> new UserNotFoundByLoginException(currentUser.getLogin()));
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new UserNotFoundException(currentUser.getId()));
         UserDto userMapped = userMapper.toUserDto(user);
         return userMapped;
     }
@@ -183,12 +183,12 @@ public class UserService {
      * @throws DefaultRoleNotFoundException if the default role is not found
      * @throws UserCreationException if user creation fails
      */
-    public User register(RegisterDto registerDto) {
+    public User register(RegisterDto registerDto, Long userId) {
         try {
-            // Basic validation before persisting
+            // Basic validation before persisting. The last name is optional, as in
+            // spring-auth: some Azure accounts have none.
             if (registerDto.login() == null || registerDto.login().isBlank()
-                    || registerDto.firstName() == null || registerDto.firstName().isBlank()
-                    || registerDto.lastName() == null || registerDto.lastName().isBlank()) {
+                    || registerDto.firstName() == null || registerDto.firstName().isBlank()) {
                 throw new UserValidationException("user.validation.missingFields", true);
             }
 
@@ -198,7 +198,7 @@ public class UserService {
                 throw new DuplicateUserException(registerDto.login());
             }
 
-            User user = userMapper.signUpToUser(registerDto);
+            User user = userMapper.signUpToUser(registerDto, userId);
 
             // Define the user's main role (owned by spring-auth, transversal for all
             // applications) - stored locally as a plain enum value, no DB lookup.
@@ -231,41 +231,48 @@ public class UserService {
     }
 
     /**
-     * Get or create an authenticated user.
+     * Gets or creates the local user matching a user authenticated by spring-auth.
      * This method:
-     * - Get the list of user in the database
-     * - test the existence of the cureent user
-     * - Register the current user if not in the database
+     * - Looks the local user up by its id, which is the spring-auth user id
+     * - Keeps a user soft-deleted locally as is: the soft delete only hides it
+     *   from the user lists, it can still use the application
+     * - Keeps the local login and names in sync with spring-auth
+     * - Registers the user locally if it has no local row yet
      *
-     * @param userDto The user registration data
+     * @param userDto The user as authenticated by spring-auth
+     * @param userId  The spring-auth user id, also the local user id
      * @return Found or created user
+     * @throws DuplicateUserException if another local user already has this login
      * @throws UserCreationException if user creation fails
      */
-    public User getOrCreateAuthenticatedUser(UserDto userDto) {
+    public User getOrCreateAuthenticatedUser(UserDto userDto, Long userId) {
         try {
-            List<User> users = userRepository.findAll();
+            Optional<User> optionalUser = userRepository.findById(userId);
 
-            User localUser = null;
-
-            for (User user : users) {
-                if (user.getUsername().contains(userDto.getLogin())) {
-                    localUser = user;
-                }
-            }
-
-            if (localUser == null) {
+            if (optionalUser.isEmpty()) {
                 RegisterDto newUser = new RegisterDto(userDto.getFirstName(), userDto.getLastName(),
-                        userDto.getLogin(), null, null, null);
-
-                localUser = this.register(newUser);
+                        userDto.getLogin(), null, userDto.getMainRole(), null);
+                return this.register(newUser, userId);
             }
-            
-            userRepository.save(localUser);
+
+            User localUser = optionalUser.get();
+
+            // spring-auth owns the login and names: mirror any change made there
+            if (!Objects.equals(localUser.getLogin(), userDto.getLogin())
+                    || !Objects.equals(localUser.getFirstName(), userDto.getFirstName())
+                    || !Objects.equals(localUser.getLastName(), userDto.getLastName())) {
+                localUser.setLogin(userDto.getLogin());
+                localUser.setFirstName(userDto.getFirstName());
+                localUser.setLastName(userDto.getLastName());
+                localUser = userRepository.save(localUser);
+            }
+
             return localUser;
-        } catch (DuplicateUserException | DefaultRoleNotFoundException | UserCreationException e) {
+        } catch (DuplicateUserException | DefaultRoleNotFoundException
+                | UserCreationException | UserValidationException e) {
             throw e;
         } catch (Exception e) {
-            log.error("ERROR : {} | Message : {} | StackTrace : {}", e.getClass(), e.getMessage(), e.getStackTrace());
+            log.error("ERROR : {} | Message : {}", e.getClass(), e.getMessage(), e);
             throw new UserCreationException(e.getMessage());
         }
     }
@@ -301,6 +308,19 @@ public class UserService {
     }
 
     /**
+     * Mirrors in the local database the main role a user now has in spring-auth,
+     * after it was changed there. Does nothing if the user has no local row yet:
+     * the role will then be synced from the token at the user's next request.
+     *
+     * @param userId     the ID of the user (same in spring-auth and locally)
+     * @param globalUser the user as returned by spring-auth
+     */
+    public void syncMainRole(Long userId, UserDto globalUser) {
+        userRepository.findById(userId)
+                .ifPresent(localUser -> updateMainRole(localUser, globalUser));
+    }
+
+    /**
      * Deletes a user from the system.
      * This method:
      * - Verifies the user exists
@@ -311,10 +331,10 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUser(@NonNull String userLogin) {
+    public UserDto deleteUser(@NonNull Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(userLogin)
+            User userToDelete = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
@@ -338,10 +358,10 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
-    public UserDto deleteUserPermanent(@NonNull String userLogin) {
+    public UserDto deleteUserPermanent(@NonNull Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(userLogin)
+            User userToDelete = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
             // Delete the user
@@ -355,26 +375,26 @@ public class UserService {
     }
 
     /**
-     * Deletes a user from the system by login.
+     * Deletes a user from the system by ID.
      * This method:
      * - Verifies the user exists
      * - Deletes the user from the database
      *
-     * @param login The login of the user to delete
+     * @param userId The ID of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws UserNotFoundByLoginException if the user is not found
+     * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
-    public UserDto deleteUserByLogin(String login) {
+    public UserDto deleteUserById(Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new UserNotFoundByLoginException(login));
+            User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
             // Delete the user
             userRepository.deleteById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundByLoginException e) {
+        } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new UserDeletionException(e.getMessage());
@@ -382,26 +402,26 @@ public class UserService {
     }
 
     /**
-     * Permanently deletes a user from the system by login.
+     * Permanently deletes a user from the system by ID.
      * This method:
      * - Verifies the user exists
      * - Deletes the user from the database
      *
-     * @param login The login of the user to delete
+     * @param userId The ID of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws UserNotFoundByLoginException if the user is not found
+     * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
-    public UserDto deleteUserPermanentByLogin(String login) {
+    public UserDto deletePermanentById(Long userId) {
         try {
             // Get the user to delete
-            User userToDelete = userRepository.findByLogin(login)
-                .orElseThrow(() -> new UserNotFoundByLoginException(login));
+            User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
             // Delete the user
             userRepository.deletePermanentlyById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundByLoginException e) {
+        } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new PermanentUserDeletionException(e.getMessage());
@@ -409,14 +429,56 @@ public class UserService {
     }
 
     /**
-     * Finds a user by their login.
+     * Finds a user by their ID.
      * This method:
-     * - Searches the database for a user with the specified login
+     * - Searches the database for a user with the specified ID
      * - Throws an exception if the user is not found
      * - Maps the User entity to a UserDto
      *
-     * @param login The login of the user to find
+     * @param userId The ID of the user to find
      * @return UserDto containing the user's information
+     * @throws AppException if the user is not found
+     */
+    public UserDto findById(Long userId) {
+        log.debug("Searching for user with ID: {}", userId);
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            log.debug("User found in database: {}", userOptional.isPresent());
+
+            User user = userOptional
+                    .orElseThrow(() -> {
+                        log.error("User not found with ID: {}", userId);
+                        return new UserNotFoundException(userId);
+                    });
+
+            if (user.isDeleted()) {
+                throw new InactiveUserException("user.inactive.orDeleted");
+            }
+
+            log.debug("User details - ID: {}, FirstName: {}, LastName: {}, Roles: {}",
+                    user.getId(), user.getFirstName(), user.getLastName(),
+                    user.getMainRole());
+
+            UserDto userDto = userMapper.toUserDto(user);
+            log.debug("Mapped to UserDto - ID: {}, FirstName: {}, LastName: {}, Role: {}",
+                    userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
+
+            return userDto;
+        } catch (UserNotFoundException | InactiveUserException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UserRetrievalException(e.getMessage());
+        }
+    }
+
+    /**
+     * Find a user by their login.
+     * This method:
+     * - Searches the database for a user with the specified login
+     * - Throws an exception if the user is not found
+     * 
+     * @param login The login of the user to find
+     * @return a UserDto containing the user's information
      * @throws AppException if the user is not found
      */
     public UserDto findByLogin(String login) {
@@ -455,102 +517,103 @@ public class UserService {
      * Deletes a user globally (via AuthClient) and locally.
      * This method:
      * - Calls the AuthClient to delete user from the global auth service
-     * - Validates the response contains the deleted user login
-     * - Deletes the user locally by login
-     * - Returns the deletion message
+     * - Once the auth service confirmed the deletion (204 No Content), deletes
+     *   the user locally by id (the local id is the spring-auth id), permanently
+     *   if {@code hardDelete} is true, softly otherwise
+     * - Returns a localized deletion message
      *
-     * @param token  The authorization token
-     * @param userId The ID of the user to delete
-     * @return Message from the global deletion response
-     * @throws UserDeletionException if the deletion fails or response is invalid
+     * @param token      The authorization token
+     * @param userId     The ID of the user to delete
+     * @param hardDelete Whether the global deletion is permanent
+     * @return Localized deletion message
+     * @throws UserDeletionException if the global deletion fails
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, String userLogin) {
-        return authClient.deleteGlobalUser(token, userLogin)
-                .flatMap(response -> {
-                    java.util.Map<String, String> body = response.getBody();
-                    if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserByLogin(body.get("deletedUserLogin"));
-                        return reactor.core.publisher.Mono.just(body.get("message"));
+    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId, boolean hardDelete) {
+
+        // Resolve the locale now: the reactive callback may run outside the request thread
+        java.util.Locale locale = LocaleContextHolder.getLocale();
+
+        // spring-auth answers 204 No Content on success and errors are mapped by AuthClient
+        return authClient.deleteGlobalUser(token, userId, hardDelete)
+                .then(reactor.core.publisher.Mono.fromCallable(() -> {
+                    // Local id is the spring-auth id: delete locally by the same id,
+                    // with the same scope (soft or permanent) as the global deletion
+                    if (hardDelete) {
+                        deletePermanentById(userId);
                     } else {
-                        return reactor.core.publisher.Mono.error(
-                            new UserDeletionException("user.delete.failed.missingResponse", true));
+                        deleteUserById(userId);
                     }
-                });
+                    return messageSource.getMessage("user.deleted.global", null, locale);
+                }));
     }
 
     /**
-     * Permanently deletes a user globally (via AuthClient) and locally.
+     * Updates a user, globally in spring-auth and locally.
      * This method:
-     * - Calls the AuthClient to permanently delete user from the global auth service
-     * - Validates the response contains the deleted user login
-     * - Permanently deletes the user locally by login
-     * - Returns the deletion message
+     * - Validates the requested main role and app-specific roles first, so that
+     *   an unknown role fails before anything is changed
+     * - Updates the profile (first name, last name, login) in spring-auth
+     * - Changes the main role in spring-auth, if given and different from the
+     *   current one (spring-auth owns the main roles)
+     * - Mirrors the resulting global user locally, and replaces the local
+     *   app-specific roles if given
      *
-     * @param token  The authorization token
-     * @param userId The ID of the user to permanently delete
-     * @param hardDelete A boolean for soft or hard delete (default: false)
-     * @return Message from the global deletion response
-     * @throws UserDeletionException if the deletion fails or response is invalid
+     * @param userId  The ID of the user to update
+     * @param newUser The new user data
+     * @param token   The authorization token for the request
+     * @return ResponseEntity containing the update result message
+     * @throws UserNotFoundException if no local user has this id
+     * @throws RoleNotFoundException if a requested role does not exist
+     * @throws UserUpdateException if spring-auth refuses the profile update
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocalPermanent(String token, String userLogin) {
-        return authClient.deleteGlobalUserPermanent(token, userLogin)
-                .flatMap(response -> {
-                    java.util.Map<String, String> body = response.getBody();
-                    if (body != null && body.containsKey("deletedUserLogin")) {
-                        deleteUserPermanentByLogin(body.get("deletedUserLogin"));
-                        return reactor.core.publisher.Mono.just(body.get("message"));
-                    } else {
-                        return reactor.core.publisher.Mono.error(
-                            new UserDeletionException("user.delete.failed.missingResponse", true));
-                    }
-                });
-    }
-
-    /**
-     * Updates a user's informations.
-     * 
-     * @param login The login (username) of the user to update
-     * @param newUser The updated user information
-     * @param token The authorization token for the request
-     * @return ResponseEntity containing the update result
-     */
-    public ResponseEntity<?> updateUser(String login, UserDto newUser, String token) {
+    public ResponseEntity<?> updateUser(Long userId, UserUpdateDto newUser, String token) {
 
         // Retrieve the existing user from the database
-        User existingUser = userRepository.findByLogin(login)
-            .orElseThrow(() -> new UserNotFoundException(login));
+        User existingUser = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException(userId));
 
-        // Resolve the new main role (owned by spring-auth) from its enum name
-        MainRoleEnum newMainRole;
-        try {
-            newMainRole = MainRoleEnum.valueOf(newUser.getMainRole());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new RoleNotFoundException(newUser.getMainRole());
+        // Resolve the requested roles before changing anything
+        MainRoleEnum requestedMainRole = null;
+        if (newUser.mainRole() != null && !newUser.mainRole().isBlank()) {
+            try {
+                requestedMainRole = MainRoleEnum.valueOf(newUser.mainRole());
+            } catch (IllegalArgumentException e) {
+                throw new RoleNotFoundException(newUser.mainRole());
+            }
         }
 
-        // Call the AuthClient to update the user in the global auth service
-        // If the response is not successful, return an error response
-        ResponseEntity<?> response = authClient.updateUser(token, login, newUser).block();
-        if (response == null || !response.getStatusCode().is2xxSuccessful()) {
-            return ResponseEntity.status(HttpStatusCode.valueOf(500)).body(response.getBody());
-        }
-
-        // Update the existing user's information with the new data in the local database
-        if (newUser.getAppSpecificRoles() != null){
-            Set<Role> newAppSpecificRoles = new HashSet<>();
-            for (String role : newUser.getAppSpecificRoles()) {
-                Role newRole = roleRepository.findByName(LocalRoleEnum.valueOf(role))
-                .orElseThrow(() -> new RoleNotFoundException(role));
+        Set<Role> newAppSpecificRoles = null;
+        if (newUser.appSpecificRoles() != null) {
+            newAppSpecificRoles = new HashSet<>();
+            for (String role : newUser.appSpecificRoles()) {
+                Role newRole;
+                try {
+                    newRole = roleRepository.findByName(LocalRoleEnum.valueOf(role))
+                        .orElseThrow(() -> new RoleNotFoundException(role));
+                } catch (IllegalArgumentException | NullPointerException e) {
+                    throw new RoleNotFoundException(role);
+                }
                 newAppSpecificRoles.add(newRole);
             }
-
-            existingUser.setAppSpecificRoles(new HashSet<>(newAppSpecificRoles));
         }
 
-        existingUser.setFirstName(newUser.getFirstName());
-        existingUser.setLastName(newUser.getLastName());
-        existingUser.setLogin(newUser.getLogin());
-        existingUser.setMainRole(newMainRole);
+        // Update the profile in spring-auth (errors are mapped by AuthClient)
+        UserDto globalUser = authClient.updateUser(token, userId, newUser.profile()).block().getBody();
+
+        // Change the main role in spring-auth if needed: it refuses a change to
+        // the current role, and checks that the actor may manage both roles
+        if (requestedMainRole != null && !requestedMainRole.name().equals(globalUser.getMainRole())) {
+            globalUser = authClient.changeMainRole(token, userId, requestedMainRole).block().getBody();
+        }
+
+        // Mirror the global user locally
+        existingUser.setFirstName(globalUser.getFirstName());
+        existingUser.setLastName(globalUser.getLastName());
+        existingUser.setLogin(globalUser.getLogin());
+        existingUser.setMainRole(MainRoleEnum.valueOf(globalUser.getMainRole()));
+        if (newAppSpecificRoles != null) {
+            existingUser.setAppSpecificRoles(newAppSpecificRoles);
+        }
 
         // Save modified Entity
         userRepository.save(existingUser);
@@ -561,51 +624,25 @@ public class UserService {
     /**
      * Restores a soft-deleted user globally (via AuthClient) and locally.
      *
-     * @param userLogin The login of the user to restore
+     * @param userId The ID of the user to restore
      * @param token The authorization token for the request
      * @throws UserNotFoundException if the local user is not found
      * @throws ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException
      *         if the global user is not found
      * @throws UserUpdateException if the global restoration fails
      */
-    public void restoreUser(String userLogin, String token) {
-        User userToRestore = userRepository.findByLogin(userLogin)
-                .orElseThrow(() -> new UserNotFoundException(userLogin));
+    public void restoreUser(Long userId, String token) {
+        User userToRestore = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
 
         // Restore the user in the global auth service
-        authClient.restoreGlobalUser(token, userLogin).block();
+        authClient.restoreGlobalUser(token, userId).block();
 
         // Change deleted value in the Entity
         userToRestore.setDeleted(false);
 
         // Save modified Entity
         userRepository.save(userToRestore);
-    }
-
-    public UserDto getOrCreateUser(UserDto userDto){
-
-        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
-
-        if(optionalUser.isEmpty()){
-            MainRoleEnum mainRole;
-            try {
-                mainRole = MainRoleEnum.valueOf(userDto.getMainRole());
-            } catch (IllegalArgumentException | NullPointerException e) {
-                throw new RoleNotFoundException();
-            }
-
-            User newUser = User.builder()
-                .firstName(userDto.getFirstName())
-                .lastName(userDto.getLastName())
-                .login(userDto.getLogin())
-                .mainRole(mainRole)
-                .build();
-
-            userRepository.save(newUser);
-            return userMapper.toUserDto(newUser);
-        }
-
-        return userMapper.toUserDto(optionalUser.get());
     }
 
     /**
@@ -619,8 +656,8 @@ public class UserService {
      * @param authUser The user as returned by spring-auth, updated in place
      * @return The same user, with its local roles and all its permissions
      */
-    public UserDto addLocalRolesAndPermissions(UserDto authUser) {
-        User localUser = getOrCreateAuthenticatedUser(authUser);
+    public UserDto addLocalRolesAndPermissions(UserDto authUser, Long userId) {
+        User localUser = getOrCreateAuthenticatedUser(authUser, userId);
         updateMainRole(localUser, authUser);
 
         Set<String> permissions = new LinkedHashSet<>();

@@ -1,6 +1,5 @@
 package ch.sectioninformatique.template.user;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -11,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import ch.sectioninformatique.template.security.MainRoleEnum;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -127,7 +128,8 @@ public class UserControllerTest {
 
     private UserDto createTemporaryUser() {
         String uniqueLogin = "temp.permanent." + System.currentTimeMillis() + "@test.com";
-        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null, null, null));
+        // Explicit id (no longer generated) that does not collide with TestUserSeeder (1-4)
+        userService.register(new RegisterDto("Temp", "User", uniqueLogin, null, null, null), 1000L);
         return userService.findByLogin(uniqueLogin);
     }
 
@@ -387,7 +389,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getLogin() + "?global=false&hard=false",
+                "/users/" + userToDelete.getId() + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -423,16 +425,13 @@ public class UserControllerTest {
         UserDto admin2User = userService.findByLogin("test.admin2@test.com");
         assertNotNull(admin2User, "Test admin2 user should exist");
 
-        // Mock the external auth service response
-        Map<String, String> authServiceResponse = Map.of(
-                "deletedUserLogin", "test.admin2@test.com",
-                "message", "User deleted from auth service");
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin())))
-                .thenReturn(Mono.just(ResponseEntity.ok(authServiceResponse)));
+        // Mock the external auth service response (204 No Content)
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), eq(false)))
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         performRequest(
                 "DELETE",
-                "/users/" + admin2User.getLogin() + "?global=true&hard=false",
+                "/users/" + admin2User.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -441,7 +440,7 @@ public class UserControllerTest {
                 null);
 
         // Verify the auth client was called
-        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getLogin()));
+        verify(authClient).deleteGlobalUser(eq("Bearer " + adminToken), eq(admin2User.getId()), eq(false));
         // Verify DB side effect (soft or hard delete)
         assertUserDeleted(admin2User);
     }
@@ -470,12 +469,12 @@ public class UserControllerTest {
         assertNotNull(managerUser, "Test manager user should exist");
 
         // Mock the external auth service to return an error
-        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getLogin())))
+        when(authClient.deleteGlobalUser(eq("Bearer " + adminToken), eq(managerUser.getId()), eq(false)))
                 .thenReturn(Mono.error(new UserDeletionException("Failed to delete user from auth service")));
 
         performRequest(
                 "DELETE",
-                "/users/" + managerUser.getLogin() + "?global=true&hard=false",
+                "/users/" + managerUser.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -514,7 +513,7 @@ public class UserControllerTest {
 
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
+                "/users/" + userToPromote.getId() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -545,7 +544,7 @@ public class UserControllerTest {
         // First promotion should succeed
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
+                "/users/" + userToPromote.getId() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -558,7 +557,7 @@ public class UserControllerTest {
         // Second promotion attempt should fail with 409 Conflict
         performRequest(
                 "PUT",
-                "/users/" + userToPromote.getLogin() + "/promote-local-manager-role",
+                "/users/" + userToPromote.getId() + "/promote-local-manager-role",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 409,
@@ -567,7 +566,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: DELETE /users/{userId}/{global}
+     * Test: DELETE /users/{userId}?global=&hard=
      * Exception: UserDeletionException (400 Bad Request)
      *
      * Documents:
@@ -591,12 +590,12 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Test manager user should exist");
 
         // Mock auth client to return error for global delete
-        when(authClient.deleteGlobalUser(any(String.class), any(String.class)))
+        when(authClient.deleteGlobalUser(any(String.class), any(Long.class), eq(false)))
             .thenReturn(Mono.error(new UserDeletionException("Database constraint violation")));
 
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
+                "/users/" + userToDelete.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 400,
@@ -613,7 +612,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: DELETE /users/{userId}/{global}
+     * Test: DELETE /users/{userId}?global=&hard=
      * Exception: UserNotFoundException (404 Not Found)
      *
      * Documents:
@@ -629,11 +628,11 @@ public class UserControllerTest {
     @Transactional
     public void deleteUser_withNonExistentId_shouldReturn404UserNotFound() throws Exception {
         String adminToken = getValidTokenForUser("test.admin@test.com");
-        String nonExistentUserLogin = "Non-login";
+        long nonExistentUserId = 999_999L;
 
         performRequest(
                 "DELETE",
-                "/users/" + nonExistentUserLogin + "?global=false&hard=false",
+                "/users/" + nonExistentUserId + "?global=false&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 404,
@@ -815,19 +814,20 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== DELETE /users/{userId}/{global} - Local ====================
+    // ==================== DELETE /users/{userId}?global=false - Local ====================
 
     /**
-     * Test: DELETE /users/{userId}/{global} - Local 401 Unauthorized
+     * Test: DELETE /users/{userId}?global=false - Local 401 Unauthorized
      *
      * Test soft deleting a user locally without authorization.
      */
     @Test
     @Transactional
     public void deleteUser_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
+        UserDto userToDelete = userService.findByLogin("test.user@test.com");
         performRequest(
                 "DELETE",
-                "/users/test.user@test.com?global=false&hard=false",
+                "/users/" + userToDelete.getId() + "?global=false&hard=false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -843,10 +843,10 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== DELETE /users/{userId}/{global} - Global ====================
+    // ==================== DELETE /users/{userId}?global=true - Global ====================
 
     /**
-     * Test: DELETE /users/{userId}/{global} - Global Success with Mocked WebClient
+     * Test: DELETE /users/{userId}?global=true - Global Success with Mocked WebClient
      *
      * Test soft deleting a user globally with mocked webclient response.
      */
@@ -856,16 +856,13 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDelete = userService.findByLogin("test.user@test.com");
         assertNotNull(userToDelete, "Test user should exist");
-        Map<String, String> mockedResponse = Map.of(
-                "message", "User deleted successfully",
-            "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUser(anyString(), anyString()))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
+        when(authClient.deleteGlobalUser(anyString(), anyLong(), eq(false)))
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         performRequest(
                 "DELETE",
-            "/users/" + userToDelete.getLogin() + "?global=true&hard=false",
+            "/users/" + userToDelete.getId() + "?global=true&hard=false",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -875,7 +872,7 @@ public class UserControllerTest {
                     try {
                         response.andExpect(status().isOk());
                         response.andExpect(jsonPath("$.message")
-                            .value("User deleted successfully"));
+                            .value(getMessage("user.deleted.global")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -883,7 +880,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: DELETE /users/{userId}/{global} - Global 401 Unauthorized
+     * Test: DELETE /users/{userId}?global=true - Global 401 Unauthorized
      *
      * Test soft deleting a user globally without authorization.
      */
@@ -923,7 +920,7 @@ public class UserControllerTest {
         assertNotNull(userToDelete, "Temporary user should exist");
         performRequest(
                 "DELETE",
-                "/users/" + userToDelete.getLogin() + "?global=false&hard=true",
+                "/users/" + userToDelete.getId() + "?global=false&hard=true",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -979,16 +976,13 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDelete = createTemporaryUser();
         assertNotNull(userToDelete, "Temporary user should exist");
-        Map<String, String> mockedResponse = Map.of(
-                "message", "User deleted permanently",
-            "deletedUserLogin", userToDelete.getLogin());
 
-        when(authClient.deleteGlobalUserPermanent(anyString(), anyString()))
-                .thenReturn(Mono.just(ResponseEntity.ok(mockedResponse)));
+        when(authClient.deleteGlobalUser(anyString(), anyLong(), eq(true)))
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         performRequest(
                 "DELETE",
-            "/users/" + userToDelete.getLogin() + "?global=true&hard=true",
+            "/users/" + userToDelete.getId() + "?global=true&hard=true",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -999,11 +993,17 @@ public class UserControllerTest {
                         response.andDo(print());
                         response.andExpect(status().isOk());
                         response.andExpect(jsonPath("$.message")
-                            .value("User deleted permanently"));
+                            .value(getMessage("user.deleted.global")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // Hard delete: the row must be gone, not just flagged as deleted.
+        // JPQL query (not findById) so the first-level cache can't hide the result.
+        assertTrue(userRepository.findAllIncludingDeleted().stream()
+                .noneMatch(u -> userToDelete.getId().equals(u.getId())),
+                "User should be permanently removed from the database");
     }
 
     /**
@@ -1045,12 +1045,14 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.user@test.com");
         assertNotNull(userToPromote, "Test user should exist");
-        when(authClient.promoteToManager(anyString(), anyString()))
-                .thenReturn(Mono.just(ResponseEntity.ok("User promoted to manager successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.user@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.MANAGER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToPromote.getId()), eq(MainRoleEnum.MANAGER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
-            "/users/" + userToPromote.getLogin() + "/promote-manager",
+            "/users/" + userToPromote.getId() + "/promote-manager",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1059,10 +1061,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.MANAGER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.MANAGER.name(), userService.findByLogin("test.user@test.com").getMainRole());
     }
 
     /**
@@ -1075,7 +1081,7 @@ public class UserControllerTest {
     public void promoteToManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.user@test.com/promote-manager",
+                "/users/1/promote-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1104,12 +1110,14 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToRevoke, "Test manager user should exist");
-        when(authClient.revokeManager(anyString(), anyString()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Manager role revoked successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.manager@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.USER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToRevoke.getId()), eq(MainRoleEnum.USER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
-            "/users/" + userToRevoke.getLogin() + "/revoke-manager",
+            "/users/" + userToRevoke.getId() + "/revoke-manager",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1118,10 +1126,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.USER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.USER.name(), userService.findByLogin("test.manager@test.com").getMainRole());
     }
 
     /**
@@ -1134,7 +1146,7 @@ public class UserControllerTest {
     public void revokeManager_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.user@test.com/revoke-manager",
+                "/users/1/revoke-manager",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1163,12 +1175,14 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToPromote, "Test manager user should exist");
-        when(authClient.promoteToAdmin(anyString(), anyString()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Admin role assigned successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.manager@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.ADMIN.name());
+        when(authClient.changeMainRole(anyString(), eq(userToPromote.getId()), eq(MainRoleEnum.ADMIN)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
-            "/users/" + userToPromote.getLogin() + "/promote-admin",
+            "/users/" + userToPromote.getId() + "/promote-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1177,10 +1191,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.ADMIN.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.ADMIN.name(), userService.findByLogin("test.manager@test.com").getMainRole());
     }
 
     /**
@@ -1193,7 +1211,7 @@ public class UserControllerTest {
     public void promoteToAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.user@test.com/promote-admin",
+                "/users/1/promote-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1222,12 +1240,14 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToRevoke, "Test admin2 user should exist");
-        when(authClient.revokeAdmin(anyString(), anyString()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Admin role revoked successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.admin2@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.USER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToRevoke.getId()), eq(MainRoleEnum.USER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
-            "/users/" + userToRevoke.getLogin() + "/revoke-admin",
+            "/users/" + userToRevoke.getId() + "/revoke-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1236,10 +1256,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.USER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.USER.name(), userService.findByLogin("test.admin2@test.com").getMainRole());
     }
 
     /**
@@ -1281,12 +1305,14 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDowngrade = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToDowngrade, "Test admin2 user should exist");
-        when(authClient.downgradeAdmin(anyString(), anyString()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Admin role downgraded successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.admin2@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.MANAGER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToDowngrade.getId()), eq(MainRoleEnum.MANAGER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
-            "/users/" + userToDowngrade.getLogin() + "/downgrade-admin",
+            "/users/" + userToDowngrade.getId() + "/downgrade-admin",
                 adminToken,
                 MediaType.APPLICATION_JSON,
                 200,
@@ -1295,10 +1321,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.MANAGER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.MANAGER.name(), userService.findByLogin("test.admin2@test.com").getMainRole());
     }
 
     /**
@@ -1311,7 +1341,7 @@ public class UserControllerTest {
     public void downgradeAdmin_withoutToken_shouldReturnUnauthorized() throws Exception {
         performRequest(
                 "PUT",
-                "/users/test.admin@test.com/downgrade-admin",
+                "/users/1/downgrade-admin",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -1339,7 +1369,7 @@ public class UserControllerTest {
 
         performRequest(
                 "DELETE",
-                "/users/" + targetUser.getLogin() + "?global=false&hard=false",
+                "/users/" + targetUser.getId() + "?global=false&hard=false",
                 userToken,
                 MediaType.APPLICATION_JSON,
                 403,

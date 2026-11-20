@@ -73,9 +73,11 @@ public class TestUserSeeder implements CommandLineRunner {
 	private void loadUserData() {
 		if (this.userRepository.count() == 0) {
 
-			// Create users with User.builder()
+			// Create users with User.builder(). The id is no longer generated: it is the
+			// spring-auth id, so it has to be set explicitly.
 
 			User testUser = User.builder()
+					.id(1L)
 					.firstName("Test")
 					.lastName("User")
 					.login("test.user@test.com")
@@ -83,6 +85,7 @@ public class TestUserSeeder implements CommandLineRunner {
 					.build();
 
 			User testManager = User.builder()
+					.id(2L)
 					.firstName("Test")
 					.lastName("Manager")
 					.login("test.manager@test.com")
@@ -90,6 +93,7 @@ public class TestUserSeeder implements CommandLineRunner {
 					.build();
 
 			User testAdmin = User.builder()
+					.id(3L)
 					.firstName("Test")
 					.lastName("Admin")
 					.login("test.admin@test.com")
@@ -97,6 +101,7 @@ public class TestUserSeeder implements CommandLineRunner {
 					.build();
 
 			User testAdmin2 = User.builder()
+					.id(4L)
 					.firstName("Test2")
 					.lastName("Admin2")
 					.login("test.admin2@test.com")

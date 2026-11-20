@@ -313,7 +313,9 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void login_asLocalManager_shouldReturnLocalRolesAndPermissions() throws Exception {
-        userService.promoteToLocalManagerRole("test.user@test.com");
+        UserDto user = userService.findByLogin("test.user@test.com");
+        
+        userService.promoteToLocalManagerRole(user.getId());
 
         // spring-auth returns no app-specific roles
         UserDto testUser = SpringAuthPermissions.grant(userService.findByLogin("test.user@test.com"));
@@ -324,7 +326,7 @@ public class AuthControllerTest {
 
         mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"login\":\"test.user@test.com\", \"password\":\"Secure123@Pass\"}"))
+                .content("{\"login\": \"" + user.getLogin() + "\", \"password\":\"Secure123@Pass\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.appSpecificRoles").value(
                         org.hamcrest.Matchers.contains("LOCAL_MANAGER")))
@@ -375,7 +377,9 @@ public class AuthControllerTest {
 
         
 
+        // Ids come from spring-auth: set them explicitly, distinct from TestUserSeeder (1-4)
         UserDto newUser = UserDto.builder()
+                .id(101L)
                 .firstName("NewTest")
                 .lastName("Register")
                 .login("newtest.register@test.com")
@@ -385,6 +389,7 @@ public class AuthControllerTest {
                 .build();
 
         User adminUser = User.builder()
+            .id(100L)
             .firstName("admin")
             .lastName("user")
             .login("admin.user@test.com")
@@ -608,10 +613,10 @@ public class AuthControllerTest {
     @Transactional
     public void updatePassword_withValidToken_shouldReturn200() throws Exception {
         String successMessage = getMessage("auth.password.updated");
-        MessageResponseDto messageResponse = new MessageResponseDto(successMessage);
 
+        // spring-auth answers 204 No Content, the message is built locally
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
-                .thenReturn(Mono.just(ResponseEntity.ok(messageResponse)));
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         String validToken = getValidTokenForTestUser();
 

@@ -278,6 +278,8 @@ CSRF protection is disabled because the application uses a stateless API for its
 
 The session policy is set to `ALWAYS` because the OAuth2 login flow uses the HTTP session to store authentication information.
 
+The security context, however, is never stored in the session: it is kept for the current request only (`RequestAttributeSecurityContextRepository`). Every request is authenticated by its own JWT, so the `JSESSIONID` cookie alone never authenticates a request.
+
 ### CORS
 
 The configuration allows requests from :

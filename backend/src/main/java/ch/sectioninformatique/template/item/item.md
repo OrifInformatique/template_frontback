@@ -13,7 +13,7 @@
 - [ItemDTO.java](#itemdtojava)
 - [ItemSeeder.java](#itemseederjava)
 - [ItemService.java](#itemservicejava)
-    - [getCurrentUserEmail()](#getcurrentuseremail)
+    - [getCurrentUser()](#getcurrentuser)
     - [createItem()](#createitem)
     - [getItem()](#getitem)
     - [getItems()](#getitems)
@@ -127,7 +127,7 @@ It uses the HTTP status `404 NOT_FOUND` and the message key `item.notFound`.
 
 Thrown when a user tries to perform an operation on an item they are not authorized to access.
 
-It uses the HTTP status `401 UNAUTHORIZED` and the message key `item.unauthorized`.
+It uses the HTTP status `403 FORBIDDEN` (the user is authenticated, but not allowed on this item) and the message key `item.unauthorized`.
 
 Both exceptions implement `MessageKeyProvider` so that their error messages can be handled by the application's internationalization system.
 
@@ -230,21 +230,23 @@ It uses :
 
 `@Service` marks the class as a Spring service.
 
-### `getCurrentUserEmail()`
+### `getCurrentUser()`
 
-Gets the email of the currently authenticated user from Spring Security.
+Gets the local user matching the currently authenticated user.
 
-The email is used to identify the user performing an operation on an item.
+The authentication principal is the user read from the JWT: its `id` is the
+spring-auth id, which is also the local user id. The user is found with
+`findById`, never by login. The local user always exists at this point, because
+`UserAuthenticationProvider` gets or creates it when it validates the token.
+
+This user is used to identify who performs an operation on an item.
 
 ### `createItem()`
 
 Creates a new item.
 
-It first gets the current user's email and checks if the user exists in the database.
-
-If the user does not exist, a new user is created.
-
-The user is then assigned as the item's `author` before the item is saved.
+The current user (`getCurrentUser()`) is assigned as the item's `author` before
+the item is saved.
 
 ### `getItem()`
 
@@ -297,10 +299,10 @@ Only the item's author, an administrator, or a super administrator can update it
 It updates :
 
 * `name`,
-* `description`,
-* `author`
+* `description`
 
-and then saves the updated item.
+and then saves the updated item. The `author` is not changed: it stays the
+item's creator, even when an administrator updates someone else's item.
 
 If the item does not exist, an `ItemNotFoundException` is thrown.
 

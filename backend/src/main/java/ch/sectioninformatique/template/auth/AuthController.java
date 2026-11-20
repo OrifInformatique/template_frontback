@@ -7,6 +7,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -54,6 +56,8 @@ public class AuthController {
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
 
+    private final MessageSource messageSource;
+
     // Logger for debugging and monitoring the authentication flow.
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
@@ -88,7 +92,7 @@ public class AuthController {
                 .block();
 
         // spring-auth only knows the global roles and permissions: add the local ones
-        userService.addLocalRolesAndPermissions(response.getBody());
+        userService.addLocalRolesAndPermissions(response.getBody(), response.getBody().getId());
         return response;
     }
 
@@ -112,7 +116,7 @@ public class AuthController {
         return authClient.register(token, user)
                 .flatMap(response -> {
                     // On successful registration, also register user locally
-                    User localUser = userService.register(user);
+                    User localUser = userService.register(user, response.getBody().getId());
                     UserDto localUserDto = userMapper.toUserDto(localUser);
 
                     // Return HTTP 200 OK with the locally registered user
@@ -153,10 +157,12 @@ public class AuthController {
     @PutMapping("/update-password")
     public ResponseEntity<MessageResponseDto> updatePassword(@RequestHeader("Authorization") String token,
             @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
-        return authClient.updatePassword(token, updatePasswordDto)
-                .map(responseEntity -> responseEntity.getBody())
-                .map(messageResponse -> ResponseEntity.ok(messageResponse))
-                .block();
+        // spring-auth answers 204 No Content: errors are mapped by AuthClient
+        authClient.updatePassword(token, updatePasswordDto).block();
+
+        String message = messageSource.getMessage("auth.password.updated", null,
+                LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(new MessageResponseDto(message));
     }
 
     /**
@@ -229,10 +235,10 @@ public class AuthController {
 
         log.debug("Got tokens, get or create the logged user in local database");
 
-        UserDto loggedUser = userService.getOrCreateUser(user);
-       
-        loggedUser.setToken(user.getToken());
-        loggedUser.setPermissions(userService.addLocalRolesAndPermissions(user).getPermissions());
+        // Same response as a standard login: the spring-auth user (with its token),
+        // completed with its local roles and permissions. The local user is found
+        // by its spring-auth id, or created.
+        UserDto loggedUser = userService.addLocalRolesAndPermissions(user, user.getId());
         session.setAttribute("loggedUser", loggedUser);
 
         log.debug("Redirecting to: {}", afterOauth2LoginFrontendCallback);

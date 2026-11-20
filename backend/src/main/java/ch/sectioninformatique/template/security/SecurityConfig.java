@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -72,6 +73,7 @@ public class SecurityConfig {
      * - Configures JWT authentication filter
      * - Disables CSRF protection (not needed for stateless API)
      * - Sets session management policy to ALWAYS
+     * - Keeps the security context per request (never in the session)
      * - Configures CORS with allowed origins and methods
      * - Defines HTTP request authorization rules
      *
@@ -99,6 +101,12 @@ public class SecurityConfig {
                     log.debug("Setting session creation policy to ALWAYS");
                     // OAuth2 login flow relies on a session to store auth requests.
                     customizer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
+                })
+                .securityContext(securityContext -> {
+                    // Authentication comes from the JWT of each request only: keep the
+                    // security context for the current request, never in the session,
+                    // or the JSESSIONID cookie alone would authenticate later requests.
+                    securityContext.securityContextRepository(new RequestAttributeSecurityContextRepository());
                 })
                 .cors(cors -> {
                     log.debug("Configuring CORS");

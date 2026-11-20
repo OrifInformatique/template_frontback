@@ -17,6 +17,7 @@ import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
 import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
 import ch.sectioninformatique.template.user.User;
+import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.user.UserRepository;
 
@@ -67,46 +68,42 @@ public class ItemService {
     }
 
     /**
-     * Extracts the current user's email from the authentication principal.
-     * This method is used to identify the currently authenticated user.
+     * Retrieves the local user matching the authenticated user.
+     * The principal is the user read from the JWT: its id is the spring-auth id,
+     * also the local user id. The local user always exists here, as
+     * UserAuthenticationProvider gets or creates it when validating the token.
      *
-     * @return The current user's email address
+     * @return The current local user
+     * @throws UserNotFoundException if no local user has the authenticated id
      */
-    private String getCurrentUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        logger.debug("Full authentication principal: {}", authentication.getPrincipal());
-        
-        String currentUserEmail = authentication.getPrincipal().toString();
-        // spring-auth principal string is expected to contain "login=<email>,..."
-        // Extract only the login from the principal string
-        currentUserEmail = currentUserEmail.substring(currentUserEmail.indexOf("login=") + 6);
-        currentUserEmail = currentUserEmail.substring(0, currentUserEmail.indexOf(","));
-        logger.debug("Extracted user email: {}", currentUserEmail);
-        
-        return currentUserEmail;
+    private User getCurrentUser() {
+        UserDto principal = (UserDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findById(principal.getId())
+            .orElseThrow(UserNotFoundException::new);
+    }
+
+    /**
+     * Checks whether a user is the author of an item. An item whose author was
+     * permanently deleted (author set to null) has no author anymore.
+     *
+     * @param item The item
+     * @param user The user
+     * @return true if the user is the item's author
+     */
+    private boolean isAuthor(Item item, User user) {
+        return item.getAuthor() != null && item.getAuthor().getId() == user.getId();
     }
 
     /**
      * Creates a new item in the system.
-     * If the current user doesn't exist in the system, a new user record is created.
      * The item is associated with the current user as its author.
      *
      * @param newItem The item to create
      * @return The created item with its author set
      */
     public Item createItem(Item newItem) {
-        String currentUserEmail = getCurrentUserEmail();
-        
-        if (!userRepository.existsByLogin(currentUserEmail)) {
-            User newUser = new User();
-            newUser.setLogin(currentUserEmail);
-            newUser.setFirstName("Azure User");
-            userRepository.save(newUser);
-        }
-        
-        User author = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(UserNotFoundException::new);
-        
+        User author = getCurrentUser();
+
         newItem.setAuthor(author);
         
         return itemRepository.save(newItem);
@@ -146,10 +143,7 @@ public class ItemService {
      * @throws UnauthorizedItemException if the current user is not authorized to delete the item
      */
     public void deleteItem(final Long id) {
-        String currentUserEmail = getCurrentUserEmail();
-        
-        User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(UserNotFoundException::new);
+        User currentUser = getCurrentUser();
         
         Item item = itemRepository.findById(id)
             .orElseThrow(() -> new ItemNotFoundException(id));
@@ -159,7 +153,7 @@ public class ItemService {
         boolean isSuperAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
         
         if (!isAdmin && !isSuperAdmin) {
-            if (item.getAuthor().getId() != currentUser.getId()) {
+            if (!isAuthor(item, currentUser)) {
                 throw new UnauthorizedItemException("delete");
             }
         }
@@ -190,10 +184,7 @@ public class ItemService {
      * @throws UnauthorizedItemException if the current user is not authorized to update the item
      */
     public Item updateItem(Long id, Item newItem) {
-        String currentUserEmail = getCurrentUserEmail();
-        
-        User currentUser = userRepository.findByLogin(currentUserEmail)
-            .orElseThrow(UserNotFoundException::new);
+        User currentUser = getCurrentUser();
         logger.debug("Found user with ID: {}", currentUser.getId());
         
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -204,17 +195,16 @@ public class ItemService {
                 logger.debug("User roles - isAdmin: {}, isSuperAdmin: {}", isAdmin, isSuperAdmin);
 
                 if (!isAdmin && !isSuperAdmin) {
-                    logger.debug("Checking authorization - Item author ID: {}, Current user ID: {}", 
-                        item.getAuthor().getId(), currentUser.getId());
-                    if (item.getAuthor().getId() != currentUser.getId()) {
+                    if (!isAuthor(item, currentUser)) {
                         logger.debug("Authorization failed - User is not the author of the item");
                         throw new UnauthorizedItemException("update");
                     }
                 } 
                 
+                // Only the content changes: the author stays the item's creator,
+                // even when an admin updates someone else's item
                 item.setName(newItem.getName());
                 item.setDescription(newItem.getDescription());
-                item.setAuthor(currentUser);
                 logger.debug("Item updated successfully - ID: {}, New name: {}", id, newItem.getName());
                 return itemRepository.save(item);
             })

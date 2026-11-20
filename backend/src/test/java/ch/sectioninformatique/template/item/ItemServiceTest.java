@@ -12,6 +12,10 @@ import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserRepository;
+import ch.sectioninformatique.template.user.UserDto;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 @SpringBootTest
 public class ItemServiceTest {
@@ -99,5 +103,42 @@ public class ItemServiceTest {
 
         //Then
         assertEquals(null, updatedItem.getAuthor());
+    }
+
+    /**
+     * The author of a new item is the local user with the authenticated id,
+     * found by id even if the login differs: no placeholder user is created.
+     */
+    @Test
+    @Transactional
+    public void createItem_shouldUseLocalUserWithAuthenticatedId() {
+        User author = userRepository.save(User.builder()
+            .id(900_101L)
+            .firstName("author")
+            .lastName("test")
+            .login("item.author@test.com")
+            .mainRole(MainRoleEnum.USER)
+            .build());
+        long userCount = userRepository.count();
+
+        // Principal as built from the JWT, with a login matching no local user
+        UserDto principal = UserDto.builder()
+            .id(author.getId())
+            .login("unknown.login@test.com")
+            .build();
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(principal, null, List.of()));
+        try {
+            Item item = new Item();
+            item.setName("Item by id");
+            item.setDescription("Author resolved by id");
+
+            Item created = itemService.createItem(item);
+
+            assertEquals(author.getId(), created.getAuthor().getId());
+            assertEquals(userCount, userRepository.count(), "No placeholder user is created");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 }

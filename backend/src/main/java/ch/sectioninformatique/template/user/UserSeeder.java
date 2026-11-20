@@ -1,12 +1,14 @@
 package ch.sectioninformatique.template.user;
 
-import java.util.Arrays;
+import java.util.HashSet;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.CredentialsDto;
 import ch.sectioninformatique.template.security.MainRoleEnum;
 
 /**
@@ -25,13 +27,16 @@ public class UserSeeder implements CommandLineRunner {
 	/** Repository for user data access */
 	private final UserRepository userRepository;
 
+	private final AuthClient authClient;
+
 	/**
 	 * Constructs a new UserSeeder with the required dependencies.
 	 *
 	 * @param userRepository Repository for user data access
 	 */
-	public UserSeeder(UserRepository userRepository) {
+	public UserSeeder(UserRepository userRepository, AuthClient authClient, UserMapper userMappeer) {
 		this.userRepository = userRepository;
+		this.authClient = authClient;
 	}
 
 	/**
@@ -70,72 +75,39 @@ public class UserSeeder implements CommandLineRunner {
 	 */
 	private void loadUserData() {
 		if (this.userRepository.count() == 0) {
+			UserDto adminUserDto = authClient.login(new CredentialsDto(
+				"super.admin@test.com",
+				 "ReallySecure123@PassWordBecauseIWantToBeSuperSafe".toCharArray()
+				)
+			).block().getBody();
 
-			// Create users with User.builder()
-			User user0 = User.builder()
-					.firstName("deleted")
-					.lastName("user")
-					.login("deleted.user@test.com")
-					.mainRole(MainRoleEnum.USER)
-					.build();
+			User adminUser = User.builder()
+				.id(adminUserDto.getId())
+				.firstName(adminUserDto.getFirstName())
+				.lastName(adminUserDto.getLastName())
+				.login(adminUserDto.getLogin())
+				.mainRole(MainRoleEnum.ADMIN)
+				.appSpecificRoles(new HashSet<>())
+				.build();
 
-			User user1 = User.builder()
-					.firstName("John")
-					.lastName("DOE")
-					.login("john.doe@test.com")
-					.mainRole(MainRoleEnum.USER)
-					.build();
+			userRepository.save(adminUser);
 
-			User user2 = User.builder()
-					.firstName("Jane")
-					.lastName("SMITH")
-					.login("jane.smith@test.com")
-					.mainRole(MainRoleEnum.MANAGER)
-					.build();
+			UserDto userDto = authClient.login(new CredentialsDto(
+				"john.doe@test.com",
+				"Secure123@Pass".toCharArray()
+			)).block().getBody();
 
-			User user3 = User.builder()
-					.firstName("Alice")
-					.lastName("JOHNSON")
-					.login("alice.johnson@test.com")
-					.mainRole(MainRoleEnum.USER)
-					.build();
+			User user = User.builder()
+				.id(userDto.getId())
+				.firstName(userDto.getFirstName())
+				.lastName(userDto.getLastName())
+				.login(userDto.getLogin())
+				.mainRole(MainRoleEnum.USER)
+				.appSpecificRoles(new HashSet<>())
+				.build();
 
-			User user4 = User.builder()
-					.firstName("Dan")
-					.lastName("SERGEANT")
-					.login("dan.sergeant@test.com")
-					.mainRole(MainRoleEnum.USER)
-					.build();
+			userRepository.save(user);
 
-			User user5 = User.builder()
-					.firstName("Bobby")
-					.lastName("BALLOONZI")
-					.login("bobby.balloonzi@test.com")
-					.mainRole(MainRoleEnum.USER)
-					.build();
-
-			User user6 = User.builder()
-					.firstName("Rob")
-					.lastName("JAKE")
-					.login("rob.jake@test.com")
-					.mainRole(MainRoleEnum.USER)
-					.build();
-
-			User user7 = User.builder()
-					.firstName("Super")
-					.lastName("Admin")
-					.login("super.admin@test.com")
-					.mainRole(MainRoleEnum.ADMIN)
-					.build();
-
-			User user8 = User.builder()
-					.firstName("Neuro")
-					.lastName("Sama")
-					.login("not.an.ia@vedal.ia")
-					.mainRole(MainRoleEnum.ADMIN)
-					.build();
-
-			userRepository.saveAll(Arrays.asList(user0, user1, user2, user3, user4, user5, user6, user7, user8));
 		} else {
 			System.out.println("Users table not empty - Skipping user seeding");
 		}

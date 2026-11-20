@@ -2,17 +2,21 @@ package ch.sectioninformatique.template.auth;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.AuthCodeNotFoundException;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.RegistrationFailedException;
 import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserUpdateException;
@@ -78,8 +82,23 @@ public class AuthClient {
          * @return a Function that takes a UriBuilder and returns a URI with the optional "lang" parameter if it exists in the current request
          */
         private Function<UriBuilder, URI> uriWithOptionalLang(String path) {
+                return uriWithOptionalLang(path, Map.of());
+        }
+
+        /**
+         * Helper method to build URIs with query parameters and an optional "lang"
+         * query parameter based on the current request context.
+         * Query parameters must be given here, never in the path: the path is
+         * encoded as a path, so a "?" in it would be sent as "%3F".
+         * @param path        the path to append to the base URI for the authentication provider
+         * @param queryParams the query parameters to add to the URI
+         * @return a Function that takes a UriBuilder and returns a URI with the query
+         *         parameters, and the optional "lang" parameter if it exists in the current request
+         */
+        private Function<UriBuilder, URI> uriWithOptionalLang(String path, Map<String, ?> queryParams) {
                 return uriBuilder -> {
                         UriBuilder builder = uriBuilder.path(path);
+                        queryParams.forEach(builder::queryParam);
                         String lang = getCurrentLangParameter();
                         if (lang != null && !lang.isBlank()) {
                                 builder.queryParam("lang", lang);
@@ -98,6 +117,33 @@ public class AuthClient {
                         return servletAttributes.getRequest().getParameter("lang");
                 }
                 return null;
+        }
+
+        /**
+         * Status to answer for an error status of spring-auth: the same one for a
+         * client error (404, 403, 409...), 502 Bad Gateway for a server error,
+         * which is not the caller's fault but spring-auth's.
+         * @param status the error status answered by spring-auth
+         * @return the status to answer to the caller
+         */
+        private static HttpStatus springAuthStatus(HttpStatusCode status) {
+                HttpStatus resolved = HttpStatus.resolve(status.value());
+                return resolved != null && resolved.is4xxClientError() ? resolved : HttpStatus.BAD_GATEWAY;
+        }
+
+        /**
+         * Message of an error response of spring-auth. Never empty: an error
+         * response without (readable) body yields its status instead, so that
+         * the error is not mistaken for a success.
+         * @param response the error response of spring-auth
+         * @return the error message
+         */
+        private static Mono<String> errorMessage(ClientResponse response) {
+                String fallback = response.statusCode().toString();
+                return response.bodyToMono(ErrorDto.class)
+                                .mapNotNull(ErrorDto::message)
+                                .onErrorResume(e -> Mono.empty())
+                                .defaultIfEmpty(fallback);
         }
 
         /**
@@ -176,7 +222,7 @@ public class AuthClient {
         public Mono<ResponseEntity<UserDto>> register(String token, RegisterDto user) {
 
                 return webClient.post()
-                                .uri(uriWithOptionalLang("/auth/register")) // the registration endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/users")) // the registration endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(user)
@@ -258,14 +304,13 @@ public class AuthClient {
          * @param token             The access token
          * @param passwordUpdateDto The PasswordUpdateDto containing the old and new
          *                          passwords
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the password
-         *         update response (e.g., token or status message)
+         * @return A Mono<ResponseEntity<Void>> completing with the bodiless
+         *         response (204 No Content) of the authentication provider
          */
-        public Mono<ResponseEntity<MessageResponseDto>> updatePassword(String token,
+        public Mono<ResponseEntity<Void>> updatePassword(String token,
                         PasswordUpdateDto passwordUpdateDto) {
                 return webClient.put()
-                                .uri(uriWithOptionalLang("/auth/update-password")) // the password update endpoint path in authentication
-                                                              // provider
+                                .uri(uriWithOptionalLang("/users/me/password")) // own password update endpoint in authentication provider
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .bodyValue(passwordUpdateDto)
@@ -275,7 +320,7 @@ public class AuthClient {
                                                                 .flatMap(error -> Mono.error(
                                                                                 new PasswordUpdateFailedException(
                                                                                                 error.message()))))
-                                .toEntity(MessageResponseDto.class);
+                                .toBodilessEntity();
         }
 
         /**
@@ -325,263 +370,91 @@ public class AuthClient {
         }
 
         /**
-         * Soft deletes a user by sending a delete request to the authentication
+         * deletes a user by sending a delete request to the authentication
          * provider.
          * 
          * @param token  The access token
          * @param userId The ID of the user to delete
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the deletion
-         *         response (e.g., token or status message)
+         * @param permanent control the type of delete (soft = false, hard = true)
+         * @return A Mono<ResponseEntity<Void>> completing with the bodiless
+         *         response (204 No Content) of the authentication provider
          */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUser(String token, String userLogin) {
+        public Mono<ResponseEntity<Void>> deleteGlobalUser(String token, Long userId, boolean permanent) {
                 return webClient.delete()
-                                .uri(uriWithOptionalLang("/users/" + userLogin  + "/false")) // soft delete user endpoint path in authentication provider
+                                .uri(uriWithOptionalLang("/users/" + userId, Map.of("permanent", permanent)))
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserDeletionException(
-                                                                                error.message()))))
-                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
-                                })
-                                .map(body -> ResponseEntity.ok(body));
-        }
-
-        /**
-         * Permanently deletes a user by sending a delete request to the authentication
-         * provider.
-         * 
-         * @param token  The access token
-         * @param userId The ID of the user to delete permanently
-         * @param hardDelete A boolean for soft or hard delete (default: false)
-         * @return A Mono<ResponseEntity<MessageResponseDto>> containing the permanent
-         *         deletion response (e.g., token or status message)
-         */
-        public Mono<ResponseEntity<Map<String, String>>> deleteGlobalUserPermanent(String token, String userLogin) {
-                return webClient.delete()
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/true")) // permanent delete user endpoint path in
-                                                                        // authentication provider
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                .retrieve()
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserDeletionException(
-                                                                                error.message()))))
-                                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
-                                })
-                                .map(body -> ResponseEntity.ok(body));
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new UserDeletionException(
+                                                                                springAuthStatus(response.statusCode()),
+                                                                                message))))
+                                .toBodilessEntity();
         }
 
         /**
          * Restores a soft-deleted user by sending a restore request to the
          * authentication provider.
-         * Restoring a global user that was not soft-deleted is not an error.
+         * Restoring a global user that was not soft-deleted is not an error:
+         * spring-auth answers 404 Not Found when no soft-deleted user has this id
+         * (e.g. the user was only deleted locally), which is treated here as
+         * "nothing to restore globally".
          *
          * @param token     The access token
-         * @param userLogin The login of the user to restore
-         * @return A Mono<ResponseEntity<String>> containing the restore response
-         * @throws UserNotFoundException if the global user does not exist
+         * @param userId The id of the user to restore
+         * @return A Mono<ResponseEntity<Void>> completing once the global user is
+         *         restored, or was not soft-deleted
          * @throws UserUpdateException if the authentication service returns
          *                             another error status
          */
-        public Mono<ResponseEntity<String>> restoreGlobalUser(String token, String userLogin) {
-                return webClient.put()
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/restore")) // restore user endpoint path in authentication provider
+        public Mono<ResponseEntity<Void>> restoreGlobalUser(String token, Long userId) {
+                return webClient.post()
+                                .uri(uriWithOptionalLang("/users/" + userId + "/restore")) // restore user endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
-                                .onStatus(status -> status.isSameCodeAs(HttpStatus.NOT_FOUND),
-                                                response -> Mono.error(new UserNotFoundException()))
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new UserUpdateException(
-                                                                                error.message()))))
-                                .toEntity(String.class);
+                                .onStatus(status -> status.value() >= 400
+                                                && !status.isSameCodeAs(HttpStatus.NOT_FOUND),
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new UserUpdateException(
+                                                                                springAuthStatus(response.statusCode()),
+                                                                                message))))
+                                .toBodilessEntity()
+                                // Not soft-deleted globally: nothing to restore on spring-auth side
+                                .onErrorResume(WebClientResponseException.NotFound.class,
+                                                e -> Mono.just(ResponseEntity.noContent().build()));
         }
 
         /**
-         * Promotes a user to manager role by sending a PUT request to the
-         * authentication service.
-         * This method makes an asynchronous HTTP call and handles potential errors by
-         * converting
-         * error responses into AppException instances.
-         * 
-         * @param token  the authorization token (Bearer token) to authenticate the
-         *               request
-         * @param userId the ID of the user to be promoted to manager role
-         * @return a Mono containing the ResponseEntity with the operation result
+         * Changes the global main role of a user by sending a PUT request to the
+         * authentication service ({@code PUT /users/{id}/role}).
+         * spring-auth owns the main roles: it checks that the actor may manage both
+         * the current and the new role, and refuses to change the actor's own role.
+         *
+         * @param token   the authorization token (Bearer token) to authenticate the
+         *                request
+         * @param userId  the ID of the user whose main role changes
+         * @param newRole the new main role of the user
+         * @return a Mono containing the ResponseEntity with the updated global user
          * @throws AppException if the authentication service returns an error status
          *                      (4xx or 5xx)
          */
-        public Mono<ResponseEntity<String>> promoteToManager(String token, String userLogin) {
+        public Mono<ResponseEntity<UserDto>> changeMainRole(String token, Long userId, MainRoleEnum newRole) {
                 return webClient.put()
-                                // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/promote-manager"))
-                                // Add the authorization token to the request headers
+                                .uri(uriWithOptionalLang("/users/" + userId + "/role"))
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, token)
-                                // Execute the HTTP request
+                                .bodyValue(Map.of("role", newRole.name()))
                                 .retrieve()
-                                // Handle error responses (4xx and 5xx status codes)
+                                // Convert error responses (4xx and 5xx) into AppException
                                 .onStatus(status -> status.value() >= 400,
                                                 response -> response.bodyToMono(ErrorDto.class)
-                                                                // Convert error response body to ErrorDto and wrap in
-                                                                // AppException
                                                                 .flatMap(error -> Mono.error(
                                                                                 new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
                                                                                                                                 .value()),
                                                                                                 error.message()))))
-                                // Convert the response to a ResponseEntity
-                                .toEntity(String.class);
-        }
-
-        /**
-         * Revokes manager role from a user by sending a PUT request to the
-         * authentication service.
-         * This method makes an asynchronous HTTP call and handles potential errors by
-         * converting
-         * error responses into AppException instances.
-         * 
-         * @param token  the authorization token (Bearer token) to authenticate the
-         *               request
-         * @param userId the ID of the user whose manager role will be revoked
-         * @return a Mono containing the ResponseEntity with the operation result
-         * @throws AppException if the authentication service returns an error status
-         *                      (4xx or 5xx)
-         */
-        public Mono<ResponseEntity<String>> revokeManager(String token, String userLogin) {
-                return webClient.put()
-                                // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/revoke-manager"))
-                                // Add the authorization token to the request headers
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                // Execute the HTTP request
-                                .retrieve()
-                                // Handle error responses (4xx and 5xx status codes)
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                // Convert error response body to ErrorDto and wrap in
-                                                                // AppException
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppMessageKeyException(
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode()
-                                                                                                                                .value()),
-                                                                                                error.message()))))
-                                // Convert the response to a ResponseEntity
-                                .toEntity(String.class);
-        }
-
-        /**
-         * Promotes a user to admin role by sending a PUT request to the authentication
-         * service.
-         * This method makes an asynchronous HTTP call and handles potential errors by
-         * converting
-         * error responses into AppException instances.
-         * 
-         * @param token  the authorization token (Bearer token) to authenticate the
-         *               request
-         * @param userId the ID of the user to be promoted to admin role
-         * @return a Mono containing the ResponseEntity with the operation result
-         * @throws AppException if the authentication service returns an error status
-         *                      (4xx or 5xx)
-         */
-        public Mono<ResponseEntity<String>> promoteToAdmin(String token, String userLogin) {
-                return webClient.put()
-                                // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/promote-admin"))
-                                // Add the authorization token to the request headers
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                // Execute the HTTP request
-                                .retrieve()
-                                // Handle error responses (4xx and 5xx status codes)
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                // Convert error response body to ErrorDto and wrap in
-                                                                // AppException
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppMessageKeyException(
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode()
-                                                                                                                                .value()),
-                                                                                                error.message()))))
-                                // Convert the response to a ResponseEntity
-                                .toEntity(String.class);
-        }
-
-        /**
-         * Revokes admin role from a user by sending a PUT request to the authentication
-         * service.
-         * This method makes an asynchronous HTTP call and handles potential errors by
-         * converting
-         * error responses into AppException instances.
-         * 
-         * @param token  the authorization token (Bearer token) to authenticate the
-         *               request
-         * @param userId the ID of the user whose admin role will be revoked
-         * @return a Mono containing the ResponseEntity with the operation result
-         * @throws AppException if the authentication service returns an error status
-         *                      (4xx or 5xx)
-         */
-        public Mono<ResponseEntity<String>> revokeAdmin(String token, String userLogin) {
-                return webClient.put()
-                                // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/revoke-admin"))
-                                // Add the authorization token to the request headers
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                // Execute the HTTP request
-                                .retrieve()
-                                // Handle error responses (4xx and 5xx status codes)
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                // Convert error response body to ErrorDto and wrap in
-                                                                // AppException
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppMessageKeyException(
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode()
-                                                                                                                                .value()),
-                                                                                                error.message()))))
-                                // Convert the response to a ResponseEntity
-                                .toEntity(String.class);
-        }
-
-        /**
-         * Downgrades an admin user to manager role by sending a PUT request to the
-         * authentication service.
-         * This removes admin privileges while maintaining manager-level access.
-         * This method makes an asynchronous HTTP call and handles potential errors by
-         * converting
-         * error responses into AppException instances.
-         * 
-         * @param token  the authorization token (Bearer token) to authenticate the
-         *               request
-         * @param userId the ID of the admin user to be downgraded to manager role
-         * @return a Mono containing the ResponseEntity with the operation result
-         * @throws AppException if the authentication service returns an error status
-         *                      (4xx or 5xx)
-         */
-        public Mono<ResponseEntity<String>> downgradeAdmin(String token, String userLogin) {
-                return webClient.put()
-                                // Construct the URI with the user ID to target the specific user
-                                .uri(uriWithOptionalLang("/users/" + userLogin + "/downgrade-admin"))
-                                // Add the authorization token to the request headers
-                                .header(HttpHeaders.AUTHORIZATION, token)
-                                // Execute the HTTP request
-                                .retrieve()
-                                // Handle error responses (4xx and 5xx status codes)
-                                .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                // Convert error response body to ErrorDto and wrap in
-                                                                // AppException
-                                                                .flatMap(error -> Mono.error(
-                                                                                new AppMessageKeyException(
-                                                                                                HttpStatus.resolve(
-                                                                                                                response.statusCode()
-                                                                                                                                .value()),
-                                                                                                error.message()))))
-                                // Convert the response to a ResponseEntity
-                                .toEntity(String.class);
+                                .toEntity(UserDto.class);
         }
 
         /**
@@ -596,15 +469,14 @@ public class AuthClient {
                 .bodyValue(authCodeDto)
                 .exchangeToMono(response ->{
                         if(response.statusCode().isError()){
-                                return response.bodyToMono(ErrorDto.class)
-                                .flatMap(error ->{
-                                        HttpStatusCode status = response.statusCode();
-                                        if(status.isSameCodeAs(HttpStatus.NOT_FOUND)){
-                                                return Mono.error(new AuthCodeNotFoundException());
-                                        }
-                                        return Mono.error(new RuntimeException(error.message()));
-
-                                });
+                                // Unknown or expired code: 404; any other error (e.g. invalid
+                                // request, code/user mismatch): the OAuth2 login failed, 401
+                                if(response.statusCode().isSameCodeAs(HttpStatus.NOT_FOUND)){
+                                        return response.releaseBody()
+                                                .then(Mono.error(new AuthCodeNotFoundException()));
+                                }
+                                return errorMessage(response)
+                                        .flatMap(message -> Mono.error(new OAuth2AuthenticationException(message)));
                         }
 
                         //Extract the body
@@ -626,24 +498,29 @@ public class AuthClient {
                 });
         }
 
-/**
- * Method for updating users
- * @param token the access token
- * @param login the user's email
- * @param userDto the user's DTO
- */
-
-public Mono<ResponseEntity<String>> updateUser(String token, String login, UserDto userDto){
-        return webClient.put()
-        .uri(uriWithOptionalLang("/users/" + login))
-        .header(HttpHeaders.AUTHORIZATION, token)
-        .bodyValue(userDto)
-        .retrieve()
-        .onStatus(status -> status.value() >= 400,
-                response -> response.bodyToMono(ErrorDto.class)
-        .flatMap(error -> Mono.error(new UserUpdateException(error.message()))))
-
-        .toEntity(String.class);
-}
-
+        /**
+         * Updates the profile (first name, last name, login) of a user in the
+         * authentication service. The main role is changed separately
+         * ({@link #changeMainRole}).
+         *
+         * @param token   the access token
+         * @param userId  the ID of the user to update
+         * @param profile the new profile fields
+         * @return a Mono containing the ResponseEntity with the updated global user
+         * @throws UserUpdateException if the authentication service returns an error status
+         */
+        public Mono<ResponseEntity<UserDto>> updateUser(String token, Long userId, Map<String, String> profile) {
+                return webClient.put()
+                                .uri(uriWithOptionalLang("/users/" + userId))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .bodyValue(profile)
+                                .retrieve()
+                                .onStatus(status -> status.value() >= 400,
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new UserUpdateException(
+                                                                                springAuthStatus(response.statusCode()),
+                                                                                message))))
+                                .toEntity(UserDto.class);
+        }
 }

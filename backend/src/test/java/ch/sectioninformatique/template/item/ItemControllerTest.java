@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template.item;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -402,7 +403,7 @@ public class ItemControllerTest {
 
     @Test
     @Transactional
-    public void updateItem_asNonAuthor_returns401() throws Exception {
+    public void updateItem_asNonAuthor_returns403() throws Exception {
         clearItems();
         Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
 
@@ -411,8 +412,8 @@ public class ItemControllerTest {
                 "/items/" + item.getId(),
                 itemJson("Stolen update", "Not allowed"),
                 tokenFor(MANAGER_LOGIN),
-                401,
-                "update/401/unauthorized",
+                403,
+                "update/403/not-author",
                 response -> {
                     try {
                         response.andExpect(jsonPath("$.message").value(getMessage("item.unauthorized")));
@@ -585,5 +586,66 @@ public class ItemControllerTest {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    /**
+     * An admin updating someone else's item changes its content only: the
+     * author stays the creator.
+     */
+    @Test
+    @Transactional
+    public void updateItem_asAdminOnOtherUsersItem_keepsAuthor() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
+
+        mockMvc.perform(put("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(ADMIN_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(itemJson("Edited by admin", "Moderated")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Edited by admin"))
+                .andExpect(jsonPath("$.author.login").value(USER_LOGIN));
+
+        // The stored author is still the creator
+        assertEquals(USER_LOGIN, itemRepository.findById(item.getId()).orElseThrow().getAuthor().getLogin());
+    }
+
+    // ==================== Items without author ====================
+
+    /**
+     * An item whose author was permanently deleted (author set to null) does not
+     * break the item list.
+     */
+    @Test
+    @Transactional
+    public void getItems_withItemWithoutAuthor_returns200() throws Exception {
+        clearItems();
+        saveDocItem(null, "Orphan item", "Author permanently deleted");
+
+        mockMvc.perform(get("/items").header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(USER_LOGIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Orphan item"))
+                .andExpect(jsonPath("$[0].authorFirstName").doesNotExist());
+    }
+
+    /**
+     * Nobody is the author of an item without author: a non-admin can't update
+     * or delete it (403, not a 500).
+     */
+    @Test
+    @Transactional
+    public void updateAndDeleteItem_withoutAuthor_asNonAdmin_returns403() throws Exception {
+        clearItems();
+        Item item = saveDocItem(null, "Orphan item", "Author permanently deleted");
+        String managerToken = tokenFor(MANAGER_LOGIN);
+
+        mockMvc.perform(put("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(itemJson("Taken over", "Not allowed")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken))
+                .andExpect(status().isForbidden());
     }
 }

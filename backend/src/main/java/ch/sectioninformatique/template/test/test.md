@@ -24,7 +24,7 @@ It contains :
 
 * `GET /tests/` → checks that the application is running and displays information such as the Java environment, active Spring profile, and database URL.
 * `GET /tests/me` → retrieves information about the currently authenticated user.
-* `PUT /tests/{userLogin}/promote-test` → promotes a user to the local application role. Requires the `user:update` permission.
+* `PUT /tests/{userId}/promote-test` → promotes a user to the local application role. Requires the `user:update` permission.
 * `GET /tests/all` → retrieves all users. Requires the `user:read` permission.
 
 ### Security
