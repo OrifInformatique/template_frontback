@@ -80,8 +80,23 @@ public class AuthClient {
          * @return a Function that takes a UriBuilder and returns a URI with the optional "lang" parameter if it exists in the current request
          */
         private Function<UriBuilder, URI> uriWithOptionalLang(String path) {
+                return uriWithOptionalLang(path, Map.of());
+        }
+
+        /**
+         * Helper method to build URIs with query parameters and an optional "lang"
+         * query parameter based on the current request context.
+         * Query parameters must be given here, never in the path: the path is
+         * encoded as a path, so a "?" in it would be sent as "%3F".
+         * @param path        the path to append to the base URI for the authentication provider
+         * @param queryParams the query parameters to add to the URI
+         * @return a Function that takes a UriBuilder and returns a URI with the query
+         *         parameters, and the optional "lang" parameter if it exists in the current request
+         */
+        private Function<UriBuilder, URI> uriWithOptionalLang(String path, Map<String, ?> queryParams) {
                 return uriBuilder -> {
                         UriBuilder builder = uriBuilder.path(path);
+                        queryParams.forEach(builder::queryParam);
                         String lang = getCurrentLangParameter();
                         if (lang != null && !lang.isBlank()) {
                                 builder.queryParam("lang", lang);
@@ -337,7 +352,7 @@ public class AuthClient {
          */
         public Mono<ResponseEntity<Void>> deleteGlobalUser(String token, Long userId, boolean permanent) {
                 return webClient.delete()
-                                .uri(uriWithOptionalLang("/users/" + userId + "?permanent=" + permanent))
+                                .uri(uriWithOptionalLang("/users/" + userId, Map.of("permanent", permanent)))
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .retrieve()
                                 .onStatus(status -> status.value() >= 400,
