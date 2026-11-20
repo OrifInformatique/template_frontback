@@ -185,9 +185,10 @@ public class ItemService {
                     }
                 } 
                 
+                // Only the content changes: the author stays the item's creator,
+                // even when an admin updates someone else's item
                 item.setName(newItem.getName());
                 item.setDescription(newItem.getDescription());
-                item.setAuthor(currentUser);
                 logger.debug("Item updated successfully - ID: {}, New name: {}", id, newItem.getName());
                 return itemRepository.save(item);
             })

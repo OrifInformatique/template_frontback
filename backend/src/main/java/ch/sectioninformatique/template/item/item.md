@@ -299,10 +299,10 @@ Only the item's author, an administrator, or a super administrator can update it
 It updates :
 
 * `name`,
-* `description`,
-* `author`
+* `description`
 
-and then saves the updated item.
+and then saves the updated item. The `author` is not changed: it stays the
+item's creator, even when an administrator updates someone else's item.
 
 If the item does not exist, an `ItemNotFoundException` is thrown.
 

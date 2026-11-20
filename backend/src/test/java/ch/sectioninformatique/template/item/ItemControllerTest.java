@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template.item;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -585,6 +586,28 @@ public class ItemControllerTest {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    /**
+     * An admin updating someone else's item changes its content only: the
+     * author stays the creator.
+     */
+    @Test
+    @Transactional
+    public void updateItem_asAdminOnOtherUsersItem_keepsAuthor() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
+
+        mockMvc.perform(put("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(ADMIN_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(itemJson("Edited by admin", "Moderated")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Edited by admin"))
+                .andExpect(jsonPath("$.author.login").value(USER_LOGIN));
+
+        // The stored author is still the creator
+        assertEquals(USER_LOGIN, itemRepository.findById(item.getId()).orElseThrow().getAuthor().getLogin());
     }
 
     // ==================== Items without author ====================
