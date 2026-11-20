@@ -301,6 +301,19 @@ public class UserService {
     }
 
     /**
+     * Mirrors in the local database the main role a user now has in spring-auth,
+     * after it was changed there. Does nothing if the user has no local row yet:
+     * the role will then be synced from the token at the user's next request.
+     *
+     * @param userId     the ID of the user (same in spring-auth and locally)
+     * @param globalUser the user as returned by spring-auth
+     */
+    public void syncMainRole(Long userId, UserDto globalUser) {
+        userRepository.findById(userId)
+                .ifPresent(localUser -> updateMainRole(localUser, globalUser));
+    }
+
+    /**
      * Deletes a user from the system.
      * This method:
      * - Verifies the user exists

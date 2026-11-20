@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import ch.sectioninformatique.template.security.MainRoleEnum;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -1042,8 +1044,10 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.user@test.com");
         assertNotNull(userToPromote, "Test user should exist");
-        when(authClient.promoteToManager(anyString(), anyLong()))
-                .thenReturn(Mono.just(ResponseEntity.ok("User promoted to manager successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.user@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.MANAGER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToPromote.getId()), eq(MainRoleEnum.MANAGER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
@@ -1056,10 +1060,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.MANAGER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.MANAGER.name(), userService.findByLogin("test.user@test.com").getMainRole());
     }
 
     /**
@@ -1101,8 +1109,10 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToRevoke, "Test manager user should exist");
-        when(authClient.revokeManager(anyString(), anyLong()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Manager role revoked successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.manager@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.USER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToRevoke.getId()), eq(MainRoleEnum.USER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
@@ -1115,10 +1125,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.USER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.USER.name(), userService.findByLogin("test.manager@test.com").getMainRole());
     }
 
     /**
@@ -1160,8 +1174,10 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToPromote = userService.findByLogin("test.manager@test.com");
         assertNotNull(userToPromote, "Test manager user should exist");
-        when(authClient.promoteToAdmin(anyString(), anyLong()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Admin role assigned successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.manager@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.ADMIN.name());
+        when(authClient.changeMainRole(anyString(), eq(userToPromote.getId()), eq(MainRoleEnum.ADMIN)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
@@ -1174,10 +1190,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.ADMIN.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.ADMIN.name(), userService.findByLogin("test.manager@test.com").getMainRole());
     }
 
     /**
@@ -1219,8 +1239,10 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToRevoke = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToRevoke, "Test admin2 user should exist");
-        when(authClient.revokeAdmin(anyString(), anyLong()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Admin role revoked successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.admin2@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.USER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToRevoke.getId()), eq(MainRoleEnum.USER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
@@ -1233,10 +1255,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.USER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.USER.name(), userService.findByLogin("test.admin2@test.com").getMainRole());
     }
 
     /**
@@ -1278,8 +1304,10 @@ public class UserControllerTest {
         String adminToken = getValidTokenForUser("test.admin@test.com");
         UserDto userToDowngrade = userService.findByLogin("test.admin2@test.com");
         assertNotNull(userToDowngrade, "Test admin2 user should exist");
-        when(authClient.downgradeAdmin(anyString(), anyLong()))
-                .thenReturn(Mono.just(ResponseEntity.ok("Admin role downgraded successfully")));
+        UserDto updatedGlobalUser = userService.findByLogin("test.admin2@test.com");
+        updatedGlobalUser.setMainRole(MainRoleEnum.MANAGER.name());
+        when(authClient.changeMainRole(anyString(), eq(userToDowngrade.getId()), eq(MainRoleEnum.MANAGER)))
+                .thenReturn(Mono.just(ResponseEntity.ok(updatedGlobalUser)));
 
         performRequest(
                 "PUT",
@@ -1292,10 +1320,14 @@ public class UserControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isOk());
+                        response.andExpect(jsonPath("$.mainRole").value(MainRoleEnum.MANAGER.name()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
+
+        // The new main role is mirrored in the local database
+        assertEquals(MainRoleEnum.MANAGER.name(), userService.findByLogin("test.admin2@test.com").getMainRole());
     }
 
     /**

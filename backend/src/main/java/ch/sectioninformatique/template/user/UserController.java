@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.auth.AuthClient;
 import lombok.RequiredArgsConstructor;
+import ch.sectioninformatique.template.security.MainRoleEnum;
 import reactor.core.publisher.Mono;
 
 /**
@@ -154,14 +155,9 @@ public class UserController {
      */
     @PutMapping(path = "/{userId}/promote-manager")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> promoteToManager(@RequestHeader("Authorization") String token,
+    public Mono<ResponseEntity<UserDto>> promoteToManager(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
-        // Call auth service to promote user to manager globally
-
-        return authClient.promoteToManager(token, userId)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+        return changeMainRole(token, userId, MainRoleEnum.MANAGER);
     }
 
     /**
@@ -178,14 +174,9 @@ public class UserController {
      */
     @PutMapping(path = "/{userId}/revoke-manager")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> revokeManager(@RequestHeader("Authorization") String token,
+    public Mono<ResponseEntity<UserDto>> revokeManager(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
-        // Call auth service to revoke manager role from user globally
-
-        return authClient.revokeManager(token, userId)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+        return changeMainRole(token, userId, MainRoleEnum.USER);
     }
 
     /**
@@ -202,14 +193,9 @@ public class UserController {
      */
     @PutMapping(path = "/{userId}/promote-admin")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> promoteToAdmin(@RequestHeader("Authorization") String token,
+    public Mono<ResponseEntity<UserDto>> promoteToAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
-            
-        // Call auth service to promote user to admin globally
-        return authClient.promoteToAdmin(token, userId)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+        return changeMainRole(token, userId, MainRoleEnum.ADMIN);
     }
 
     /**
@@ -226,15 +212,9 @@ public class UserController {
      */
     @PutMapping(path = "/{userId}/revoke-admin")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> revokeAdmin(@RequestHeader("Authorization") String token,
+    public Mono<ResponseEntity<UserDto>> revokeAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
-        // Call auth service to revoke admin role from user globally
-
-
-        return authClient.revokeAdmin(token, userId)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+        return changeMainRole(token, userId, MainRoleEnum.USER);
     }
 
     /**
@@ -252,14 +232,9 @@ public class UserController {
      */
     @PutMapping(path = "/{userId}/downgrade-admin")
     @PreAuthorize("hasAuthority('user:update')")
-    public Mono<ResponseEntity<String>> downgradeAdmin(@RequestHeader("Authorization") String token,
+    public Mono<ResponseEntity<UserDto>> downgradeAdmin(@RequestHeader("Authorization") String token,
             @PathVariable Long userId) {
-
-        // Call auth service to downgrade admin to manager globally
-        return authClient.downgradeAdmin(token, userId)
-                .flatMap(response -> {
-                    return Mono.just(response);
-                });
+        return changeMainRole(token, userId, MainRoleEnum.MANAGER);
     }
 
     /**
@@ -320,5 +295,22 @@ public class UserController {
 
         userService.restoreUser(userId, token);
         return ResponseEntity.ok().body("User restored successfully.");
+    }
+
+    /**
+     * Changes the global main role of a user in spring-auth, then mirrors it in
+     * the local database so that local and global main roles stay in sync.
+     *
+     * @param token   the authorization token of the authenticated user
+     * @param userId  the ID of the user whose main role changes
+     * @param newRole the new main role
+     * @return the user as updated by spring-auth
+     */
+    private Mono<ResponseEntity<UserDto>> changeMainRole(String token, Long userId, MainRoleEnum newRole) {
+        return authClient.changeMainRole(token, userId, newRole)
+                .map(response -> {
+                    userService.syncMainRole(userId, response.getBody());
+                    return ResponseEntity.ok(response.getBody());
+                });
     }
 }

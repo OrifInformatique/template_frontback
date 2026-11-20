@@ -613,10 +613,10 @@ public class AuthControllerTest {
     @Transactional
     public void updatePassword_withValidToken_shouldReturn200() throws Exception {
         String successMessage = getMessage("auth.password.updated");
-        MessageResponseDto messageResponse = new MessageResponseDto(successMessage);
 
+        // spring-auth answers 204 No Content, the message is built locally
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
-                .thenReturn(Mono.just(ResponseEntity.ok(messageResponse)));
+                .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
         String validToken = getValidTokenForTestUser();
 

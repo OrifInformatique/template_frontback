@@ -7,6 +7,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -53,6 +55,8 @@ public class AuthController {
 
     /** Mapper for converting between User entities and DTOs */
     private final UserMapper userMapper;
+
+    private final MessageSource messageSource;
 
     // Logger for debugging and monitoring the authentication flow.
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -153,10 +157,12 @@ public class AuthController {
     @PutMapping("/update-password")
     public ResponseEntity<MessageResponseDto> updatePassword(@RequestHeader("Authorization") String token,
             @RequestBody @Valid PasswordUpdateDto updatePasswordDto) {
-        return authClient.updatePassword(token, updatePasswordDto)
-                .map(responseEntity -> responseEntity.getBody())
-                .map(messageResponse -> ResponseEntity.ok(messageResponse))
-                .block();
+        // spring-auth answers 204 No Content: errors are mapped by AuthClient
+        authClient.updatePassword(token, updatePasswordDto).block();
+
+        String message = messageSource.getMessage("auth.password.updated", null,
+                LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(new MessageResponseDto(message));
     }
 
     /**
