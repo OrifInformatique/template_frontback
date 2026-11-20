@@ -1404,12 +1404,14 @@ Finally, the modified `User` Entity is saved using `userRepository.save()`.
 ### restoreUser()
 
 ```java
-public void restoreUser(String userLogin, String token)
+public void restoreUser(Long userId, String token)
 ```
 
-Restores a soft-deleted user.
+Restores a soft-deleted user, identified by its ID.
 
-It first calls `authClient.restoreGlobalUser()` (`PUT /users/{login}/restore` on spring-auth) to restore the global user (no error if it was not soft-deleted). A 404 from spring-auth means the global user does not exist and is thrown as a `UserNotFoundException`; any other error is thrown as a `UserUpdateException`. In both cases the local user is left unchanged.
+If no local user has this ID, a `UserNotFoundException` (404) is thrown.
+
+It then calls `authClient.restoreGlobalUser()` (`POST /users/{id}/restore` on spring-auth) to restore the global user. spring-auth answers 404 when the user is not soft-deleted globally (e.g. it was only deleted locally): this is not an error, there is just nothing to restore globally. Any other error is thrown as a `UserUpdateException` with spring-auth's status, and the local user is left unchanged.
 
 It then finds the local user and changes:
 

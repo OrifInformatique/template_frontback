@@ -375,26 +375,26 @@ public class UserService {
     }
 
     /**
-     * Deletes a user from the system by login.
+     * Deletes a user from the system by ID.
      * This method:
      * - Verifies the user exists
      * - Deletes the user from the database
      *
-     * @param login The login of the user to delete
+     * @param userId The ID of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws UserNotFoundByLoginException if the user is not found
+     * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the deletion fails
      */
     public UserDto deleteUserById(Long userId) {
         try {
             // Get the user to delete
             User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundByLoginException(userId.toString()));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
             // Delete the user
             userRepository.deleteById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundByLoginException e) {
+        } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new UserDeletionException(e.getMessage());
@@ -402,26 +402,26 @@ public class UserService {
     }
 
     /**
-     * Permanently deletes a user from the system by login.
+     * Permanently deletes a user from the system by ID.
      * This method:
      * - Verifies the user exists
      * - Deletes the user from the database
      *
-     * @param login The login of the user to delete
+     * @param userId The ID of the user to delete
      * @return UserDto containing the deleted user's information
-     * @throws UserNotFoundByLoginException if the user is not found
+     * @throws UserNotFoundException if the user is not found
      * @throws UserDeletionException if the permanent deletion fails
      */
     public UserDto deletePermanentById(Long userId) {
         try {
             // Get the user to delete
             User userToDelete = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundByLoginException(userId.toString()));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
             // Delete the user
             userRepository.deletePermanentlyById(userToDelete.getId());
             return userMapper.toUserDto(userToDelete);
-        } catch (UserNotFoundByLoginException e) {
+        } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new PermanentUserDeletionException(e.getMessage());
@@ -429,26 +429,26 @@ public class UserService {
     }
 
     /**
-     * Finds a user by their login.
+     * Finds a user by their ID.
      * This method:
-     * - Searches the database for a user with the specified login
+     * - Searches the database for a user with the specified ID
      * - Throws an exception if the user is not found
      * - Maps the User entity to a UserDto
      *
-     * @param login The login of the user to find
+     * @param userId The ID of the user to find
      * @return UserDto containing the user's information
      * @throws AppException if the user is not found
      */
     public UserDto findById(Long userId) {
-        log.debug("Searching for user with login: {}", userId);
+        log.debug("Searching for user with ID: {}", userId);
         try {
             Optional<User> userOptional = userRepository.findById(userId);
             log.debug("User found in database: {}", userOptional.isPresent());
 
             User user = userOptional
                     .orElseThrow(() -> {
-                        log.error("User not found with login: {}", userId);
-                        return new UserNotFoundByLoginException(userId.toString());
+                        log.error("User not found with ID: {}", userId);
+                        return new UserNotFoundException(userId);
                     });
 
             if (user.isDeleted()) {
@@ -464,7 +464,7 @@ public class UserService {
                     userDto.getId(), userDto.getFirstName(), userDto.getLastName(), userDto.getMainRole());
 
             return userDto;
-        } catch (UserNotFoundByLoginException | InactiveUserException e) {
+        } catch (UserNotFoundException | InactiveUserException e) {
             throw e;
         } catch (Exception e) {
             throw new UserRetrievalException(e.getMessage());
@@ -477,7 +477,7 @@ public class UserService {
      * - Searches the database for a user with the specified login
      * - Throws an exception if the user is not found
      * 
-     * @param userLogin
+     * @param login The login of the user to find
      * @return a UserDto containing the user's information
      * @throws AppException if the user is not found
      */
@@ -624,7 +624,7 @@ public class UserService {
     /**
      * Restores a soft-deleted user globally (via AuthClient) and locally.
      *
-     * @param userLogin The login of the user to restore
+     * @param userId The ID of the user to restore
      * @param token The authorization token for the request
      * @throws UserNotFoundException if the local user is not found
      * @throws ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException

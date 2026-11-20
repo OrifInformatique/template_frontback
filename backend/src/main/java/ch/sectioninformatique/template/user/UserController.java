@@ -286,7 +286,7 @@ public class UserController {
      * - Validates the user exists and is deleted
      * - Returns success/error message
      *
-     * @param userLogin The login of the user to restore
+     * @param userId The ID of the user to restore
      * @param token The authorization token (Bearer token) for authentication
      * @return ResponseEntity with success message or error details
      */

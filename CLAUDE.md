@@ -79,7 +79,7 @@ Don't conflate the two: a new local role goes in `LocalRoleEnum` (and is auto-se
 
 `GET /roles` returns both kinds through a uniform `RoleDto` (`id` null for main roles, `type` = `MAIN`/`LOCAL`, plus `permissions`), filtered by `?scope=` (`local` default / `main` / `all`) — same enum-param pattern as `?state=`, bound by a converter in `config/WebMvcConfig`.
 
-`User` also supports soft delete (`deleted` flag, default repository queries exclude it) alongside a separate permanent/hard-delete path (`UserRepositoryPermanentDelete`, `DELETE /users/{id}/false/permanent`) that also cleans up the `users_app_specific_roles` join table first.
+`User` also supports soft delete (`deleted` flag, default repository queries exclude it) alongside a separate permanent/hard-delete path (`UserRepositoryPermanentDelete`, `DELETE /users/{id}?global=false&hard=true`) that also cleans up the `users_app_specific_roles` join table first.
 
 ### Error handling and i18n
 

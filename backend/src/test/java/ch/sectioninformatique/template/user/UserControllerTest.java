@@ -566,7 +566,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: DELETE /users/{userId}/{global}
+     * Test: DELETE /users/{userId}?global=&hard=
      * Exception: UserDeletionException (400 Bad Request)
      *
      * Documents:
@@ -612,7 +612,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: DELETE /users/{userId}/{global}
+     * Test: DELETE /users/{userId}?global=&hard=
      * Exception: UserNotFoundException (404 Not Found)
      *
      * Documents:
@@ -814,19 +814,20 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== DELETE /users/{userId}/{global} - Local ====================
+    // ==================== DELETE /users/{userId}?global=false - Local ====================
 
     /**
-     * Test: DELETE /users/{userId}/{global} - Local 401 Unauthorized
+     * Test: DELETE /users/{userId}?global=false - Local 401 Unauthorized
      *
      * Test soft deleting a user locally without authorization.
      */
     @Test
     @Transactional
     public void deleteUser_locallyWithoutToken_shouldReturnUnauthorized() throws Exception {
+        UserDto userToDelete = userService.findByLogin("test.user@test.com");
         performRequest(
                 "DELETE",
-                "/users/test.user@test.com?global=false&hard=false",
+                "/users/" + userToDelete.getId() + "?global=false&hard=false",
                 null,
                 MediaType.APPLICATION_JSON,
                 401,
@@ -842,10 +843,10 @@ public class UserControllerTest {
                 });
     }
 
-    // ==================== DELETE /users/{userId}/{global} - Global ====================
+    // ==================== DELETE /users/{userId}?global=true - Global ====================
 
     /**
-     * Test: DELETE /users/{userId}/{global} - Global Success with Mocked WebClient
+     * Test: DELETE /users/{userId}?global=true - Global Success with Mocked WebClient
      *
      * Test soft deleting a user globally with mocked webclient response.
      */
@@ -879,7 +880,7 @@ public class UserControllerTest {
     }
 
     /**
-     * Test: DELETE /users/{userId}/{global} - Global 401 Unauthorized
+     * Test: DELETE /users/{userId}?global=true - Global 401 Unauthorized
      *
      * Test soft deleting a user globally without authorization.
      */

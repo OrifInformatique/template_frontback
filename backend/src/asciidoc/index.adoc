@@ -513,7 +513,7 @@ include::{snippets}/users/all-unauthorized-missing-token/http-response.adoc[]
 It returns a message indicating authentication is required.
 
 === 3.2 Delete User (Global)
-This is an example output for the `DELETE /users/{userId}/true` endpoint when globally deleting a user.
+This is an example output for the `DELETE /users/{userId}?global=true&hard=false` endpoint when globally deleting a user.
 
 .request
 include::{snippets}/users/delete-global/http-request.adoc[]
@@ -524,7 +524,7 @@ include::{snippets}/users/delete-global/http-response.adoc[]
 It confirms the global deletion request.
 
 ==== 3.2.1 Success (Alternative)
-This is another example output for the `DELETE /users/{userId}/true` endpoint.
+This is another example output for the `DELETE /users/{userId}?global=true&hard=false` endpoint.
 
 .request
 include::{snippets}/users/delete-global-success/http-request.adoc[]
@@ -535,7 +535,7 @@ include::{snippets}/users/delete-global-success/http-response.adoc[]
 It confirms the global deletion request.
 
 ==== 3.2.2 Error from external service
-This is an example output for the `DELETE /users/{userId}/true` endpoint when the global deletion fails because of an external service error.
+This is an example output for the `DELETE /users/{userId}?global=true&hard=false` endpoint when the global deletion fails because of an external service error.
 
 .request
 include::{snippets}/users/delete-global-error/http-request.adoc[]
@@ -557,7 +557,7 @@ include::{snippets}/users/delete-global-unauthorized-missing-token/http-response
 It returns a message indicating authentication is required.
 
 === 3.3 Delete User (Local)
-This is an example output for the `DELETE /users/{userId}/false` endpoint when performing a local (soft) delete.
+This is an example output for the `DELETE /users/{userId}?global=false&hard=false` endpoint when performing a local (soft) delete.
 
 .request
 include::{snippets}/users/delete-local-success/http-request.adoc[]
@@ -931,7 +931,7 @@ include::{snippets}/users/downgrade-admin-unauthorized/http-response.adoc[]
 It returns a message indicating authentication is required.
 
 === 3.14 Delete User (Permanent Local)
-This is an example output for the `DELETE /users/{userId}/false/permanent` endpoint.
+This is an example output for the `DELETE /users/{userId}?global=false&hard=true` endpoint.
 
 .request
 include::{snippets}/users/delete-permanent-local-success/http-request.adoc[]
@@ -942,7 +942,7 @@ include::{snippets}/users/delete-permanent-local-success/http-response.adoc[]
 It confirms the local permanent deletion request.
 
 ==== 3.14.1 Success (Alternative)
-This is another example output for the `DELETE /users/{userId}/false/permanent` endpoint.
+This is another example output for the `DELETE /users/{userId}?global=false&hard=true` endpoint.
 
 .request
 include::{snippets}/users/delete-permanent-local-success/http-request.adoc[]
