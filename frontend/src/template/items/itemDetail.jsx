@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from '@orif-informatique/react-components-library';
+import { authorName } from './authorName';
 
 const ItemDetail = ({ item, onClose }) => {
     const { t } = useTranslation('items');
@@ -16,7 +17,7 @@ const ItemDetail = ({ item, onClose }) => {
                     <span className="text-sm text-gray-900">{item.name}</span>
 
                     <span className="text-sm font-medium text-gray-500">{t("author", "Author")}</span>
-                    <span className="text-sm text-gray-900">{item.author}</span>
+                    <span className="text-sm text-gray-900">{typeof item.author === 'string' ? item.author : authorName(item.author, t)}</span>
 
                     <span className="text-sm font-medium text-gray-500">{t("description", "Description")}</span>
                     <span className="text-sm text-gray-900 whitespace-pre-wrap">{item.description}</span>
@@ -25,8 +26,8 @@ const ItemDetail = ({ item, onClose }) => {
                 <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 py-4">
                     <span className="text-sm font-medium text-gray-500">{t("status", "Status")}</span>
                     <span>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.isDeleted ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                            {item.isDeleted ? t("deleted", "Deleted") : t("active", "Active")}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.deleted ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                            {item.deleted ? t("deleted", "Deleted") : t("active", "Active")}
                         </span>
                     </span>
 

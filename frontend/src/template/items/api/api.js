@@ -1,16 +1,16 @@
 import api from "../../auth/apiClient";
 
 /**
- * Gets items filtered by soft-delete state.
+ * Gets items filtered by soft-delete status.
  *
- * @param {'active'|'deleted'|'all'} state which subset to fetch (default 'active')
+ * @param {'ACTIVE'|'DELETED'|'ALL'} status which subset to fetch (default 'ACTIVE')
  * @returns {Array}
  */
-export const getItems = async (state = 'active') =>
+export const getItems = async (status = 'ACTIVE') =>
 {
     try
     {
-        const response = await api.get(`/items`, { params: { state } });
+        const response = await api.get(`/items`, { params: { status } });
         return response.data;
     }
     catch(error)
@@ -36,8 +36,9 @@ export const deleteItem = async (id) =>
 {
     try
     {
-        const response = await api.delete(`/items/${id}`);
-        return response.data;
+        // Soft delete, 204 No Content
+        await api.delete(`/items/${id}`);
+        return true;
     }
     catch(error)
     {
@@ -49,7 +50,7 @@ export const restoreItem = async (id) =>
 {
     try
     {
-        const response = await api.put(`/items/${id}/restore`);
+        const response = await api.post(`/items/${id}/restore`);
         return response.data;
     }
     catch(error)
@@ -62,10 +63,11 @@ export const hardDeleteItem = async (id) =>
 {
     try
     {
-        const response = await api.delete(`/items/${id}`, {
-            params: { softDelete: false },
+        // Permanent delete, 204 No Content
+        await api.delete(`/items/${id}`, {
+            params: { permanent: true },
         });
-        return response.data;
+        return true;
     }
     catch(error)
     {
@@ -77,7 +79,8 @@ export const hardDeleteItem = async (id) =>
 export const createItem = async (data) =>
 {
     try {
-        const response = await api.post(`/items/`, data);
+        // 201 Created with the created item
+        const response = await api.post(`/items`, data);
         return response.data;
     }
     catch(error)

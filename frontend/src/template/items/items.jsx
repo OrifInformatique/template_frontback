@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import ItemForm from './itemForm';
 import ItemDetail from './itemDetail';
+import { authorName } from './authorName';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import useAuthStore from '../auth/authStore';
 
@@ -24,7 +25,7 @@ const Items = () => {
         let ignore = false;
         setIsLoading(true);
         setError(null);
-        getItems(showDeleted ? 'all' : 'active')
+        getItems(showDeleted ? 'ALL' : 'ACTIVE')
             .then((data) => {
                 if (!ignore) setItems(data);
             })
@@ -42,7 +43,7 @@ const Items = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await getItems(showDeleted ? 'all' : 'active');
+            const data = await getItems(showDeleted ? 'ALL' : 'ACTIVE');
             setItems(data);
         } catch (err) {
             setError(err.message || t("fetch_error", "Failed to load items."));
@@ -59,7 +60,7 @@ const Items = () => {
         // TODO: Replace hardcoded edit with a proper edit form/modal
         edit: { permission: "item:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
         delete: { permission: "item:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
-        restore: { permission: "item:write", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
+        restore: { permission: "item:update", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
         hardDelete: { permission: "item:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
         viewDeleted: { permission: "item:read" },
     }), [fetchItems]);
@@ -88,6 +89,7 @@ const Items = () => {
             <List
                 items={items.map((item) => ({
                     ...item,
+                    author: authorName(item.author, t),
                     createdAt: new Date(item.createdAt).toLocaleString(),
                     updatedAt: new Date(item.updatedAt).toLocaleString(),
                 }))}

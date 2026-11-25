@@ -23,5 +23,6 @@
     "close": "Close",
     "status": "Status",
     "deleted": "Deleted",
-    "active": "Active"
+    "active": "Active",
+    "unknown_author": "Unknown author"
 }
