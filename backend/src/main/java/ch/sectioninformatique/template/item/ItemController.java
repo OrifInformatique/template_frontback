@@ -1,9 +1,9 @@
 package ch.sectioninformatique.template.item;
 
-import java.util.ArrayList;
+import java.net.URI;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,129 +11,121 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.item.ItemExceptions.ItemNotFoundException;
-import ch.sectioninformatique.template.item.ItemExceptions.UnauthorizedItemException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 /**
- * REST controller for managing items in the system.
- * This controller provides endpoints for CRUD operations on items,
- * with appropriate security checks and authorization requirements.
- * All responses are automatically converted to JSON format.
+ * REST controller for items, the CRUD example module of the template.
+ *
+ * Endpoints follow the conventions of spring-auth:
+ * - GET    /items?status=        list items (ACTIVE by default, DELETED, ALL)
+ * - GET    /items/{id}           read an item (soft-deleted or not)
+ * - POST   /items                create an item, 201 + Location + item
+ * - PUT    /items/{id}           update an item, 200 + item
+ * - DELETE /items/{id}           delete an item (soft by default), 204
+ * - POST   /items/{id}/restore   restore a soft-deleted item, 200 + item
+ *
+ * Modifying an item (update, delete, restore) is allowed to its author and to
+ * administrators only (checked by ItemService).
  */
 @RequestMapping("/items")
+@RequiredArgsConstructor
 @RestController
 public class ItemController {
 
-    @Autowired
-    private ItemService itemService;
+    private final ItemService itemService;
 
     /**
-     * Constructor for initializing the ItemController with the required service.
+     * Lists items, filtered by deletion state.
      *
-     * @param itemService The item service to use
+     * @param status ACTIVE (default), DELETED or ALL, case-insensitive
+     * @return 200 with the items
      */
-    public ItemController(ItemService itemService) {
-        this.itemService = itemService;
-    }
-
-    /**
-     * Retrieves items in the system, filtered by their soft-delete state.
-     * Requires the 'item:read' authority to access.
-     *
-     * @param state which subset of items to return: {@code active} (default),
-     *              {@code deleted}, or {@code all}
-     * @return the matching list of items
-     */
-    @PreAuthorize("hasAuthority('item:read')")
     @GetMapping
-    public List<ItemsDTO> getItems(@RequestParam(defaultValue = "active") DeletionFilter state)
-    {
-            List<ItemsDTO> items = new ArrayList<>();
-            itemService.getItems(state).forEach(item -> items.add(new ItemsDTO(item)));
-            return items;
-    }
-
-
-    /**
-     * Retrieves a specific item by its ID.
-     * Requires the 'item:read' authority to access.
-     *
-     * @param id The unique identifier of the item to retrieve
-     * @return The requested item
-     * @throws ItemNotFoundException if the item is not found
-     */
     @PreAuthorize("hasAuthority('item:read')")
-    @GetMapping("/{id}")
-    public Item getItemById(@PathVariable Long id) {
-        return itemService.getItem(id)
-            .orElseThrow(() -> new ItemNotFoundException(id));
+    public ResponseEntity<List<ItemDto>> getItems(@RequestParam(defaultValue = "ACTIVE") DeletionFilter status) {
+        return ResponseEntity.ok(itemService.getItems(status).stream().map(ItemDto::from).toList());
     }
-    
+
     /**
-     * Creates a new item in the system.
-     * Requires the 'item:write' authority to access.
+     * Reads an item, soft-deleted or not (its "deleted" field tells).
      *
-     * @param item The item data to create
-     * @return The newly created item
+     * @param id the item id
+     * @return 200 with the item, 404 if unknown
      */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('item:read')")
+    public ResponseEntity<ItemDto> getItem(@PathVariable Long id) {
+        return itemService.getItem(id)
+                .map(item -> ResponseEntity.ok(ItemDto.from(item)))
+                .orElseThrow(() -> new ItemNotFoundException(id));
+    }
+
+    /**
+     * Creates an item, authored by the authenticated user.
+     *
+     * @param request the name and description of the item
+     * @return 201 with the created item and its URL in the Location header
+     */
+    @PostMapping
     @PreAuthorize("hasAuthority('item:write')")
-    @PostMapping("/")
-    public Item createItem(@RequestBody @Valid ItemRequestDto item) {
+    public ResponseEntity<ItemDto> createItem(@RequestBody @Valid ItemRequestDto request) {
         // A new entity built from the allowed fields only: a client can't choose
         // the id (which would overwrite an existing item), author or deletion state
-        return itemService.createItem(item.toItem());
+        ItemDto created = ItemDto.from(itemService.createItem(request.toItem()));
+        URI location = UriComponentsBuilder.fromPath("/items/{id}").buildAndExpand(created.id()).toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     /**
-     * Updates an existing item in the system.
-     * Requires the 'item:update' authority to access.
+     * Updates the name and description of an item.
      *
-     * @param id The unique identifier of the item to update
-     * @param item The updated item data
-     * @return The updated item
-     * @throws ItemNotFoundException if the item is not found
-     * @throws UnauthorizedItemException if the user is not authorized to update the item
+     * @param id      the item id
+     * @param request the new name and description
+     * @return 200 with the updated item
      */
-    @PreAuthorize("hasAuthority('item:update')")
     @PutMapping("/{id}")
-    public Item updateItem(@PathVariable Long id, @RequestBody @Valid ItemRequestDto item) {
-        return itemService.updateItem(id, item.toItem());
-    }
-
-    /**
-     * Restore a soft-deleted item in the system.
-     * Requires the 'item:write' authority to access.
-     * @param id The unique identifier of the item to restore
-     * @return The restored item
-     */
     @PreAuthorize("hasAuthority('item:update')")
-    @PutMapping("/{id}/restore")
-    public Item restoreItem(@PathVariable Long id) {
-        return itemService.restoreItem(id);
+    public ResponseEntity<ItemDto> updateItem(@PathVariable Long id, @RequestBody @Valid ItemRequestDto request) {
+        return ResponseEntity.ok(ItemDto.from(itemService.updateItem(id, request.toItem())));
     }
 
     /**
-     * Deletes an item from the system.
-     * Requires either the 'item:delete' authority or a combination of
-     * 'item:write' authority and appropriate role (ROLE_USER or ROLE_ADMIN).
+     * Deletes an item.
      *
-     * @param id The unique identifier of the item to delete
-     * @throws ItemNotFoundException if the item is not found
-     * @throws UnauthorizedItemException if the user is not authorized to delete the item
+     * @param id        the item id
+     * @param permanent true to remove the item from the database, false
+     *                  (default) for a soft, restorable deletion
+     * @return 204 No Content
      */
-    @PreAuthorize("hasAuthority('item:delete') || ((hasRole('ROLE_USER') || hasRole('ROLE_ADMIN')) && hasAuthority('item:write'))")
     @DeleteMapping("/{id}")
-    public void deleteItem(@PathVariable Long id, @RequestParam(defaultValue = "true") boolean softDelete) {
-        if(softDelete) {
-            itemService.deleteItem(id);
-        } else {
+    @PreAuthorize("hasAuthority('item:delete') || ((hasRole('ROLE_USER') || hasRole('ROLE_ADMIN')) && hasAuthority('item:write'))")
+    public ResponseEntity<Void> deleteItem(@PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean permanent) {
+        if (permanent) {
             itemService.deletePermanentById(id);
+        } else {
+            itemService.deleteItem(id);
         }
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Restores a soft-deleted item.
+     *
+     * @param id the item id
+     * @return 200 with the restored item
+     */
+    @PostMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('item:update')")
+    public ResponseEntity<ItemDto> restoreItem(@PathVariable Long id) {
+        return ResponseEntity.ok(ItemDto.from(itemService.restoreItem(id)));
     }
 }

@@ -704,10 +704,13 @@ It returns a message indicating that the scope value is invalid.
 
 == 5 Item Endpoints
 
-NOTE: `GET /items` returns a list of {@code ItemsDTO}. `GET /items/{id}` and create/update responses return the full {@code Item} entity, including a nested {@code author} user object.
+Every item endpoint returns the same item representation (`ItemDto`): `id`, `name`, `description`,
+`author` (`id`, `firstName`, `lastName`; `null` once the author was permanently deleted), `createdAt`,
+`updatedAt` and `deleted`. Creating and updating an item only accept `name` and `description`.
+Updating, deleting and restoring an item is allowed to its author and to administrators only.
 
 === 5.1 List Active Items
-This is an example output for the `GET /items` endpoint with the default `state=active` filter.
+This is an example output for the `GET /items` endpoint with the default `status=ACTIVE` filter (`ACTIVE`, `DELETED` or `ALL`, case-insensitive).
 
 .request
 include::{snippets}/items/list-active/http-request.adoc[]
@@ -726,7 +729,7 @@ include::{snippets}/items/list/401/missing-token/http-request.adoc[]
 include::{snippets}/items/list/401/missing-token/http-response.adoc[]
 
 === 5.2 List Deleted Items
-This is an example output for the `GET /items?state=deleted` endpoint.
+This is an example output for the `GET /items?status=DELETED` endpoint.
 
 .request
 include::{snippets}/items/list-deleted/http-request.adoc[]
@@ -737,7 +740,7 @@ include::{snippets}/items/list-deleted/http-response.adoc[]
 It returns only soft-deleted items.
 
 === 5.3 List All Items
-This is an example output for the `GET /items?state=all` endpoint.
+This is an example output for the `GET /items?status=ALL` endpoint.
 
 .request
 include::{snippets}/items/list-all/http-request.adoc[]
@@ -775,7 +778,7 @@ include::{snippets}/items/get-by-id/401/missing-token/http-request.adoc[]
 include::{snippets}/items/get-by-id/401/missing-token/http-response.adoc[]
 
 === 5.5 Create Item
-This is an example output for the `POST /items/` endpoint.
+This is an example output for the `POST /items` endpoint: `201 Created`, with the URL of the new item in the `Location` header.
 
 .request
 include::{snippets}/items/create/http-request.adoc[]
@@ -843,7 +846,7 @@ include::{snippets}/items/update/401/missing-token/http-request.adoc[]
 include::{snippets}/items/update/401/missing-token/http-response.adoc[]
 
 === 5.7 Delete Item (Soft Delete)
-This is an example output for the `DELETE /items/{id}` endpoint with the default `softDelete=true`.
+This is an example output for the `DELETE /items/{id}` endpoint with the default `permanent=false` (soft delete): `204 No Content`.
 
 .request
 include::{snippets}/items/delete-soft/http-request.adoc[]
@@ -854,7 +857,7 @@ include::{snippets}/items/delete-soft/http-response.adoc[]
 Requires the `item:delete` authority (ADMIN role in the default permission model).
 
 ==== 5.7.1 Delete Item (Permanent)
-This is an example output for the `DELETE /items/{id}?softDelete=false` endpoint.
+This is an example output for the `DELETE /items/{id}?permanent=true` endpoint.
 
 .request
 include::{snippets}/items/delete-permanent/http-request.adoc[]
@@ -887,3 +890,12 @@ include::{snippets}/items/delete/401/missing-token/http-request.adoc[]
 
 .response
 include::{snippets}/items/delete/401/missing-token/http-response.adoc[]
+
+=== 5.8 Restore Item
+This is an example output for the `POST /items/{id}/restore` endpoint: the soft-deleted item is restored and returned.
+
+.request
+include::{snippets}/items/restore/http-request.adoc[]
+
+.response
+include::{snippets}/items/restore/http-response.adoc[]

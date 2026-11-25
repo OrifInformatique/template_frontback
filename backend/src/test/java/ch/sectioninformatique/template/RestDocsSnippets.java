@@ -1,7 +1,6 @@
 package ch.sectioninformatique.template;
 
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 
@@ -97,36 +96,33 @@ public final class RestDocsSnippets {
                 fieldWithPath("description").description("Item description"));
     }
 
-    /** Matches a JSON array of {@code ItemsDTO} returned by {@code GET /items}. */
-    public static Snippet itemsListResponse() {
-        return responseFields(
-                fieldWithPath("[].id").description("Item identifier"),
-                fieldWithPath("[].name").description("Item name"),
-                fieldWithPath("[].description").description("Item description"),
-                fieldWithPath("[].authorFirstName").description("Author first name"),
-                fieldWithPath("[].authorLastName").description("Author last name"),
-                fieldWithPath("[].createdAt").description("Creation timestamp"),
-                fieldWithPath("[].updatedAt").description("Last update timestamp"),
-                fieldWithPath("[].deleted").description("Whether the item is soft-deleted"));
+    /** Fields of an {@code ItemDto}, under the given prefix ("" or "[]."). */
+    private static FieldDescriptor[] itemFields(String prefix) {
+        return new FieldDescriptor[] {
+                fieldWithPath(prefix + "id").description("Item identifier"),
+                fieldWithPath(prefix + "name").description("Item name"),
+                fieldWithPath(prefix + "description").description("Item description"),
+                fieldWithPath(prefix + "author").optional().type(JsonFieldType.OBJECT)
+                        .description("Author of the item, null once the author was permanently deleted"),
+                fieldWithPath(prefix + "author.id").optional().type(JsonFieldType.NUMBER)
+                        .description("Author user identifier"),
+                fieldWithPath(prefix + "author.firstName").optional().type(JsonFieldType.STRING)
+                        .description("Author first name"),
+                fieldWithPath(prefix + "author.lastName").optional().type(JsonFieldType.STRING)
+                        .description("Author last name"),
+                fieldWithPath(prefix + "createdAt").description("Creation timestamp"),
+                fieldWithPath(prefix + "updatedAt").description("Last update timestamp"),
+                fieldWithPath(prefix + "deleted").description("Whether the item is soft-deleted") };
     }
 
-    /**
-     * Matches the {@code Item} entity returned by {@code GET /items/{id}} and by create/update.
-     * Uses relaxed matching because the nested {@code author} serializes the full {@code User} entity.
-     */
+    /** Matches a JSON array of {@code ItemDto} returned by {@code GET /items}. */
+    public static Snippet itemsListResponse() {
+        return responseFields(itemFields("[]."));
+    }
+
+    /** Matches an {@code ItemDto} returned by the other item endpoints. */
     public static Snippet itemDetailResponse() {
-        return relaxedResponseFields(
-                fieldWithPath("id").description("Item identifier"),
-                fieldWithPath("name").description("Item name"),
-                fieldWithPath("description").description("Item description"),
-                fieldWithPath("author").description("Item author (full user entity)"),
-                fieldWithPath("author.id").description("Author user identifier"),
-                fieldWithPath("author.firstName").description("Author first name"),
-                fieldWithPath("author.lastName").description("Author last name"),
-                fieldWithPath("author.login").description("Author login email"),
-                fieldWithPath("createdAt").description("Creation timestamp"),
-                fieldWithPath("updatedAt").description("Last update timestamp"),
-                fieldWithPath("deleted").description("Whether the item is soft-deleted"));
+        return responseFields(itemFields(""));
     }
 
     private static FieldDescriptor[] userFields(String prefix, boolean optionalItems) {

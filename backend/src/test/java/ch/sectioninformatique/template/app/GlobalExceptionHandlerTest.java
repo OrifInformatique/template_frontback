@@ -107,7 +107,7 @@ public class GlobalExceptionHandlerTest {
     public void malformedJson_returnsGenericMessage() throws Exception {
         String token = "Bearer " + userAuthenticationProvider.createToken(
                 SpringAuthPermissions.grant(userService.findByLogin("test.manager@test.com")));
-        ResultActions result = mockMvc.perform(post("/items/?lang=en")
+        ResultActions result = mockMvc.perform(post("/items?lang=en")
                 .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\": "));

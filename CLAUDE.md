@@ -58,7 +58,7 @@ Code lives under `ch.sectioninformatique.template`, one package per domain (`use
 - `ItemService` — business logic, authorization checks against the authenticated user (author-or-admin ownership checks), talks to repositories
 - `ItemRepository` (+ `ItemRepositoryImpl` for custom queries) — Spring Data JPA
 - `ItemExceptions` — nested custom exceptions for this domain, thrown from the service and caught by the global handler
-- `ItemBuilder`, `ItemSeeder`, `ItemsDTO` — builder, dev data seeding, response DTO
+- `ItemBuilder`, `ItemSeeder`, `ItemDto`, `ItemRequestDto` — builder, dev data seeding, response DTO, request DTO (only the client-settable fields)
 
 **`item` is the canonical example module** — when adding a new domain, copy its shape rather than inventing a new pattern. `user` follows the same shape but is more complex (soft delete + dual role model, see below).
 
