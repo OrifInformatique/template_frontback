@@ -2,7 +2,9 @@ package ch.sectioninformatique.template.auth;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -32,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -67,9 +70,37 @@ public class AuthClient {
         @Value("${AFTER_OAUTH2_LOGIN_URL}")
         private String afterOauth2LoginUrl;
 
-        /** Constructor to initialize the WebClient */
+        /**
+         * Constructor to initialize the WebClient.
+         *
+         * Every request to spring-auth carries the language of the current request
+         * (Accept-Language), so that spring-auth's messages, often included in this
+         * backend's error messages, are in the same language.
+         */
         public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
-                this.webClient = WebClient.create(authUrl);
+                this.webClient = WebClient.builder()
+                                .baseUrl(authUrl)
+                                .filter(acceptLanguageOfCurrentRequest())
+                                .build();
+        }
+
+        /**
+         * Adds the Accept-Language header to the requests to spring-auth: the locale
+         * resolved for the current request (lang parameter, otherwise the
+         * Accept-Language header of the client), unless the request already has one.
+         *
+         * @return the filter adding the header
+         */
+        private static ExchangeFilterFunction acceptLanguageOfCurrentRequest() {
+                return (request, next) -> {
+                        if (request.headers().containsHeader(HttpHeaders.ACCEPT_LANGUAGE)) {
+                                return next.exchange(request);
+                        }
+                        String language = LocaleContextHolder.getLocale().toLanguageTag();
+                        return next.exchange(ClientRequest.from(request)
+                                        .header(HttpHeaders.ACCEPT_LANGUAGE, language)
+                                        .build());
+                };
         }
 
         // Logger for debugging and monitoring the authentication flow.

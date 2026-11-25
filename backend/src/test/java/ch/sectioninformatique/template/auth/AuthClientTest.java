@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -40,6 +42,7 @@ public class AuthClientTest {
     /** Method and URI (raw, as sent on the wire) of the last request received */
     private final AtomicReference<String> lastMethod = new AtomicReference<>();
     private final AtomicReference<URI> lastUri = new AtomicReference<>();
+    private final AtomicReference<String> lastAcceptLanguage = new AtomicReference<>();
 
     /** Next answer of the fake spring-auth: by default 204 No Content (successful delete) */
     private final AtomicInteger responseStatus = new AtomicInteger(204);
@@ -58,6 +61,7 @@ public class AuthClientTest {
         server.createContext("/", exchange -> {
             lastMethod.set(exchange.getRequestMethod());
             lastUri.set(exchange.getRequestURI());
+            lastAcceptLanguage.set(exchange.getRequestHeaders().getFirst("Accept-Language"));
             String body = responseBody.get();
             if (body == null) {
                 exchange.sendResponseHeaders(responseStatus.get(), -1);
@@ -77,6 +81,7 @@ public class AuthClientTest {
     void stopServer() {
         server.stop(0);
         RequestContextHolder.resetRequestAttributes();
+        LocaleContextHolder.resetLocaleContext();
     }
 
     /**
@@ -187,5 +192,20 @@ public class AuthClientTest {
                         "Secure123@Pass".toCharArray(), null, null)).block());
 
         assertEquals(HttpStatus.CONFLICT, e.getStatus());
+    }
+
+    /**
+     * Requests to spring-auth carry the language of the current request, so that
+     * spring-auth's messages are in the same language as the backend's.
+     */
+    @Test
+    void requests_shouldCarryTheLanguageOfTheCurrentRequest() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        authClient.deleteGlobalUser("Bearer token", 9L, false).block();
+        assertEquals("en", lastAcceptLanguage.get());
+
+        LocaleContextHolder.setLocale(Locale.FRENCH);
+        authClient.deleteGlobalUser("Bearer token", 9L, false).block();
+        assertEquals("fr", lastAcceptLanguage.get());
     }
 }
