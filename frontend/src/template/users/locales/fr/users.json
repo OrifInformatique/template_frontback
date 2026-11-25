@@ -16,5 +16,14 @@
     "create_user": "Créer un utilisateur",
     "edit_user": "Modifier l'utilisateur",
     "fetch_error": "Impossible de charger les utilisateurs.",
-    "action_error": "L'action a échoué."
+    "action_error": "L'action a échoué.",
+    "password": "Mot de passe",
+    "none_selected": "Aucun sélectionné",
+    "selected_one": "sélectionné",
+    "selected_many": "sélectionnés",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "create": "Créer",
+    "save_error": "L'utilisateur n'a pas pu être enregistré.",
+    "roles_error": "Les rôles n'ont pas pu être chargés."
 }

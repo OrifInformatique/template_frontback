@@ -16,5 +16,14 @@
     "create_user": "Create User",
     "edit_user": "Edit User",
     "fetch_error": "Failed to load users.",
-    "action_error": "The action failed."
+    "action_error": "The action failed.",
+    "password": "Password",
+    "none_selected": "None selected",
+    "selected_one": "selected",
+    "selected_many": "selected",
+    "cancel": "Cancel",
+    "save": "Save",
+    "create": "Create",
+    "save_error": "The user could not be saved.",
+    "roles_error": "The roles could not be loaded."
 }

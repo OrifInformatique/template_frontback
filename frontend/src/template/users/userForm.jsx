@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next';
 import { Button, InputPassword, InputText, MultiSelect  } from '@orif-informatique/react-components-library';
 
 import { createUser, updateUser, getRoles } from "./api/api";
 import { apiErrorMessage } from "../auth/apiError";
 
 function UserForm({ user, onClose, onSaved }) {
+const { t } = useTranslation('users');
 const [firstName, setFirstName] = useState(user ? user.firstName : "");
 const [lastName, setLastName] = useState(user ? user.lastName : "");
 const [login, setLogin] = useState(user ? user.login : "");
@@ -31,7 +33,7 @@ useEffect(() => {
             setAppSpefRole(localRoles);
         } catch (error) {
             console.error("Roles loading failed:", error);
-            setSaveError(apiErrorMessage(error, "Unable to load the roles."));
+            setSaveError(apiErrorMessage(error, t("roles_error", "The roles could not be loaded.")));
         }
     };
 
@@ -55,7 +57,7 @@ useEffect(() => {
 
 const handleSaveError = (error) => {
     // Backend message, with the invalid fields of a validation error
-    setSaveError(apiErrorMessage(error, "Unable to save user."));
+    setSaveError(apiErrorMessage(error, t("save_error", "The user could not be saved.")));
     console.error("User save failed:", error.response?.data || error);
 };
 
@@ -91,13 +93,13 @@ const handleSave = async () => {
 return (
     <>
     
-        <InputText id="user-first-name" name="firstName" label="First Name" value={firstName} onChangeFunction={(e) => setFirstName(e.target.value)} />
-        <InputText id="user-last-name" name="lastName" label="Last Name" value={lastName} onChangeFunction={(e) => setLastName(e.target.value)} />
-        <InputText id="user-login" name="login" label="Login" value={login} onChangeFunction={(e) => setLogin(e.target.value)} />
-        <InputPassword id="user-password" name="password" label="Password" type="password" value={password} onChangeFunction={(e) => setPassword(e.target.value)} />
+        <InputText id="user-first-name" name="firstName" label={t("firstName", "First Name")} value={firstName} onChangeFunction={(e) => setFirstName(e.target.value)} />
+        <InputText id="user-last-name" name="lastName" label={t("lastName", "Last Name")} value={lastName} onChangeFunction={(e) => setLastName(e.target.value)} />
+        <InputText id="user-login" name="login" label={t("login", "Login")} value={login} onChangeFunction={(e) => setLogin(e.target.value)} />
+        <InputPassword id="user-password" name="password" label={t("password", "Password")} type="password" value={password} onChangeFunction={(e) => setPassword(e.target.value)} />
         <div>
-            <label htmlFor="user-roles" className="block text-sm font-medium text-gray-700 mt-4">Main Role</label>
-        <select id="user-roles" name="roles" label="Main Role" value={userRoles} onChange={(e) => setUserRoles(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
+            <label htmlFor="user-roles" className="block text-sm font-medium text-gray-700 mt-4">{t("mainRole", "Main Role")}</label>
+        <select id="user-roles" name="roles" value={userRoles} onChange={(e) => setUserRoles(e.target.value)} className="w-full p-2 border border-gray-300 rounded">
             {roles.map((role) => (
                 <option key={role.name} value={role.name}>{role.name}</option>
             ))}
@@ -105,7 +107,7 @@ return (
         </div>
     
         <MultiSelect
-        name="Role spécifique"
+        name={t("appSpecificRoles", "App Specific Roles")}
         options={roleName}
         selectedValues={userAppSpefRole}
         defaultValues={userAppSpefRole}
@@ -113,9 +115,9 @@ return (
         onChangeFunction={setUserAppSpefRole}
         error={null}
         className={null}
-        emptyLabel='Aucun sélectionné'
-        singleLabel='sélectionné'
-        multipleLabel='sélectionnés'
+        emptyLabel={t("none_selected", "None selected")}
+        singleLabel={t("selected_one", "selected")}
+        multipleLabel={t("selected_many", "selected")}
         />
 
         {saveError ? <p className="mt-3 text-red-600" role="alert">{saveError}</p> : null}
@@ -123,9 +125,9 @@ return (
 
 
         <div className="flex justify-end mt-4">
-            <Button label="Cancel" variant="secondary" className="mr-2" onClick={() => {onClose()}} />
+            <Button label={t("cancel", "Cancel")} variant="secondary" className="mr-2" onClick={() => {onClose()}} />
             <Button 
-            label={user ? "Save" : "Create"} 
+            label={user ? t("save", "Save") : t("create", "Create")} 
             variant="primary" 
             onClick={handleSave} />
         </div>
