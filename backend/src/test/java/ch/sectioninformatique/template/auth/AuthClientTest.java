@@ -43,6 +43,7 @@ public class AuthClientTest {
     private final AtomicReference<String> lastMethod = new AtomicReference<>();
     private final AtomicReference<URI> lastUri = new AtomicReference<>();
     private final AtomicReference<String> lastAcceptLanguage = new AtomicReference<>();
+    private final AtomicReference<String> lastBody = new AtomicReference<>();
 
     /** Next answer of the fake spring-auth: by default 204 No Content (successful delete) */
     private final AtomicInteger responseStatus = new AtomicInteger(204);
@@ -62,6 +63,7 @@ public class AuthClientTest {
             lastMethod.set(exchange.getRequestMethod());
             lastUri.set(exchange.getRequestURI());
             lastAcceptLanguage.set(exchange.getRequestHeaders().getFirst("Accept-Language"));
+            lastBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             String body = responseBody.get();
             if (body == null) {
                 exchange.sendResponseHeaders(responseStatus.get(), -1);
@@ -111,6 +113,21 @@ public class AuthClientTest {
 
         assertEquals("/users/9", lastUri.get().getRawPath());
         assertEquals("permanent=false&lang=en", lastUri.get().getRawQuery());
+    }
+
+    /**
+     * The auth code exchange sends the body expected by spring-auth's
+     * POST /oauth2/token: {"userId", "code"}.
+     */
+    @Test
+    void getTokenWithAuthCode_shouldSendUserIdAndCode() {
+        respond(200, "{\"id\":9,\"login\":\"a@b.ch\",\"token\":\"t\",\"deleted\":false,\"mainRole\":\"USER\"}");
+
+        authClient.getTokenWithAuthCode(AuthCodeDto.builder().userId(9L).code("abc").build()).block();
+
+        assertEquals("POST", lastMethod.get());
+        assertEquals("/oauth2/token", lastUri.get().getRawPath());
+        assertEquals("{\"userId\":9,\"code\":\"abc\"}", lastBody.get());
     }
 
     // ==================== Error mapping ====================
@@ -164,7 +181,7 @@ public class AuthClientTest {
         respond(400, "{\"message\":\"Validation failed\"}");
 
         OAuth2AuthenticationException e = assertThrows(OAuth2AuthenticationException.class,
-                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("bogus").id(2L).build()).block());
+                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("bogus").userId(2L).build()).block());
 
         assertEquals(HttpStatus.UNAUTHORIZED, e.getStatus());
     }
@@ -177,7 +194,7 @@ public class AuthClientTest {
         respond(404, null);
 
         assertThrows(AuthCodeNotFoundException.class,
-                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("old").id(2L).build()).block());
+                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("old").userId(2L).build()).block());
     }
 
     /**

@@ -89,7 +89,7 @@ public class OAuth2Controller {
         log.debug("OAuth2 login successful, using authcode to get tokens");
         AuthCodeDto authCodeDto = AuthCodeDto.builder()
                 .code(authCode)
-                .id(userId)
+                .userId(userId)
                 .build();
 
         // Exchange the auth code with spring-auth: user with its access token,

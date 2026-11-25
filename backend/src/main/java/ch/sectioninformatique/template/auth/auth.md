@@ -95,14 +95,14 @@ The Azure login and OAuth2 callback URLs are provided through :
 
 ## *AuthCodeDto.java*
 
-`AuthCodeDto` is a Data Transfer Object used to transfer a temporary authentication code.
+`AuthCodeDto` is the body of spring-auth's `POST /oauth2/token`, which exchanges the temporary authentication code received after an Azure login. Its field names must match spring-auth's `AuthCodeExchangeDto`.
 
 It contains :
 
-* `id`,
+* `userId`,
 * `code`
 
-The `id` identifies the user or authentication request associated with the code.
+The `userId` is the spring-auth id of the user who logged in, received with the code in the redirect URL.
 
 The `code` contains the temporary authentication code used during the authentication process.
 
