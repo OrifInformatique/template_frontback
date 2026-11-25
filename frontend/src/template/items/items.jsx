@@ -5,6 +5,7 @@ import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from '.
 import ItemForm from './itemForm';
 import ItemDetail from './itemDetail';
 import { authorName } from './authorName';
+import { apiErrorMessage } from '../auth/apiError';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import useAuthStore from '../auth/authStore';
 
@@ -30,7 +31,7 @@ const Items = () => {
                 if (!ignore) setItems(data);
             })
             .catch((err) => {
-                if (!ignore) setError(err.message || t("fetch_error", "Failed to load items."));
+                if (!ignore) setError(apiErrorMessage(err, t("fetch_error", "Failed to load items.")));
             })
             .finally(() => {
                 if (!ignore) setIsLoading(false);
@@ -46,7 +47,7 @@ const Items = () => {
             const data = await getItems(showDeleted ? 'ALL' : 'ACTIVE');
             setItems(data);
         } catch (err) {
-            setError(err.message || t("fetch_error", "Failed to load items."));
+            setError(apiErrorMessage(err, t("fetch_error", "Failed to load items.")));
         } finally {
             setIsLoading(false);
         }
@@ -56,14 +57,26 @@ const Items = () => {
         fetchItems();
     }, [fetchItems]);
 
+    // Runs a list action, then reloads the list; shows the error if it fails
+    // (e.g. 403 when the user is not the author of the item)
+    const runAction = useCallback(async (action) => {
+        try {
+            await action();
+            await fetchItems();
+        } catch (err) {
+            console.error("Item action failed:", err);
+            setError(apiErrorMessage(err, t("action_error", "The action failed.")));
+        }
+    }, [fetchItems, t]);
+
     const actions = useMemo(() => ({
         // TODO: Replace hardcoded edit with a proper edit form/modal
         edit: { permission: "item:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
-        delete: { permission: "item:delete", onClick: (item) => deleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Delete failed:", err)) },
-        restore: { permission: "item:update", onClick: (item) => restoreItem(item.id).then(() => fetchItems()).catch((err) => console.error("Restore failed:", err)) },
-        hardDelete: { permission: "item:delete", onClick: (item) => hardDeleteItem(item.id).then(() => fetchItems()).catch((err) => console.error("Hard delete failed:", err)) },
+        delete: { permission: "item:delete", onClick: (item) => runAction(() => deleteItem(item.id)) },
+        restore: { permission: "item:update", onClick: (item) => runAction(() => restoreItem(item.id)) },
+        hardDelete: { permission: "item:delete", onClick: (item) => runAction(() => hardDeleteItem(item.id)) },
         viewDeleted: { permission: "item:read" },
-    }), [fetchItems]);
+    }), [runAction]);
 
     return (
         <div>

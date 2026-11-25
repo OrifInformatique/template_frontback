@@ -24,5 +24,7 @@
     "status": "Status",
     "deleted": "Deleted",
     "active": "Active",
-    "unknown_author": "Unknown author"
+    "unknown_author": "Unknown author",
+    "save_error": "The item could not be saved.",
+    "action_error": "The action failed."
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button, InputPassword, InputText, MultiSelect  } from '@orif-informatique/react-components-library';
 
 import { createUser, updateUser, getRoles } from "./api/api";
+import { apiErrorMessage } from "../auth/apiError";
 
 function UserForm({ user, onClose, onSaved }) {
 const [firstName, setFirstName] = useState(user ? user.firstName : "");
@@ -23,10 +24,15 @@ userAppSpefRole.map(r => userRolesName.push(r.name))
 
 useEffect(() => {
     const fetchRoles = async () => {
-        const mainRoles = await getRoles('main');
-        const localRoles = await getRoles('local');
-        setRoles(mainRoles);
-        setAppSpefRole(localRoles);
+        try {
+            const mainRoles = await getRoles('main');
+            const localRoles = await getRoles('local');
+            setRoles(mainRoles);
+            setAppSpefRole(localRoles);
+        } catch (error) {
+            console.error("Roles loading failed:", error);
+            setSaveError(apiErrorMessage(error, "Unable to load the roles."));
+        }
     };
 
     fetchRoles();
@@ -48,15 +54,8 @@ useEffect(() => {
 }, [user]);
 
 const handleSaveError = (error) => {
-    const data = error.response?.data;
-    let message = data?.message || error.message || "Unable to save user.";
-    // Validation errors: show which fields are invalid
-    if (data?.fieldErrors) {
-        message += ": " + Object.entries(data.fieldErrors)
-            .map(([field, fieldError]) => `${field} ${fieldError}`)
-            .join(", ");
-    }
-    setSaveError(message);
+    // Backend message, with the invalid fields of a validation error
+    setSaveError(apiErrorMessage(error, "Unable to save user."));
     console.error("User save failed:", error.response?.data || error);
 };
 
