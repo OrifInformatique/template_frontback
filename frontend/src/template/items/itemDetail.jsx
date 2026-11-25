@@ -17,7 +17,7 @@ const ItemDetail = ({ item, onClose }) => {
                     <span className="text-sm text-gray-900">{item.name}</span>
 
                     <span className="text-sm font-medium text-gray-500">{t("author", "Author")}</span>
-                    <span className="text-sm text-gray-900">{typeof item.author === 'string' ? item.author : authorName(item.author, t)}</span>
+                    <span className="text-sm text-gray-900">{authorName(item.author, t)}</span>
 
                     <span className="text-sm font-medium text-gray-500">{t("description", "Description")}</span>
                     <span className="text-sm text-gray-900 whitespace-pre-wrap">{item.description}</span>

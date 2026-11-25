@@ -69,14 +69,19 @@ const Items = () => {
         }
     }, [fetchItems, t]);
 
+    // The list shows items formatted for display (dates, author name): the
+    // detail view and the form get the original item
+    const originalItem = useCallback((row) => items.find((item) => item.id === row.id) ?? row, [items]);
+
     const actions = useMemo(() => ({
-        // TODO: Replace hardcoded edit with a proper edit form/modal
-        edit: { permission: "item:update", onClick: (item) => { setSelectedItem(item); setFormOpen(true); } },
+        // Clicking a row opens its detail
+        view: { permission: "item:read", onClick: (row) => { setSelectedItem(originalItem(row)); setItemOpen(true); } },
+        edit: { permission: "item:update", onClick: (row) => { setSelectedItem(originalItem(row)); setFormOpen(true); } },
         delete: { permission: "item:delete", onClick: (item) => runAction(() => deleteItem(item.id)) },
         restore: { permission: "item:update", onClick: (item) => runAction(() => restoreItem(item.id)) },
         hardDelete: { permission: "item:delete", onClick: (item) => runAction(() => hardDeleteItem(item.id)) },
         viewDeleted: { permission: "item:read" },
-    }), [runAction]);
+    }), [runAction, originalItem]);
 
     return (
         <div>
