@@ -1,13 +1,13 @@
 import api from "../../auth/apiClient";
 
 /**
- * Gets users filtered by soft-delete state.
+ * Gets users filtered by soft-delete status.
  *
- * @param {'active'|'deleted'|'all'} state which subset to fetch (default 'active')
+ * @param {'ACTIVE'|'DELETED'|'ALL'} status which subset to fetch (default 'ACTIVE')
  */
-export const getUsers = async (state = 'active') => {
+export const getUsers = async (status = 'ACTIVE') => {
     try {
-        const response = await api.get(`/users`, { params: { state } });
+        const response = await api.get(`/users`, { params: { status } });
         return response.data;
     }
     catch(error) {
@@ -15,18 +15,12 @@ export const getUsers = async (state = 'active') => {
         return [];
     }
 };
-export const deleteUserLocal = async (userLogin) => {
-    console.log("userID :" + userLogin);
-    try {
-        const response = await api.delete(`/users/${userLogin}?global=false&hard=false`);
-        return response.data;
-    }
-    catch(error) {
-        console.error(`Error while deleting user: ${error.message}`);
-        return null;
-    }
-};
 
+/**
+ * Gets the roles, main (owned by spring-auth) and/or local (app-specific).
+ *
+ * @param {'local'|'main'|'all'} scope which roles to fetch (default 'local')
+ */
 export const getRoles = async (scope = 'local') => {
     try {
         const response = await api.get(`/roles`, { params: { scope } });
@@ -38,45 +32,31 @@ export const getRoles = async (scope = 'local') => {
     };
 }
 
-export const deleteUserDistant = async (userLogin) => {
-    console.log("userID :" + userLogin);
+/**
+ * Deletes a user, in spring-auth and locally (204 No Content).
+ *
+ * @param {number} userId the user id
+ * @param {boolean} permanent true to remove the user, false for a soft (restorable) deletion
+ */
+export const deleteUser = async (userId, permanent = false) => {
     try {
-        const response = await api.delete(`/users/${userLogin}?global=true&hard=false`);
-        return response.data;
+        await api.delete(`/users/${userId}`, { params: { scope: 'GLOBAL', permanent } });
+        return true;
     }
     catch(error) {
         console.error(`Error while deleting user: ${error.message}`);
-        return null;
+        return false;
     }
 };
 
-export const hardDeleteUserLocal = async (userLogin) => {
-    console.log("userID :" + userLogin);
-    try {
-        const response = await api.delete(`/users/${userLogin}?global=false&hard=true`);
-        return response.data;
-    }
-    catch(error) {
-        console.error(`Error while hard deleting user: ${error.message}`);
-        return null;
-    }
-};
-
-export const hardDeleteUserDistant = async (id) => {
-    try {
-        console.log("userID :" + id);
-        const response = await api.delete(`/users/${id}/true/permanent`);
-        return response.data;
-    }
-    catch(error) {
-        console.error(`Error while hard deleting user: ${error.message}`);
-        return null;
-    }
-};
-
+/**
+ * Creates a user, in spring-auth and locally.
+ *
+ * @returns the created user
+ */
 export const createUser = async (data) => {
     try {
-        const response = await api.post(`/auth/register`, data);
+        const response = await api.post(`/users`, data);
         return response.data;
     }
     catch(error) {
@@ -85,9 +65,15 @@ export const createUser = async (data) => {
     }
 };
 
-export const updateUser = async (userLogin, data) => {
+/**
+ * Updates a user: profile and main role (in spring-auth), app-specific roles.
+ *
+ * @param {number} userId the user id
+ * @returns the updated user
+ */
+export const updateUser = async (userId, data) => {
     try {
-        const response = await api.put(`/users/${encodeURIComponent(userLogin)}`, data);
+        const response = await api.put(`/users/${userId}`, data);
         return response.data;
     }
     catch(error) {
@@ -96,9 +82,15 @@ export const updateUser = async (userLogin, data) => {
     }
 };
 
-export const restoreUser = async (userLogin) => {
+/**
+ * Restores a soft-deleted user.
+ *
+ * @param {number} userId the user id
+ * @returns the restored user
+ */
+export const restoreUser = async (userId) => {
     try {
-        const response = await api.put(`/users/${userLogin}/restore`);
+        const response = await api.post(`/users/${userId}/restore`);
         return response.data;
     }
     catch(error) {

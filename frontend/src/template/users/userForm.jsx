@@ -48,7 +48,14 @@ useEffect(() => {
 }, [user]);
 
 const handleSaveError = (error) => {
-    const message = error.response?.data?.message || error.message || "Unable to save user.";
+    const data = error.response?.data;
+    let message = data?.message || error.message || "Unable to save user.";
+    // Validation errors: show which fields are invalid
+    if (data?.fieldErrors) {
+        message += ": " + Object.entries(data.fieldErrors)
+            .map(([field, fieldError]) => `${field} ${fieldError}`)
+            .join(", ");
+    }
     setSaveError(message);
     console.error("User save failed:", error.response?.data || error);
 };
@@ -58,11 +65,10 @@ const handleSave = async () => {
 
     try {
         if (user) {
-            await updateUser(user.login, {
+            await updateUser(user.id, {
                 "firstName" : firstName,
                 "lastName" : lastName,
                 "login" : login,
-                "deleted": Boolean(user.deleted ?? false),
                 "mainRole": userRoles,
                 "appSpecificRoles" : userAppSpefRole
             });

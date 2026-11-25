@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import  { useTranslation } from 'react-i18next'
 import useAuthStore from '../auth/authStore';
 
-import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers} from './api/api';
+import { deleteUser, restoreUser, getUsers } from './api/api';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import UserForm from './userForm';
 
@@ -16,11 +16,10 @@ function UserList() {
     const [formOpen, setFormOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const usersPermissions = user?.permissions || [];
-    const usersAppRoles = user?.appSpecificRoles || [];
 
         const fetchUsers = async () => {
                 try {
-                    const response = await getUsers(showDeleted ? 'all' : 'active');
+                    const response = await getUsers(showDeleted ? 'ALL' : 'ACTIVE');
 
                     setUser(response);
                 } catch (error) {
@@ -45,10 +44,11 @@ function UserList() {
 
         const actions = useMemo(() => ({
             edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user), setFormOpen(true)}},
-            delete: { permission: "user:delete", onClick: (user) => { deleteUserLocal(user.login).then(() => deleteUserDistant(user.login).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err)))}},
-            hardDelete: { permission: "user:delete", onClick: (user) => hardDeleteUserLocal(user.login).then(() => hardDeleteUserDistant(user.login).then(() => fetchUsers())).catch((err) => console.error("Hard delete failed:", err)) },
+            // Users are deleted in spring-auth and locally, softly or permanently
+            delete: { permission: "user:delete", onClick: (user) => deleteUser(user.id).then(() => fetchUsers()) },
+            hardDelete: { permission: "user:delete", onClick: (user) => deleteUser(user.id, true).then(() => fetchUsers()) },
             viewDeleted: { permission: "user:read"},
-            restore: { permission: "user:update", onClick: (user) => restoreUser(user.login).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err)) }
+            restore: { permission: "user:update", onClick: (user) => restoreUser(user.id).then(() => fetchUsers()) }
         }), [showDeleted]);
 
 
