@@ -23,6 +23,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.sun.net.httpserver.HttpServer;
 
 import ch.sectioninformatique.template.auth.AuthExceptions.AuthCodeNotFoundException;
+import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserUpdateException;
@@ -172,5 +173,19 @@ public class AuthClientTest {
 
         assertThrows(AuthCodeNotFoundException.class,
                 () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("old").id(2L).build()).block());
+    }
+
+    /**
+     * A login already used in spring-auth (409) is a conflict, not a bad request.
+     */
+    @Test
+    void register_whenSpringAuthAnswers409_shouldThrowLoginAlreadyExistsWith409() {
+        respond(409, "{\"message\":\"Login already exists\"}");
+
+        LoginAlreadyExistsException e = assertThrows(LoginAlreadyExistsException.class,
+                () -> authClient.register("Bearer token", new RegisterDto("A", "B", "a@b.ch",
+                        "Secure123@Pass".toCharArray(), null, null)).block());
+
+        assertEquals(HttpStatus.CONFLICT, e.getStatus());
     }
 }

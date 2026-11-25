@@ -38,7 +38,7 @@ Setup: copy `env-dist` → `.env` and `application.properties-dist` → `applica
 
 ```bash
 npm install
-npm run serve             # webpack-dev-server on PORT from .env (default 4000), proxies /auth, /users, /items, /roles, /tests to BACKEND_API_URL
+npm run serve             # webpack-dev-server on PORT from .env (default 4000), proxies /auth, /oauth2, /users, /items, /roles, /tests to BACKEND_API_URL
 npm run build              # production build
 npm run storybook          # Storybook on :6006
 npm run build-storybook
@@ -64,9 +64,9 @@ Code lives under `ch.sectioninformatique.template`, one package per domain (`use
 
 ### Auth is delegated, not implemented locally
 
-`auth/AuthController` does not perform authentication itself — it relays requests (login, register, refresh, Azure OAuth2 callback) to the external `spring-auth` service via `auth/AuthClient` (a Spring WebFlux `WebClient`, configured in `security/WebClientConfig`). `spring-auth`'s base URL comes from `SPRING_AUTH_URL` in `.env`. Locally-issued JWTs from `spring-auth` are then validated on every request by `security/JwtAuthFilter` + `security/UserAuthenticationProvider`, which populate the Spring Security context. See `docs/frontend_backend_auth_architecture.mmd`/`.png` and `docs/process-documentation.md` for full sequence diagrams (standard login, Azure OAuth2 login, refresh token flow).
+`auth/AuthController` (`/auth/login`, `/auth/refresh`, `/auth/logout`) and `auth/OAuth2Controller` (`/oauth2/*`, Azure login) do not perform authentication themselves — they relay requests to the external `spring-auth` service, with the same paths as spring-auth (user creation and password change are `POST /users` and `PUT /users/me/password`), via `auth/AuthClient` (a Spring WebFlux `WebClient`, configured in `security/WebClientConfig`). `spring-auth`'s base URL comes from `SPRING_AUTH_URL` in `.env`. Locally-issued JWTs from `spring-auth` are then validated on every request by `security/JwtAuthFilter` + `security/UserAuthenticationProvider`, which populate the Spring Security context. See `docs/frontend_backend_auth_architecture.mmd`/`.png` and `docs/process-documentation.md` for full sequence diagrams (standard login, Azure OAuth2 login, refresh token flow).
 
-Azure OAuth2 login is a three-party redirect dance (Frontend ↔ this Backend ↔ spring-auth ↔ Azure): the backend receives a temporary auth code at `/auth/auth-code`, exchanges it with spring-auth for tokens, stashes them in the HTTP session, then the frontend polls `GET /auth/tokens` to retrieve and clear them. This is why `SecurityConfig` sets `SessionCreationPolicy.ALWAYS` even though the API is otherwise stateless/JWT-based.
+Azure OAuth2 login is a three-party redirect dance (Frontend ↔ this Backend ↔ spring-auth ↔ Azure): the backend receives a temporary auth code at `GET /oauth2/callback` (`AFTER_OAUTH2_LOGIN_URL`), exchanges it with spring-auth for tokens, stashes them in the HTTP session, then the frontend calls `POST /oauth2/token` to retrieve them, once (the session data is then removed). This is why `SecurityConfig` sets `SessionCreationPolicy.ALWAYS` even though the API is otherwise stateless/JWT-based.
 
 ### Roles and permissions
 
@@ -100,7 +100,7 @@ Routing is centralized in `src/index.js` (React Router v7); all routes are neste
 
 State: `zustand` is used for feature-local stores (e.g. `template/auth/authStore.jsx` holds the authenticated user/tokens). No global app-wide store — keep new stores scoped to their module.
 
-The dev server proxies `/auth`, `/users`, `/items`, `/roles`, `/tests` requests to `BACKEND_API_URL` (`pathFilter` in `webpack.config.js`) — when adding a new backend module with its own top-level path, add it there too.
+The dev server proxies `/auth`, `/oauth2`, `/users`, `/items`, `/roles`, `/tests` requests to `BACKEND_API_URL` (`pathFilter` in `webpack.config.js`) — when adding a new backend module with its own top-level path, add it there too.
 
 ## Notes
 

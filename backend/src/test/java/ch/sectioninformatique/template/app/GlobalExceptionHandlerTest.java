@@ -118,6 +118,6 @@ public class GlobalExceptionHandlerTest {
     /** No Azure login result in the session: 401 with a body (it used to be empty) */
     @Test
     public void tokens_withoutAzureLoginResult_returnsStandardError401() throws Exception {
-        assertErrorBody(mockMvc.perform(get("/auth/tokens?lang=en")), 401, "Unauthorized");
+        assertErrorBody(mockMvc.perform(post("/oauth2/token?lang=en")), 401, "Unauthorized");
     }
 }

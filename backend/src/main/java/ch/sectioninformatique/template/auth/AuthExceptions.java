@@ -128,15 +128,15 @@ public class AuthExceptions {
     }
 
     /**
-     * Thrown when a login is already taken.
+     * Thrown when a login is already taken (spring-auth answers 409 Conflict).
      */
     public static class LoginAlreadyExistsException extends AppException implements MessageKeyProvider {
         public LoginAlreadyExistsException() {
-            super(HttpStatus.BAD_REQUEST);
+            super(HttpStatus.CONFLICT);
         }
 
         public LoginAlreadyExistsException(String detail) {
-            super(HttpStatus.BAD_REQUEST);
+            super(HttpStatus.CONFLICT);
         }
 
         @Override
@@ -158,7 +158,7 @@ public class AuthExceptions {
 
     /**
      * Thrown when the frontend asks for the result of an Azure OAuth2 login
-     * ({@code GET /auth/tokens}) but none is waiting in its session.
+     * ({@code POST /oauth2/token}) but none is waiting in its session.
      */
     public static class OAuth2LoginResultNotFoundException extends AppException implements MessageKeyProvider {
         public OAuth2LoginResultNotFoundException() {

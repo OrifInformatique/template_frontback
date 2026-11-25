@@ -274,51 +274,7 @@ include::{snippets}/auth/login-user-not-found/http-response.adoc[]
 
 It returns an error indicating the user was not found.
 
-=== 2.2 Register
-This is an example output for the `POST /auth/register` endpoint.
-
-.request
-include::{snippets}/auth/register/http-request.adoc[]
-
-.response
-include::{snippets}/auth/register/http-response.adoc[]
-
-It returns the profil of the newly registered user.
-
-==== 2.2.1 Error 400 - User Already Exists
-This is an example output for the `POST /auth/register` endpoint when the user already exists.
-
-.request
-include::{snippets}/auth/register-conflict/http-request.adoc[]
-
-.response
-include::{snippets}/auth/register-conflict/http-response.adoc[]
-
-It returns a message indicating that the user already exists.
-
-===== 2.2.1.1 User Already Exists (Alternative)
-This is another example output for the `POST /auth/register` endpoint when attempting to register an existing user.
-
-.request
-include::{snippets}/auth/register-user-already-exists/http-request.adoc[]
-
-.response
-include::{snippets}/auth/register-user-already-exists/http-response.adoc[]
-
-It returns a message indicating that the user already exists.
-
-==== 2.2.2 Error 500 - Registration Failed
-This is an example output for the `POST /auth/register` endpoint when registration fails.
-
-.request
-include::{snippets}/auth/register-failed/http-request.adoc[]
-
-.response
-include::{snippets}/auth/register-failed/http-response.adoc[]
-
-It returns a message indicating that the registration process failed.
-
-=== 2.3 Refresh
+=== 2.2 Refresh
 This is an example output for the `POST /auth/refresh` endpoint.
 
 .request
@@ -329,7 +285,7 @@ include::{snippets}/auth/refresh/http-response.adoc[]
 
 It returns a new access token.
 
-==== 2.3.1 Error 401 - Invalid Refresh Token
+==== 2.2.1 Error 401 - Invalid Refresh Token
 This is an example output for the `POST /auth/refresh` endpoint when the refresh token is invalid or expired.
 
 .request
@@ -340,7 +296,7 @@ include::{snippets}/auth/refresh-invalid/http-response.adoc[]
 
 It returns a message indicating the refresh token cannot be used.
 
-==== 2.3.2 Error 401 - Expired Refresh Token
+==== 2.2.2 Error 401 - Expired Refresh Token
 This is an example output for the `POST /auth/refresh` endpoint when the refresh token has expired.
 
 .request
@@ -351,7 +307,7 @@ include::{snippets}/auth/refresh-expired-token/http-response.adoc[]
 
 It returns a message indicating the refresh token has expired.
 
-==== 2.3.3 Error 401 - Malformed Refresh Token
+==== 2.2.3 Error 401 - Malformed Refresh Token
 This is an example output for the `POST /auth/refresh` endpoint when the refresh token is malformed.
 
 .request
@@ -362,7 +318,7 @@ include::{snippets}/auth/refresh-malformed-refresh-token/http-response.adoc[]
 
 It returns a message indicating the refresh token format is invalid.
 
-==== 2.3.4 Error 401 - JWT Verification Failed
+==== 2.2.4 Error 401 - JWT Verification Failed
 This is an example output for the `POST /auth/refresh` endpoint when JWT verification fails.
 
 .request
@@ -373,10 +329,20 @@ include::{snippets}/auth/refresh-jwt-verification-failed/http-response.adoc[]
 
 It returns a message indicating the JWT verification has failed.
 
-=== 2.4 Logout
-Those are example outputs for the `POST /auth/logout` endpoint.
+=== 2.3 Logout
+`POST /auth/logout` revokes the refresh token in spring-auth and invalidates the HTTP
+session: `204 No Content`, with the `Set-Cookie` header of spring-auth expiring the
+refresh token cookie.
 
-==== 2.4.1 Error 401 - Missing Token
+==== 2.3.1 Success
+
+.request
+include::{snippets}/auth/logout/http-request.adoc[]
+
+.response
+include::{snippets}/auth/logout/http-response.adoc[]
+
+==== 2.3.2 Error 401 - Missing Token
 This is an example output when no authorisation token is provided.
 
 .request
@@ -387,7 +353,7 @@ include::{snippets}/auth/logout-unauthorized/http-response.adoc[]
 
 It returns a message indicating authentication is required.
 
-==== 2.4.2 Error 401 - Malformed Token
+==== 2.3.3 Error 401 - Malformed Token
 This is an example output when a malformed token is provided.
 
 .request
@@ -398,62 +364,25 @@ include::{snippets}/auth/logout-unauthorized-service/http-response.adoc[]
 
 It returns a message indicating the token format is incorrect.
 
-=== 2.5 OAuth2 Login
-This is an example output for the `GET /auth/oauth2/login` endpoint when called without valid authentication.
+=== 2.4 Azure (OAuth2) Login
+The Azure login is a redirect dance between the frontend, this backend, spring-auth and Azure
+(same paths as spring-auth's OAuth2 endpoints):
+
+. `GET /oauth2/login/azure` redirects the browser (`302`) to spring-auth's Azure login, with
+  `/oauth2/callback` as the URL to come back to (`AFTER_OAUTH2_LOGIN_URL`).
+. After the Azure login, spring-auth redirects the browser to `GET /oauth2/callback` with a
+  temporary auth code; the backend exchanges it for the user and its tokens, keeps them in the
+  HTTP session and redirects the browser to the frontend (`AFTER_OAUTH2_LOGIN_FRONTEND_CALLBACK`).
+. The frontend calls `POST /oauth2/token` (with the session cookie) and gets the user with its
+  access token, and the refresh token in a cookie. Single use: a second call answers `401`.
+
+==== 2.4.1 Start the Azure Login
 
 .request
 include::{snippets}/auth/azure-login/http-request.adoc[]
 
 .response
 include::{snippets}/auth/azure-login/http-response.adoc[]
-
-It returns a message indicating authentication is required.
-
-=== 2.6 Update Password
-Those are example outputs for the `PUT /auth/update-password` endpoint.
-
-This is an example output when the password is successfully updated.
-
-.request
-include::{snippets}/auth/update-password-success/http-request.adoc[]
-
-.response
-include::{snippets}/auth/update-password-success/http-response.adoc[]
-
-It confirms the password update.
-
-==== 2.6.1 Error 400 - Update Password Failed
-This is an example output when the password update fails due to incorrect old password.
-
-.request
-include::{snippets}/auth/update-password-failed/http-request.adoc[]
-
-.response
-include::{snippets}/auth/update-password-failed/http-response.adoc[]
-
-It returns a message indicating that the old password is incorrect.
-
-==== 2.6.2 Error 401 - Unauthorised
-This is an example output when the endpoint is called without valid authentication.
-
-.request
-include::{snippets}/auth/update-password/http-request.adoc[]
-
-.response
-include::{snippets}/auth/update-password/http-response.adoc[]
-
-It returns a message indicating authentication is required.
-
-==== 2.6.3 Error 401 - Malformed Token
-This is an example output when the endpoint is called with a malformed authentication token.
-
-.request
-include::{snippets}/auth/update-password-malformed-token/http-request.adoc[]
-
-.response
-include::{snippets}/auth/update-password-malformed-token/http-response.adoc[]
-
-It returns a message indicating the token format is incorrect.
 
 == 3 User Endpoints
 
@@ -655,6 +584,80 @@ include::{snippets}/users/restore-success/http-request.adoc[]
 
 .response
 include::{snippets}/users/restore-success/http-response.adoc[]
+
+=== 3.7 Create User
+`POST /users` creates a user in spring-auth, then locally with its app-specific roles:
+`201 Created`, with the URL of the new user in the `Location` header. The body is validated
+as spring-auth validates it (names, email login, password of 8 to 72 characters).
+Requires `user:write`.
+
+==== 3.7.1 Success
+
+.request
+include::{snippets}/auth/register/http-request.adoc[]
+
+.response
+include::{snippets}/auth/register/http-response.adoc[]
+
+==== 3.7.2 Error 400 - Invalid Body
+
+.request
+include::{snippets}/auth/register-failed/http-request.adoc[]
+
+.response
+include::{snippets}/auth/register-failed/http-response.adoc[]
+
+==== 3.7.3 Error 403 - Forbidden
+
+.request
+include::{snippets}/auth/register-noPermission/http-request.adoc[]
+
+.response
+include::{snippets}/auth/register-noPermission/http-response.adoc[]
+
+==== 3.7.4 Error 409 - Login Already Used
+
+.request
+include::{snippets}/auth/register-conflict/http-request.adoc[]
+
+.response
+include::{snippets}/auth/register-conflict/http-response.adoc[]
+
+=== 3.8 Change Own Password
+`PUT /users/me/password` changes the password of the authenticated user in spring-auth:
+`204 No Content`.
+
+==== 3.8.1 Success
+
+.request
+include::{snippets}/auth/update-password-success/http-request.adoc[]
+
+.response
+include::{snippets}/auth/update-password-success/http-response.adoc[]
+
+==== 3.8.2 Error 400 - Update Password Failed
+
+.request
+include::{snippets}/auth/update-password-failed/http-request.adoc[]
+
+.response
+include::{snippets}/auth/update-password-failed/http-response.adoc[]
+
+==== 3.8.3 Error 401 - Missing Token
+
+.request
+include::{snippets}/auth/update-password/http-request.adoc[]
+
+.response
+include::{snippets}/auth/update-password/http-response.adoc[]
+
+==== 3.8.4 Error 401 - Malformed Token
+
+.request
+include::{snippets}/auth/update-password-malformed-token/http-request.adoc[]
+
+.response
+include::{snippets}/auth/update-password-malformed-token/http-response.adoc[]
 
 == 4 Role Endpoints
 

@@ -124,11 +124,12 @@ public class SecurityConfig {
                     requests
                             .requestMatchers("/error").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/auth/login/azure").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/auth/auth-code").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/auth/tokens").permitAll()
+                            // Azure login (OAuth2Controller): browser redirects and the
+                            // frontend taking the result, before any access token exists
+                            .requestMatchers(HttpMethod.GET, "/oauth2/login/azure").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/oauth2/callback").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/oauth2/token").permitAll()
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .anyRequest().authenticated();
                     log.debug("HTTP request authorization rules configured");

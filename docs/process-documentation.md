@@ -142,12 +142,12 @@ sequenceDiagram
     participant Azure
  
     Note over Frontend,Backend: Redirect frontend to spring-auth Azure endpoint
-    Frontend->>Backend: /auth/login/azure with [frontend callback url]
-    Backend->>Backend: Create URI for spring-auth Azure endpoint with [/auth/auth-code callback url]
-    Backend-->>Frontend: Redirect to spring-auth Azure endpoint with [/auth/auth-code callback url]
+    Frontend->>Backend: GET /oauth2/login/azure
+    Backend->>Backend: Create URI for spring-auth Azure endpoint with [/oauth2/callback url]
+    Backend-->>Frontend: Redirect to spring-auth Azure endpoint with [/oauth2/callback url]
 
     Note over Frontend,Azure: Azure login process
-    Frontend->>spring-auth: /oauth2/login/azure with [backend /auth/auth-code callback url]
+    Frontend->>spring-auth: /oauth2/login/azure with [backend /oauth2/callback url]
     spring-auth->>spring-auth: /oauth2/authorization/azure Spring security's authorisation endpoint
     spring-auth->>Azure: Initiate Azure login process
     Azure-->>Frontend: (If needed, redirect frontend to Azure login form)
@@ -157,14 +157,14 @@ sequenceDiagram
     Note over Frontend, spring-auth: Create jwt tokens and send them to the frontend
     spring-auth->>spring-auth: Create or get the Azure user in spring-auth database
     spring-auth->>spring-auth: Generate a temporary AuthCode to exchange with client's backend
-    spring-auth->>Backend: [/auth/auth-code callback url] with temporary AuthCode
+    spring-auth->>Backend: GET /oauth2/callback with temporary AuthCode
     Backend->>spring-auth: /oauth2/token with the temporary AuthCode
     spring-auth-->>Backend: Response with userDto, access and refresh tokens
     Backend->>Backend: Create or get the user in local database
     Backend->>Backend: Store the userDto and tokens in session
     Backend->>Frontend: Redirect to the [frontend callback url]
-    Frontend->>Backend: GET /auth/tokens get the userDto and tokens from session
-    Backend-->>Frontend: Response with userDto and tokens and delete them from the session
+    Frontend->>Backend: POST /oauth2/token get the userDto and tokens from session
+    Backend-->>Frontend: Response with userDto and tokens and delete them from the session (single use)
 ```
 _Sequence Diagram showing login with Azure_
 
@@ -182,10 +182,10 @@ sequenceDiagram
     AuthClient-->>AuthController: ResponseEntity<UserDto>
     AuthController->>Client: UserDto + refresh_token cookie
 
-    Note over AuthController,spring-auth: Registration Flow
-    Client->>AuthController: POST /auth/register with RegisterDto
+    Note over AuthController,spring-auth: User creation (UserController, POST /users)
+    Client->>AuthController: POST /users with RegisterDto
     AuthController->>AuthClient: register(registerDto)
-    AuthClient->>spring-auth: POST /auth/register
+    AuthClient->>spring-auth: POST /users
     spring-auth-->>AuthClient: Success response
     AuthClient-->>AuthController: ResponseEntity
     AuthController->>UserService: register(registerDto)

@@ -114,7 +114,7 @@ Separate concern, related to test suite reliability (and therefore documentation
 Related fixes in the template backend:
 
 - `@AfterEach`: `SecurityContextHolder.clearContext()` in `AuthControllerTest`, `UserControllerTest`, `TestControllerTest`, and `ItemControllerTest`
-- `SecurityConfig` uses a single JWT filter chain; `SessionCreationPolicy.ALWAYS` is required for the Azure OAuth2 callback flow (`/auth/tokens`)
+- `SecurityConfig` uses a single JWT filter chain; `SessionCreationPolicy.ALWAYS` is required for the Azure OAuth2 callback flow (`/oauth2/callback` → `POST /oauth2/token`)
 
 ## Where does the HTML land?
 

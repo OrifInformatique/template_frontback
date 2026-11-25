@@ -325,16 +325,15 @@ public class AuthClient {
         }
 
         /**
-         * Logs out the authenticated user by sending a logout request to the
-         * authentication provider.
-         * Extracts and retransmits the Set-Cookie header containing the expired refresh
-         * token.
-         * 
+         * Logs out the authenticated user: spring-auth revokes its refresh token
+         * and answers 204 No Content with a Set-Cookie header expiring the
+         * refresh token cookie, which is passed on.
+         *
          * @param token The access token
-         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout
-         *         response with Set-Cookie header
+         * @return A Mono<ResponseEntity<Void>> carrying the expiring refresh token
+         *         cookie of spring-auth, if any
          */
-        public Mono<ResponseEntity<Map<String, String>>> logout(String token) {
+        public Mono<ResponseEntity<Void>> logout(String token) {
                 return webClient.post()
                                 .uri(uriWithOptionalLang("/auth/logout")) // the logout endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
@@ -348,25 +347,15 @@ public class AuthClient {
                                                                                 message)));
                                         }
 
-                                        // Extract response body
-                                        Mono<Map<String, String>> bodyMono = response.bodyToMono(
-                                                        new ParameterizedTypeReference<Map<String, String>>() {
-                                                        });
-
-                                        return bodyMono.map(body -> {
-                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
-
-                                                // Extract refresh_token cookie (expired) directly in the lambda
-                                                response.headers().asHttpHeaders()
-                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
-                                                                                Collections.emptyList())
-                                                                .stream()
-                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
-                                                                .findFirst()
-                                                                .ifPresent(cookie -> builder.header(
-                                                                                HttpHeaders.SET_COOKIE, cookie));
-                                                return builder.body(body);
-                                        });
+                                        ResponseEntity.HeadersBuilder<?> builder = ResponseEntity.noContent();
+                                        // Pass on the expiring refresh_token cookie
+                                        response.headers().asHttpHeaders()
+                                                        .getOrDefault(HttpHeaders.SET_COOKIE, Collections.emptyList())
+                                                        .stream()
+                                                        .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                        .findFirst()
+                                                        .ifPresent(cookie -> builder.header(HttpHeaders.SET_COOKIE, cookie));
+                                        return response.releaseBody().then(Mono.just(builder.<Void>build()));
                                 });
         }
 

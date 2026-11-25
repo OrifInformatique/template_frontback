@@ -417,6 +417,22 @@ public class UserService {
     }
 
     /**
+     * Creates a user: in spring-auth first (which validates the user and
+     * checks that the login is free), then locally with the same id and its
+     * app-specific roles.
+     *
+     * @param request the new user
+     * @param token   the access token of the authenticated user
+     * @return the created user
+     * @throws ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException
+     *         if the login is already used in spring-auth
+     */
+    public UserDto createUser(RegisterDto request, String token) {
+        UserDto globalUser = authClient.register(token, request).block().getBody();
+        return userMapper.toUserDto(register(request, globalUser.getId()));
+    }
+
+    /**
      * Gets a user by its ID, soft-deleted or not (the "deleted" field tells).
      *
      * @param userId The ID of the user

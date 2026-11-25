@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,7 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.auth.AuthExceptions.InvalidCredentialsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.PasswordUpdateFailedException;
-import ch.sectioninformatique.template.auth.AuthExceptions.UserAlreadyExistsException;
+import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
 import ch.sectioninformatique.template.security.MainRoleEnum;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefreshTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
@@ -364,14 +366,14 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: POST /auth/register
+     * Test: POST /users
      *
      * Verify successful registration calls auth client and saves user to local
      * database.
      */
     @Test
     @Transactional
-    public void register_withValidData_shouldReturn200AndSaveUserToDatabase() throws Exception {
+    public void createUser_withValidData_shouldReturn201AndSaveUserToDatabase() throws Exception {
         // Create a new user DTO that doesn't exist yet in the database
 
 
@@ -412,19 +414,18 @@ public class AuthControllerTest {
 
         performRequest(
                 "POST",
-                "/auth/register",
+                "/users",
                 "{\"firstName\":\"NewTest\",\"lastName\":\"Register\",\"login\":\"newtest.register@test.com\",\"password\":\"testPassword\"}",
                 adminDto.getToken(),
                 MediaType.APPLICATION_JSON,
-                200,
+                201,
                 "register",
                 request -> {
                     try {
                         // Verify the auth client was called
                         verify(authClient).register(anyString(), any(RegisterDto.class));
-                        MvcResult mvcResult = request.andReturn();
-                        String responseBody = mvcResult.getResponse().getContentAsString();
-                        System.out.println("REPONSE BODY : " + responseBody);
+                        request.andExpect(header().string(HttpHeaders.LOCATION, "/users/101"));
+                        request.andExpect(jsonPath("$.id").value(101));
 
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -436,7 +437,7 @@ public class AuthControllerTest {
 
     @Transactional
     @Test
-    public void register_withWrongPermission_shouldReturn403() throws Exception{
+    public void createUser_withWrongPermission_shouldReturn403() throws Exception{
         
         User user = User.builder()
             .firstName("user")
@@ -467,7 +468,7 @@ public class AuthControllerTest {
 
         performRequest(
         "POST",
-        "/auth/register",
+        "/users",
         "{\"firstName\":\"NewTest\",\"lastName\":\"Register\",\"login\":\"newtest.register@test.com\",\"password\":\"testPassword\"}",
         userDto.getToken(),
         MediaType.APPLICATION_JSON,
@@ -487,7 +488,7 @@ public class AuthControllerTest {
     
 
     /**
-     * Test: POST /auth/register
+     * Test: POST /users
      *
      * Verify registration with existing user returns 409 Conflict (current
      * controller behavior).
@@ -497,7 +498,7 @@ public class AuthControllerTest {
      */
     @Test
     @Transactional
-    public void register_withExistingUser_shouldReturn409Conflict() throws Exception {
+    public void createUser_withExistingUser_shouldReturn409Conflict() throws Exception {
 
 
         User adminUser = User.builder()
@@ -512,11 +513,11 @@ public class AuthControllerTest {
         adminDto.setToken(adminToken);
 
         when(authClient.register(anyString(), any(RegisterDto.class)))
-                .thenReturn(Mono.error(new UserAlreadyExistsException()));
+                .thenReturn(Mono.error(new LoginAlreadyExistsException()));
 
         performRequest(
                 "POST",
-                "/auth/register",
+                "/users",
                 "{\"firstName\":\"Test\",\"lastName\":\"Existing\",\"login\":\"exists@test.com\",\"password\":\"testPassword\"}",
                 adminDto.getToken(),
                 MediaType.APPLICATION_JSON,
@@ -525,7 +526,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isConflict());
-                        response.andExpect(jsonPath("$.message").value(getMessage("auth.userAlreadyExists")));
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.loginAlreadyExists")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -605,16 +606,14 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: PUT /auth/update-password
+     * Test: PUT /users/me/password
      *
      * Verify successful password update with valid token returns 200.
      */
     @Test
     @Transactional
-    public void updatePassword_withValidToken_shouldReturn200() throws Exception {
-        String successMessage = getMessage("auth.password.updated");
-
-        // spring-auth answers 204 No Content, the message is built locally
+    public void updatePassword_withValidToken_shouldReturn204() throws Exception {
+        // spring-auth answers 204 No Content, passed on
         when(authClient.updatePassword(any(String.class), any(PasswordUpdateDto.class)))
                 .thenReturn(Mono.just(ResponseEntity.noContent().build()));
 
@@ -622,26 +621,24 @@ public class AuthControllerTest {
 
         performRequest(
                 "PUT",
-                "/auth/update-password",
+                "/users/me/password",
                 "{\"oldPassword\":\"OldPassword123@\",\"newPassword\":\"NewPassword123@\"}",
                 validToken,
                 MediaType.APPLICATION_JSON,
-                200,
+                204,
                 "update-password-success",
                 response -> {
                     try {
-                        response.andExpect(status().isOk());
-                        response.andExpect(jsonPath("$.message").value(successMessage));
+                        response.andExpect(status().isNoContent());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 },
-                RestDocsSnippets.passwordUpdateRequest(),
-                RestDocsSnippets.messageResponse());
+                RestDocsSnippets.passwordUpdateRequest());
     }
 
     /**
-     * Test: PUT /auth/update-password
+     * Test: PUT /users/me/password
      *
      * Verify password update without authentication token returns 401 Unauthorized.
      */
@@ -650,7 +647,7 @@ public class AuthControllerTest {
     public void updatePassword_withoutToken_shouldReturn401() throws Exception {
         performRequest(
                 "PUT",
-                "/auth/update-password",
+                "/users/me/password",
                 "{\"oldPassword\":\"OldPassword123@\",\"newPassword\":\"NewPassword123@\"}",
                 null,
                 MediaType.APPLICATION_JSON,
@@ -666,7 +663,7 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: GET /auth/login/azure
+     * Test: GET /oauth2/login/azure
      *
      * Azure login endpoint that redirects to spring-auth Azure login.
      */
@@ -674,7 +671,7 @@ public class AuthControllerTest {
     public void azureLogin_inTestEnvironment_shouldReturn302() throws Exception {
         performRequest(
                 "GET",
-                "/auth/login/azure",
+                "/oauth2/login/azure",
                 null,
                 null,
                 MediaType.APPLICATION_JSON,
@@ -690,7 +687,7 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: POST /auth/update-password
+     * Test: PUT /users/me/password
      * Exception: PasswordUpdateFailedException (400 Bad Request)
      *
      * Documents:
@@ -714,7 +711,7 @@ public class AuthControllerTest {
 
         performRequest(
                 "PUT",
-                "/auth/update-password",
+                "/users/me/password",
                 "{\"oldPassword\":\"WrongOldPassword\",\"newPassword\":\"NewPassword123@\"}",
                 validToken,
                 MediaType.APPLICATION_JSON,
@@ -731,7 +728,7 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: POST /auth/register
+     * Test: POST /users
      * Exception: RegistrationFailedException (400 Bad Request)
      *
      * Documents:
@@ -745,7 +742,7 @@ public class AuthControllerTest {
      */
     @Test
     @Transactional
-    public void register_withValidationError_shouldReturn400RegistrationFailed() throws Exception {
+    public void createUser_withInvalidBody_shouldReturn400WithFieldErrors() throws Exception {
 
 
         User newUser = User.builder()
@@ -766,7 +763,7 @@ public class AuthControllerTest {
 
         performRequest(
                 "POST",
-                "/auth/register",
+                "/users",
                 "{\"firstName\":\"Test\",\"lastName\":\"User\",\"login\":\"invalid-email\",\"password\":\"testPassword\"}",
                 userDto.getToken(),
                 MediaType.APPLICATION_JSON,
@@ -775,7 +772,9 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isBadRequest());
-                        response.andExpect(jsonPath("$.message").value(errorMessage));
+                        // Validated locally, as spring-auth would: spring-auth is not called
+                        response.andExpect(jsonPath("$.fieldErrors.login").exists());
+                        verifyNoInteractions(authClient);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -903,7 +902,7 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: POST /auth/update-password
+     * Test: PUT /users/me/password
      * Exception: SecurityExceptions.InvalidTokenException (401 Unauthorized)
      *
      * Documents:
@@ -925,7 +924,7 @@ public class AuthControllerTest {
     public void updatePassword_withMalformedToken_shouldReturn401InvalidToken() throws Exception {
         performRequest(
                 "PUT",
-                "/auth/update-password",
+                "/users/me/password",
                 "{\"oldPassword\":\"OldPassword123@\",\"newPassword\":\"NewPassword123@\"}",
                 "malformed.token.here",
                 MediaType.APPLICATION_JSON,
@@ -981,7 +980,7 @@ public class AuthControllerTest {
     }
 
     /**
-     * Test: POST /auth/register
+     * Test: POST /users
      * Exception: UserAlreadyExistsException (409 Conflict)
      *
      * Documents:
@@ -993,7 +992,7 @@ public class AuthControllerTest {
      */
     @Test
     @Transactional
-    public void register_withDuplicateLogin_shouldReturn409Conflict() throws Exception {
+    public void createUser_withDuplicateLogin_shouldReturn409Conflict() throws Exception {
 
 
         User admin = User.builder()
@@ -1008,11 +1007,11 @@ public class AuthControllerTest {
         adminDto.setToken(token);
 
         when(authClient.register(anyString(), any(RegisterDto.class)))
-                .thenReturn(Mono.error(new UserAlreadyExistsException()));
+                .thenReturn(Mono.error(new LoginAlreadyExistsException()));
 
         performRequest(
                 "POST",
-                "/auth/register",
+                "/users",
                 "{\"firstName\":\"Test\",\"lastName\":\"Duplicate\",\"login\":\"duplicate@test.com\",\"password\":\"testPassword\"}",
                 adminDto.getToken(),
                 MediaType.APPLICATION_JSON,
@@ -1021,7 +1020,7 @@ public class AuthControllerTest {
                 response -> {
                     try {
                         response.andExpect(status().isConflict());
-                        response.andExpect(jsonPath("$.message").value(getMessage("auth.userAlreadyExists")));
+                        response.andExpect(jsonPath("$.message").value(getMessage("auth.loginAlreadyExists")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1098,6 +1097,40 @@ public class AuthControllerTest {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    /**
+     * Test: POST /auth/logout
+     *
+     * Logout answers 204 and passes on the cookie of spring-auth expiring the
+     * refresh token.
+     */
+    @Test
+    @Transactional
+    public void logout_withValidToken_shouldReturn204AndExpireRefreshCookie() throws Exception {
+        String expiredCookie = "refresh_token=; Path=/auth/refresh; Max-Age=0; HttpOnly; Secure; SameSite=Strict";
+        when(authClient.logout(anyString()))
+                .thenReturn(Mono.just(ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, expiredCookie).<Void>build()));
+
+        performRequest(
+                "POST",
+                "/auth/logout",
+                null,
+                getValidTokenForTestUser(),
+                MediaType.APPLICATION_JSON,
+                204,
+                "logout",
+                response -> {
+                    try {
+                        // The refresh token cookie of spring-auth, expired, is passed on
+                        response.andExpect(cookie().value("refresh_token", ""));
+                        response.andExpect(cookie().maxAge("refresh_token", 0));
+                        response.andExpect(cookie().path("refresh_token", "/auth/refresh"));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+        verify(authClient).logout(anyString());
     }
 
     /**

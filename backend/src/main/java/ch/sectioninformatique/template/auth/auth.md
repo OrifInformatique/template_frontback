@@ -19,6 +19,7 @@
 - [MessageResponseDto.java](#messageresponsedtojava)
 - [PasswordUpdateDto.java](#passwordupdatedtojava)
 - [RefreshUpdateDto.java](#refreshupdatedtojava)
+- [OAuth2Controller.java](#oauth2controllerjava)
 - [RegisterDto.java](#registerdtojava)
 - [TokenResponseDto.java](#tokenresponsedtojava)
 
@@ -55,7 +56,7 @@ It contains :
 
 `updatePassword()` sends the user's password update request to the authentication service.
 
-`logout()` logs the user out and forwards the expired `refresh_token` cookie.
+`logout()` logs the user out (spring-auth answers `204`) and passes on the expiring `refresh_token` cookie.
 
 ### User management
 
@@ -115,217 +116,48 @@ Because `AuthCodeDto` is a Java `record`, it is immutable and automatically prov
 
 ## *AuthController.java*
 
-`AuthController` is a REST Controller responsible for handling authentication and user account operations.
-
-It uses `AuthClient` to communicate with the external authentication service and `UserService` to manage users in the local database.
-
-All endpoints use the `/auth` path.
-
-It contains :
-
-* `login()`,
-* `register()`,
-* `refreshLogin()`,
-* `updatePassword()`,
-* `OAuth2AzureLogin()`,
-* `authCode()`,
-* `getToken()`,
-* `logout()`
-
-### Authentication
-
-`login()` sends the user's credentials to the authentication service and returns the authentication result.
-
-`register()` creates a new account through the authentication service and also registers the user in the local database.
-
-`refreshLogin()` uses the `refresh_token` cookie to request a new access token.
-
-`updatePassword()` sends the user's password update request to the authentication service.
-
-`logout()` invalidates the current session, clears the Spring Security context, and sends the logout request to the authentication service.
-
-### Azure OAuth2 login
-
-`OAuth2AzureLogin()` starts the Azure OAuth2 login process.
-
-It stores the frontend redirect URL in the HTTP session and creates a `redirect_url` cookie before redirecting the user to the authentication service.
-
-`authCode()` handles the authorization code returned after a successful Azure login.
-
-It exchanges the code for authentication tokens, gets or creates the user in the local database, stores the user and refresh token in the session, and redirects the user to the frontend.
-
-### `getToken()`
-
-Retrieves the logged-in user's information from the HTTP session.
-
-It also recreates the `refresh_token` cookie with its configured lifetime and returns the stored user information.
-
-If the required session information is missing, it returns HTTP `401 UNAUTHORIZED`.
-
-### Security
-
-The `register()` endpoint requires the `user:write` permission.
-
-The controller also uses the user's HTTP session to store authentication information during the OAuth2 login process.
-
-Overall, `AuthController` provides the application's authentication endpoints while delegating the actual communication with the external authentication service to `AuthClient`.
-
-
----
-
-## *AuthExceptions.java*
-
-`AuthExceptions` is a container class for authentication-related exceptions.
-
-This class groups all authentication exceptions as static inner classes.
-
-It contains :
-
-* `InvalidCredentialsException`,
-* `RegistrationFailedException`,
-* `UserNotFoundException`,
-* `UserAlreadyExistsException`,
-* `PasswordUpdateFailedException`,
-* `OAuth2AuthenticationException`,
-* `LoginAlreadyExistsException`,
-* `AuthCodeNotFoundException`
-
-Each exception extends `AppException` and implements `MessageKeyProvider`, allowing it to define an HTTP status and a localized message key.
-
-### `InvalidCredentialsException`
-
-Thrown when the provided login credentials are invalid.
-
-It uses HTTP status `401 UNAUTHORIZED` and the message key `auth.invalidCredentials`.
-
-### `RegistrationFailedException`
-
-Thrown when user registration fails.
-
-It uses HTTP status `400 BAD_REQUEST` and the message key `auth.register.failed`.
-
-It also stores the error details as message arguments.
-
-### `UserNotFoundException`
-
-Thrown when a user cannot be found during authentication.
-
-It uses HTTP status `404 NOT_FOUND` and the message key `user.notFound`.
-
-### `UserAlreadyExistsException`
-
-Thrown when trying to create a user that already exists.
-
-It uses HTTP status `409 CONFLICT` and the message key `auth.userAlreadyExists`.
-
-### `PasswordUpdateFailedException`
-
-Thrown when updating a user's password fails.
-
-It uses HTTP status `400 BAD_REQUEST` and the message key `auth.password.update.failed`.
-
-### `OAuth2AuthenticationException`
-
-Thrown when an OAuth2 authentication process fails.
-
-It uses HTTP status `401 UNAUTHORIZED` and the message key `auth.oauth2.failed`.
-
-### `LoginAlreadyExistsException`
-
-Thrown when a login is already taken during registration.
-
-It uses HTTP status `400 BAD_REQUEST` and the message key `auth.loginAlreadyExists`.
-
-### `AuthCodeNotFoundException`
-
-Thrown when an OAuth2 authentication code cannot be found.
-
-It uses HTTP status `404 NOT_FOUND` and the message key `auth.code.not.found`.
-
-
----
-
-## *CredentialsDto.java*
-
-`CredentialsDto` is a Data Transfer Object used to transfer the user's login credentials during authentication.
-
-It contains :
-
-* `login`,
-* `password`
-
-The `login` contains the user's login identifier.
-
-The `password` contains the user's password as a character array.
-
-Because `CredentialsDto` is a Java `record`, it is immutable and automatically provides its constructor, accessors, `equals()`, `hashCode()`, and `toString()` methods.
-
-
----
-
-## *MessageResponseDto.java*
-
-`MessageResponseDto` is a Data Transfer Object used to return a simple message in an API response.
-
-It contains :
-
-* `message`
-
-The `message` field contains the text returned to the client.
-
-Because `MessageResponseDto` is a Java `record`, it is immutable and automatically provides its constructor, accessor, `equals()`, `hashCode()`, and `toString()` methods.
-
-
----
-
-## *PasswordUpdateDto.java*
-
-`PasswordUpdateDto` is a Data Transfer Object used to transfer the information needed to update a user's password.
-
-It contains :
-
-* `oldPassword`,
-* `newPassword`
-
-Both passwords are stored as character arrays (`char[]`) instead of `String`.
-
-`@NotNull` ensures that both the old and new passwords are provided in the request.
-
-The old password is used to verify the user's current password before changing it, while the new password is used as the replacement password.
-
----
-
-## *RefreshUpdateDto.java*
-
-`RefreshRequestDto` is a Data Transfer Object used to transfer a refresh token when requesting a new access token.
-
-It contains :
-
-* `refreshToken`
-
-The `refreshToken` contains the token provided by the authentication system.
-
-Because `RefreshRequestDto` is a Java `record`, it is immutable and automatically provides its constructor, accessor, `equals()`, `hashCode()`, and `toString()` methods.
-
-
----
+`AuthController` is a REST Controller for authentication, relayed to the external
+authentication service (spring-auth) through `AuthClient`. It uses the same paths as
+spring-auth (`/auth`).
+
+| Endpoint | Response |
+|---|---|
+| `POST /auth/login` | `200`, the user with its access token, completed with its local roles and permissions; the refresh token in a cookie |
+| `POST /auth/refresh` | `200`, a new access token from the `refresh_token` cookie (`401` without the cookie) |
+| `POST /auth/logout` | `204`; spring-auth revokes the refresh token, its expiring `refresh_token` cookie is passed on, and the HTTP session is invalidated |
+
+User creation (`POST /users`) and password change (`PUT /users/me/password`) are user
+operations, in `UserController`. The Azure login is in `OAuth2Controller`.
+
+## *OAuth2Controller.java*
+
+`OAuth2Controller` handles the Azure OAuth2 login, delegated to spring-auth, under the same
+paths as spring-auth's OAuth2 endpoints (`/oauth2`).
+
+| Endpoint | Response |
+|---|---|
+| `GET /oauth2/login/azure` | `302` to spring-auth's Azure login, which will come back to `/oauth2/callback` (`AFTER_OAUTH2_LOGIN_URL`) |
+| `GET /oauth2/callback?authCode=&userId=` | Browser redirect from spring-auth after the Azure login: exchanges the temporary auth code for the user and its tokens (`AuthClient.getTokenWithAuthCode()`), gets or creates the local user, keeps the user and the refresh token in the HTTP session, then `302` to the frontend (`AFTER_OAUTH2_LOGIN_FRONTEND_CALLBACK`) |
+| `POST /oauth2/token` | `200`, the logged user with its access token, and the refresh token in a cookie (lifetime `SECURITY_JWT_TOKEN_REFRESH_TOKEN_LIFETIME`). **Single use**: the session data is removed, a second call answers `401` |
+
+The HTTP session is only used to carry the result of the Azure login from the callback to
+the frontend; it never authenticates a request (see `SecurityConfig`).
 
 ## *RegisterDto.java*
 
-`RegisterDto` is a Data Transfer Object used to transfer the information required to create a new user account.
+`RegisterDto` is the body of `POST /users` (user creation).
 
 It contains :
 
-* `firstName`,
-* `lastName`,
-* `login`,
-* `password`
+* `firstName` and `lastName` : required, letters with inner spaces, apostrophes and hyphens (as in spring-auth),
+* `login` : required email,
+* `password` : 8 to 72 characters, as a character array,
+* `mainRole` : optional main role (USER by default in spring-auth),
+* `appSpecificRoles` : optional local roles
 
-The `firstName` and `lastName` contain the user's name information.
-
-The `login` contains the user's login identifier.
-
-The `password` contains the user's password as a character array.
+It is validated as spring-auth validates it, to answer with the invalid fields before calling
+spring-auth. It is also used internally, without validation, to register locally a user
+authenticated by spring-auth (e.g. an Azure account without last name).
 
 Because `RegisterDto` is a Java `record`, it is immutable and automatically provides its constructor, accessors, `equals()`, `hashCode()`, and `toString()` methods.
 

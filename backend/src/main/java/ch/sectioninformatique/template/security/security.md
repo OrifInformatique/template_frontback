@@ -279,11 +279,8 @@ The following endpoints are accessible without authentication :
 
 * `/error`,
 * `POST /auth/login`,
-* `POST /auth/register`,
 * `POST /auth/refresh`,
-* `GET /auth/login/azure`,
-* `GET /auth/auth-code`,
-* `GET /auth/tokens`,
+* `GET /oauth2/login/azure`, `GET /oauth2/callback` and `POST /oauth2/token` (Azure login, before any access token exists),
 * all `OPTIONS` requests.
 
 All other requests require the user to be authenticated.

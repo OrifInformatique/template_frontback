@@ -1,5 +1,6 @@
 package ch.sectioninformatique.template.user;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import ch.sectioninformatique.template.app.DeletionFilter;
+import ch.sectioninformatique.template.auth.AuthClient;
+import ch.sectioninformatique.template.auth.PasswordUpdateDto;
+import ch.sectioninformatique.template.auth.RegisterDto;
 import ch.sectioninformatique.template.security.BearerToken;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +32,8 @@ import reactor.core.publisher.Mono;
  *
  * Endpoints follow the conventions of spring-auth:
  * - GET    /users/me            the authenticated user, with local roles and all permissions
+ * - PUT    /users/me/password   change the password of the authenticated user, 204
+ * - POST   /users               create a user, 201 + Location + user
  * - GET    /users?status=       list users (ACTIVE by default, DELETED, ALL)
  * - GET    /users/{id}          read a user (soft-deleted or not)
  * - PUT    /users/{id}          update profile, main role and app-specific roles, 200 + user
@@ -42,6 +49,8 @@ public class UserController {
 
     private final UserService userService;
 
+    private final AuthClient authClient;
+
     /**
      * Returns the authenticated user: the user of the token, with its local
      * (app-specific) roles and all its permissions, global and local (same
@@ -54,6 +63,34 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserDto currentUser) {
         return ResponseEntity.ok(userService.addLocalRolesAndPermissions(currentUser, currentUser.getId()));
+    }
+
+    /**
+     * Changes the password of the authenticated user (in spring-auth).
+     *
+     * @param request current and new passwords
+     * @return 204 No Content
+     */
+    @PutMapping("/me/password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> updateOwnPassword(@RequestBody @Valid PasswordUpdateDto request) {
+        // spring-auth answers 204 No Content: errors are mapped by AuthClient
+        authClient.updatePassword(BearerToken.current(), request).block();
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Creates a user, in spring-auth then locally (with its app-specific roles).
+     *
+     * @param request the new user
+     * @return 201 with the created user and its URL in the Location header
+     */
+    @PostMapping
+    @PreAuthorize("hasAuthority('user:write')")
+    public ResponseEntity<UserDto> createUser(@RequestBody @Valid RegisterDto request) {
+        UserDto created = userService.createUser(request, BearerToken.current());
+        URI location = UriComponentsBuilder.fromPath("/users/{id}").buildAndExpand(created.getId()).toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     /**
