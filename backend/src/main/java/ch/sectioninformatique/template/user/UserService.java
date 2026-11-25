@@ -24,7 +24,6 @@ import ch.sectioninformatique.template.security.RoleRepository;
 import ch.sectioninformatique.template.user.UserExceptions.DefaultRoleNotFoundException;
 import ch.sectioninformatique.template.user.UserExceptions.DuplicateUserException;
 import ch.sectioninformatique.template.user.UserExceptions.RoleNotFoundException;
-import ch.sectioninformatique.template.user.UserExceptions.UserAlreadyHasRoleException;
 import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundByLoginException;
 import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.user.UserExceptions.UserCreationException;
@@ -73,44 +72,6 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to the local manager role.
-     * This operation:
-     * - Verifies the user exists
-     * - Checks if the user already has the local manager role
-     * - Removes existing roles and assigns the local manager role
-     *
-     * @param userId The ID of the user to promote
-     * @return UserDto containing the updated user's information
-     * @throws UserNotFoundException if the user is not found
-     * @throws UserAlreadyHasRoleException if the user already has the role
-     * @throws RoleNotFoundException if the role is not found
-     * @throws UserPromotionException if the promotion operation fails
-     */
-    public UserDto promoteToLocalManagerRole(@NonNull Long userId) {
-        try {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(UserNotFoundException::new);
-
-            for (Role role : user.getAppSpecificRoles()) {
-                if (role.getName().equals(LocalRoleEnum.LOCAL_MANAGER)) {
-                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_MANAGER.name());
-                }
-            }
-
-            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER)
-                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_MANAGER.name()));
-
-            user.getAppSpecificRoles().add(testAdminRole);
-            userRepository.save(user);
-            return userMapper.toUserDto(user);
-        } catch (UserNotFoundException | UserAlreadyHasRoleException | RoleNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new UserPromotionException(e.getMessage());
-        }
-    }
-
-    /**
      * Retrieves all users in the system (not including soft-deleted users).
      *
      * @return List of all users as UserDto
@@ -156,18 +117,6 @@ public class UserService {
             usersDto.add(userMapper.toUserDto(user));
         }
         return usersDto;
-    }
-
-    /**
-     * Retrieves the authenticated user's information.
-     *
-     * @return UserDto containing the current user's information
-     */
-    public UserDto me(UserDto currentUser) {
-        User user = userRepository.findById(currentUser.getId())
-                .orElseThrow(() -> new UserNotFoundException(currentUser.getId()));
-        UserDto userMapped = userMapper.toUserDto(user);
-        return userMapped;
     }
 
     /**

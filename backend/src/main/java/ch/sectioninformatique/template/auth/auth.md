@@ -16,7 +16,6 @@
     - [LoginAlreadyExistsException](#loginalreadyexistsexception)
     - [AuthCodeNotFoundException](#authcodenotfoundexception)
 - [CredentialsDto.java](#credentialsdtojava)
-- [MessageResponseDto.java](#messageresponsedtojava)
 - [PasswordUpdateDto.java](#passwordupdatedtojava)
 - [RefreshUpdateDto.java](#refreshupdatedtojava)
 - [OAuth2Controller.java](#oauth2controllerjava)

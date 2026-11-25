@@ -18,8 +18,7 @@
     - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
     - [1.9 Error and Exception Management (`main/java/app`)](#19-error-and-exception-management-mainjavaapp)
     - [1.10 Item Module (`main/java/item`)](#110-item-module-mainjavaitem)
-    - [1.11 Test Module (`main/java/test`)](#111-test-module-mainjavatest)
-    - [1.12 Localization and Messages (`main/java/config` + `resources/messages`)](#112-localization-and-messages-mainjavaconfig--resourcesmessages)
+    - [1.11 Localization and Messages (`main/java/config` + `resources/messages`)](#111-localization-and-messages-mainjavaconfig--resourcesmessages)
   - [2. Today's Branch Updates (2026-03-10)](#2-todays-branch-updates-2026-03-10)
   - [Related Documentation](#related-documentation)
 
@@ -109,7 +108,6 @@ Contains test classes for unit and integration tests.
 | `item`                    | Manages stock and inventory functionalities (CRUD with security guards).                                                                                                       |
 | `security`                | Security-related classes: JWT filters, password encoding, and authentication management.                                                                                         |
 | `user`                    | Manages user profiles, roles, and permissions.                                                                                                                                  |
-| `test`                    | Test-related endpoints and utilities for development and testing.                                                                                                                |
 | `AuthApplication.java`    | Main Spring Boot entry point containing the `main()` method. Run the project from this class.                                                                                   |
 
 ---
@@ -458,15 +456,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 ---
 
-### 1.11 Test Module (`main/java/test`)
-
-| File                  | Description                                                |
-| --------------------- | ---------------------------------------------------------- |
-| `TestController.java` | Endpoints and utilities for development and testing purposes. |
-
----
-
-### 1.12 Localization and Messages (`main/java/config` + `resources/messages`)
+### 1.11 Localization and Messages (`main/java/config` + `resources/messages`)
 
 | File / Path | Description |
 | ----------- | ----------- |

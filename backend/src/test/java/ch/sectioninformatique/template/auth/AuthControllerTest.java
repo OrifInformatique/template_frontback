@@ -54,7 +54,10 @@ import ch.sectioninformatique.template.security.SecurityExceptions.InvalidRefres
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 import ch.sectioninformatique.template.security.SecurityExceptions.JwtVerificationException;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
+import ch.sectioninformatique.template.security.LocalRoleEnum;
+import ch.sectioninformatique.template.security.RoleRepository;
 import ch.sectioninformatique.template.user.User;
+import ch.sectioninformatique.template.user.UserRepository;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserMapper;
 import ch.sectioninformatique.template.user.UserService;
@@ -93,6 +96,12 @@ public class AuthControllerTest {
 
     @Autowired
     private MessageSource messageSource;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @MockitoBean
     private AuthClient authClient; // mock this instead of the controller
@@ -315,9 +324,10 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void login_asLocalManager_shouldReturnLocalRolesAndPermissions() throws Exception {
-        UserDto user = userService.findByLogin("test.user@test.com");
-        
-        userService.promoteToLocalManagerRole(user.getId());
+        // Local manager: the local role is assigned in the local database only
+        User localUser = userRepository.findByLogin("test.user@test.com").orElseThrow();
+        localUser.getAppSpecificRoles().add(roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER).orElseThrow());
+        userRepository.save(localUser);
 
         // spring-auth returns no app-specific roles
         UserDto testUser = SpringAuthPermissions.grant(userService.findByLogin("test.user@test.com"));
@@ -328,7 +338,7 @@ public class AuthControllerTest {
 
         mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"login\": \"" + user.getLogin() + "\", \"password\":\"Secure123@Pass\"}"))
+                .content("{\"login\": \"" + localUser.getLogin() + "\", \"password\":\"Secure123@Pass\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.appSpecificRoles").value(
                         org.hamcrest.Matchers.contains("LOCAL_MANAGER")))

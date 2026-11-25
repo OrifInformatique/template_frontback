@@ -11,7 +11,7 @@ import org.springframework.restdocs.snippet.Snippet;
 /**
  * JSON field contracts for Spring REST Docs in template_frontback.
  * Derived from backend DTOs ({@code UserDto}, {@code RegisterDto}, {@code TokenResponseDto},
- * {@code MessageResponseDto}, {@code PasswordUpdateDto}, {@code ItemsDTO}, {@code Item})
+ * {@code PasswordUpdateDto}, {@code UserUpdateDto}, {@code ItemDto}, {@code ItemRequestDto})
  * and the integration tests that document HTTP examples.
  */
 public final class RestDocsSnippets {
@@ -81,12 +81,6 @@ public final class RestDocsSnippets {
     /** Matches a JSON array of {@code RoleDto}. */
     public static Snippet roleListResponse() {
         return responseFields(roleFields("[].", true));
-    }
-
-    /** Matches {@code MessageResponseDto}. */
-    public static Snippet messageResponse() {
-        return responseFields(
-                fieldWithPath("message").description("Localized status message"));
     }
 
     /** Matches create/update request body ({@code name}, {@code description}). */

@@ -174,10 +174,6 @@ Contains all user-related exceptions.
     Used when user cannot be found using their login\
     Returns : 404 NOT_FOUND
 
-- `UserAlreadyHasRoleException` :\
-    Used when user already has the requested role\
-    Returns : 409 CONFLICT
-
 - `UserCreationException` :\
     Used when user creation fails\
     Returns : 400 BAD_REQUEST
@@ -1050,18 +1046,6 @@ It uses:
 userRepository.findAllDeleted()
 ```
 
-### me()
-
-```java
-public UserDto me(UserDto currentUser)
-```
-
-Retrieves the currently authenticated user's information.
-
-It uses the login from `currentUser` to search for the corresponding user in the database.
-
-If the user cannot be found, a `UserNotFoundByLoginException` is thrown.
-
 ---
 
 ## User creation
@@ -1165,25 +1149,6 @@ return user
 ---
 
 ## Role management
-
-### promoteToLocalManagerRole()
-
-```java
-public UserDto promoteToLocalManagerRole(Long userId)
-```
-
-Adds the `LOCAL_MANAGER` to a user.
-
-The method:
-
-1. searches for the user
-2. checks whether the user already has the role
-3. finds the role in the database
-4. adds the role to the user's app-specific roles
-5. saves the user
-6. returns the updated `UserDto`
-
-If the user already has the role, a `UserAlreadyHasRoleException` is thrown.
 
 ### updateMainRole()
 
@@ -1446,7 +1411,7 @@ It handles:
 | User retrieval                 | `allUsers()`, `allWithDeletedUsers()`, `deletedUsers()`, `findByLogin()` |
 | User creation                  | `register()`                                                             |
 | Authentication synchronization | `getOrCreateAuthenticatedUser()`                                         |
-| Role management                | `promoteToLocalManagerRole()`, `updateMainRole()`, `getRolesList()`          |
+| Role management                | `updateMainRole()`, `getRolesList()`                                         |
 | User update                    | `updateUser()`                                                           |
 | Soft deletion                  | `deleteUser()`, `deleteUserByLogin()`                                    |
 | Permanent deletion             | `deleteUserPermanent()`, `deleteUserPermanentByLogin()`                  |
