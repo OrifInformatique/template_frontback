@@ -11,6 +11,12 @@ const scrubTokens = (user) => {
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
 
+const normalizeUser = (user) => {
+    if (!user) return null;
+    const { appSpecificRoles, ...rest } = user;
+    return { ...rest, roles: ensureArray(user.roles ?? appSpecificRoles) };
+};
+
 // One-time cleanup of older persisted shapes that might contain tokens
 try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -35,7 +41,8 @@ const useAuthStore = create(
 
             // User profile without tokens; persisted
             user: null,
-            setUser: (user) => set({ user: scrubTokens(user) }),
+            // The API returns the local roles as "appSpecificRoles": keep them as "roles"
+            setUser: (user) => set({ user: normalizeUser(scrubTokens(user)) }),
             clearUser: () => set({ user: null }),
 
             // Role/permission helpers
