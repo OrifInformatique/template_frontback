@@ -18,8 +18,7 @@
     - [1.8 Security Module (`main/java/security`)](#18-security-module-mainjavasecurity)
     - [1.9 Error and Exception Management (`main/java/app`)](#19-error-and-exception-management-mainjavaapp)
     - [1.10 Item Module (`main/java/item`)](#110-item-module-mainjavaitem)
-    - [1.11 Test Module (`main/java/test`)](#111-test-module-mainjavatest)
-    - [1.12 Localization and Messages (`main/java/config` + `resources/messages`)](#112-localization-and-messages-mainjavaconfig--resourcesmessages)
+    - [1.11 Localization and Messages (`main/java/config` + `resources/messages`)](#111-localization-and-messages-mainjavaconfig--resourcesmessages)
   - [2. Today's Branch Updates (2026-03-10)](#2-todays-branch-updates-2026-03-10)
   - [Related Documentation](#related-documentation)
 
@@ -109,7 +108,6 @@ Contains test classes for unit and integration tests.
 | `item`                    | Manages stock and inventory functionalities (CRUD with security guards).                                                                                                       |
 | `security`                | Security-related classes: JWT filters, password encoding, and authentication management.                                                                                         |
 | `user`                    | Manages user profiles, roles, and permissions.                                                                                                                                  |
-| `test`                    | Test-related endpoints and utilities for development and testing.                                                                                                                |
 | `AuthApplication.java`    | Main Spring Boot entry point containing the `main()` method. Run the project from this class.                                                                                   |
 
 ---
@@ -142,12 +140,12 @@ sequenceDiagram
     participant Azure
  
     Note over Frontend,Backend: Redirect frontend to spring-auth Azure endpoint
-    Frontend->>Backend: /auth/login/azure with [frontend callback url]
-    Backend->>Backend: Create URI for spring-auth Azure endpoint with [/auth/auth-code callback url]
-    Backend-->>Frontend: Redirect to spring-auth Azure endpoint with [/auth/auth-code callback url]
+    Frontend->>Backend: GET /oauth2/login/azure
+    Backend->>Backend: Create URI for spring-auth Azure endpoint with [/oauth2/callback url]
+    Backend-->>Frontend: Redirect to spring-auth Azure endpoint with [/oauth2/callback url]
 
     Note over Frontend,Azure: Azure login process
-    Frontend->>spring-auth: /oauth2/login/azure with [backend /auth/auth-code callback url]
+    Frontend->>spring-auth: /oauth2/login/azure with [backend /oauth2/callback url]
     spring-auth->>spring-auth: /oauth2/authorization/azure Spring security's authorisation endpoint
     spring-auth->>Azure: Initiate Azure login process
     Azure-->>Frontend: (If needed, redirect frontend to Azure login form)
@@ -157,14 +155,14 @@ sequenceDiagram
     Note over Frontend, spring-auth: Create jwt tokens and send them to the frontend
     spring-auth->>spring-auth: Create or get the Azure user in spring-auth database
     spring-auth->>spring-auth: Generate a temporary AuthCode to exchange with client's backend
-    spring-auth->>Backend: [/auth/auth-code callback url] with temporary AuthCode
+    spring-auth->>Backend: GET /oauth2/callback with temporary AuthCode
     Backend->>spring-auth: /oauth2/token with the temporary AuthCode
     spring-auth-->>Backend: Response with userDto, access and refresh tokens
     Backend->>Backend: Create or get the user in local database
     Backend->>Backend: Store the userDto and tokens in session
     Backend->>Frontend: Redirect to the [frontend callback url]
-    Frontend->>Backend: GET /auth/tokens get the userDto and tokens from session
-    Backend-->>Frontend: Response with userDto and tokens and delete them from the session
+    Frontend->>Backend: POST /oauth2/token get the userDto and tokens from session
+    Backend-->>Frontend: Response with userDto and tokens and delete them from the session (single use)
 ```
 _Sequence Diagram showing login with Azure_
 
@@ -182,10 +180,10 @@ sequenceDiagram
     AuthClient-->>AuthController: ResponseEntity<UserDto>
     AuthController->>Client: UserDto + refresh_token cookie
 
-    Note over AuthController,spring-auth: Registration Flow
-    Client->>AuthController: POST /auth/register with RegisterDto
+    Note over AuthController,spring-auth: User creation (UserController, POST /users)
+    Client->>AuthController: POST /users with RegisterDto
     AuthController->>AuthClient: register(registerDto)
-    AuthClient->>spring-auth: POST /auth/register
+    AuthClient->>spring-auth: POST /users
     spring-auth-->>AuthClient: Success response
     AuthClient-->>AuthController: ResponseEntity
     AuthController->>UserService: register(registerDto)
@@ -317,10 +315,11 @@ sequenceDiagram
     Note over Client,UserController: Get Current User
     Client->>JwtAuthFilter: GET /users/me with JWT token
     JwtAuthFilter->>UserController: Authorized UserDto from SecurityContext
-    UserController->>Client: UserDto in response
+    UserController->>UserService: addLocalRolesAndPermissions(currentUser, id)
+    UserController->>Client: UserDto with local roles and all permissions
 
-    Note over Client,UserController: Get Users (state = active | deleted | all)
-    Client->>JwtAuthFilter: GET /users?state=active with JWT token
+    Note over Client,UserController: Get Users (status = ACTIVE | DELETED | ALL)
+    Client->>JwtAuthFilter: GET /users?status=ACTIVE with JWT token
     JwtAuthFilter->>UserController: Authorized (requires user:read)
     UserController->>UserService: allUsers() / deletedUsers() / allWithDeletedUsers()
     UserService->>UserRepository: findAllByDeletedFalse() / findAllDeleted() / findAllIncludingDeleted()
@@ -328,36 +327,19 @@ sequenceDiagram
     UserService-->>UserController: List<User>
     UserController->>Client: List of Users
 
-    Client->>SecurityLayer: /users/{userId}/promote-admin
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    UserController->>UserService: UserService.promoteToAdmin(userId)
-    UserService->>UserRepository: UserRepository.findById(userId)
-    UserRepository->>UserService: Found User
-    UserService->>UserRepository: UserRepository.save(user) with updated role
-    UserService->>UserMapper: UserMapper.toUserDto(user)
-    UserMapper->>UserController: UserDto
-    UserController->>Client: Response "User promoted to admin successfully"
-    Client->>SecurityLayer: /users/{userId}/promote-admin
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    note right of UserController: Global admin role promotion via spring-auth
-    UserController->>UserService: UserService.promoteToAdmin(userId, token)
-    UserService->>AuthClient: authClient.promoteToAdmin(userId, token)
-    AuthClient->>UserService: Response from spring-auth
-    UserController->>Client: Response "User promoted to admin successfully"
-
-    Client->>SecurityLayer: /users/{userId}/promote-local-manager-role
-    SecurityLayer->>UserController: Authorized UserDto with `user:update` authority extracted from token
-    note right of UserController: Local app-specific role promotion (local database)
-    UserController->>UserService: UserService.promoteToLocalManagerRole(userId)
-    UserService->>UserRepository: UserRepository.findById(userId)
-    UserRepository->>UserService: Found User
-    UserService->>UserRepository: UserRepository.save(user) with updated app-specific role
-    UserService->>UserMapper: UserMapper.toUserDto(user)
-    UserMapper->>UserController: UserDto
-    UserController->>Client: Response "User promoted to local app role successfully"
+    Note over Client,AuthClient: Update User (profile, main role, app-specific roles)
+    Client->>SecurityLayer: PUT /users/{userId}
+    SecurityLayer->>UserController: Authorized (requires user:update)
+    UserController->>UserService: updateUser(userId, UserUpdateDto, token)
+    UserService->>AuthClient: updateUser(token, userId, profile)
+    AuthClient-->>UserService: Global user from spring-auth
+    note right of UserService: Main role changed in spring-auth only if given and different
+    UserService->>AuthClient: changeMainRole(token, userId, role)
+    UserService->>UserRepository: save(user) with global data and app-specific roles
+    UserController->>Client: 200 with the updated UserDto
 
     Note over Client,UserRepositoryImpl: Permanent Local Deletion (hard delete)
-    Client->>UserController: DELETE /users/{userId}?global=false&hard=true
+    Client->>UserController: DELETE /users/{userId}?permanent=true
     UserController->>UserService: deleteUserPermanent(userId)
     UserService->>UserRepositoryImpl: deletePermanentlyById(userId)
     UserRepositoryImpl->>UserRepositoryImpl: delete users_app_specific_roles links first
@@ -408,7 +390,7 @@ sequenceDiagram
         JwtAuthFilter->>UserAuthenticationEntryPoint: commence(authException)
         UserAuthenticationEntryPoint->>MessageSource: Resolve auth message key
         MessageSource-->>UserAuthenticationEntryPoint: Localized auth message
-        UserAuthenticationEntryPoint-->>Client: 401 Unauthorized JSON ErrorDto
+        UserAuthenticationEntryPoint-->>Client: 401 Unauthorized JSON ErrorResponse
     else Token valid
         JwtAuthFilter-->>JwtAuthFilter: Set SecurityContext with Authentication
         JwtAuthFilter-->>UserController: Forward request
@@ -416,7 +398,7 @@ sequenceDiagram
             UserController->>CustomAccessDeniedHandler: AccessDeniedException
             CustomAccessDeniedHandler->>MessageSource: Resolve access denied key
             MessageSource-->>CustomAccessDeniedHandler: Localized forbidden message
-            CustomAccessDeniedHandler-->>Client: 403 Forbidden JSON ErrorDto
+            CustomAccessDeniedHandler-->>Client: 403 Forbidden JSON ErrorResponse
         else Authorized
             note right of UserController: Controller handles authorized request
             UserController->>UserService: Perform business logic
@@ -451,11 +433,12 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 | File                                   | Description                                                |
 | -------------------------------------- | ---------------------------------------------------------- |
-| `errors/ErrorDto.java`                 | Record serving as Data Transfer Object for errors.         |
+| `errors/ErrorResponse.java`            | Body of every error response: `timestamp`, `status`, `error`, `message`, `fieldErrors` (validation only); same as spring-auth. |
+| `errors/ErrorResponseWriter.java`      | Writes an `ErrorResponse` from the security components (filter, entry point, access denied handler), in the language of the request. |
 | `exceptions/AppException.java`         | Base exception carrying HTTP status for all application/domain exceptions. |
 | `exceptions/AppMessageKeyException.java` | Generic exception for explicit message-key based errors with optional args. |
 | `exceptions/MessageKeyProvider.java`   | Contract for exceptions exposing i18n message keys and formatting arguments. |
-| `exceptions/GlobalExceptionHandler.java` | Global REST exception handler resolving message keys through `MessageSource`; includes validation `fieldErrors`. |
+| `exceptions/GlobalExceptionHandler.java` | Global REST exception handler resolving message keys through `MessageSource` into an `ErrorResponse` (400/401/404/405/415/500 for Spring's own exceptions); includes validation `fieldErrors`. |
 
 ---
 
@@ -473,15 +456,7 @@ _Sequence Diagram showing JWT authentication and request handling flow._
 
 ---
 
-### 1.11 Test Module (`main/java/test`)
-
-| File                  | Description                                                |
-| --------------------- | ---------------------------------------------------------- |
-| `TestController.java` | Endpoints and utilities for development and testing purposes. |
-
----
-
-### 1.12 Localization and Messages (`main/java/config` + `resources/messages`)
+### 1.11 Localization and Messages (`main/java/config` + `resources/messages`)
 
 | File / Path | Description |
 | ----------- | ----------- |

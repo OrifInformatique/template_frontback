@@ -193,7 +193,9 @@ public class UserAuthenticationProvider {
                         .forEach(authorities::add);
             }
 
-            return new UsernamePasswordAuthenticationToken(currentUser, null, authorities);
+            // The token is kept as credentials, to call spring-auth on behalf of the
+            // user (see BearerToken); the context is per request (never in the session)
+            return new UsernamePasswordAuthenticationToken(currentUser, token, authorities);
         } catch (TokenExpiredException e) {
             log.warn("JWT token has expired");
             throw new JwtTokenExpiredException();

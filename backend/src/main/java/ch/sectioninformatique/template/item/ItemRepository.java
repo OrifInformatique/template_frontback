@@ -52,7 +52,10 @@ public interface ItemRepository extends CrudRepository<Item, Long> {
      *
      * @param id the ID of the item to delete
      */
-    @Modifying
+    // Bulk query: flush pending changes first and clear the persistence context
+    // after, so that an item loaded before (e.g. for the ownership check) is not
+    // still returned as existing in the same transaction
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
     @Query("DELETE FROM Item i WHERE i.id = :id")
     void deletePermanentlyById(Long id);

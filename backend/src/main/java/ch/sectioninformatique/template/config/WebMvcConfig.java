@@ -8,6 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import ch.sectioninformatique.template.app.DeletionFilter;
 import ch.sectioninformatique.template.security.RoleScope;
+import ch.sectioninformatique.template.user.DeletionScope;
 
 /**
  * Web MVC customizations: registers converters used to bind request parameters.
@@ -19,6 +20,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addFormatters(@NonNull FormatterRegistry registry) {
         registry.addConverter(new StringToDeletionFilterConverter());
         registry.addConverter(new StringToRoleScopeConverter());
+        registry.addConverter(new StringToDeletionScopeConverter());
     }
 
     /**
@@ -42,6 +44,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
         @Override
         public RoleScope convert(@NonNull String source) {
             return RoleScope.fromParam(source);
+        }
+    }
+
+    /**
+     * Converts the {@code scope} query parameter of a user deletion to a
+     * {@link DeletionScope}, case-insensitively.
+     */
+    static class StringToDeletionScopeConverter implements Converter<String, DeletionScope> {
+        @Override
+        public DeletionScope convert(@NonNull String source) {
+            return DeletionScope.fromParam(source);
         }
     }
 }

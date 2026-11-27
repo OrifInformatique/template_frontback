@@ -1,6 +1,7 @@
 package ch.sectioninformatique.template.auth;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Data Transfer Object (DTO) representing a password update input from the client.
@@ -12,4 +13,10 @@ import jakarta.validation.constraints.NotNull;
  * Validation:
  * - `@NotNull` ensures that passwords are provided in the request body.
  */
-public record PasswordUpdateDto (@NotNull char[] oldPassword, @NotNull char[] newPassword) {}
+/**
+ * Body of {@code PUT /users/me/password}.
+ *
+ * @param oldPassword current password
+ * @param newPassword new password, 8 to 72 characters (as required by spring-auth)
+ */
+public record PasswordUpdateDto(@NotNull char[] oldPassword, @NotNull @Size(min = 8, max = 72) char[] newPassword) {}

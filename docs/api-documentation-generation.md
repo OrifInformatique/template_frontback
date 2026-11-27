@@ -38,7 +38,6 @@ Classes involved:
 
 - `AuthControllerTest`
 - `UserControllerTest`
-- `TestControllerTest`
 - `RoleControllerTest`
 - `ItemControllerTest`
 - `RestDocsSnippets` (centralized `requestFields` / `responseFields` contracts)
@@ -113,8 +112,8 @@ Separate concern, related to test suite reliability (and therefore documentation
 
 Related fixes in the template backend:
 
-- `@AfterEach`: `SecurityContextHolder.clearContext()` in `AuthControllerTest`, `UserControllerTest`, `TestControllerTest`, and `ItemControllerTest`
-- `SecurityConfig` uses a single JWT filter chain; `SessionCreationPolicy.ALWAYS` is required for the Azure OAuth2 callback flow (`/auth/tokens`)
+- `@AfterEach`: `SecurityContextHolder.clearContext()` in `AuthControllerTest`, `UserControllerTest` and `ItemControllerTest`
+- `SecurityConfig` uses a single JWT filter chain; `SessionCreationPolicy.ALWAYS` is required for the Azure OAuth2 callback flow (`/oauth2/callback` → `POST /oauth2/token`)
 
 ## Where does the HTML land?
 
@@ -158,7 +157,7 @@ Run only the REST Docs-related tests:
 
 ```bash
 mvn -Dspring.profiles.active=test test -Dtest=RestDocsSensitiveDataMaskingTest
-mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,UserControllerTest,TestControllerTest,RoleControllerTest,ItemControllerTest
+mvn -Dspring.profiles.active=test test -Dtest=AuthControllerTest,OAuth2ControllerTest,UserControllerTest,RoleControllerTest,ItemControllerTest
 ```
 
 Inspect snippets:

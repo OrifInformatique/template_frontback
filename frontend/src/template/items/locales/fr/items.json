@@ -23,5 +23,8 @@
     "close": "Fermer",
     "status": "Statut",
     "deleted": "Supprimé",
-    "active": "Actif"
+    "active": "Actif",
+    "unknown_author": "Auteur inconnu",
+    "save_error": "L'élément n'a pas pu être enregistré.",
+    "action_error": "L'action a échoué."
 }

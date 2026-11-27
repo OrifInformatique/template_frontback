@@ -9,8 +9,6 @@
 
     - [doFilterInternal()](#dofilterinternal)
     - [Error Handling](#error-handling)
-    - [sendErrorResponse()](#senderrorresponse)
-    - [getMessage()](#getmessage)
 
 - [PermissionEnum.java](#permissionenumjava)
 - [Role.java](#rolejava)
@@ -39,7 +37,6 @@
 - [UserAuthenticationEntryPoint.java](#userauthenticationentrypointjava)
 
     - [commence()](#commence)
-    - [getMessage](#getmessage-1)
 
 - [UserAuthenticationProvider.java](#userauthenticationproviderjava)
 
@@ -60,23 +57,17 @@
 
 It implements Spring Security's `AccessDeniedHandler` and returns an HTTP `403 FORBIDDEN` response.
 
-It contains :
-
-* `handle()`,
-* `messageSource`,
-* `OBJECT_MAPPER`
-
 ### `handle()`
 
 Handles `AccessDeniedException` when access to a protected resource is denied.
 
-It sets the response status to `403 FORBIDDEN` and returns the error as JSON.
+It answers HTTP `403 FORBIDDEN` with the standard error body (`ErrorResponse`)
+and the `error.accessDenied` message, written by `ErrorResponseWriter` in the
+language of the request.
 
-The error message is retrieved from `MessageSource` using the current request's locale.
-
-If the exception contains a message that matches a translation key, that key is used instead. Otherwise, the default `error.accessDenied` message is returned.
-
-`ErrorDto` is used to format the error response, while `ObjectMapper` converts it to JSON.
+Note: the `@PreAuthorize` checks of the controllers throw their
+`AccessDeniedException` inside Spring MVC, where `GlobalExceptionHandler`
+answers it with the same body and message.
 
 
 ---
@@ -90,10 +81,8 @@ It extends `OncePerRequestFilter`, ensuring that the filter is executed once per
 It contains :
 
 * `doFilterInternal()`,
-* `sendErrorResponse()`,
-* `getMessage()`,
 * `userAuthenticationProvider`,
-* `messageSource`
+* `errorResponseWriter`
 
 ### `doFilterInternal()`
 
@@ -109,19 +98,13 @@ If no authentication error occurs, the request continues through the filter chai
 
 ### Error handling
 
-Different JWT errors are handled separately so that the application can return the corresponding translated error message.
+Different JWT errors are handled separately so that the application can return
+the corresponding translated error message (`security.jwt.expired`,
+`security.jwt.invalidSignature`, `security.jwt.malformed`...).
 
-`MessageSource` is used with the current locale to retrieve these messages.
-
-### `sendErrorResponse()`
-
-Creates a JSON error response containing the error `message`.
-
-It sets the HTTP status to `401 UNAUTHORIZED` and uses `ObjectMapper` to convert the response to JSON.
-
-### `getMessage()`
-
-Retrieves a translated message from `MessageSource` using a message key and the current request locale.
+They are answered with HTTP `401 UNAUTHORIZED` and the standard error body
+(`ErrorResponse`), written by `ErrorResponseWriter` in the language of the
+request (`lang` parameter, otherwise `Accept-Language`).
 
 
 ---
@@ -296,11 +279,8 @@ The following endpoints are accessible without authentication :
 
 * `/error`,
 * `POST /auth/login`,
-* `POST /auth/register`,
 * `POST /auth/refresh`,
-* `GET /auth/login/azure`,
-* `GET /auth/auth-code`,
-* `GET /auth/tokens`,
+* `GET /oauth2/login/azure`, `GET /oauth2/callback` and `POST /oauth2/token` (Azure login, before any access token exists),
 * all `OPTIONS` requests.
 
 All other requests require the user to be authenticated.
@@ -382,25 +362,15 @@ It implements `AuthenticationEntryPoint` and returns a JSON response with HTTP s
 It contains :
 
 * `commence()`,
-* `getMessage()`,
-* `messageSource`,
-* `OBJECT_MAPPER`
+* `errorResponseWriter`
 
 ### `commence()`
 
 Handles authentication failures when an unauthenticated user tries to access a protected resource.
 
-It sets the response status to `401 UNAUTHORIZED` and the content type to JSON.
-
-The error message is retrieved from `MessageSource` using the current locale.
-
-If the authentication exception contains a message that matches a translation key, that message is used. Otherwise, the default `security.auth.missingOrInvalidToken` message is returned.
-
-The error is returned using `ErrorDto` and `ObjectMapper`.
-
-### `getMessage()`
-
-Retrieves a translated message from `MessageSource` using a message key and the current request locale.
+It answers HTTP `401 UNAUTHORIZED` with the standard error body (`ErrorResponse`)
+and the `security.auth.missingOrInvalidToken` message, written by
+`ErrorResponseWriter` in the language of the request.
 
 
 ---

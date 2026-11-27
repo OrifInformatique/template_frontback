@@ -41,14 +41,17 @@ const ChangePassword = () =>
             console.error("Change password failed:", error);
 
             const status = error.response?.status;
+            const fieldErrors = error.response?.data?.fieldErrors;
 
-            if (status === 401 || status === 403)
+            if (status === 400 && fieldErrors?.newPassword)
             {
-                setErrorKey("wrong_current_password");
+                // Refused by validation (8 to 72 characters)
+                setErrorKey("invalid_new_password");
             }
             else if (status === 400)
             {
-                setErrorKey("invalid_new_password");
+                // Refused by spring-auth: the current password is incorrect
+                setErrorKey("wrong_current_password");
             }
             else
             {

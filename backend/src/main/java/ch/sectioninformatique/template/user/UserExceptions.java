@@ -69,33 +69,6 @@ public class UserExceptions {
     }
 
     /**
-     * Thrown when a user already has a specific role.
-     */
-    public static class UserAlreadyHasRoleException extends AppException implements MessageKeyProvider {
-        private final String roleName;
-
-        public UserAlreadyHasRoleException(String roleName) {
-            super(HttpStatus.CONFLICT);
-            this.roleName = roleName;
-        }
-
-        public UserAlreadyHasRoleException() {
-            super(HttpStatus.CONFLICT);
-            this.roleName = null;
-        }
-
-        @Override
-        public String getMessageKey() {
-            return "user.role.alreadyHas";
-        }
-
-        @Override
-        public Object[] getMessageArgs() {
-            return roleName == null ? NO_ARGS : new Object[] { roleName };
-        }
-    }
-
-    /**
      * Thrown when a user creation operation fails.
      */
     public static class UserCreationException extends AppException implements MessageKeyProvider {

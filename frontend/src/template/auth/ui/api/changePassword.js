@@ -1,9 +1,9 @@
 import api from '../../apiClient';
 
 export const changePassword = async (oldPassword, newPassword) => {
-    const response = await api.put('/auth/update-password', {
+    // 204 No Content on success
+    await api.put('/users/me/password', {
         oldPassword,
         newPassword,
     });
-    return response.data;
 };

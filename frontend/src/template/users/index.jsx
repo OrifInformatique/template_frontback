@@ -2,9 +2,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import  { useTranslation } from 'react-i18next'
 import useAuthStore from '../auth/authStore';
 
-import {deleteUserLocal, hardDeleteUserLocal, deleteUserDistant, hardDeleteUserDistant, restoreUser, getUsers} from './api/api';
+import { deleteUser, restoreUser, getUsers } from './api/api';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import UserForm from './userForm';
+import { apiErrorMessage } from '../auth/apiError';
 
 function UserList() {
 
@@ -15,19 +16,33 @@ function UserList() {
     const [showDeleted, setShowDeleted] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [error, setError] = useState(null);
     const usersPermissions = user?.permissions || [];
-    const usersAppRoles = user?.appSpecificRoles || [];
 
         const fetchUsers = async () => {
+                setError(null);
                 try {
-                    const response = await getUsers(showDeleted ? 'all' : 'active');
+                    const response = await getUsers(showDeleted ? 'ALL' : 'ACTIVE');
 
                     setUser(response);
                 } catch (error) {
                     console.error('Error fetching users:', error);
                     setUser([]);
+                    setError(apiErrorMessage(error, t("fetch_error", "Failed to load users.")));
                 }
             };
+
+        // Runs a list action, then reloads the list; shows the error if it fails
+        // (e.g. spring-auth refusing to delete the user's own account)
+        const runAction = async (action) => {
+            try {
+                await action();
+                await fetchUsers();
+            } catch (error) {
+                console.error('User action failed:', error);
+                setError(apiErrorMessage(error, t("action_error", "The action failed.")));
+            }
+        };
 
         useEffect(() => {
             fetchUsers();
@@ -45,10 +60,11 @@ function UserList() {
 
         const actions = useMemo(() => ({
             edit: { permission: "user:update", onClick: (user) => { setSelectedUser(user), setFormOpen(true)}},
-            delete: { permission: "user:delete", onClick: (user) => { deleteUserLocal(user.login).then(() => deleteUserDistant(user.login).then(() => fetchUsers()).catch((err) => console.error("Delete failed:", err)))}},
-            hardDelete: { permission: "user:delete", onClick: (user) => hardDeleteUserLocal(user.login).then(() => hardDeleteUserDistant(user.login).then(() => fetchUsers())).catch((err) => console.error("Hard delete failed:", err)) },
+            // Users are deleted in spring-auth and locally, softly or permanently
+            delete: { permission: "user:delete", onClick: (user) => runAction(() => deleteUser(user.id)) },
+            hardDelete: { permission: "user:delete", onClick: (user) => runAction(() => deleteUser(user.id, true)) },
             viewDeleted: { permission: "user:read"},
-            restore: { permission: "user:update", onClick: (user) => restoreUser(user.login).then(() => fetchUsers()).catch((err) => console.error("Restore failed:", err)) }
+            restore: { permission: "user:update", onClick: (user) => runAction(() => restoreUser(user.id)) }
         }), [showDeleted]);
 
 
@@ -71,6 +87,7 @@ function UserList() {
                     children={<UserForm user={selectedUser} onClose={closeForm} onSaved={handleUserSaved} />}
                 />
                 ) : null}
+                {error && <p className="text-center text-red-500 py-4" role="alert">{error}</p>}
                 {user?.permissions?.includes("user:write") && (
                     <Button label={t("create_user", "Create User")} variant="primary" className="mb-4" onClick={() => { setSelectedUser(null); setFormOpen(true); }} />
                 )}

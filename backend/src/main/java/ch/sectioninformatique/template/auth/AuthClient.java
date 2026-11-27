@@ -2,11 +2,12 @@ package ch.sectioninformatique.template.auth;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import ch.sectioninformatique.template.app.errors.ErrorDto;
 import ch.sectioninformatique.template.app.exceptions.AppException;
 import ch.sectioninformatique.template.app.exceptions.AppMessageKeyException;
 import ch.sectioninformatique.template.auth.AuthExceptions.AuthCodeNotFoundException;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -68,9 +70,37 @@ public class AuthClient {
         @Value("${AFTER_OAUTH2_LOGIN_URL}")
         private String afterOauth2LoginUrl;
 
-        /** Constructor to initialize the WebClient */
+        /**
+         * Constructor to initialize the WebClient.
+         *
+         * Every request to spring-auth carries the language of the current request
+         * (Accept-Language), so that spring-auth's messages, often included in this
+         * backend's error messages, are in the same language.
+         */
         public AuthClient(@Value("${SPRING_AUTH_URL}") String authUrl) {
-                this.webClient = WebClient.create(authUrl);
+                this.webClient = WebClient.builder()
+                                .baseUrl(authUrl)
+                                .filter(acceptLanguageOfCurrentRequest())
+                                .build();
+        }
+
+        /**
+         * Adds the Accept-Language header to the requests to spring-auth: the locale
+         * resolved for the current request (lang parameter, otherwise the
+         * Accept-Language header of the client), unless the request already has one.
+         *
+         * @return the filter adding the header
+         */
+        private static ExchangeFilterFunction acceptLanguageOfCurrentRequest() {
+                return (request, next) -> {
+                        if (request.headers().containsHeader(HttpHeaders.ACCEPT_LANGUAGE)) {
+                                return next.exchange(request);
+                        }
+                        String language = LocaleContextHolder.getLocale().toLanguageTag();
+                        return next.exchange(ClientRequest.from(request)
+                                        .header(HttpHeaders.ACCEPT_LANGUAGE, language)
+                                        .build());
+                };
         }
 
         // Logger for debugging and monitoring the authentication flow.
@@ -140,8 +170,10 @@ public class AuthClient {
          */
         private static Mono<String> errorMessage(ClientResponse response) {
                 String fallback = response.statusCode().toString();
-                return response.bodyToMono(ErrorDto.class)
-                                .mapNotNull(ErrorDto::message)
+                // Read as a generic map: only "message" is needed, whatever the
+                // other fields of the body (spring-auth sends an ErrorResponse)
+                return response.bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() { })
+                                .mapNotNull(body -> body.get("message") instanceof String message ? message : null)
                                 .onErrorResume(e -> Mono.empty())
                                 .defaultIfEmpty(fallback);
         }
@@ -161,8 +193,8 @@ public class AuthClient {
                                 .bodyValue(credentialsDto)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> {
+                                                return errorMessage(response)
+                                                                .flatMap(message -> {
                                                                         HttpStatusCode status = response.statusCode();
                                                                         if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
                                                                                 return Mono.error(new UserNotFoundException());
@@ -228,17 +260,17 @@ public class AuthClient {
                                 .bodyValue(user)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> {
+                                                return errorMessage(response)
+                                                                .flatMap(message -> {
                                                                         if (response.statusCode().isSameCodeAs(
                                                                                         HttpStatus.CONFLICT)) {
                                                                                 return Mono.error(
                                                                                                 new LoginAlreadyExistsException(
-                                                                                                                error.message()));
+                                                                                                                message));
                                                                         }
                                                                         return Mono.error(
                                                                                         new RegistrationFailedException(
-                                                                                                        error.message()));
+                                                                                                        message));
                                                                 });
                                         }
 
@@ -275,10 +307,10 @@ public class AuthClient {
                                 .cookie("refresh_token", refreshToken)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
+                                                return errorMessage(response)
+                                                                .flatMap(message -> Mono.error(
                                                                                 new InvalidRefreshTokenException(
-                                                                                                error.message())));
+                                                                                                message)));
                                         }
 
                                         Mono<TokenResponseDto> bodyMono = response.bodyToMono(TokenResponseDto.class);
@@ -316,56 +348,45 @@ public class AuthClient {
                                 .bodyValue(passwordUpdateDto)
                                 .retrieve()
                                 .onStatus(HttpStatusCode::isError,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(
                                                                                 new PasswordUpdateFailedException(
-                                                                                                error.message()))))
+                                                                                                message))))
                                 .toBodilessEntity();
         }
 
         /**
-         * Logs out the authenticated user by sending a logout request to the
-         * authentication provider.
-         * Extracts and retransmits the Set-Cookie header containing the expired refresh
-         * token.
-         * 
+         * Logs out the authenticated user: spring-auth revokes its refresh token
+         * and answers 204 No Content with a Set-Cookie header expiring the
+         * refresh token cookie, which is passed on.
+         *
          * @param token The access token
-         * @return A Mono<ResponseEntity<Map<String, String>>> containing the logout
-         *         response with Set-Cookie header
+         * @return A Mono<ResponseEntity<Void>> carrying the expiring refresh token
+         *         cookie of spring-auth, if any
          */
-        public Mono<ResponseEntity<Map<String, String>>> logout(String token) {
+        public Mono<ResponseEntity<Void>> logout(String token) {
                 return webClient.post()
                                 .uri(uriWithOptionalLang("/auth/logout")) // the logout endpoint path in authentication provider
                                 .header(HttpHeaders.AUTHORIZATION, token)
                                 .exchangeToMono(response -> {
                                         if (response.statusCode().isError()) {
-                                                return response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(new AppMessageKeyException(
+                                                return errorMessage(response)
+                                                                .flatMap(message -> Mono.error(new AppMessageKeyException(
                                                                                 HttpStatus.resolve(response
                                                                                                 .statusCode()
                                                                                                 .value()),
-                                                                                error.message())));
+                                                                                message)));
                                         }
 
-                                        // Extract response body
-                                        Mono<Map<String, String>> bodyMono = response.bodyToMono(
-                                                        new ParameterizedTypeReference<Map<String, String>>() {
-                                                        });
-
-                                        return bodyMono.map(body -> {
-                                                ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
-
-                                                // Extract refresh_token cookie (expired) directly in the lambda
-                                                response.headers().asHttpHeaders()
-                                                                .getOrDefault(HttpHeaders.SET_COOKIE,
-                                                                                Collections.emptyList())
-                                                                .stream()
-                                                                .filter(cookie -> cookie.startsWith("refresh_token="))
-                                                                .findFirst()
-                                                                .ifPresent(cookie -> builder.header(
-                                                                                HttpHeaders.SET_COOKIE, cookie));
-                                                return builder.body(body);
-                                        });
+                                        ResponseEntity.HeadersBuilder<?> builder = ResponseEntity.noContent();
+                                        // Pass on the expiring refresh_token cookie
+                                        response.headers().asHttpHeaders()
+                                                        .getOrDefault(HttpHeaders.SET_COOKIE, Collections.emptyList())
+                                                        .stream()
+                                                        .filter(cookie -> cookie.startsWith("refresh_token="))
+                                                        .findFirst()
+                                                        .ifPresent(cookie -> builder.header(HttpHeaders.SET_COOKIE, cookie));
+                                        return response.releaseBody().then(Mono.just(builder.<Void>build()));
                                 });
         }
 
@@ -447,13 +468,13 @@ public class AuthClient {
                                 .retrieve()
                                 // Convert error responses (4xx and 5xx) into AppException
                                 .onStatus(status -> status.value() >= 400,
-                                                response -> response.bodyToMono(ErrorDto.class)
-                                                                .flatMap(error -> Mono.error(
+                                                response -> errorMessage(response)
+                                                                .flatMap(message -> Mono.error(
                                                                                 new AppMessageKeyException(
                                                                                                 HttpStatus.resolve(
                                                                                                                 response.statusCode()
                                                                                                                                 .value()),
-                                                                                                error.message()))))
+                                                                                                message))))
                                 .toEntity(UserDto.class);
         }
 

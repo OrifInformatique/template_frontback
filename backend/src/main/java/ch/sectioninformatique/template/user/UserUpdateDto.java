@@ -1,5 +1,9 @@
 package ch.sectioninformatique.template.user;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,11 +23,18 @@ import java.util.Map;
  * @param appSpecificRoles new local role names, null to keep them
  */
 public record UserUpdateDto(
-        String firstName,
-        String lastName,
-        String login,
+        @NotBlank @Pattern(regexp = NAME_PATTERN) String firstName,
+        @Pattern(regexp = NAME_PATTERN) String lastName,
+        @NotBlank @Email String login,
         String mainRole,
         List<String> appSpecificRoles) {
+
+    /**
+     * Allowed names, as validated by spring-auth (letters, with inner spaces,
+     * apostrophes and hyphens): checked here too, to answer with the invalid
+     * field before calling spring-auth.
+     */
+    public static final String NAME_PATTERN = "^[\\p{L}][\\p{L} '\\-]*[\\p{L}]$";
 
     /**
      * @return the profile fields, as expected by spring-auth's user update

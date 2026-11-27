@@ -2,10 +2,13 @@ package ch.sectioninformatique.template.item;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ch.sectioninformatique.template.RestDocsSensitiveDataMasking.maskSensitiveData;
@@ -37,6 +40,8 @@ import ch.sectioninformatique.template.security.SpringAuthPermissions;
 import ch.sectioninformatique.template.AuthApplication;
 import ch.sectioninformatique.template.RestDocsSnippets;
 import ch.sectioninformatique.template.security.UserAuthenticationProvider;
+import ch.sectioninformatique.template.security.RoleRepository;
+import ch.sectioninformatique.template.security.LocalRoleEnum;
 import ch.sectioninformatique.template.user.User;
 import ch.sectioninformatique.template.user.UserDto;
 import ch.sectioninformatique.template.user.UserRepository;
@@ -66,6 +71,9 @@ public class ItemControllerTest {
 
     @Autowired
     private ItemRepository itemRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private UserAuthenticationProvider userAuthenticationProvider;
@@ -183,7 +191,7 @@ public class ItemControllerTest {
 
         performRequest(
                 "GET",
-                "/items?state=deleted",
+                "/items?status=DELETED",
                 null,
                 tokenFor(MANAGER_LOGIN),
                 200,
@@ -210,7 +218,7 @@ public class ItemControllerTest {
 
         performRequest(
                 "GET",
-                "/items?state=all",
+                "/items?status=ALL",
                 null,
                 tokenFor(ADMIN_LOGIN),
                 200,
@@ -262,7 +270,7 @@ public class ItemControllerTest {
                     try {
                         response.andExpect(jsonPath("$.id").value(item.getId()));
                         response.andExpect(jsonPath("$.name").value("Doc item"));
-                        response.andExpect(jsonPath("$.author.login").value(USER_LOGIN));
+                        response.andExpect(jsonPath("$.author.id").value(userEntity(USER_LOGIN).getId()));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -319,15 +327,18 @@ public class ItemControllerTest {
 
         performRequest(
                 "POST",
-                "/items/",
+                "/items",
                 itemJson("New item", "Created via REST Docs test"),
                 tokenFor(MANAGER_LOGIN),
-                200,
+                201,
                 "create",
                 response -> {
                     try {
                         response.andExpect(jsonPath("$.name").value("New item"));
-                        response.andExpect(jsonPath("$.author.login").value(MANAGER_LOGIN));
+                        response.andExpect(jsonPath("$.author.id").value(userEntity(MANAGER_LOGIN).getId()));
+                        // URL of the created item
+                        response.andExpect(header().string(HttpHeaders.LOCATION,
+                                org.hamcrest.Matchers.matchesPattern("/items/\\d+")));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -341,7 +352,7 @@ public class ItemControllerTest {
     public void createItem_withoutWritePermission_returns403() throws Exception {
         performRequest(
                 "POST",
-                "/items/",
+                "/items",
                 itemJson("Forbidden item", "Should not be created"),
                 tokenFor(USER_LOGIN),
                 403,
@@ -360,7 +371,7 @@ public class ItemControllerTest {
     public void createItem_missingToken_returns401() throws Exception {
         performRequest(
                 "POST",
-                "/items/",
+                "/items",
                 itemJson("Ghost item", "No authentication"),
                 null,
                 401,
@@ -502,7 +513,7 @@ public class ItemControllerTest {
                 "/items/" + item.getId(),
                 null,
                 tokenFor(ADMIN_LOGIN),
-                200,
+                204,
                 "delete-soft",
                 null);
     }
@@ -516,10 +527,10 @@ public class ItemControllerTest {
 
         performRequest(
                 "DELETE",
-                "/items/" + itemId + "?softDelete=false",
+                "/items/" + itemId + "?permanent=true",
                 null,
                 tokenFor(ADMIN_LOGIN),
-                200,
+                204,
                 "delete-permanent",
                 null);
     }
@@ -604,10 +615,174 @@ public class ItemControllerTest {
                         .content(itemJson("Edited by admin", "Moderated")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Edited by admin"))
-                .andExpect(jsonPath("$.author.login").value(USER_LOGIN));
+                .andExpect(jsonPath("$.author.id").value(userEntity(USER_LOGIN).getId()));
 
         // The stored author is still the creator
         assertEquals(USER_LOGIN, itemRepository.findById(item.getId()).orElseThrow().getAuthor().getLogin());
+    }
+
+    /**
+     * Restoring a soft-deleted item (as its author) returns the restored item.
+     */
+    @Test
+    @Transactional
+    public void restoreItem_asAuthor_returnsRestoredItem() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(MANAGER_LOGIN), "Deleted item", "Soft-deleted by its author");
+        item.setDeleted(true);
+        itemRepository.save(item);
+
+        performRequest(
+                "POST",
+                "/items/" + item.getId() + "/restore",
+                null,
+                tokenFor(MANAGER_LOGIN),
+                200,
+                "restore",
+                response -> {
+                    try {
+                        response.andExpect(jsonPath("$.deleted").value(false));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                RestDocsSnippets.itemDetailResponse());
+    }
+
+    // ==================== Request body: client-settable fields only ====================
+
+    /**
+     * A create request carrying the id of an existing item creates a new item:
+     * the existing item (of another user) is not overwritten.
+     */
+    @Test
+    @Transactional
+    public void createItem_withIdOfExistingItem_createsNewItemAndKeepsExistingOne() throws Exception {
+        clearItems();
+        Item existing = saveDocItem(userEntity(ADMIN_LOGIN), "Admin item", "Owned by admin");
+
+        mockMvc.perform(post("/items")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":" + existing.getId() + ",\"name\":\"Hijacked\",\"description\":\"x\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.not(existing.getId().intValue())))
+                .andExpect(jsonPath("$.author.id").value(userEntity(MANAGER_LOGIN).getId()));
+
+        Item unchanged = itemRepository.findById(existing.getId()).orElseThrow();
+        assertEquals("Admin item", unchanged.getName());
+        assertEquals(ADMIN_LOGIN, unchanged.getAuthor().getLogin());
+    }
+
+    /**
+     * The author and deletion state can't be set through an update request.
+     */
+    @Test
+    @Transactional
+    public void updateItem_withAuthorAndDeletedFields_ignoresThem() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(MANAGER_LOGIN), "Manager item", "Owned by manager");
+        long adminId = userEntity(ADMIN_LOGIN).getId();
+
+        mockMvc.perform(put("/items/" + item.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Renamed\",\"description\":\"x\",\"deleted\":true,"
+                                + "\"author\":{\"id\":" + adminId + "}}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Renamed"))
+                .andExpect(jsonPath("$.deleted").value(false))
+                .andExpect(jsonPath("$.author.id").value(userEntity(MANAGER_LOGIN).getId()));
+    }
+
+    /**
+     * An item without name is refused with 400 and the invalid field.
+     */
+    @Test
+    @Transactional
+    public void createItem_withBlankName_returns400() throws Exception {
+        mockMvc.perform(post("/items")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\" \",\"description\":\"x\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // ==================== Ownership: permanent delete and restore ====================
+
+    /** Gives test.user the LOCAL_MANAGER role (item:delete, not admin), rolled back with the test */
+    private void grantLocalManagerToTestUser() {
+        User user = userEntity(USER_LOGIN);
+        user.getAppSpecificRoles().add(roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER).orElseThrow());
+        userRepository.save(user);
+    }
+
+    /**
+     * A non-admin allowed to delete items can't permanently delete another
+     * user's item.
+     */
+    @Test
+    @Transactional
+    public void deleteItemPermanently_asNonAuthor_returns403AndKeepsItem() throws Exception {
+        clearItems();
+        grantLocalManagerToTestUser();
+        Item item = saveDocItem(userEntity(ADMIN_LOGIN), "Admin item", "Owned by admin");
+
+        mockMvc.perform(delete("/items/" + item.getId() + "?permanent=true")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(USER_LOGIN)))
+                .andExpect(status().isForbidden());
+
+        assertTrue(itemRepository.findById(item.getId()).isPresent(), "Item must not be deleted");
+    }
+
+    /**
+     * The author can permanently delete their own item.
+     */
+    @Test
+    @Transactional
+    public void deleteItemPermanently_asAuthor_deletesItem() throws Exception {
+        clearItems();
+        grantLocalManagerToTestUser();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
+
+        mockMvc.perform(delete("/items/" + item.getId() + "?permanent=true")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(USER_LOGIN)))
+                .andExpect(status().isNoContent());
+
+        assertTrue(itemRepository.findById(item.getId()).isEmpty(), "Item must be deleted");
+    }
+
+    /**
+     * Permanently deleting an unknown item is answered 404.
+     */
+    @Test
+    @Transactional
+    public void deleteItemPermanently_unknownItem_returns404() throws Exception {
+        mockMvc.perform(delete("/items/999999?permanent=true")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(ADMIN_LOGIN)))
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * A non-admin can't restore another user's deleted item; an admin can.
+     */
+    @Test
+    @Transactional
+    public void restoreItem_asNonAuthor_returns403_asAdmin_restores() throws Exception {
+        clearItems();
+        Item item = saveDocItem(userEntity(USER_LOGIN), "User item", "Owned by test user");
+        item.setDeleted(true);
+        itemRepository.save(item);
+
+        mockMvc.perform(post("/items/" + item.getId() + "/restore")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(MANAGER_LOGIN)))
+                .andExpect(status().isForbidden());
+        assertTrue(itemRepository.findById(item.getId()).orElseThrow().isDeleted(), "Item stays deleted");
+
+        mockMvc.perform(post("/items/" + item.getId() + "/restore")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(ADMIN_LOGIN)))
+                .andExpect(status().isOk());
+        assertFalse(itemRepository.findById(item.getId()).orElseThrow().isDeleted(), "Item restored");
     }
 
     // ==================== Items without author ====================

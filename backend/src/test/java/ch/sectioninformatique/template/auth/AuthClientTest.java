@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -23,6 +25,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.sun.net.httpserver.HttpServer;
 
 import ch.sectioninformatique.template.auth.AuthExceptions.AuthCodeNotFoundException;
+import ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException;
 import ch.sectioninformatique.template.auth.AuthExceptions.OAuth2AuthenticationException;
 import ch.sectioninformatique.template.user.UserExceptions.UserDeletionException;
 import ch.sectioninformatique.template.user.UserExceptions.UserUpdateException;
@@ -39,6 +42,8 @@ public class AuthClientTest {
     /** Method and URI (raw, as sent on the wire) of the last request received */
     private final AtomicReference<String> lastMethod = new AtomicReference<>();
     private final AtomicReference<URI> lastUri = new AtomicReference<>();
+    private final AtomicReference<String> lastAcceptLanguage = new AtomicReference<>();
+    private final AtomicReference<String> lastBody = new AtomicReference<>();
 
     /** Next answer of the fake spring-auth: by default 204 No Content (successful delete) */
     private final AtomicInteger responseStatus = new AtomicInteger(204);
@@ -57,6 +62,8 @@ public class AuthClientTest {
         server.createContext("/", exchange -> {
             lastMethod.set(exchange.getRequestMethod());
             lastUri.set(exchange.getRequestURI());
+            lastAcceptLanguage.set(exchange.getRequestHeaders().getFirst("Accept-Language"));
+            lastBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             String body = responseBody.get();
             if (body == null) {
                 exchange.sendResponseHeaders(responseStatus.get(), -1);
@@ -76,6 +83,7 @@ public class AuthClientTest {
     void stopServer() {
         server.stop(0);
         RequestContextHolder.resetRequestAttributes();
+        LocaleContextHolder.resetLocaleContext();
     }
 
     /**
@@ -105,6 +113,21 @@ public class AuthClientTest {
 
         assertEquals("/users/9", lastUri.get().getRawPath());
         assertEquals("permanent=false&lang=en", lastUri.get().getRawQuery());
+    }
+
+    /**
+     * The auth code exchange sends the body expected by spring-auth's
+     * POST /oauth2/token: {"userId", "code"}.
+     */
+    @Test
+    void getTokenWithAuthCode_shouldSendUserIdAndCode() {
+        respond(200, "{\"id\":9,\"login\":\"a@b.ch\",\"token\":\"t\",\"deleted\":false,\"mainRole\":\"USER\"}");
+
+        authClient.getTokenWithAuthCode(AuthCodeDto.builder().userId(9L).code("abc").build()).block();
+
+        assertEquals("POST", lastMethod.get());
+        assertEquals("/oauth2/token", lastUri.get().getRawPath());
+        assertEquals("{\"userId\":9,\"code\":\"abc\"}", lastBody.get());
     }
 
     // ==================== Error mapping ====================
@@ -158,7 +181,7 @@ public class AuthClientTest {
         respond(400, "{\"message\":\"Validation failed\"}");
 
         OAuth2AuthenticationException e = assertThrows(OAuth2AuthenticationException.class,
-                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("bogus").id(2L).build()).block());
+                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("bogus").userId(2L).build()).block());
 
         assertEquals(HttpStatus.UNAUTHORIZED, e.getStatus());
     }
@@ -171,6 +194,35 @@ public class AuthClientTest {
         respond(404, null);
 
         assertThrows(AuthCodeNotFoundException.class,
-                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("old").id(2L).build()).block());
+                () -> authClient.getTokenWithAuthCode(AuthCodeDto.builder().code("old").userId(2L).build()).block());
+    }
+
+    /**
+     * A login already used in spring-auth (409) is a conflict, not a bad request.
+     */
+    @Test
+    void register_whenSpringAuthAnswers409_shouldThrowLoginAlreadyExistsWith409() {
+        respond(409, "{\"message\":\"Login already exists\"}");
+
+        LoginAlreadyExistsException e = assertThrows(LoginAlreadyExistsException.class,
+                () -> authClient.register("Bearer token", new RegisterDto("A", "B", "a@b.ch",
+                        "Secure123@Pass".toCharArray(), null, null)).block());
+
+        assertEquals(HttpStatus.CONFLICT, e.getStatus());
+    }
+
+    /**
+     * Requests to spring-auth carry the language of the current request, so that
+     * spring-auth's messages are in the same language as the backend's.
+     */
+    @Test
+    void requests_shouldCarryTheLanguageOfTheCurrentRequest() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        authClient.deleteGlobalUser("Bearer token", 9L, false).block();
+        assertEquals("en", lastAcceptLanguage.get());
+
+        LocaleContextHolder.setLocale(Locale.FRENCH);
+        authClient.deleteGlobalUser("Bearer token", 9L, false).block();
+        assertEquals("fr", lastAcceptLanguage.get());
     }
 }

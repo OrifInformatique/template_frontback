@@ -1,88 +1,59 @@
 import api from "../../auth/apiClient";
 
+// Every function throws the axios error when the request fails: callers show it
+// (see apiErrorMessage in auth/apiError.js).
+
 /**
- * Gets items filtered by soft-delete state.
+ * Gets items filtered by soft-delete status.
  *
- * @param {'active'|'deleted'|'all'} state which subset to fetch (default 'active')
- * @returns {Array}
+ * @param {'ACTIVE'|'DELETED'|'ALL'} status which subset to fetch (default 'ACTIVE')
+ * @returns {Promise<Array>} the items
  */
-export const getItems = async (state = 'active') =>
-{
-    try
-    {
-        const response = await api.get(`/items`, { params: { state } });
-        return response.data;
-    }
-    catch(error)
-    {
-        console.error(`Error while fetching data: ${error.message}`);
-        return [];
-    }
-};
-export const modifyItem = async (id, data) =>
-{
-    try
-    {
-        const response = await api.put(`/items/${id}`, data);
-        return response.data;
-    }
-    catch(error)
-    {
-        console.error(`Error while modifying item: ${error.message}`);
-        return null;
-    }
-};
-export const deleteItem = async (id) =>
-{
-    try
-    {
-        const response = await api.delete(`/items/${id}`);
-        return response.data;
-    }
-    catch(error)
-    {
-        console.error(`Error while deleting item: ${error.message}`);
-        return null;
-    }
-};
-export const restoreItem = async (id) =>
-{
-    try
-    {
-        const response = await api.put(`/items/${id}/restore`);
-        return response.data;
-    }
-    catch(error)
-    {
-        console.error(`Error while restoring item: ${error.message}`);
-        return null;
-    }
-};
-export const hardDeleteItem = async (id) =>
-{
-    try
-    {
-        const response = await api.delete(`/items/${id}`, {
-            params: { softDelete: false },
-        });
-        return response.data;
-    }
-    catch(error)
-    {
-        console.error(`Error while hard deleting item: ${error.message}`);
-        return null;
-    }
+export const getItems = async (status = 'ACTIVE') => {
+    const response = await api.get(`/items`, { params: { status } });
+    return response.data;
 };
 
-export const createItem = async (data) =>
-{
-    try {
-        const response = await api.post(`/items/`, data);
-        return response.data;
-    }
-    catch(error)
-    {
-        console.error(`Error while creating item: ${error.message}`);
-        return null;
-    }
+/**
+ * Updates the name and description of an item.
+ *
+ * @returns {Promise<Object>} the updated item
+ */
+export const modifyItem = async (id, data) => {
+    const response = await api.put(`/items/${id}`, data);
+    return response.data;
+};
+
+/**
+ * Soft-deletes an item (204 No Content).
+ */
+export const deleteItem = async (id) => {
+    await api.delete(`/items/${id}`);
+};
+
+/**
+ * Restores a soft-deleted item.
+ *
+ * @returns {Promise<Object>} the restored item
+ */
+export const restoreItem = async (id) => {
+    const response = await api.post(`/items/${id}/restore`);
+    return response.data;
+};
+
+/**
+ * Permanently deletes an item (204 No Content).
+ */
+export const hardDeleteItem = async (id) => {
+    await api.delete(`/items/${id}`, { params: { permanent: true } });
+};
+
+/**
+ * Creates an item (201 Created).
+ *
+ * @returns {Promise<Object>} the created item
+ */
+export const createItem = async (data) => {
+    const response = await api.post(`/items`, data);
+    return response.data;
 };

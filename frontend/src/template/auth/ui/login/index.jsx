@@ -79,11 +79,11 @@ const Login = () => {
                 {accessToken ? (
                     <div className="flex items-center justify-between gap-2 border border-black rounded-md p-2 text-sm">
                         <span>
-                            Connecté via {loginType === 'azure' ? 'Azure' : 'local'}
+                            {t("connected_via", "Connected via {{type}}", { type: loginType === 'azure' ? 'Azure' : t("local_account", "local account") })}
                         </span>
                         <Button
                             variant="secondary"
-                            label="Se déconnecter"
+                            label={t("sign_out", "Sign out")}
                             onClick={handleLogoutClick}
                         />
                     </div>
@@ -96,7 +96,7 @@ const Login = () => {
                     >
                         <Image
                             src="https://learn.microsoft.com/en-us/azure/active-directory/develop/media/howto-add-branding-in-apps/ms-symbollockup_signin_light.svg"
-                            alt="Connexion avec Microsoft Azure"
+                            alt={t("azure_sign_in", "Sign in with Microsoft Azure")}
                         />
                     </button>
                 </div>

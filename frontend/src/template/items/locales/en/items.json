@@ -23,5 +23,8 @@
     "close": "Close",
     "status": "Status",
     "deleted": "Deleted",
-    "active": "Active"
+    "active": "Active",
+    "unknown_author": "Unknown author",
+    "save_error": "The item could not be saved.",
+    "action_error": "The action failed."
 }

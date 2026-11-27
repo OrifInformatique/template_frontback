@@ -29,6 +29,9 @@ api.interceptors.request.use((config) => {
 
 let refreshPromise = null;
 
+// Requests whose 401 must not trigger a token refresh
+const NO_REFRESH_URLS = ['/auth/login', '/auth/refresh', '/oauth2/token'];
+
 api.interceptors.response.use(
     (response) => {
         const newToken = response?.data?.accessToken || response?.data?.token;
@@ -39,10 +42,12 @@ api.interceptors.response.use(
         const status = error.response?.status;
         const originalRequest = error.config;
 
-        // Refresh on 401 (expired token) or on 400 when the request was sent without Authorization.
-        const missingAuthHeader = !(originalRequest?.headers && originalRequest.headers.Authorization);
+        // Refresh on 401 (missing or expired access token), except for the requests
+        // that obtain tokens themselves: their 401 means wrong credentials or no
+        // Azure login to complete, which a refresh can't fix.
+        const tokenRequest = NO_REFRESH_URLS.some((url) => originalRequest?.url?.startsWith(url));
         const shouldRefresh =
-            !!originalRequest && !originalRequest._retry && (status === 401 || (status === 400 && missingAuthHeader));
+            !!originalRequest && !originalRequest._retry && status === 401 && !tokenRequest;
 
         if (shouldRefresh) {
             originalRequest._retry = true;

@@ -24,7 +24,6 @@ import ch.sectioninformatique.template.security.RoleRepository;
 import ch.sectioninformatique.template.user.UserExceptions.DefaultRoleNotFoundException;
 import ch.sectioninformatique.template.user.UserExceptions.DuplicateUserException;
 import ch.sectioninformatique.template.user.UserExceptions.RoleNotFoundException;
-import ch.sectioninformatique.template.user.UserExceptions.UserAlreadyHasRoleException;
 import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundByLoginException;
 import ch.sectioninformatique.template.user.UserExceptions.UserNotFoundException;
 import ch.sectioninformatique.template.user.UserExceptions.UserCreationException;
@@ -73,44 +72,6 @@ public class UserService {
     private final UserMapper userMapper;
 
     /**
-     * Promotes a user to the local manager role.
-     * This operation:
-     * - Verifies the user exists
-     * - Checks if the user already has the local manager role
-     * - Removes existing roles and assigns the local manager role
-     *
-     * @param userId The ID of the user to promote
-     * @return UserDto containing the updated user's information
-     * @throws UserNotFoundException if the user is not found
-     * @throws UserAlreadyHasRoleException if the user already has the role
-     * @throws RoleNotFoundException if the role is not found
-     * @throws UserPromotionException if the promotion operation fails
-     */
-    public UserDto promoteToLocalManagerRole(@NonNull Long userId) {
-        try {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(UserNotFoundException::new);
-
-            for (Role role : user.getAppSpecificRoles()) {
-                if (role.getName().equals(LocalRoleEnum.LOCAL_MANAGER)) {
-                    throw new UserAlreadyHasRoleException(LocalRoleEnum.LOCAL_MANAGER.name());
-                }
-            }
-
-            Role testAdminRole = roleRepository.findByName(LocalRoleEnum.LOCAL_MANAGER)
-                    .orElseThrow(() -> new RoleNotFoundException(LocalRoleEnum.LOCAL_MANAGER.name()));
-
-            user.getAppSpecificRoles().add(testAdminRole);
-            userRepository.save(user);
-            return userMapper.toUserDto(user);
-        } catch (UserNotFoundException | UserAlreadyHasRoleException | RoleNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new UserPromotionException(e.getMessage());
-        }
-    }
-
-    /**
      * Retrieves all users in the system (not including soft-deleted users).
      *
      * @return List of all users as UserDto
@@ -156,18 +117,6 @@ public class UserService {
             usersDto.add(userMapper.toUserDto(user));
         }
         return usersDto;
-    }
-
-    /**
-     * Retrieves the authenticated user's information.
-     *
-     * @return UserDto containing the current user's information
-     */
-    public UserDto me(UserDto currentUser) {
-        User user = userRepository.findById(currentUser.getId())
-                .orElseThrow(() -> new UserNotFoundException(currentUser.getId()));
-        UserDto userMapped = userMapper.toUserDto(user);
-        return userMapped;
     }
 
     /**
@@ -307,18 +256,6 @@ public class UserService {
         }
     }
 
-    /**
-     * Mirrors in the local database the main role a user now has in spring-auth,
-     * after it was changed there. Does nothing if the user has no local row yet:
-     * the role will then be synced from the token at the user's next request.
-     *
-     * @param userId     the ID of the user (same in spring-auth and locally)
-     * @param globalUser the user as returned by spring-auth
-     */
-    public void syncMainRole(Long userId, UserDto globalUser) {
-        userRepository.findById(userId)
-                .ifPresent(localUser -> updateMainRole(localUser, globalUser));
-    }
 
     /**
      * Deletes a user from the system.
@@ -429,6 +366,35 @@ public class UserService {
     }
 
     /**
+     * Creates a user: in spring-auth first (which validates the user and
+     * checks that the login is free), then locally with the same id and its
+     * app-specific roles.
+     *
+     * @param request the new user
+     * @param token   the access token of the authenticated user
+     * @return the created user
+     * @throws ch.sectioninformatique.template.auth.AuthExceptions.LoginAlreadyExistsException
+     *         if the login is already used in spring-auth
+     */
+    public UserDto createUser(RegisterDto request, String token) {
+        UserDto globalUser = authClient.register(token, request).block().getBody();
+        return userMapper.toUserDto(register(request, globalUser.getId()));
+    }
+
+    /**
+     * Gets a user by its ID, soft-deleted or not (the "deleted" field tells).
+     *
+     * @param userId The ID of the user
+     * @return The user
+     * @throws UserNotFoundException if no local user has this ID
+     */
+    public UserDto getUser(Long userId) {
+        return userRepository.findById(userId)
+                .map(userMapper::toUserDto)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+    }
+
+    /**
      * Finds a user by their ID.
      * This method:
      * - Searches the database for a user with the specified ID
@@ -520,22 +486,18 @@ public class UserService {
      * - Once the auth service confirmed the deletion (204 No Content), deletes
      *   the user locally by id (the local id is the spring-auth id), permanently
      *   if {@code hardDelete} is true, softly otherwise
-     * - Returns a localized deletion message
      *
      * @param token      The authorization token
      * @param userId     The ID of the user to delete
      * @param hardDelete Whether the global deletion is permanent
-     * @return Localized deletion message
+     * @return A Mono completing once the user is deleted globally and locally
      * @throws UserDeletionException if the global deletion fails
      */
-    public reactor.core.publisher.Mono<String> deleteGlobalAndLocal(String token, Long userId, boolean hardDelete) {
-
-        // Resolve the locale now: the reactive callback may run outside the request thread
-        java.util.Locale locale = LocaleContextHolder.getLocale();
+    public reactor.core.publisher.Mono<Void> deleteGlobalAndLocal(String token, Long userId, boolean hardDelete) {
 
         // spring-auth answers 204 No Content on success and errors are mapped by AuthClient
         return authClient.deleteGlobalUser(token, userId, hardDelete)
-                .then(reactor.core.publisher.Mono.fromCallable(() -> {
+                .then(reactor.core.publisher.Mono.fromRunnable(() -> {
                     // Local id is the spring-auth id: delete locally by the same id,
                     // with the same scope (soft or permanent) as the global deletion
                     if (hardDelete) {
@@ -543,7 +505,6 @@ public class UserService {
                     } else {
                         deleteUserById(userId);
                     }
-                    return messageSource.getMessage("user.deleted.global", null, locale);
                 }));
     }
 
@@ -561,12 +522,12 @@ public class UserService {
      * @param userId  The ID of the user to update
      * @param newUser The new user data
      * @param token   The authorization token for the request
-     * @return ResponseEntity containing the update result message
+     * @return The updated user
      * @throws UserNotFoundException if no local user has this id
      * @throws RoleNotFoundException if a requested role does not exist
      * @throws UserUpdateException if spring-auth refuses the profile update
      */
-    public ResponseEntity<?> updateUser(Long userId, UserUpdateDto newUser, String token) {
+    public UserDto updateUser(Long userId, UserUpdateDto newUser, String token) {
 
         // Retrieve the existing user from the database
         User existingUser = userRepository.findById(userId)
@@ -616,9 +577,7 @@ public class UserService {
         }
 
         // Save modified Entity
-        userRepository.save(existingUser);
-
-        return ResponseEntity.ok().body(messageSource.getMessage("user.update.success", null, LocaleContextHolder.getLocale()));
+        return userMapper.toUserDto(userRepository.save(existingUser));
     }
 
     /**
@@ -626,12 +585,13 @@ public class UserService {
      *
      * @param userId The ID of the user to restore
      * @param token The authorization token for the request
+     * @return The restored user
      * @throws UserNotFoundException if the local user is not found
      * @throws ch.sectioninformatique.template.auth.AuthExceptions.UserNotFoundException
      *         if the global user is not found
      * @throws UserUpdateException if the global restoration fails
      */
-    public void restoreUser(Long userId, String token) {
+    public UserDto restoreUser(Long userId, String token) {
         User userToRestore = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId.toString()));
 
@@ -642,7 +602,7 @@ public class UserService {
         userToRestore.setDeleted(false);
 
         // Save modified Entity
-        userRepository.save(userToRestore);
+        return userMapper.toUserDto(userRepository.save(userToRestore));
     }
 
     /**

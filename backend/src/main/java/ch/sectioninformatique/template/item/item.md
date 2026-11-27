@@ -10,7 +10,8 @@
     - [ItemNotFoundException](#itemnotfoundexception)
     - [UnauthorizedItemException](#unauthorizeditemexception)
 - [ItemRepository.java](#itemrepositoryjava)
-- [ItemDTO.java](#itemdtojava)
+- [ItemDto.java](#itemdtojava)
+- [ItemRequestDto.java](#itemrequestdtojava)
 - [ItemSeeder.java](#itemseederjava)
 - [ItemService.java](#itemservicejava)
     - [getCurrentUser()](#getcurrentuser)
@@ -77,18 +78,29 @@ All endpoints use the `/items` path and return data in JSON format.
 It contains :
 
 * `getItems()`,
-* `getItemById()`,
+* `getItem()`,
 * `createItem()`,
 * `updateItem()`,
-* `deleteItem()`
+* `deleteItem()`,
+* `restoreItem()`
 
 ### Endpoints
 
-* `GET /items` → retrieves all items. The `includeDeleted` parameter determines whether soft-deleted items are included.
-* `GET /items/{id}` → retrieves an item using its ID.
-* `POST /items/` → creates a new item.
-* `PUT /items/{id}` → updates an existing item.
-* `DELETE /items/{id}` → deletes an item. The `softDelete` parameter determines whether the item is soft-deleted or permanently deleted.
+Every endpoint returns items as `ItemDto` and errors as the standard `ErrorResponse`.
+
+| Endpoint | Authority | Response |
+|---|---|---|
+| `GET /items?status=ACTIVE\|DELETED\|ALL` | `item:read` | `200`, the items (`ACTIVE` by default, case-insensitive) |
+| `GET /items/{id}` | `item:read` | `200`, the item, soft-deleted or not; `404` if unknown |
+| `POST /items` | `item:write` | `201`, the created item, with its URL in the `Location` header |
+| `PUT /items/{id}` | `item:update` | `200`, the updated item |
+| `DELETE /items/{id}?permanent=false` | `item:delete`, or `item:write` for users and admins | `204`; `permanent=true` removes the item from the database |
+| `POST /items/{id}/restore` | `item:update` | `200`, the restored item |
+
+`POST` and `PUT` accept an `ItemRequestDto` (`name`, required, and `description`,
+at most 1000 characters): the id, author and deletion state can't be sent.
+Updating, deleting and restoring an item is allowed to its author and to
+administrators only (`ItemService.findModifiableItem()`).
 
 ### Security
 
@@ -157,28 +169,32 @@ Spring Data JPA automatically provides the implementation of this repository.
 
 
 ---
-## *ItemDTO.java*
+## *ItemDto.java*
 
-`ItemsDTO` is a Data Transfer Object used to transfer item data between parts of the application.
-
-It contains the useful information about an item without including unnecessary information such as the author's ID.
+`ItemDto` is the item returned by every item endpoint (list, detail, create,
+update, restore).
 
 It contains :
 
 * `id`,
 * `name`,
 * `description`,
-* `authorFirstName`,
-* `authorLastName`,
+* `author` : `id`, `firstName` and `lastName` of the author (`AuthorDto`), or `null` once the author was permanently deleted,
 * `createdAt`,
 * `updatedAt`,
 * `deleted`
 
-Instead of storing the complete `User` object like `Item`, it only stores the author's first and last name. This makes the data easier to use and display on the frontend.
+The author is reduced to its id and names: the API never exposes the whole
+`User` entity, with its roles and authorities.
 
-The `ItemsDTO(Item item)` constructor converts an `Item` entity into an `ItemsDTO` by copying the required information from the item.
+`ItemDto.from(Item item)` converts an `Item` entity into an `ItemDto`.
 
-`@Data` from Lombok automatically generates getters, setters, `toString()`, `equals()`, and `hashCode()`.
+## *ItemRequestDto.java*
+
+`ItemRequestDto` is the body of the create and update requests. It only
+contains the fields a client may set: `name` (required) and `description` (at
+most 1000 characters). `toItem()` builds a new `Item` from them, with no id,
+author or deletion state.
 
 
 ---
@@ -256,13 +272,11 @@ It returns an `Optional<Item>`, which means the item may or may not exist.
 
 ### `getItems()`
 
-Retrieves all items.
+Retrieves the items matching a `DeletionFilter` (the `status` parameter of `GET /items`):
 
-The `includeDeleted` parameter determines whether soft-deleted items should be included.
-
-If `includeDeleted` is `false`, the Hibernate filter only returns items where `deleted = false`.
-
-If `includeDeleted` is `true`, the filter is disabled and deleted items are also returned.
+* `ACTIVE` → items where `deleted = false` (`findAllByDeletedFalse()`),
+* `DELETED` → soft-deleted items only (`findAllByDeletedTrue()`),
+* `ALL` → every item (`findAllIncludingDeleted()`).
 
 ### `deleteItem()`
 
@@ -286,7 +300,10 @@ Permanently deletes an item from the database.
 
 Unlike `deleteItem()`, this does not use soft deletion.
 
-If the operation fails, an `ItemNotFoundException` is thrown.
+Like `updateItem()`, `deleteItem()` and `restoreItem()`, it goes through
+`findModifiableItem()`: only the item's author or an administrator can do it.
+If the item does not exist, an `ItemNotFoundException` (404) is thrown; if the
+user is not allowed, an `UnauthorizedItemException` (403).
 
 ### `updateItem()`
 

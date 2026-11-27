@@ -6,26 +6,21 @@ const AZURE_CALLBACK_PATH = '/azure';
 
 const handleOAuth2Login = () => {
     const redirectUrl = `${window.location.origin}${AZURE_CALLBACK_PATH}`;
-    const loginUrl = new URL('/auth/login/azure', BACKEND_API_URL);
+    const loginUrl = new URL('/oauth2/login/azure', BACKEND_API_URL);
     loginUrl.searchParams.set('redirectUrl', redirectUrl);
     window.location.assign(loginUrl.toString());
 };
 
 const getAccessToken = async () => {
     try {
-        const response = await api.get('/auth/tokens', {
+        // Result of the Azure login kept in the session by the backend: single
+        // use, the backend removes it once returned
+        const response = await api.post('/oauth2/token', null, {
             baseURL: BACKEND_API_URL || undefined,
         });
         const data = response?.data || {};
         const accessToken = data.accessToken || data.token;
-        const user =
-            data.user ||
-            (data.id
-                ? {
-                      ...data,
-                      roles: data.roles || data.appSpecificRoles,
-                  }
-                : null);
+        const user = data.user || (data.id ? data : null);
 
         if (accessToken) {
             const store = useAuthStore.getState();

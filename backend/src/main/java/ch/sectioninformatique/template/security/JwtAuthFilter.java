@@ -7,21 +7,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+
+import ch.sectioninformatique.template.app.errors.ErrorResponseWriter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import tools.jackson.databind.ObjectMapper;
 import ch.sectioninformatique.template.security.SecurityExceptions.InvalidTokenException;
 
 import org.springframework.stereotype.Component;
 import org.springframework.lang.NonNull;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * JWT Authentication Filter for processing JWT tokens in incoming requests.
@@ -51,9 +50,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      */
 
     private final UserAuthenticationProvider userAuthenticationProvider;
-    private final MessageSource messageSource;
-
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private final ErrorResponseWriter errorResponseWriter;
 
     /**
      * Processes each incoming request to validate JWT tokens.
@@ -95,37 +92,37 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 } catch (SecurityExceptions.JwtTokenExpiredException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("JWT validation failed: {}", e.getMessage());
-                    sendErrorResponse(response, getMessage("security.jwt.expired"));
+                    errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.jwt.expired");
                     return;
                 } catch (SecurityExceptions.InvalidJwtSignatureException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("JWT validation failed: {}", e.getMessage());
-                    sendErrorResponse(response, getMessage("security.jwt.invalidSignature"));
+                    errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.jwt.invalidSignature");
                     return;
                 } catch (SecurityExceptions.MalformedJwtException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("JWT validation failed: {}", e.getMessage());
-                    sendErrorResponse(response, getMessage("security.jwt.malformed"));
+                    errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.jwt.malformed");
                     return;
                 } catch (SecurityExceptions.InvalidTokenTypeException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("JWT validation failed: {}", e.getMessage());
-                    sendErrorResponse(response, getMessage("security.jwt.invalidType"));
+                    errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.jwt.invalidType");
                     return;
                 } catch (SecurityExceptions.JwtVerificationException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("JWT validation failed: {}", e.getMessage());
-                    sendErrorResponse(response, getMessage("security.jwt.verificationFailed"));
+                    errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.jwt.verificationFailed");
                     return;
                 } catch (JWTVerificationException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("Invalid JWT token: {}", e.getMessage());
-                    sendErrorResponse(response, getMessage("security.jwt.invalid"));
+                    errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.jwt.invalid");
                     return;
                 } catch (InvalidTokenException e) {
                     SecurityContextHolder.clearContext();
                     log.debug("Invalid token: {}", e.getMessage());
-                    sendErrorResponse(response, getMessage("security.token.invalid"));
+                    errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.token.invalid");
                     return;
                 } catch (RuntimeException e) {
                     // Preserve behavior for other runtime exceptions
@@ -135,7 +132,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             } else if (header != null && !header.isEmpty()) {
                 // Header is present but malformed
                 log.debug("Malformed Authorization header");
-                sendErrorResponse(response, getMessage("security.authHeader.malformed"));
+                errorResponseWriter.write(request, response, HttpStatus.UNAUTHORIZED, "security.authHeader.malformed");
                 return;
             }
         }
@@ -150,15 +147,4 @@ public class JwtAuthFilter extends OncePerRequestFilter {
      * @param message The error message to send
      * @throws IOException If there's an I/O error writing the response
      */
-    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-        Map<String, String> errorBody = Map.of("message", message);
-        mapper.writeValue(response.getWriter(), errorBody);
-        response.getWriter().flush();
-    }
-
-    private String getMessage(String key) {
-        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
-    }
 }
