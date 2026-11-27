@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { getItems, modifyItem, deleteItem, restoreItem, hardDeleteItem } from './api/api';
 import ItemForm from './itemForm';
 import ItemDetail from './itemDetail';
-import { authorName } from './authorName';
 import { apiErrorMessage } from '../auth/apiError';
 import { Button, PopUp, List } from '@orif-informatique/react-components-library';
 import useAuthStore from '../auth/authStore';
@@ -107,7 +106,7 @@ const Items = () => {
             <List
                 items={items.map((item) => ({
                     ...item,
-                    author: authorName(item.author, t),
+                    author: item.author ? `${item.author.firstName ?? ''} ${item.author.lastName ?? ''}`.trim() : t("unknown_author", "Unknown author"),
                     createdAt: new Date(item.createdAt).toLocaleString(),
                     updatedAt: new Date(item.updatedAt).toLocaleString(),
                 }))}

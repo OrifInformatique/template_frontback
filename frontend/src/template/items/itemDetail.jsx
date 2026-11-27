@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from '@orif-informatique/react-components-library';
-import { authorName } from './authorName';
 
 const ItemDetail = ({ item, onClose }) => {
     const { t } = useTranslation('items');
@@ -17,7 +16,7 @@ const ItemDetail = ({ item, onClose }) => {
                     <span className="text-sm text-gray-900">{item.name}</span>
 
                     <span className="text-sm font-medium text-gray-500">{t("author", "Author")}</span>
-                    <span className="text-sm text-gray-900">{authorName(item.author, t)}</span>
+                    <span className="text-sm text-gray-900">{item.author ? `${item.author.firstName ?? ''} ${item.author.lastName ?? ''}`.trim() : t("unknown_author", "Unknown author")}</span>
 
                     <span className="text-sm font-medium text-gray-500">{t("description", "Description")}</span>
                     <span className="text-sm text-gray-900 whitespace-pre-wrap">{item.description}</span>
